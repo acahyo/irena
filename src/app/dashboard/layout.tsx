@@ -25,12 +25,16 @@ import {
   HeartPulse,
   LogOut,
   Users,
+  Briefcase,
+  Shield,
 } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard", icon: Users, label: "Directory" },
   { href: "/dashboard/calendar", icon: CalendarDays, label: "Calendar" },
   { href: "/dashboard/sentiment-analysis", icon: HeartPulse, label: "Sentiment AI" },
+  { href: "/dashboard/department", icon: Briefcase, label: "Department" },
+  { href: "/dashboard/position", icon: Shield, label: "Position" },
 ];
 
 export default function DashboardLayout({
