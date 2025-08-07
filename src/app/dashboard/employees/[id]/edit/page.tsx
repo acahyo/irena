@@ -299,6 +299,21 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
                 <Input id="siteLocation" name="siteLocation" placeholder="e.g. Site A" defaultValue={employee.siteLocation} />
               </div>
 
+               <div className="space-y-2">
+                <Label htmlFor="employeeStatus">Employee Status</Label>
+                <Select name="employeeStatus" defaultValue={employee.employeeStatus}>
+                  <SelectTrigger id="employeeStatus">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="nonaktif">Non-Aktif</SelectItem>
+                    <SelectItem value="resign">Resign</SelectItem>
+                    <SelectItem value="phk">PHK</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
             </div>
 
             <div className="flex justify-end gap-2 pt-4">

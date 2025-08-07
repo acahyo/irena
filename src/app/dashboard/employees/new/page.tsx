@@ -289,6 +289,21 @@ export default function NewEmployeePage() {
                 <Label htmlFor="siteLocation">Lokasi/Site</Label>
                 <Input id="siteLocation" name="siteLocation" placeholder="e.g. Site A" />
               </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="employeeStatus">Employee Status</Label>
+                <Select name="employeeStatus">
+                  <SelectTrigger id="employeeStatus">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="nonaktif">Non-Aktif</SelectItem>
+                    <SelectItem value="resign">Resign</SelectItem>
+                    <SelectItem value="phk">PHK</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
             </div>
 

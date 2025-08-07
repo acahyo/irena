@@ -23,6 +23,7 @@ export const employees: Employee[] = [
     emergencyContactName: 'Bob Johnson',
     emergencyContactNumber: '098-765-4321',
     bpjsStatus: 'active',
+    employeeStatus: 'active',
     simPhoto: 'https://placehold.co/600x400.png',
     sioPhoto: 'https://placehold.co/600x400.png',
     simperNumber: 'SIMPER123',
@@ -43,6 +44,7 @@ export const employees: Employee[] = [
     email: 'bob.w@staffhub.com',
     phone: '123-456-7891',
     location: 'San Francisco, CA',
+    employeeStatus: 'active',
   },
   {
     id: '3',
@@ -53,6 +55,7 @@ export const employees: Employee[] = [
     email: 'charlie.b@staffhub.com',
     phone: '123-456-7892',
     location: 'Austin, TX',
+    employeeStatus: 'active',
   },
   {
     id: '4',
@@ -63,6 +66,7 @@ export const employees: Employee[] = [
     email: 'diana.p@staffhub.com',
     phone: '123-456-7893',
     location: 'Chicago, IL',
+    employeeStatus: 'nonaktif',
   },
   {
     id: '5',
@@ -73,6 +77,7 @@ export const employees: Employee[] = [
     email: 'ethan.h@staffhub.com',
     phone: '123-456-7894',
     location: 'Miami, FL',
+    employeeStatus: 'resign',
   },
   {
     id: '6',
@@ -83,6 +88,7 @@ export const employees: Employee[] = [
     email: 'fiona.g@staffhub.com',
     phone: '123-456-7895',
     location: 'Remote',
+    employeeStatus: 'phk',
   },
   {
     id: '7',
@@ -93,6 +99,7 @@ export const employees: Employee[] = [
     email: 'george.c@staffhub.com',
     phone: '123-456-7896',
     location: 'New York, NY',
+    employeeStatus: 'active',
   },
   {
     id: '8',
@@ -103,6 +110,7 @@ export const employees: Employee[] = [
     email: 'hannah.a@staffhub.com',
     phone: '123-456-7897',
     location: 'San Francisco, CA',
+    employeeStatus: 'active',
   },
 ];
 

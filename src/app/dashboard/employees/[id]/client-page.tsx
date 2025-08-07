@@ -16,7 +16,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Building2, Calendar, FileText, Heart, Home, Landmark, Mail, MapPin, Pencil, Phone, ShieldCheck, Trash2, User, UserSquare, Users } from 'lucide-react';
+import { ArrowLeft, Building2, Calendar, FileText, Heart, Home, Landmark, Mail, MapPin, Pencil, Phone, ShieldCheck, Trash2, User, UserCheck, UserSquare, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import type { Employee } from '@/lib/types';
@@ -71,6 +71,21 @@ export default function EmployeeProfileClientPage({ employee }: { employee: Empl
       </div>
     );
   };
+
+  const getStatusVariant = (status?: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
+      switch (status) {
+          case 'active':
+              return 'default';
+          case 'nonaktif':
+              return 'secondary';
+          case 'resign':
+              return 'outline';
+          case 'phk':
+              return 'destructive';
+          default:
+              return 'secondary';
+      }
+  }
 
   return (
     <div className="space-y-6">
@@ -180,6 +195,17 @@ export default function EmployeeProfileClientPage({ employee }: { employee: Empl
                         {employee.bpjsStatus ? (
                              <Badge variant={employee.bpjsStatus === 'active' ? 'default' : 'destructive'} className="capitalize mt-1">
                                 {employee.bpjsStatus}
+                            </Badge>
+                        ) : <p className="text-muted-foreground">N/A</p>}
+                    </div>
+                </div>
+                 <div className="flex items-start gap-4">
+                    <div className="text-muted-foreground w-5 mt-1"><UserCheck className="h-5 w-5"/></div>
+                    <div>
+                        <p className="font-semibold text-sm">Employee Status</p>
+                        {employee.employeeStatus ? (
+                             <Badge variant={getStatusVariant(employee.employeeStatus)} className="capitalize mt-1">
+                                {employee.employeeStatus}
                             </Badge>
                         ) : <p className="text-muted-foreground">N/A</p>}
                     </div>
