@@ -1,3 +1,4 @@
+
 export type Employee = {
   id: string;
   name: string;
@@ -14,6 +15,9 @@ export type Employee = {
   accountNumber?: string;
   bankName?: string;
   accountHolderName?: string;
+  maritalStatus?: 'single' | 'married' | 'divorced' | 'widowed';
+  emergencyContactName?: string;
+  emergencyContactNumber?: string;
 };
 
 export type CalendarEvent = {

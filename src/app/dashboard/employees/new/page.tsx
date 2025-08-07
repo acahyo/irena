@@ -1,10 +1,11 @@
+
 'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
-import { ArrowLeft, Calendar as CalendarIcon } from 'lucide-react';
+import { ArrowLeft, Calendar as CalendarIcon, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -20,14 +21,37 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function NewEmployeePage() {
   const router = useRouter();
   const { toast } = useToast();
   const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>();
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+
+  const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setPhotoPreview(null);
+    }
+  };
+
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -59,12 +83,25 @@ export default function NewEmployeePage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-8">
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-x-6 gap-y-8 md:grid-cols-3">
+              <div className="space-y-2 md:col-span-3">
+                <Label>Photo</Label>
+                <div className="flex items-center gap-4">
+                    <Avatar className="h-24 w-24">
+                        <AvatarImage src={photoPreview || undefined} alt="Employee Photo" />
+                        <AvatarFallback>
+                            <Upload className="h-8 w-8 text-muted-foreground" />
+                        </AvatarFallback>
+                    </Avatar>
+                    <Input id="photo" name="photo" type="file" accept="image/*" onChange={handlePhotoChange} className="max-w-sm" />
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="nik">NIK</Label>
                 <Input id="nik" name="nik" placeholder="e.g. 3201..." required />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="name">Full Name</Label>
                 <Input id="name" name="name" placeholder="e.g. John Doe" required />
               </div>
@@ -106,7 +143,21 @@ export default function NewEmployeePage() {
                   </PopoverContent>
                 </Popover>
               </div>
-              <div className="space-y-2 md:col-span-2">
+                <div className="space-y-2">
+                    <Label htmlFor="maritalStatus">Status Perkawinan</Label>
+                    <Select name="maritalStatus">
+                        <SelectTrigger id="maritalStatus">
+                            <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="single">Single</SelectItem>
+                            <SelectItem value="married">Married</SelectItem>
+                            <SelectItem value="divorced">Divorced</SelectItem>
+                            <SelectItem value="widowed">Widowed</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+              <div className="space-y-2 md:col-span-3">
                 <Label htmlFor="address">Alamat</Label>
                 <Input
                   id="address"
@@ -115,7 +166,27 @@ export default function NewEmployeePage() {
                   required
                 />
               </div>
+              
               <div className="space-y-2">
+                <Label htmlFor="emergencyContactName">Nama Kontak Darurat</Label>
+                <Input
+                  id="emergencyContactName"
+                  name="emergencyContactName"
+                  placeholder="e.g. Jane Doe"
+                  required
+                />
+              </div>
+               <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="emergencyContactNumber">Nomor Kontak Darurat</Label>
+                <Input
+                  id="emergencyContactNumber"
+                  name="emergencyContactNumber"
+                  placeholder="e.g. 08123456789"
+                  required
+                />
+              </div>
+
+               <div className="space-y-2">
                 <Label htmlFor="bankName">Nama Bank</Label>
                 <Input
                   id="bankName"
@@ -133,7 +204,7 @@ export default function NewEmployeePage() {
                   required
                 />
               </div>
-               <div className="space-y-2 md:col-span-2">
+               <div className="space-y-2">
                 <Label htmlFor="accountHolderName">Nama Rekening</Label>
                 <Input
                   id="accountHolderName"
@@ -144,7 +215,7 @@ export default function NewEmployeePage() {
               </div>
             </div>
 
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end gap-2 pt-4">
               <Button type="button" variant="outline" onClick={() => router.back()}>
                 Cancel
               </Button>
