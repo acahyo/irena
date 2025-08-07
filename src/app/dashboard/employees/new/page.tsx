@@ -33,6 +33,7 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { departments, positions } from '@/lib/data';
 
 export default function NewEmployeePage() {
   const router = useRouter();
@@ -240,9 +241,18 @@ export default function NewEmployeePage() {
                 <Label htmlFor="idCardNumber">Nomor ID Card</Label>
                 <Input id="idCardNumber" name="idCardNumber" placeholder="e.g. 67890" />
               </div>
-              <div className="space-y-2">
-                 <Label htmlFor="position">Jabatan</Label>
-                 <Input id="position" name="position" placeholder="e.g. Operator" />
+               <div className="space-y-2">
+                <Label htmlFor="position">Jabatan</Label>
+                 <Select name="position">
+                  <SelectTrigger id="position">
+                    <SelectValue placeholder="Select position" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {positions.map((pos) => (
+                      <SelectItem key={pos.id} value={pos.name}>{pos.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
@@ -255,7 +265,16 @@ export default function NewEmployeePage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="department">Departemen</Label>
-                <Input id="department" name="department" placeholder="e.g. Produksi" />
+                 <Select name="department">
+                  <SelectTrigger id="department">
+                    <SelectValue placeholder="Select department" />
+                  </SelectTrigger>
+                  <SelectContent>
+                     {departments.map((dept) => (
+                        <SelectItem key={dept.id} value={dept.name}>{dept.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
