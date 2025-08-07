@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { employees } from '@/lib/data';
 import type { Employee } from '@/lib/types';
@@ -14,11 +15,16 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Search } from 'lucide-react';
+import { PlusCircle, Search, Upload, Download } from 'lucide-react';
+import * as XLSX from 'xlsx';
+import { useToast } from '@/hooks/use-toast';
+
 
 export default function EmployeeDirectoryPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('all');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   const departments = useMemo(() => {
     const allDepartments = employees.map((emp) => emp.department);
@@ -36,6 +42,50 @@ export default function EmployeeDirectoryPage() {
     });
   }, [searchTerm, departmentFilter]);
 
+  const handleExport = () => {
+    const worksheet = XLSX.utils.json_to_sheet(filteredEmployees);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Employees");
+    XLSX.writeFile(workbook, "EmployeeData.xlsx");
+     toast({
+      title: 'Success!',
+      description: 'Employee data has been exported.',
+    });
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target?.result as ArrayBuffer);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const sheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[sheetName];
+          const json = XLSX.utils.sheet_to_json(worksheet);
+          console.log(json); // Here you can process the imported data
+          toast({
+            title: 'Success!',
+            description: 'Employee data has been imported. Check the console for the data.',
+          });
+        } catch (error) {
+          console.error("Error reading file:", error);
+           toast({
+            variant: "destructive",
+            title: 'Import Error',
+            description: 'Failed to import the Excel file.',
+          });
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center">
@@ -48,7 +98,7 @@ export default function EmployeeDirectoryPage() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <div className="flex gap-4">
+        <div className="flex flex-wrap gap-2">
           <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
             <SelectTrigger className="w-full md:w-[200px]">
               <SelectValue placeholder="Filter by department" />
@@ -61,6 +111,21 @@ export default function EmployeeDirectoryPage() {
               ))}
             </SelectContent>
           </Select>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            className="hidden"
+            accept=".xlsx, .xls"
+          />
+          <Button variant="outline" onClick={handleImportClick}>
+            <Upload className="mr-2 h-4 w-4" />
+            Import
+          </Button>
+          <Button variant="outline" onClick={handleExport}>
+            <Download className="mr-2 h-4 w-4" />
+            Export
+          </Button>
           <Button asChild>
             <Link href="/dashboard/employees/new">
               <PlusCircle className="mr-2 h-4 w-4" />
