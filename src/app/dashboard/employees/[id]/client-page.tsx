@@ -14,7 +14,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Building2, Calendar, FileText, Heart, Home, Landmark, Mail, MapPin, Phone, ShieldCheck, User, UserSquare, Users } from 'lucide-react';
+import { ArrowLeft, Building2, Calendar, FileText, Heart, Home, Landmark, Mail, MapPin, Pencil, Phone, ShieldCheck, Trash2, User, UserSquare, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import type { Employee } from '@/lib/types';
@@ -65,6 +65,16 @@ export default function EmployeeProfileClientPage({ employee }: { employee: Empl
             <h2 className="text-3xl font-bold">{employee.name}</h2>
             <p className="text-lg text-muted-foreground">{employee.role}</p>
             <p className="text-sm text-muted-foreground">{employee.department} - {employee.siteLocation}</p>
+          </div>
+           <div className="flex gap-2">
+            <Button variant="outline">
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit
+            </Button>
+            <Button variant="destructive">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Remove
+            </Button>
           </div>
         </CardHeader>
       </Card>
