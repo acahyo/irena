@@ -57,7 +57,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
        <Button asChild variant="outline" size="sm">
             <Link href="/dashboard">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Directory
+                Back to Employees
             </Link>
         </Button>
 

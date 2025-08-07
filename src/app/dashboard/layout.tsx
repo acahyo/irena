@@ -27,14 +27,18 @@ import {
   Users,
   Briefcase,
   Shield,
+  UsersRound,
+  ShieldCheck,
 } from "lucide-react";
 
 const navItems = [
-  { href: "/dashboard", icon: Users, label: "Directory" },
+  { href: "/dashboard", icon: Users, label: "Employees" },
   { href: "/dashboard/calendar", icon: CalendarDays, label: "Calendar" },
   { href: "/dashboard/sentiment-analysis", icon: HeartPulse, label: "Sentiment AI" },
   { href: "/dashboard/department", icon: Briefcase, label: "Department" },
   { href: "/dashboard/position", icon: Shield, label: "Position" },
+  { href: "/dashboard/users", icon: UsersRound, label: "Users" },
+  { href: "/dashboard/roles", icon: ShieldCheck, label: "Roles" },
 ];
 
 export default function DashboardLayout({

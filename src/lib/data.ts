@@ -1,6 +1,6 @@
 
 
-import type { Employee, CalendarEvent, Department, Position } from './types';
+import type { Employee, CalendarEvent, Department, Position, User, Role } from './types';
 
 export const employees: Employee[] = [
   {
@@ -136,4 +136,16 @@ export const positions: Position[] = [
     { id: '6', name: 'Frontend Developer' },
     { id: '7', name: 'Sales Representative' },
     { id: '8', name: 'Data Analyst' },
+];
+
+export const users: User[] = [
+    { id: '1', name: 'Admin User', email: 'admin@staffhub.com', role: 'Administrator' },
+    { id: '2', name: 'HR Manager', email: 'hr.manager@staffhub.com', role: 'HR' },
+    { id: '3', name: 'General User', email: 'user@staffhub.com', role: 'Employee' },
+];
+
+export const roles: Role[] = [
+    { id: '1', name: 'Administrator', description: 'Full access to all features' },
+    { id: '2', name: 'HR', description: 'Access to employee management features' },
+    { id: '3', name: 'Employee', description: 'Basic access to their own profile' },
 ];
