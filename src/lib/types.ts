@@ -42,3 +42,8 @@ export type Department = {
     id: string;
     name: string;
 };
+
+export type Position = {
+    id: string;
+    name: string;
+};

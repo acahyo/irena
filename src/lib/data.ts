@@ -1,5 +1,6 @@
 
-import type { Employee, CalendarEvent, Department } from './types';
+
+import type { Employee, CalendarEvent, Department, Position } from './types';
 
 export const employees: Employee[] = [
   {
@@ -124,4 +125,15 @@ export const departments: Department[] = [
     { id: '4', name: 'Human Resources' },
     { id: '5', name: 'Marketing' },
     { id: '6', name: 'Sales' },
+];
+
+export const positions: Position[] = [
+    { id: '1', name: 'Lead Software Engineer' },
+    { id: '2', name: 'Product Manager' },
+    { id: '3', name: 'UI/UX Designer' },
+    { id: '4', name: 'HR Specialist' },
+    { id: '5', name: 'Marketing Lead' },
+    { id: '6', name: 'Frontend Developer' },
+    { id: '7', name: 'Sales Representative' },
+    { id: '8', name: 'Data Analyst' },
 ];
