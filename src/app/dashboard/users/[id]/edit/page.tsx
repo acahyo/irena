@@ -1,6 +1,7 @@
 
 'use client';
 
+import React from 'react';
 import Link from 'next/link';
 import { notFound, useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
