@@ -236,7 +236,7 @@ export default function EmployeeProfileClientPage({ employee }: { employee: Empl
         <Card className="lg:col-span-3">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5"/> Documents</CardTitle>
-            </CardHeader>
+            </Header>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <PhotoItem label="SIM Photo" src={employee.simPhoto} hint="drivers license" />
                 <PhotoItem label="SIO Photo" src={employee.sioPhoto} hint="license" />
