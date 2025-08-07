@@ -67,9 +67,11 @@ export default function EmployeeProfileClientPage({ employee }: { employee: Empl
             <p className="text-sm text-muted-foreground">{employee.department} - {employee.siteLocation}</p>
           </div>
            <div className="flex gap-2">
-            <Button variant="outline">
-                <Pencil className="mr-2 h-4 w-4" />
-                Edit
+            <Button asChild variant="outline">
+                <Link href={`/dashboard/employees/${employee.id}/edit`}>
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Edit
+                </Link>
             </Button>
             <Button variant="destructive">
                 <Trash2 className="mr-2 h-4 w-4" />
