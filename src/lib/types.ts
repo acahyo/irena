@@ -18,6 +18,17 @@ export type Employee = {
   maritalStatus?: 'single' | 'married' | 'divorced' | 'widowed';
   emergencyContactName?: string;
   emergencyContactNumber?: string;
+  bpjsStatus?: 'active' | 'inactive';
+  simPhoto?: string;
+  sioPhoto?: string;
+  simperNumber?: string;
+  idCardNumber?: string;
+  messRoomNumber?: string;
+  messEntryDate?: Date;
+  contractStartDate?: Date;
+  contractEndDate?: Date;
+  position?: string;
+  siteLocation?: string;
 };
 
 export type CalendarEvent = {
