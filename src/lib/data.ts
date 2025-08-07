@@ -1,4 +1,5 @@
-import type { Employee, CalendarEvent } from './types';
+
+import type { Employee, CalendarEvent, Department } from './types';
 
 export const employees: Employee[] = [
   {
@@ -114,4 +115,13 @@ export const calendarEvents: CalendarEvent[] = [
     { date: new Date(today.getFullYear(), 0, 1), title: "New Year's Day", type: 'holiday' },
     { date: new Date(today.getFullYear(), 6, 4), title: "Independence Day", type: 'holiday' },
     { date: new Date(today.getFullYear(), 11, 25), title: "Christmas Day", type: 'holiday' },
+];
+
+export const departments: Department[] = [
+    { id: '1', name: 'Technology' },
+    { id: '2', name: 'Product' },
+    { id: '3', name: 'Design' },
+    { id: '4', name: 'Human Resources' },
+    { id: '5', name: 'Marketing' },
+    { id: '6', name: 'Sales' },
 ];

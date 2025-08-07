@@ -1,4 +1,5 @@
 
+
 export type Employee = {
   id: string;
   name: string;
@@ -35,4 +36,9 @@ export type CalendarEvent = {
   date: Date;
   title: string;
   type: 'leave' | 'holiday' | 'event';
+};
+
+export type Department = {
+    id: string;
+    name: string;
 };
