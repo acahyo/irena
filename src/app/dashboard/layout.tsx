@@ -29,6 +29,7 @@ import {
   Shield,
   UsersRound,
   ShieldCheck,
+  Settings,
 } from "lucide-react";
 
 const navItems = [
@@ -39,6 +40,7 @@ const navItems = [
   { href: "/dashboard/position", icon: Shield, label: "Position" },
   { href: "/dashboard/users", icon: UsersRound, label: "Users" },
   { href: "/dashboard/roles", icon: ShieldCheck, label: "Roles" },
+  { href: "/dashboard/settings", icon: Settings, label: "Settings" },
 ];
 
 export default function DashboardLayout({
