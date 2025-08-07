@@ -7,6 +7,13 @@ export type Employee = {
   email: string;
   phone: string;
   location: string;
+  nik?: string;
+  placeOfBirth?: string;
+  dateOfBirth?: Date;
+  address?: string;
+  accountNumber?: string;
+  bankName?: string;
+  accountHolderName?: string;
 };
 
 export type CalendarEvent = {

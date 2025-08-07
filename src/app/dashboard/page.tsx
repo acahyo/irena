@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import Link from 'next/link';
 import { employees } from '@/lib/data';
 import type { Employee } from '@/lib/types';
 import { EmployeeCard } from '@/components/employee-card';
@@ -60,9 +61,11 @@ export default function EmployeeDirectoryPage() {
               ))}
             </SelectContent>
           </Select>
-          <Button>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Add Employee
+          <Button asChild>
+            <Link href="/dashboard/employees/new">
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Add Employee
+            </Link>
           </Button>
         </div>
       </div>
