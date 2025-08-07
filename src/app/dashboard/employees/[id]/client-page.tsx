@@ -1,7 +1,9 @@
 
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Avatar,
   AvatarFallback,
@@ -18,8 +20,32 @@ import { ArrowLeft, Building2, Calendar, FileText, Heart, Home, Landmark, Mail, 
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import type { Employee } from '@/lib/types';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { useToast } from '@/hooks/use-toast';
 
 export default function EmployeeProfileClientPage({ employee }: { employee: Employee }) {
+    const router = useRouter();
+    const { toast } = useToast();
+
+    const handleRemove = () => {
+        // Here you would typically handle the deletion from your backend.
+        console.log(`Removing employee: ${employee.name}`);
+        toast({
+            title: 'Success!',
+            description: `Employee ${employee.name} has been removed.`,
+        });
+        router.push('/dashboard');
+    };
 
   const DetailItem = ({ icon, label, value }: { icon: React.ReactNode, label: string, value?: string | null }) => {
     if (!value) return null;
@@ -73,10 +99,29 @@ export default function EmployeeProfileClientPage({ employee }: { employee: Empl
                     Edit
                 </Link>
             </Button>
-            <Button variant="destructive">
-                <Trash2 className="mr-2 h-4 w-4" />
-                Remove
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive">
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Remove
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete the
+                    employee's record from our servers.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleRemove}>
+                    Continue
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </CardHeader>
       </Card>
