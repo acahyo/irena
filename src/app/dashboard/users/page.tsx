@@ -72,7 +72,9 @@ export default function UsersPage() {
                                 </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                    <DropdownMenuItem>Edit</DropdownMenuItem>
+                                    <DropdownMenuItem asChild>
+                                      <Link href={`/dashboard/users/${user.id}/edit`}>Edit</Link>
+                                    </DropdownMenuItem>
                                     <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
