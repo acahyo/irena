@@ -1,10 +1,7 @@
 
-'use client';
-
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, CalendarOff, UserCheck, Loader2, Clock, UserX, LogOut, CircleSlash, ListChecks, UserRound } from 'lucide-react';
+import { Users, CalendarOff, UserCheck, Clock, UserX, LogOut, CircleSlash, ListChecks, UserRound } from 'lucide-react';
 import { getEmployees } from '@/actions/employees';
 import { getLeaveRequests } from '@/actions/leave';
 import type { Employee } from '@/lib/types';
@@ -19,112 +16,69 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { DashboardClock } from './client-page';
 
 
-export default function DashboardPage() {
-    const [stats, setStats] = useState({
-        totalEmployees: 0,
-        employeesOnLeave: 0,
-        employeesByPosition: [] as { name: string, value: number }[],
-        employeesByStatus: {
-            active: 0,
-            nonaktif: 0,
-            resign: 0,
-            phk: 0
-        },
-        leaveRecommendation: [] as Employee[],
-    });
-    const [loading, setLoading] = useState(true);
-    const [currentDateTime, setCurrentDateTime] = useState<Date | null>(null);
+async function getDashboardData() {
+    const [employees, leaveRequests] = await Promise.all([
+        getEmployees(),
+        getLeaveRequests()
+    ]);
 
-     useEffect(() => {
-        // Set initial time on client mount to avoid hydration mismatch
-        setCurrentDateTime(new Date());
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-        const timer = setInterval(() => {
-            setCurrentDateTime(new Date());
-        }, 1000); // Update every second
+    const approvedLeave = leaveRequests.filter(
+        (req) =>
+            req.status === 'Approved' &&
+            new Date(req.startDate) <= today &&
+            new Date(req.endDate) >= today
+    );
+    
+    const employeesByPosition = employees.reduce((acc, emp) => {
+        const position = emp.position || 'Unassigned';
+        const existing = acc.find(item => item.name === position);
+        if (existing) {
+            existing.value += 1;
+        } else {
+            acc.push({ name: position, value: 1 });
+        }
+        return acc;
+    }, [] as { name: string, value: number }[]);
 
-        return () => clearInterval(timer); // Cleanup on component unmount
-    }, []);
+    const employeesByStatus = employees.reduce((acc, emp) => {
+        const status = emp.employeeStatus || 'active';
+        if (acc[status as keyof typeof acc]) {
+            acc[status as keyof typeof acc]++;
+        } else {
+            acc[status as keyof typeof acc] = 1;
+        }
+        return acc;
+    }, { active: 0, nonaktif: 0, resign: 0, phk: 0 });
 
-    useEffect(() => {
-        const fetchDashboardData = async () => {
-            setLoading(true);
-            try {
-                const [employees, leaveRequests] = await Promise.all([
-                    getEmployees(),
-                    getLeaveRequests()
-                ]);
+    const leaveRecommendation = employees
+        .filter(emp => emp.contractStartDate)
+        .map(emp => {
+            const startDate = new Date(emp.contractStartDate!);
+            const diffTime = today.getTime() - startDate.getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 3600 * 24));
+            return { ...emp, daysActive: diffDays };
+        })
+        .filter(emp => emp.daysActive! >= 120 && emp.employeeStatus === 'active');
 
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-
-                const approvedLeave = leaveRequests.filter(
-                    (req) =>
-                        req.status === 'Approved' &&
-                        new Date(req.startDate) <= today &&
-                        new Date(req.endDate) >= today
-                );
-                
-                const employeesByPosition = employees.reduce((acc, emp) => {
-                    const position = emp.position || 'Unassigned';
-                    const existing = acc.find(item => item.name === position);
-                    if (existing) {
-                        existing.value += 1;
-                    } else {
-                        acc.push({ name: position, value: 1 });
-                    }
-                    return acc;
-                }, [] as { name: string, value: number }[]);
-
-                const employeesByStatus = employees.reduce((acc, emp) => {
-                    const status = emp.employeeStatus || 'active';
-                    if (acc[status as keyof typeof acc]) {
-                        acc[status as keyof typeof acc]++;
-                    } else {
-                        acc[status as keyof typeof acc] = 1;
-                    }
-                    return acc;
-                }, { active: 0, nonaktif: 0, resign: 0, phk: 0 });
-
-                const leaveRecommendation = employees
-                    .filter(emp => emp.contractStartDate)
-                    .map(emp => {
-                        const startDate = new Date(emp.contractStartDate!);
-                        const diffTime = today.getTime() - startDate.getTime();
-                        const diffDays = Math.ceil(diffTime / (1000 * 3600 * 24));
-                        return { ...emp, daysActive: diffDays };
-                    })
-                    .filter(emp => emp.daysActive! >= 120 && emp.employeeStatus === 'active');
+    return {
+        totalEmployees: employees.length,
+        employeesOnLeave: approvedLeave.length,
+        employeesByPosition: employeesByPosition.sort((a,b) => b.value - a.value),
+        employeesByStatus: employeesByStatus,
+        leaveRecommendation,
+    };
+}
 
 
-                setStats({
-                    totalEmployees: employees.length,
-                    employeesOnLeave: approvedLeave.length,
-                    employeesByPosition: employeesByPosition.sort((a,b) => b.value - a.value),
-                    employeesByStatus: employeesByStatus,
-                    leaveRecommendation,
-                });
-
-            } catch (error) {
-                console.error("Failed to fetch dashboard data", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchDashboardData();
-    }, []);
-
-    if (loading) {
-        return (
-            <div className="flex justify-center items-center h-full">
-                <Loader2 className="h-16 w-16 animate-spin text-primary" />
-            </div>
-        );
-    }
-
+export default async function DashboardPage() {
+    const stats = await getDashboardData();
+    
     const StatusItem = ({ icon, label, value, color }: { icon: React.ReactNode, label: string, value: number, color?: string }) => (
         <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -138,25 +92,7 @@ export default function DashboardPage() {
     return (
         <div className="space-y-6">
              <div className="grid gap-6 md:grid-cols-4">
-                 <Card className="md:col-span-1">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Date & Time</CardTitle>
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                         {currentDateTime ? (
-                            <>
-                                <div className="text-2xl font-bold">{currentDateTime.toLocaleTimeString('id-ID')}</div>
-                                <p className="text-xs text-muted-foreground">{currentDateTime.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                            </>
-                        ) : (
-                             <div className="space-y-2">
-                                <div className="h-7 w-3/4 animate-pulse rounded-md bg-muted"></div>
-                                <div className="h-3 w-full animate-pulse rounded-md bg-muted"></div>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
+                 <DashboardClock />
                 <Link href="/dashboard/employees" className="transition-all duration-200 ease-in-out hover:-translate-y-1 hover:shadow-lg">
                     <Card className="h-full">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
