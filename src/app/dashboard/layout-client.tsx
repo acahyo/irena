@@ -59,9 +59,9 @@ export default function DashboardClientLayout({
   const userRole = user?.role || '';
 
   const navItems = allNavItems.filter(item => {
-    if (!item.roles) return true; // Visible to all if no roles are specified
-    // Admin can see everything
-    if (userRole.toLowerCase().includes('admin')) return true;
+    // Admin can see everything, case-insensitive check
+    if (userRole.toLowerCase() === 'administrator') return true;
+    // Check if the item's roles include the user's role
     return item.roles.includes(userRole);
   });
 
