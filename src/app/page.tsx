@@ -25,7 +25,7 @@ export default async function LoginPage() {
           <CardHeader className="space-y-1 text-center">
             <div className="flex justify-center pb-4">
                <Avatar className="h-12 w-12 rounded-lg">
-                {settings.logo && <AvatarImage src={settings.logo} alt={settings.appName} />}
+                {settings.logo && <AvatarImage src={settings.logo} alt={settings.appName || 'Logo'} />}
                 <AvatarFallback className="rounded-lg bg-primary text-primary-foreground">
                     <LogIn className="h-6 w-6" />
                 </AvatarFallback>
