@@ -3,7 +3,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, CalendarOff, UserCheck, Loader2, Clock, UserX, LogOut, CircleSlash, ListChecks, UserRound } from 'lucide-react';
 import { getEmployees } from '@/actions/employees';
@@ -12,20 +11,14 @@ import type { Employee } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
-
-const COLORS = ['#136F63', '#877795', '#A29F85', '#C4B79A', '#EAE0C1', '#F7EDE2'];
-
-const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-        return (
-            <div className="rounded-lg border bg-background p-2 shadow-sm">
-                <p className="font-bold">{`${payload[0].name}`}</p>
-                <p className="text-sm text-muted-foreground">{`Jumlah: ${payload[0].value}`}</p>
-            </div>
-        );
-    }
-    return null;
-};
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 
 
 export default function DashboardPage() {
@@ -206,29 +199,31 @@ export default function DashboardPage() {
                         <CardTitle>Karyawan Berdasarkan Jabatan</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="h-[350px]">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <PieChart>
-                                    <Pie
-                                        data={stats.employeesByPosition}
-                                        cx="50%"
-                                        cy="50%"
-                                        innerRadius={80}
-                                        outerRadius={120}
-                                        fill="#8884d8"
-                                        paddingAngle={5}
-                                        dataKey="value"
-                                        nameKey="name"
-                                    >
-                                        {stats.employeesByPosition.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                        ))}
-                                    </Pie>
-                                    <Tooltip content={<CustomTooltip />} />
-                                    <Legend iconSize={10} />
-                                </PieChart>
-                            </ResponsiveContainer>
-                        </div>
+                       <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="w-[50px]">No</TableHead>
+                                    <TableHead>Jabatan</TableHead>
+                                    <TableHead className="text-right">Jumlah Karyawan</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {stats.employeesByPosition.map((pos, index) => (
+                                    <TableRow key={pos.name}>
+                                        <TableCell>{index + 1}</TableCell>
+                                        <TableCell className="font-medium">{pos.name}</TableCell>
+                                        <TableCell className="text-right">{pos.value}</TableCell>
+                                    </TableRow>
+                                ))}
+                                {stats.employeesByPosition.length === 0 && (
+                                     <TableRow>
+                                        <TableCell colSpan={3} className="h-24 text-center">
+                                            Tidak ada data jabatan.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
                     </CardContent>
                 </Card>
                 <Card>
