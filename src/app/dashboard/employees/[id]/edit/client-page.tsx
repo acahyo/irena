@@ -41,7 +41,15 @@ import { Textarea } from '@/components/ui/textarea';
 const parseDate = (date: string | Date | undefined): Date | undefined => {
   if (!date) return undefined;
   if (date instanceof Date) return date;
-  return parseISO(date);
+  try {
+    const parsed = parseISO(date);
+    if (!isNaN(parsed.getTime())) {
+      return parsed;
+    }
+  } catch (e) {
+    // ignore error
+  }
+  return undefined;
 };
 
 
