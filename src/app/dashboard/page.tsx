@@ -2,12 +2,27 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Briefcase, CalendarOff, Loader2 } from 'lucide-react';
 import { getEmployees } from '@/actions/employees';
 import { getLeaveRequests } from '@/actions/leave';
-import type { Employee, LeaveRequest } from '@/lib/types';
+import type { Employee } from '@/lib/types';
+
+const COLORS = ['#136F63', '#877795', '#A29F85', '#C4B79A', '#EAE0C1', '#F7EDE2'];
+
+const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="rounded-lg border bg-background p-2 shadow-sm">
+                <p className="font-bold">{`${payload[0].name}`}</p>
+                <p className="text-sm text-muted-foreground">{`Jumlah: ${payload[0].value}`}</p>
+            </div>
+        );
+    }
+    return null;
+};
+
 
 export default function DashboardPage() {
     const [stats, setStats] = useState({
@@ -112,48 +127,25 @@ export default function DashboardPage() {
                 <CardContent>
                     <div className="h-[350px]">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={stats.employeesByPosition} layout="vertical" margin={{ left: 20, right: 20 }}>
-                                <XAxis type="number" hide />
-                                <YAxis 
-                                    dataKey="name" 
-                                    type="category" 
-                                    width={150} 
-                                    tickLine={false} 
-                                    axisLine={false}
-                                    tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-                                />
-                                <Tooltip
-                                  cursor={{ fill: 'hsl(var(--secondary))' }}
-                                  content={({ active, payload }) => {
-                                      if (active && payload && payload.length) {
-                                        return (
-                                        <div className="rounded-lg border bg-background p-2 shadow-sm">
-                                            <div className="grid grid-cols-2 gap-2">
-                                            <div className="flex flex-col space-y-1">
-                                                <span className="text-[0.70rem] uppercase text-muted-foreground">
-                                                Jabatan
-                                                </span>
-                                                <span className="font-bold text-muted-foreground">
-                                                {payload[0].payload.name}
-                                                </span>
-                                            </div>
-                                            <div className="flex flex-col space-y-1">
-                                                <span className="text-[0.70rem] uppercase text-muted-foreground">
-                                                Jumlah
-                                                </span>
-                                                <span className="font-bold">
-                                                {payload[0].value}
-                                                </span>
-                                            </div>
-                                            </div>
-                                        </div>
-                                        )
-                                    }
-                                    return null
-                                  }}
-                                />
-                                <Bar dataKey="value" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} barSize={20} />
-                            </BarChart>
+                            <PieChart>
+                                <Pie
+                                    data={stats.employeesByPosition}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={80}
+                                    outerRadius={120}
+                                    fill="#8884d8"
+                                    paddingAngle={5}
+                                    dataKey="value"
+                                    nameKey="name"
+                                >
+                                    {stats.employeesByPosition.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip content={<CustomTooltip />} />
+                                <Legend iconSize={10} />
+                            </PieChart>
                         </ResponsiveContainer>
                     </div>
                 </CardContent>
