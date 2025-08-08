@@ -25,6 +25,7 @@ import type { Employee } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Copy, Bold, Italic, Underline, Upload } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import * as mammoth from 'mammoth';
 
 const generateContractText = (data: any) => {
     const { 
@@ -150,8 +151,35 @@ export default function ContractTemplateClientPage({ employees }: { employees: E
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
-        if (file) {
-            const reader = new FileReader();
+        if (!file) return;
+
+        const reader = new FileReader();
+        
+        if (file.name.endsWith('.docx')) {
+            reader.onload = (e) => {
+                const arrayBuffer = e.target?.result as ArrayBuffer;
+                mammoth.convertToHtml({ arrayBuffer: arrayBuffer })
+                    .then(result => {
+                        if (editorRef.current) {
+                            editorRef.current.innerHTML = result.value;
+                            setGeneratedContract(result.value);
+                            toast({
+                                title: 'Template Loaded',
+                                description: `Template from ${file.name} has been loaded.`,
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error(error);
+                        toast({
+                            variant: "destructive",
+                            title: 'Error',
+                            description: 'Could not convert .docx file.',
+                        });
+                    });
+            };
+            reader.readAsArrayBuffer(file);
+        } else {
             reader.onload = (e) => {
                 const content = e.target?.result as string;
                 if (editorRef.current) {
@@ -243,7 +271,7 @@ export default function ContractTemplateClientPage({ employees }: { employees: E
                                 ref={fileInputRef}
                                 onChange={handleFileChange}
                                 className="hidden"
-                                accept=".txt,.html"
+                                accept=".txt,.html,.docx"
                             />
                             <Button variant="ghost" size="sm" onClick={handleUploadClick}>
                                 <Upload className="mr-2 h-4 w-4" />
