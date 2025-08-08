@@ -1,6 +1,7 @@
 
 
 import { getEmployee } from '@/actions/employees';
+import { getLeaveRequestsByEmployeeId } from '@/actions/leave';
 import { notFound } from 'next/navigation';
 import EmployeeProfileClientPage from './client-page';
 import { format, parseISO } from 'date-fns';
@@ -26,6 +27,8 @@ export default async function EmployeeProfilePage({ params }: { params: { id: st
     notFound();
   }
 
+  const leaveHistoryData = await getLeaveRequestsByEmployeeId(params.id);
+
   // Pre-format dates on the server before sending to the client component
   const employee = {
     ...employeeData,
@@ -33,6 +36,11 @@ export default async function EmployeeProfilePage({ params }: { params: { id: st
     messEntryDate: formatDate(employeeData.messEntryDate),
     contractStartDate: formatDate(employeeData.contractStartDate),
     contractEndDate: formatDate(employeeData.contractEndDate),
+    leaveHistory: leaveHistoryData.map(req => ({
+        ...req,
+        startDate: formatDate(req.startDate) as any,
+        endDate: formatDate(req.endDate) as any,
+    }))
   };
 
 

@@ -16,9 +16,9 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Building2, Calendar, FileText, Heart, Home, Landmark, Mail, MapPin, Pencil, Phone, ShieldCheck, Trash2, User, UserCheck, UserSquare, Users, Briefcase } from 'lucide-react';
+import { ArrowLeft, Building2, Calendar, FileText, Heart, Home, Landmark, Mail, MapPin, Pencil, Phone, ShieldCheck, Trash2, User, UserCheck, UserSquare, Users, Briefcase, CalendarCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import type { Employee } from '@/lib/types';
+import type { Employee, LeaveRequest } from '@/lib/types';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,6 +32,29 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useToast } from '@/hooks/use-toast';
 import { deleteEmployee } from '@/actions/employees';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+
+
+const getStatusVariant = (status: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
+  switch (status) {
+    case 'Approved':
+      return 'default';
+    case 'Pending':
+      return 'secondary';
+    case 'Rejected':
+      return 'destructive';
+    default:
+      return 'outline';
+  }
+};
+
 
 // The employee object passed here should have dates pre-formatted as strings
 export default function EmployeeProfileClientPage({ employee }: { employee: Employee & { dateOfBirth?: string, messEntryDate?: string, contractStartDate?: string, contractEndDate?: string } }) {
@@ -81,7 +104,7 @@ export default function EmployeeProfileClientPage({ employee }: { employee: Empl
     );
   };
 
-  const getStatusVariant = (status?: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
+  const getEmployeeStatusVariant = (status?: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
       switch (status) {
           case 'active':
               return 'default';
@@ -213,7 +236,7 @@ export default function EmployeeProfileClientPage({ employee }: { employee: Empl
                     <div>
                         <p className="font-semibold text-sm">Status Karyawan</p>
                         {employee.employeeStatus ? (
-                             <Badge variant={getStatusVariant(employee.employeeStatus)} className="capitalize mt-1">
+                             <Badge variant={getEmployeeStatusVariant(employee.employeeStatus)} className="capitalize mt-1">
                                 {employee.employeeStatus}
                             </Badge>
                         ) : <p className="text-muted-foreground">N/A</p>}
@@ -240,6 +263,46 @@ export default function EmployeeProfileClientPage({ employee }: { employee: Empl
              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
                  <DetailItem icon={<Calendar className="h-5 w-5"/>} label="Contract Start Date" value={employee.contractStartDate} />
                 <DetailItem icon={<Calendar className="h-5 w-5"/>} label="Contract End Date" value={employee.contractEndDate} />
+            </CardContent>
+        </Card>
+        
+        <Card className="lg:col-span-3">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><CalendarCheck className="h-5 w-5"/> Leave History</CardTitle>
+            </CardHeader>
+            <CardContent>
+                 <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Start Date</TableHead>
+                            <TableHead>End Date</TableHead>
+                            <TableHead>Type</TableHead>
+                            <TableHead>Reason</TableHead>
+                            <TableHead>Status</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {employee.leaveHistory && employee.leaveHistory.length > 0 ? (
+                            employee.leaveHistory.map((req) => (
+                                <TableRow key={req.id}>
+                                    <TableCell>{req.startDate as string}</TableCell>
+                                    <TableCell>{req.endDate as string}</TableCell>
+                                    <TableCell>{req.type}</TableCell>
+                                    <TableCell className="max-w-xs truncate">{req.reason}</TableCell>
+                                    <TableCell>
+                                        <Badge variant={getStatusVariant(req.status)}>{req.status}</Badge>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell colSpan={5} className="h-24 text-center">
+                                    No leave history found.
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
             </CardContent>
         </Card>
 

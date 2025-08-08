@@ -35,6 +35,7 @@ export type Employee = {
   siteLocation?: string;
   onLeave?: boolean;
   daysActive?: number;
+  leaveHistory?: LeaveRequest[];
 };
 
 export type CalendarEvent = {
