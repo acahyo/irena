@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import type { Employee } from '@/lib/types';
+import type { Employee, LeaveRequest } from '@/lib/types';
 import { EmployeeCard } from '@/components/employee-card';
 import { Input } from '@/components/ui/input';
 import {
@@ -18,6 +18,7 @@ import { PlusCircle, Search, Upload, Download, Loader2 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
 import { getEmployees } from '@/actions/employees';
+import { getLeaveRequests } from '@/actions/leave';
 
 
 export default function EmployeeDirectoryPage() {
@@ -29,14 +30,43 @@ export default function EmployeeDirectoryPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    const fetchEmployees = async () => {
+    const fetchInitialData = async () => {
       setLoading(true);
-      const fetchedEmployees = await getEmployees();
-      setEmployees(fetchedEmployees);
-      setLoading(false);
+      try {
+        const [fetchedEmployees, leaveRequests] = await Promise.all([
+          getEmployees(),
+          getLeaveRequests(),
+        ]);
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const approvedLeave = leaveRequests.filter(
+          (req) =>
+            req.status === 'Approved' &&
+            new Date(req.startDate) <= today &&
+            new Date(req.endDate) >= today
+        );
+        
+        const employeesWithLeaveStatus = fetchedEmployees.map((emp) => ({
+          ...emp,
+          onLeave: approvedLeave.some((req) => req.employeeId === emp.id),
+        }));
+        
+        setEmployees(employeesWithLeaveStatus);
+
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Failed to fetch employee or leave data.'
+        })
+      } finally {
+        setLoading(false);
+      }
     };
-    fetchEmployees();
-  }, []);
+    fetchInitialData();
+  }, [toast]);
 
   const departments = useMemo(() => {
     const allDepartments = employees.map((emp) => emp.department).filter(Boolean);
@@ -168,4 +198,3 @@ export default function EmployeeDirectoryPage() {
     </div>
   );
 }
-

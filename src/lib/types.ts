@@ -32,6 +32,7 @@ export type Employee = {
   contractEndDate?: Date;
   position?: string;
   siteLocation?: string;
+  onLeave?: boolean;
 };
 
 export type CalendarEvent = {
