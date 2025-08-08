@@ -1,7 +1,21 @@
 
+
 import { getEmployees } from '@/actions/employees';
 import { getLeaveRequests } from '@/actions/leave';
 import EmployeeDirectoryClientPage from './client-page';
+import { format, parseISO } from 'date-fns';
+
+const formatDate = (date: string | Date | undefined): string | undefined => {
+  if (!date) return undefined;
+  const dateObj = typeof date === 'string' ? parseISO(date) : date;
+  try {
+    return format(dateObj, 'PP');
+  } catch (error) {
+    console.error('Invalid date format:', date);
+    return 'Invalid Date';
+  }
+};
+
 
 export default async function EmployeeDirectoryPage() {
   const [fetchedEmployees, leaveRequests] = await Promise.all([
@@ -21,6 +35,8 @@ export default async function EmployeeDirectoryPage() {
     
     const employeesWithLeaveStatus = fetchedEmployees.map((emp) => ({
       ...emp,
+      contractStartDate: formatDate(emp.contractStartDate),
+      contractEndDate: formatDate(emp.contractEndDate),
       onLeave: approvedLeave.some((req) => req.employeeId === emp.id),
     }));
 

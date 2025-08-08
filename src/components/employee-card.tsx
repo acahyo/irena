@@ -1,6 +1,6 @@
 
+
 import Link from 'next/link';
-import { format } from 'date-fns';
 import type { Employee } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -15,16 +15,7 @@ import { Phone, Building, Calendar, Briefcase, User } from 'lucide-react';
 import { Badge } from './ui/badge';
 
 interface EmployeeCardProps {
-  employee: Employee;
-}
-
-const formatDate = (date: Date | string | undefined) => {
-    if (!date) return 'N/A';
-    try {
-        return format(new Date(date), 'PP');
-    } catch (error) {
-        return 'Invalid Date';
-    }
+  employee: Employee & { contractStartDate?: string, contractEndDate?: string };
 }
 
 export function EmployeeCard({ employee }: EmployeeCardProps) {
@@ -57,11 +48,11 @@ export function EmployeeCard({ employee }: EmployeeCardProps) {
         <CardFooter className="flex-col items-start gap-2 text-xs text-muted-foreground border-t pt-4">
              <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
-                <span>Mulai: {formatDate(employee.contractStartDate)}</span>
+                <span>Mulai: {employee.contractStartDate || 'N/A'}</span>
             </div>
              <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
-                <span>Selesai: {formatDate(employee.contractEndDate)}</span>
+                <span>Selesai: {employee.contractEndDate || 'N/A'}</span>
             </div>
         </CardFooter>
       </Card>
