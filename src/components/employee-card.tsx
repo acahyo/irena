@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Phone, Building, Calendar, Briefcase, User } from 'lucide-react';
+import { Phone, Building, Calendar, User, FileText } from 'lucide-react';
 import { Badge } from './ui/badge';
 
 interface EmployeeCardProps {
@@ -33,6 +33,7 @@ export function EmployeeCard({ employee }: EmployeeCardProps) {
             <div className="w-full truncate pt-4">
               <CardTitle className="truncate">{employee.name}</CardTitle>
               <CardDescription className="truncate">{employee.position || 'No position'}</CardDescription>
+              <CardDescription className="truncate text-xs pt-1">{employee.idCardNumber || 'No ID Card'}</CardDescription>
             </div>
         </CardHeader>
         <CardContent className="flex-grow space-y-2 text-sm text-muted-foreground">
