@@ -34,6 +34,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { MoreHorizontal, PlusCircle, Loader2, Trash2, Pencil } from 'lucide-react';
 import { getPositions, deletePosition } from '@/actions/positions';
