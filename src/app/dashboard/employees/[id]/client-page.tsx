@@ -16,7 +16,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Building2, Calendar, FileText, Heart, Home, Landmark, Mail, MapPin, Pencil, Phone, ShieldCheck, Trash2, User, UserCheck, UserSquare, Users } from 'lucide-react';
+import { ArrowLeft, Building2, Calendar, FileText, Heart, Home, Landmark, Mail, MapPin, Pencil, Phone, ShieldCheck, Trash2, User, UserCheck, UserSquare, Users, Briefcase } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import type { Employee } from '@/lib/types';
@@ -229,6 +229,7 @@ export default function EmployeeProfileClientPage({ employee }: { employee: Empl
             <CardContent className="space-y-4">
                 <DetailItem icon={<Home className="h-5 w-5"/>} label="Mess Room" value={employee.messRoomNumber} />
                 <DetailItem icon={<Calendar className="h-5 w-5"/>} label="Mess Entry Date" value={employee.messEntryDate ? format(employee.messEntryDate, 'PPP') : undefined} />
+                <DetailItem icon={<Briefcase className="h-5 w-5"/>} label="Peralatan Kerja" value={employee.workEquipment} />
             </CardContent>
         </Card>
 

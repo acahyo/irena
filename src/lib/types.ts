@@ -27,6 +27,7 @@ export type Employee = {
   idCardNumber?: string;
   messRoomNumber?: string;
   messEntryDate?: Date;
+  workEquipment?: string;
   contractStartDate?: Date;
   contractEndDate?: Date;
   position?: string;

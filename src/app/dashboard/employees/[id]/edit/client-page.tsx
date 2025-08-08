@@ -36,6 +36,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import type { Employee, Department, Position } from '@/lib/types';
 import { updateEmployee } from '@/actions/employees';
+import { Textarea } from '@/components/ui/textarea';
 
 
 export default function EditEmployeePageClient({ employee, departments, positions }: { employee: Employee, departments: Department[], positions: Position[] }) {
@@ -334,6 +335,11 @@ export default function EditEmployeePageClient({ employee, departments, position
                <div className="space-y-2">
                 <Label htmlFor="siteLocation">Lokasi/Site</Label>
                 <Input id="siteLocation" name="siteLocation" placeholder="e.g. Site A" defaultValue={employee.siteLocation} />
+              </div>
+              
+              <div className="space-y-2 md:col-span-3">
+                <Label htmlFor="workEquipment">Peralatan Kerja</Label>
+                <Textarea id="workEquipment" name="workEquipment" placeholder="e.g. Laptop, Mouse, Keyboard" defaultValue={employee.workEquipment} />
               </div>
 
                <div className="space-y-2">

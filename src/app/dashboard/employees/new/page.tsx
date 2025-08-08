@@ -36,6 +36,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { departments, positions } from '@/lib/data';
 import { createEmployee } from '@/actions/employees';
 import type { Employee } from '@/lib/types';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function NewEmployeePage() {
   const router = useRouter();
@@ -331,6 +332,11 @@ export default function NewEmployeePage() {
                <div className="space-y-2">
                 <Label htmlFor="siteLocation">Lokasi/Site Kerja</Label>
                 <Input id="siteLocation" name="siteLocation" placeholder="e.g. Site A" />
+              </div>
+
+               <div className="space-y-2 md:col-span-3">
+                <Label htmlFor="workEquipment">Peralatan Kerja</Label>
+                <Textarea id="workEquipment" name="workEquipment" placeholder="e.g. Laptop, Mouse, Keyboard" />
               </div>
               
               <div className="space-y-2">
