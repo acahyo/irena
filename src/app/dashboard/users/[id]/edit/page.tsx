@@ -1,12 +1,11 @@
 
-import React from 'react';
 import { notFound } from 'next/navigation';
-import { users } from '@/lib/data';
+import { getUser } from '@/actions/users';
 import { getRoles } from '@/actions/roles';
 import EditUserClientPage from './client-page';
 
 export default async function EditUserPage({ params }: { params: { id: string } }) {
-    const user = users.find((u) => u.id === params.id);
+    const user = await getUser(params.id);
 
     if (!user) {
         notFound();

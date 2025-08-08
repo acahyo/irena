@@ -1,11 +1,11 @@
 
 'use client';
 
-import React from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -18,19 +18,39 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { User, Role } from '@/lib/types';
+import { updateUser } from '@/actions/users';
 
 export default function EditUserClientPage({ user, roles }: { user: User, roles: Role[] }) {
     const router = useRouter();
     const { toast } = useToast();
+    const [loading, setLoading] = useState(false);
 
-    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        console.log('Form submitted for update');
-        toast({
-            title: 'Success!',
-            description: 'User has been updated.',
-        });
-        router.push('/dashboard/users');
+        setLoading(true);
+
+        const formData = new FormData(event.currentTarget);
+        const name = formData.get('name') as string;
+        const email = formData.get('email') as string;
+        const role = formData.get('role') as string;
+
+        try {
+            await updateUser(user.id, { name, email, role });
+            toast({
+                title: 'Success!',
+                description: 'User has been updated.',
+            });
+            router.push('/dashboard/users');
+            router.refresh();
+        } catch (error) {
+             toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'Failed to update user.',
+            });
+        } finally {
+            setLoading(false);
+        }
     };
 
   return (
@@ -66,7 +86,7 @@ export default function EditUserClientPage({ user, roles }: { user: User, roles:
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="role">Role</Label>
-                        <Select name="role" defaultValue={user.role}>
+                        <Select name="role" defaultValue={user.role} required>
                             <SelectTrigger id="role">
                                 <SelectValue placeholder="Select a role" />
                             </SelectTrigger>
@@ -79,10 +99,11 @@ export default function EditUserClientPage({ user, roles }: { user: User, roles:
                     </div>
                 </div>
                  <div className="flex justify-end gap-2 pt-4">
-                    <Button type="button" variant="outline" onClick={() => router.back()}>
+                    <Button type="button" variant="outline" onClick={() => router.back()} disabled={loading}>
                         Cancel
                     </Button>
-                    <Button type="submit">
+                    <Button type="submit" disabled={loading}>
+                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Update User
                     </Button>
                 </div>
