@@ -48,13 +48,14 @@ const navItems = [
 export default function DashboardClientLayout({
   children,
   settings,
-  activeLabelProvider,
 }: {
   children: React.ReactNode;
   settings: AppSettings;
-  activeLabelProvider: (pathname: string) => string;
 }) {
   const pathname = usePathname();
+
+  const activeLabel = navItems.find(item => item.exact ? pathname === item.href : pathname.startsWith(item.href))?.label || settings.appName || 'Staff Hub';
+
 
   return (
     <SidebarProvider>
@@ -117,7 +118,7 @@ export default function DashboardClientLayout({
           <SidebarTrigger className="flex md:hidden" />
           <div className="flex-1">
              <h1 className="text-lg font-semibold">
-                {activeLabelProvider(pathname)}
+                {activeLabel}
             </h1>
           </div>
         </header>
