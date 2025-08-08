@@ -33,9 +33,15 @@ export default function EditUserClientPage({ user, roles }: { user: User, roles:
         const name = formData.get('name') as string;
         const email = formData.get('email') as string;
         const role = formData.get('role') as string;
+        const password = formData.get('password') as string;
+
+        const userData: Partial<User> = { name, email, role };
+        if (password) {
+            userData.password = password;
+        }
 
         try {
-            await updateUser(user.id, { name, email, role });
+            await updateUser(user.id, userData);
             toast({
                 title: 'Success!',
                 description: 'User has been updated.',

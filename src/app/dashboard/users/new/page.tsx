@@ -51,11 +51,10 @@ export default function NewUserPage() {
         const name = formData.get('name') as string;
         const email = formData.get('email') as string;
         const role = formData.get('role') as string;
-        // Password handling should be done securely, this is a placeholder
-        // const password = formData.get('password') as string;
+        const password = formData.get('password') as string;
 
         try {
-            await createUser({ name, email, role });
+            await createUser({ name, email, role, password });
             toast({
                 title: 'Success!',
                 description: 'New user has been added.',

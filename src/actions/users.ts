@@ -1,6 +1,7 @@
 
 'use server';
 
+import { createHash } from 'crypto';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import type { User } from '@/lib/types';
@@ -10,7 +11,10 @@ export async function getUsers(): Promise<User[]> {
   const querySnapshot = await getDocs(collection(db, 'users'));
   const users: User[] = [];
   querySnapshot.forEach((doc) => {
-    users.push({ id: doc.id, ...doc.data() } as User);
+    const data = doc.data();
+    // Ensure password is not sent to the client
+    delete data.password;
+    users.push({ id: doc.id, ...data } as User);
   });
   return users.sort((a, b) => a.name.localeCompare(b.name));
 }
@@ -21,7 +25,10 @@ export async function getUser(id: string): Promise<User | null> {
   const docSnap = await getDoc(docRef);
 
   if (docSnap.exists()) {
-    return { id: docSnap.id, ...docSnap.data() } as User;
+    const data = docSnap.data();
+    // Ensure password is not sent to the client
+    delete data.password;
+    return { id: docSnap.id, ...data } as User;
   } else {
     return null;
   }
@@ -29,16 +36,25 @@ export async function getUser(id: string): Promise<User | null> {
 
 // Create a new user
 export async function createUser(user: Omit<User, 'id'>): Promise<string> {
-  // In a real app, you would hash the password here before saving
+    if (user.password) {
+        user.password = createHash('md5').update(user.password).digest('hex');
+    }
   const docRef = await addDoc(collection(db, 'users'), user);
   return docRef.id;
 }
 
 // Update an existing user
 export async function updateUser(id: string, user: Partial<User>): Promise<void> {
-  // In a real app, you would handle password changes separately and hash new passwords
   const docRef = doc(db, 'users', id);
-  await updateDoc(docRef, user);
+  const userData = { ...user };
+  // Hash password only if it's being changed (i.e., it's not empty)
+  if (userData.password) {
+      userData.password = createHash('md5').update(userData.password).digest('hex');
+  } else {
+      // Avoid overwriting the existing password with an empty one
+      delete userData.password;
+  }
+  await updateDoc(docRef, userData);
 }
 
 // Delete a user

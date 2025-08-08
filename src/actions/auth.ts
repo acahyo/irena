@@ -1,6 +1,7 @@
 
 'use server';
 
+import { createHash } from 'crypto';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import type { User } from '@/lib/types';
@@ -21,10 +22,11 @@ export async function authenticateUser({ email, password }: Pick<User, 'email' |
 
         const userDoc = querySnapshot.docs[0];
         const user = userDoc.data() as User;
+        
+        // Hash the provided password with MD5 to compare with the stored hash
+        const hashedPassword = createHash('md5').update(password).digest('hex');
 
-        // In a real app, passwords should be hashed and compared securely.
-        // This is a simple comparison for demonstration purposes.
-        if (user.password !== password) {
+        if (user.password !== hashedPassword) {
             return { success: false, message: 'Invalid email or password.' };
         }
 
