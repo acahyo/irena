@@ -52,7 +52,8 @@ const hexToHslString = (hex: string | undefined): string | undefined => {
 
 export default function SettingsPage() {
     const { toast } = useToast();
-    const [settings, setSettings] = useState<AppSettings | null>(null);
+    const [settings, setSettings] = useState<Omit<AppSettings, 'logo'> | null>(null);
+    const [logoPreview, setLogoPreview] = useState<string | undefined | null>(null);
     const [loading, setLoading] = useState(false);
     const [pageLoading, setPageLoading] = useState(true);
 
@@ -61,7 +62,9 @@ export default function SettingsPage() {
             setPageLoading(true);
             try {
                 const data = await getSettings();
-                setSettings(data);
+                const { logo, ...rest } = data;
+                setSettings(rest);
+                setLogoPreview(logo);
             } catch (error) {
                 toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch settings.' });
             } finally {
@@ -76,11 +79,11 @@ export default function SettingsPage() {
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                setSettings(prev => prev ? { ...prev, logo: reader.result as string } : { logo: reader.result as string });
+                setLogoPreview(reader.result as string);
             };
             reader.readAsDataURL(file);
         } else {
-            setSettings(prev => prev ? { ...prev, logo: '' } : { logo: '' });
+             setLogoPreview(null);
         }
     };
     
@@ -95,7 +98,11 @@ export default function SettingsPage() {
         setLoading(true);
         
         try {
-            const { id, ...settingsToSave } = settings;
+            const settingsToSave: Omit<AppSettings, 'id'> = {
+                ...settings,
+                logo: logoPreview || '',
+            };
+
             await saveSettings(settingsToSave);
 
             // Update CSS variables dynamically
@@ -189,7 +196,7 @@ export default function SettingsPage() {
                             <Label>Application Logo</Label>
                             <div className="flex items-center gap-4">
                                 <Avatar className="h-24 w-24 rounded-md">
-                                    <AvatarImage src={settings.logo || undefined} alt="App Logo" className="object-contain" />
+                                    <AvatarImage src={logoPreview || undefined} alt="App Logo" className="object-contain" />
                                     <AvatarFallback className="rounded-md">
                                         <Upload className="h-8 w-8 text-muted-foreground" />
                                     </AvatarFallback>
@@ -207,12 +214,12 @@ export default function SettingsPage() {
 
                         <div className="space-y-2">
                             <Label htmlFor="appName">Application Name</Label>
-                            <Input id="appName" name="appName" value={settings.appName} onChange={handleInputChange} />
+                            <Input id="appName" name="appName" value={settings.appName || ''} onChange={handleInputChange} />
                         </div>
 
                         <div className="space-y-2">
                             <Label htmlFor="appDescription">Application Description</Label>
-                            <Textarea id="appDescription" name="appDescription" value={settings.appDescription} onChange={handleInputChange} />
+                            <Textarea id="appDescription" name="appDescription" value={settings.appDescription || ''} onChange={handleInputChange} />
                         </div>
 
                         <Card>
