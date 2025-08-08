@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from 'react';
@@ -33,21 +34,22 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { departments, positions } from '@/lib/data';
-import { createEmployee } from '@/actions/employees';
-import type { Employee } from '@/lib/types';
+import type { Employee, Department, Position } from '@/lib/types';
+import { updateEmployee } from '@/actions/employees';
 
-export default function NewEmployeePage() {
+
+export default function EditEmployeePageClient({ employee, departments, positions }: { employee: Employee, departments: Department[], positions: Position[] }) {
   const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>();
-  const [messEntryDate, setMessEntryDate] = useState<Date | undefined>();
-  const [contractStartDate, setContractStartDate] = useState<Date | undefined>();
-  const [contractEndDate, setContractEndDate] = useState<Date | undefined>();
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [simPreview, setSimPreview] = useState<string | null>(null);
-  const [sioPreview, setSioPreview] = useState<string | null>(null);
+  
+  const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(employee.dateOfBirth);
+  const [messEntryDate, setMessEntryDate] = useState<Date | undefined>(employee.messEntryDate);
+  const [contractStartDate, setContractStartDate] = useState<Date | undefined>(employee.contractStartDate);
+  const [contractEndDate, setContractEndDate] = useState<Date | undefined>(employee.contractEndDate);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(employee.avatar || null);
+  const [simPreview, setSimPreview] = useState<string | null>(employee.simPhoto || null);
+  const [sioPreview, setSioPreview] = useState<string | null>(employee.sioPhoto || null);
 
   const handleFileChange = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -85,18 +87,19 @@ export default function NewEmployeePage() {
     } as Partial<Employee>;
     
     try {
-        await createEmployee(employeeData);
+        await updateEmployee(employee.id, employeeData);
         toast({
             title: 'Success!',
-            description: 'New employee has been added.',
+            description: 'Employee data has been updated.',
         });
-        router.push('/dashboard');
+        router.push(`/dashboard/employees/${employee.id}`);
+        router.refresh(); // Refresh to show updated data
     } catch (error) {
         console.error(error);
         toast({
             variant: 'destructive',
             title: 'Error',
-            description: 'Failed to add new employee.',
+            description: 'Failed to update employee.',
         });
     } finally {
         setLoading(false);
@@ -165,17 +168,17 @@ export default function NewEmployeePage() {
   return (
     <div className="space-y-6">
       <Button asChild variant="outline" size="sm">
-        <Link href="/dashboard">
+        <Link href={`/dashboard/employees/${employee.id}`}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Employees
+          Back to Employee Details
         </Link>
       </Button>
 
       <Card>
         <CardHeader>
-          <CardTitle>Add New Employee</CardTitle>
+          <CardTitle>Edit Employee</CardTitle>
           <CardDescription>
-            Fill out the form below to add a new employee to the directory.
+            Update the form below to edit the employee's details.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -187,15 +190,15 @@ export default function NewEmployeePage() {
 
               <div className="space-y-2">
                 <Label htmlFor="nik">NIK</Label>
-                <Input id="nik" name="nik" placeholder="e.g. 3201..." required />
+                <Input id="nik" name="nik" placeholder="e.g. 3201..." required defaultValue={employee.nik} />
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="name">Full Name</Label>
-                <Input id="name" name="name" placeholder="e.g. John Doe" required />
+                <Input id="name" name="name" placeholder="e.g. John Doe" required defaultValue={employee.name} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="placeOfBirth">Tempat Lahir</Label>
-                <Input id="placeOfBirth" name="placeOfBirth" placeholder="e.g. Jakarta" required />
+                <Input id="placeOfBirth" name="placeOfBirth" placeholder="e.g. Jakarta" required defaultValue={employee.placeOfBirth} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="dateOfBirth">Tanggal Lahir</Label>
@@ -203,7 +206,7 @@ export default function NewEmployeePage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="maritalStatus">Status Perkawinan</Label>
-                <Select name="maritalStatus">
+                <Select name="maritalStatus" defaultValue={employee.maritalStatus}>
                   <SelectTrigger id="maritalStatus">
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
@@ -217,34 +220,34 @@ export default function NewEmployeePage() {
               </div>
               <div className="space-y-2 md:col-span-3">
                 <Label htmlFor="address">Alamat</Label>
-                <Input id="address" name="address" placeholder="e.g. 123 Main St, Anytown" required />
+                <Input id="address" name="address" placeholder="e.g. 123 Main St, Anytown" required defaultValue={employee.address} />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="emergencyContactName">Nama Kontak Darurat</Label>
-                <Input id="emergencyContactName" name="emergencyContactName" placeholder="e.g. Jane Doe" required />
+                <Input id="emergencyContactName" name="emergencyContactName" placeholder="e.g. Jane Doe" required defaultValue={employee.emergencyContactName} />
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="emergencyContactNumber">Nomor Kontak Darurat</Label>
-                <Input id="emergencyContactNumber" name="emergencyContactNumber" placeholder="e.g. 08123456789" required />
+                <Input id="emergencyContactNumber" name="emergencyContactNumber" placeholder="e.g. 08123456789" required defaultValue={employee.emergencyContactNumber} />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="bankName">Nama Bank</Label>
-                <Input id="bankName" name="bankName" placeholder="e.g. Bank Central Asia" required />
+                <Input id="bankName" name="bankName" placeholder="e.g. Bank Central Asia" required defaultValue={employee.bankName} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="accountNumber">Nomor Rekening</Label>
-                <Input id="accountNumber" name="accountNumber" placeholder="e.g. 1234567890" required />
+                <Input id="accountNumber" name="accountNumber" placeholder="e.g. 1234567890" required defaultValue={employee.accountNumber} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="accountHolderName">Nama Rekening</Label>
-                <Input id="accountHolderName" name="accountHolderName" placeholder="e.g. John Doe" required />
+                <Input id="accountHolderName" name="accountHolderName" placeholder="e.g. John Doe" required defaultValue={employee.accountHolderName} />
               </div>
 
               <div className="space-y-2 md:col-span-3">
                 <Label>Status BPJS</Label>
-                <RadioGroup name="bpjsStatus" className="flex gap-4">
+                <RadioGroup name="bpjsStatus" className="flex gap-4" defaultValue={employee.bpjsStatus}>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="active" id="bpjs-active" />
                     <Label htmlFor="bpjs-active">Aktif</Label>
@@ -263,15 +266,15 @@ export default function NewEmployeePage() {
 
               <div className="space-y-2">
                 <Label htmlFor="simperNumber">Nomor Simper</Label>
-                <Input id="simperNumber" name="simperNumber" placeholder="e.g. 12345" />
+                <Input id="simperNumber" name="simperNumber" placeholder="e.g. 12345" defaultValue={employee.simperNumber} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="idCardNumber">Nomor ID Card</Label>
-                <Input id="idCardNumber" name="idCardNumber" placeholder="e.g. 67890" />
+                <Input id="idCardNumber" name="idCardNumber" placeholder="e.g. 67890" defaultValue={employee.idCardNumber} />
               </div>
                <div className="space-y-2">
                 <Label htmlFor="position">Jabatan</Label>
-                 <Select name="position">
+                 <Select name="position" defaultValue={employee.position}>
                   <SelectTrigger id="position">
                     <SelectValue placeholder="Select position" />
                   </SelectTrigger>
@@ -285,7 +288,7 @@ export default function NewEmployeePage() {
 
               <div className="space-y-2">
                 <Label htmlFor="messRoomNumber">Nomor Kamar/Mes</Label>
-                <Input id="messRoomNumber" name="messRoomNumber" placeholder="e.g. A-101" />
+                <Input id="messRoomNumber" name="messRoomNumber" placeholder="e.g. A-101" defaultValue={employee.messRoomNumber} />
               </div>
                <div className="space-y-2">
                 <Label htmlFor="messEntryDate">Tanggal Masuk Mes</Label>
@@ -293,7 +296,7 @@ export default function NewEmployeePage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="department">Departemen</Label>
-                 <Select name="department">
+                 <Select name="department" defaultValue={employee.department}>
                   <SelectTrigger id="department">
                     <SelectValue placeholder="Select department" />
                   </SelectTrigger>
@@ -315,12 +318,12 @@ export default function NewEmployeePage() {
               </div>
                <div className="space-y-2">
                 <Label htmlFor="siteLocation">Lokasi/Site</Label>
-                <Input id="siteLocation" name="siteLocation" placeholder="e.g. Site A" />
+                <Input id="siteLocation" name="siteLocation" placeholder="e.g. Site A" defaultValue={employee.siteLocation} />
               </div>
-              
-              <div className="space-y-2">
+
+               <div className="space-y-2">
                 <Label htmlFor="employeeStatus">Employee Status</Label>
-                <Select name="employeeStatus">
+                <Select name="employeeStatus" defaultValue={employee.employeeStatus}>
                   <SelectTrigger id="employeeStatus">
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
@@ -340,8 +343,8 @@ export default function NewEmployeePage() {
                 Cancel
               </Button>
               <Button type="submit" disabled={loading}>
-                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Save Employee
+                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Update Employee
               </Button>
             </div>
           </form>

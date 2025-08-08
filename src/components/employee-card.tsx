@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import type { Employee } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -31,7 +32,7 @@ export function EmployeeCard({ employee }: EmployeeCardProps) {
         </CardHeader>
         <CardContent>
           <div className="text-sm text-muted-foreground">
-            <p>{employee.department}</p>
+            <p>{employee.department || 'No department'}</p>
           </div>
         </CardContent>
       </Card>

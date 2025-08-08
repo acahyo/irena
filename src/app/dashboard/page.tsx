@@ -1,9 +1,8 @@
 
 'use client';
 
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { employees } from '@/lib/data';
 import type { Employee } from '@/lib/types';
 import { EmployeeCard } from '@/components/employee-card';
 import { Input } from '@/components/ui/input';
@@ -15,21 +14,34 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Search, Upload, Download } from 'lucide-react';
+import { PlusCircle, Search, Upload, Download, Loader2 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
+import { getEmployees } from '@/actions/employees';
 
 
 export default function EmployeeDirectoryPage() {
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('all');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  const departments = useMemo(() => {
-    const allDepartments = employees.map((emp) => emp.department);
-    return ['all', ...Array.from(new Set(allDepartments))];
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      setLoading(true);
+      const fetchedEmployees = await getEmployees();
+      setEmployees(fetchedEmployees);
+      setLoading(false);
+    };
+    fetchEmployees();
   }, []);
+
+  const departments = useMemo(() => {
+    const allDepartments = employees.map((emp) => emp.department).filter(Boolean);
+    return ['all', ...Array.from(new Set(allDepartments as string[]))];
+  }, [employees]);
 
   const filteredEmployees = useMemo(() => {
     return employees.filter((employee: Employee) => {
@@ -40,7 +52,7 @@ export default function EmployeeDirectoryPage() {
         departmentFilter === 'all' || employee.department === departmentFilter;
       return matchesSearch && matchesDepartment;
     });
-  }, [searchTerm, departmentFilter]);
+  }, [searchTerm, departmentFilter, employees]);
 
   const handleExport = () => {
     const worksheet = XLSX.utils.json_to_sheet(filteredEmployees);
@@ -135,7 +147,11 @@ export default function EmployeeDirectoryPage() {
         </div>
       </div>
 
-      {filteredEmployees.length > 0 ? (
+      {loading ? (
+        <div className="flex justify-center items-center h-48">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : filteredEmployees.length > 0 ? (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredEmployees.map((employee) => (
             <EmployeeCard key={employee.id} employee={employee} />
@@ -145,10 +161,11 @@ export default function EmployeeDirectoryPage() {
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-12 text-center">
             <h3 className="text-2xl font-bold tracking-tight">No employees found</h3>
             <p className="text-sm text-muted-foreground">
-                Try adjusting your search or filter criteria.
+                Try adjusting your search or filter criteria or add a new employee.
             </p>
         </div>
       )}
     </div>
   );
 }
+

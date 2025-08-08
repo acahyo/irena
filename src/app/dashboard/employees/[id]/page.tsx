@@ -1,11 +1,12 @@
 
-import { employees } from '@/lib/data';
+
+import { getEmployee } from '@/actions/employees';
 import { notFound } from 'next/navigation';
 import EmployeeProfileClientPage from './client-page';
 
 
-export default function EmployeeProfilePage({ params }: { params: { id: string } }) {
-  const employee = employees.find((e) => e.id === params.id);
+export default async function EmployeeProfilePage({ params }: { params: { id: string } }) {
+  const employee = await getEmployee(params.id);
 
   if (!employee) {
     notFound();

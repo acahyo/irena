@@ -1,7 +1,7 @@
 
+
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -32,19 +32,28 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { useToast } from '@/hooks/use-toast';
+import { deleteEmployee } from '@/actions/employees';
 
 export default function EmployeeProfileClientPage({ employee }: { employee: Employee }) {
     const router = useRouter();
     const { toast } = useToast();
 
-    const handleRemove = () => {
-        // Here you would typically handle the deletion from your backend.
-        console.log(`Removing employee: ${employee.name}`);
-        toast({
-            title: 'Success!',
-            description: `Employee ${employee.name} has been removed.`,
-        });
-        router.push('/dashboard');
+    const handleRemove = async () => {
+        try {
+            await deleteEmployee(employee.id);
+            toast({
+                title: 'Success!',
+                description: `Employee ${employee.name} has been removed.`,
+            });
+            router.push('/dashboard');
+            router.refresh();
+        } catch (error) {
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'Failed to remove employee.',
+            });
+        }
     };
 
   const DetailItem = ({ icon, label, value }: { icon: React.ReactNode, label: string, value?: string | null }) => {
