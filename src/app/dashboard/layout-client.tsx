@@ -32,27 +32,38 @@ import {
   CalendarCheck,
   LayoutDashboard,
 } from "lucide-react";
-import type { AppSettings } from "@/lib/types";
+import type { AppSettings, User } from "@/lib/types";
 
-const navItems = [
-  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", exact: true },
-  { href: "/dashboard/employees", icon: Users, label: "Employees" },
-  { href: "/dashboard/leave-schedule", icon: CalendarCheck, label: "Jadwal Cuti" },
-  { href: "/dashboard/department", icon: Briefcase, label: "Department" },
-  { href: "/dashboard/position", icon: Shield, label: "Position" },
-  { href: "/dashboard/users", icon: UsersRound, label: "Users" },
-  { href: "/dashboard/roles", icon: ShieldCheck, label: "Roles" },
-  { href: "/dashboard/settings", icon: Settings, label: "Settings" },
+const allNavItems = [
+  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", exact: true, roles: ["Administrator", "HR"] },
+  { href: "/dashboard/employees", icon: Users, label: "Employees", roles: ["Administrator", "HR"] },
+  { href: "/dashboard/leave-schedule", icon: CalendarCheck, label: "Jadwal Cuti", roles: ["Administrator", "HR"] },
+  { href: "/dashboard/department", icon: Briefcase, label: "Department", roles: ["Administrator", "HR"] },
+  { href: "/dashboard/position", icon: Shield, label: "Position", roles: ["Administrator", "HR"] },
+  { href: "/dashboard/users", icon: UsersRound, label: "Users", roles: ["Administrator"] },
+  { href: "/dashboard/roles", icon: ShieldCheck, label: "Roles", roles: ["Administrator"] },
+  { href: "/dashboard/settings", icon: Settings, label: "Settings", roles: ["Administrator"] },
 ];
 
 export default function DashboardClientLayout({
   children,
   settings,
+  user,
 }: {
   children: React.ReactNode;
   settings: AppSettings;
+  user: User;
 }) {
   const pathname = usePathname();
+  
+  const userRole = user?.role || '';
+
+  const navItems = allNavItems.filter(item => {
+    if (!item.roles) return true; // Visible to all if no roles are specified
+    // Admin can see everything
+    if (userRole.toLowerCase().includes('admin')) return true;
+    return item.roles.includes(userRole);
+  });
 
   const activeLabel = navItems.find(item => item.exact ? pathname === item.href : pathname.startsWith(item.href))?.label || settings.appName || 'Staff Hub';
 
@@ -93,15 +104,15 @@ export default function DashboardClientLayout({
         <SidebarFooter>
           <div className="flex items-center gap-2">
             <Avatar className="h-8 w-8">
-              <AvatarImage src="https://placehold.co/100x100/877795/FFFFFF" alt="Admin" />
-              <AvatarFallback>A</AvatarFallback>
+              <AvatarImage src="https://placehold.co/100x100/877795/FFFFFF" alt={user.name} />
+              <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col text-sm">
               <span className="font-semibold text-sidebar-foreground">
-                Admin User
+                {user.name}
               </span>
               <span className="text-sidebar-foreground/70">
-                admin@staffhub.com
+                {user.email}
               </span>
             </div>
           </div>
