@@ -85,7 +85,13 @@ export default function EmployeeDirectoryPage() {
   }, [searchTerm, departmentFilter, employees]);
 
   const handleExport = () => {
-    const worksheet = XLSX.utils.json_to_sheet(filteredEmployees);
+    // Remove image data before exporting to prevent errors with long base64 strings
+    const employeesForExport = filteredEmployees.map(emp => {
+      const { avatar, ktpPhoto, simPhoto, sioPhoto, ...rest } = emp;
+      return rest;
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(employeesForExport);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Employees");
     XLSX.writeFile(workbook, "EmployeeData.xlsx");
