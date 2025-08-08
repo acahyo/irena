@@ -1,6 +1,7 @@
 
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
@@ -16,11 +17,22 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { roles } from '@/lib/data';
+import { getRoles } from '@/actions/roles';
+import type { Role } from '@/lib/types';
+
 
 export default function NewUserPage() {
     const router = useRouter();
     const { toast } = useToast();
+    const [roles, setRoles] = useState<Role[]>([]);
+
+    useEffect(() => {
+        const fetchRoles = async () => {
+            const fetchedRoles = await getRoles();
+            setRoles(fetchedRoles);
+        };
+        fetchRoles();
+    }, []);
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();

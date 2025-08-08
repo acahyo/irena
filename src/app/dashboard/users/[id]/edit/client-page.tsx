@@ -17,10 +17,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { roles } from '@/lib/data';
-import type { User } from '@/lib/types';
+import type { User, Role } from '@/lib/types';
 
-export default function EditUserClientPage({ user }: { user: User }) {
+export default function EditUserClientPage({ user, roles }: { user: User, roles: Role[] }) {
     const router = useRouter();
     const { toast } = useToast();
 
