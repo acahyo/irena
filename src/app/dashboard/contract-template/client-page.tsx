@@ -23,7 +23,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import type { Employee } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { Copy, Bold, Italic, Underline } from 'lucide-react';
+import { Copy, Bold, Italic, Underline, Upload } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 const generateContractText = (data: any) => {
@@ -95,6 +95,7 @@ export default function ContractTemplateClientPage({ employees }: { employees: E
     const [contractData, setContractData] = useState<any>({});
     const [generatedContract, setGeneratedContract] = useState<string>('');
     const editorRef = useRef<HTMLDivElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (generatedContract && editorRef.current) {
@@ -142,6 +143,29 @@ export default function ContractTemplateClientPage({ employees }: { employees: E
     const applyFormat = (command: string) => {
         document.execCommand(command, false);
     }
+
+    const handleUploadClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const content = e.target?.result as string;
+                if (editorRef.current) {
+                    editorRef.current.innerHTML = content;
+                    setGeneratedContract(content);
+                    toast({
+                        title: 'Template Loaded',
+                        description: `Template from ${file.name} has been loaded.`,
+                    });
+                }
+            };
+            reader.readAsText(file);
+        }
+    };
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -210,10 +234,21 @@ export default function ContractTemplateClientPage({ employees }: { employees: E
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="bg-muted rounded-t-lg border-b border-border p-2 flex items-center gap-2">
-                             <Button variant="ghost" size="icon" onClick={() => applyFormat('bold')}><Bold /></Button>
-                             <Button variant="ghost" size="icon" onClick={() => applyFormat('italic')}><Italic /></Button>
-                             <Button variant="ghost" size="icon" onClick={() => applyFormat('underline')}><Underline /></Button>
+                             <Button variant="ghost" size="icon" onClick={() => applyFormat('bold')}><Bold className="h-4 w-4" /></Button>
+                             <Button variant="ghost" size="icon" onClick={() => applyFormat('italic')}><Italic className="h-4 w-4" /></Button>
+                             <Button variant="ghost" size="icon" onClick={() => applyFormat('underline')}><Underline className="h-4 w-4" /></Button>
                              <Separator orientation="vertical" className="h-6 mx-2" />
+                              <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleFileChange}
+                                className="hidden"
+                                accept=".txt,.html"
+                            />
+                            <Button variant="ghost" size="sm" onClick={handleUploadClick}>
+                                <Upload className="mr-2 h-4 w-4" />
+                                Upload Template
+                            </Button>
                              <Button onClick={handleCopy} disabled={!generatedContract} variant="ghost" className="ml-auto">
                                 <Copy className="mr-2 h-4 w-4" />
                                 Copy
@@ -237,4 +272,3 @@ export default function ContractTemplateClientPage({ employees }: { employees: E
         </div>
     );
 }
-
