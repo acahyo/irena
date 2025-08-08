@@ -30,10 +30,12 @@ import {
   UsersRound,
   ShieldCheck,
   Settings,
+  CalendarCheck,
 } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard", icon: Users, label: "Employees" },
+  { href: "/dashboard/leave-schedule", icon: CalendarCheck, label: "Jadwal Cuti" },
   { href: "/dashboard/calendar", icon: CalendarDays, label: "Calendar" },
   { href: "/dashboard/sentiment-analysis", icon: HeartPulse, label: "Sentiment AI" },
   { href: "/dashboard/department", icon: Briefcase, label: "Department" },
@@ -69,7 +71,7 @@ export default function DashboardLayout({
               <SidebarMenuItem key={item.href}>
                 <Link href={item.href} passHref>
                   <SidebarMenuButton
-                    isActive={pathname === item.href}
+                    isActive={pathname.startsWith(item.href) && (item.href === '/dashboard' ? pathname === item.href : true)}
                     tooltip={{ children: item.label }}
                   >
                     <item.icon />
