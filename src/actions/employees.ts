@@ -2,7 +2,7 @@
 'use server';
 
 import { db } from '@/lib/firebase';
-import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, Timestamp, writeBatch } from 'firebase/firestore';
 import type { Employee } from '@/lib/types';
 
 // Helper to convert Firestore Timestamps to Dates in a document
@@ -57,4 +57,18 @@ export async function updateEmployee(id: string, employee: Partial<Employee>): P
 export async function deleteEmployee(id: string): Promise<void> {
   const docRef = doc(db, 'employees', id);
   await deleteDoc(docRef);
+}
+
+// Import multiple employees
+export async function importEmployees(employees: Partial<Employee>[]) {
+    const batch = writeBatch(db);
+    
+    employees.forEach(employee => {
+        const docRef = doc(collection(db, 'employees'));
+        // We don't need to add an id, Firestore does it automatically
+        const { id, ...employeeData } = employee; 
+        batch.set(docRef, employeeData);
+    });
+
+    await batch.commit();
 }

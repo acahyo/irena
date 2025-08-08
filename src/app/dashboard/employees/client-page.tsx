@@ -1,8 +1,9 @@
 
 'use client';
 
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect, useTransition } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import type { Employee } from '@/lib/types';
 import { EmployeeCard } from '@/components/employee-card';
 import { Input } from '@/components/ui/input';
@@ -14,9 +15,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Search, Upload, Download } from 'lucide-react';
+import { PlusCircle, Search, Upload, Download, Loader2 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
+import { importEmployees } from '@/actions/employees';
 
 
 export default function EmployeeDirectoryClientPage({ initialEmployees }: { initialEmployees: Employee[]}) {
@@ -25,6 +27,8 @@ export default function EmployeeDirectoryClientPage({ initialEmployees }: { init
   const [departmentFilter, setDepartmentFilter] = useState('all');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     setEmployees(initialEmployees);
@@ -78,19 +82,37 @@ export default function EmployeeDirectoryClientPage({ initialEmployees }: { init
           const workbook = XLSX.read(data, { type: 'array' });
           const sheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[sheetName];
-          const json = XLSX.utils.sheet_to_json(worksheet);
-          console.log(json); // Here you can process the imported data
-          toast({
-            title: 'Success!',
-            description: 'Employee data has been imported. Check the console for the data.',
+          const json = XLSX.utils.sheet_to_json(worksheet) as Partial<Employee>[];
+          
+          startTransition(async () => {
+            try {
+              await importEmployees(json);
+              toast({
+                title: 'Success!',
+                description: 'Employee data has been imported successfully.',
+              });
+              router.refresh();
+            } catch (importError) {
+               toast({
+                variant: "destructive",
+                title: 'Import Error',
+                description: 'Failed to save imported data to the database.',
+              });
+            }
           });
+
         } catch (error) {
           console.error("Error reading file:", error);
            toast({
             variant: "destructive",
-            title: 'Import Error',
-            description: 'Failed to import the Excel file.',
+            title: 'File Read Error',
+            description: 'Failed to read the Excel file.',
           });
+        } finally {
+            // Reset file input
+            if(fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
         }
       };
       reader.readAsArrayBuffer(file);
@@ -128,9 +150,10 @@ export default function EmployeeDirectoryClientPage({ initialEmployees }: { init
             onChange={handleFileChange}
             className="hidden"
             accept=".xlsx, .xls"
+            disabled={isPending}
           />
-          <Button variant="outline" onClick={handleImportClick}>
-            <Upload className="mr-2 h-4 w-4" />
+          <Button variant="outline" onClick={handleImportClick} disabled={isPending}>
+            {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
             Import
           </Button>
           <Button variant="outline" onClick={handleExport}>
