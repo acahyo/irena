@@ -5,11 +5,13 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, CalendarOff, UserCheck, Loader2, Clock, UserX, LogOut, CircleSlash } from 'lucide-react';
+import { Users, CalendarOff, UserCheck, Loader2, Clock, UserX, LogOut, CircleSlash, ListChecks, UserRound } from 'lucide-react';
 import { getEmployees } from '@/actions/employees';
 import { getLeaveRequests } from '@/actions/leave';
 import type { Employee } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const COLORS = ['#136F63', '#877795', '#A29F85', '#C4B79A', '#EAE0C1', '#F7EDE2'];
 
@@ -37,6 +39,7 @@ export default function DashboardPage() {
             resign: 0,
             phk: 0
         },
+        leaveRecommendation: [] as Employee[],
     });
     const [loading, setLoading] = useState(true);
     const [currentDateTime, setCurrentDateTime] = useState<Date | null>(null);
@@ -92,12 +95,23 @@ export default function DashboardPage() {
                     return acc;
                 }, { active: 0, nonaktif: 0, resign: 0, phk: 0 });
 
+                const leaveRecommendation = employees
+                    .filter(emp => emp.contractStartDate)
+                    .map(emp => {
+                        const startDate = new Date(emp.contractStartDate!);
+                        const diffTime = today.getTime() - startDate.getTime();
+                        const diffDays = Math.ceil(diffTime / (1000 * 3600 * 24));
+                        return { ...emp, daysActive: diffDays };
+                    })
+                    .filter(emp => emp.daysActive! >= 120 && emp.employeeStatus === 'active');
+
 
                 setStats({
                     totalEmployees: employees.length,
                     employeesOnLeave: approvedLeave.length,
                     employeesByPosition: employeesByPosition.sort((a,b) => b.value - a.value),
                     employeesByStatus: employeesByStatus,
+                    leaveRecommendation,
                 });
 
             } catch (error) {
@@ -186,36 +200,75 @@ export default function DashboardPage() {
                     </CardContent>
                 </Card>
             </div>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Karyawan Berdasarkan Jabatan</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="h-[350px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie
-                                    data={stats.employeesByPosition}
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={80}
-                                    outerRadius={120}
-                                    fill="#8884d8"
-                                    paddingAngle={5}
-                                    dataKey="value"
-                                    nameKey="name"
-                                >
-                                    {stats.employeesByPosition.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                    ))}
-                                </Pie>
-                                <Tooltip content={<CustomTooltip />} />
-                                <Legend iconSize={10} />
-                            </PieChart>
-                        </ResponsiveContainer>
-                    </div>
-                </CardContent>
-            </Card>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <Card className="lg:col-span-2">
+                    <CardHeader>
+                        <CardTitle>Karyawan Berdasarkan Jabatan</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="h-[350px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie
+                                        data={stats.employeesByPosition}
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={80}
+                                        outerRadius={120}
+                                        fill="#8884d8"
+                                        paddingAngle={5}
+                                        dataKey="value"
+                                        nameKey="name"
+                                    >
+                                        {stats.employeesByPosition.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip content={<CustomTooltip />} />
+                                    <Legend iconSize={10} />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <ListChecks />
+                            Rekomendasi Cuti
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-sm text-muted-foreground mb-4">
+                            Karyawan aktif lebih dari 120 hari yang direkomendasikan untuk mengambil cuti.
+                        </p>
+                        <ScrollArea className="h-[300px]">
+                            <div className="space-y-4">
+                                {stats.leaveRecommendation.length > 0 ? (
+                                    stats.leaveRecommendation.map(emp => (
+                                        <div key={emp.id} className="flex items-center">
+                                            <Avatar className="h-9 w-9">
+                                                <AvatarImage src={emp.avatar} alt={emp.name} />
+                                                <AvatarFallback>{emp.name.charAt(0)}</AvatarFallback>
+                                            </Avatar>
+                                            <div className="ml-4 space-y-1">
+                                                <Link href={`/dashboard/employees/${emp.id}`} className="text-sm font-medium leading-none hover:underline">{emp.name}</Link>
+                                                <p className="text-xs text-muted-foreground">{emp.position}</p>
+                                            </div>
+                                            <div className="ml-auto font-medium text-xs">{emp.daysActive} hari</div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-8">
+                                        <UserRound className="h-8 w-8 mb-2" />
+                                        <p className="text-sm">Tidak ada karyawan yang memenuhi kriteria saat ini.</p>
+                                    </div>
+                                )}
+                            </div>
+                        </ScrollArea>
+                    </CardContent>
+                </Card>
+            </div>
         </div>
     );
 }

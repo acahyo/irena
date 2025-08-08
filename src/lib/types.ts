@@ -34,6 +34,7 @@ export type Employee = {
   position?: string;
   siteLocation?: string;
   onLeave?: boolean;
+  daysActive?: number;
 };
 
 export type CalendarEvent = {
