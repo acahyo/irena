@@ -137,16 +137,18 @@ export default function DashboardPage() {
                         </CardContent>
                     </Card>
                 </Link>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Karyawan Cuti</CardTitle>
-                        <CalendarOff className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{stats.employeesOnLeave}</div>
-                        <p className="text-xs text-muted-foreground">Jumlah karyawan yang sedang cuti</p>
-                    </CardContent>
-                </Card>
+                <Link href="/dashboard/leave-schedule" className="transition-all duration-200 ease-in-out hover:-translate-y-1 hover:shadow-lg">
+                    <Card className="h-full">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Karyawan Cuti</CardTitle>
+                            <CalendarOff className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{stats.employeesOnLeave}</div>
+                            <p className="text-xs text-muted-foreground">Jumlah karyawan yang sedang cuti</p>
+                        </CardContent>
+                    </Card>
+                </Link>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Karyawan Aktif</CardTitle>
