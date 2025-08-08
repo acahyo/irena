@@ -211,7 +211,7 @@ export default function EmployeeProfileClientPage({ employee }: { employee: Empl
                  <div className="flex items-start gap-4">
                     <div className="text-muted-foreground w-5 mt-1"><UserCheck className="h-5 w-5"/></div>
                     <div>
-                        <p className="font-semibold text-sm">Employee Status</p>
+                        <p className="font-semibold text-sm">Status Karyawan</p>
                         {employee.employeeStatus ? (
                              <Badge variant={getStatusVariant(employee.employeeStatus)} className="capitalize mt-1">
                                 {employee.employeeStatus}

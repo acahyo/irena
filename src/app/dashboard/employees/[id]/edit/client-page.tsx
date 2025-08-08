@@ -75,6 +75,11 @@ export default function EditEmployeePageClient({ employee, departments, position
     const formData = new FormData(event.currentTarget);
     const data = Object.fromEntries(formData.entries());
 
+    // Remove file inputs from data object as we handle them separately
+    delete data.photo;
+    delete data.simPhoto;
+    delete data.sioPhoto;
+
     const employeeData: Partial<Employee> = {
         ...data,
         dateOfBirth: dateOfBirth,
@@ -193,7 +198,7 @@ export default function EditEmployeePageClient({ employee, departments, position
                 <Input id="nik" name="nik" placeholder="e.g. 3201..." required defaultValue={employee.nik} />
               </div>
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="name">Nama Lengkap</Label>
                 <Input id="name" name="name" placeholder="e.g. John Doe" required defaultValue={employee.name} />
               </div>
               <div className="space-y-2">
@@ -222,27 +227,37 @@ export default function EditEmployeePageClient({ employee, departments, position
                 <Label htmlFor="address">Alamat</Label>
                 <Input id="address" name="address" placeholder="e.g. 123 Main St, Anytown" required defaultValue={employee.address} />
               </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="email">Email Address</Label>
+                <Input id="email" name="email" type="email" placeholder="e.g. john@example.com" defaultValue={employee.email} />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input id="phone" name="phone" type="tel" placeholder="e.g. 08123456789" defaultValue={employee.phone} />
+              </div>
 
               <div className="space-y-2">
                 <Label htmlFor="emergencyContactName">Nama Kontak Darurat</Label>
-                <Input id="emergencyContactName" name="emergencyContactName" placeholder="e.g. Jane Doe" required defaultValue={employee.emergencyContactName} />
+                <Input id="emergencyContactName" name="emergencyContactName" placeholder="e.g. Jane Doe" defaultValue={employee.emergencyContactName} />
               </div>
-              <div className="space-y-2 md:col-span-2">
+              <div className="space-y-2">
                 <Label htmlFor="emergencyContactNumber">Nomor Kontak Darurat</Label>
-                <Input id="emergencyContactNumber" name="emergencyContactNumber" placeholder="e.g. 08123456789" required defaultValue={employee.emergencyContactNumber} />
+                <Input id="emergencyContactNumber" name="emergencyContactNumber" placeholder="e.g. 08123456789" defaultValue={employee.emergencyContactNumber} />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="bankName">Nama Bank</Label>
-                <Input id="bankName" name="bankName" placeholder="e.g. Bank Central Asia" required defaultValue={employee.bankName} />
+                <Input id="bankName" name="bankName" placeholder="e.g. Bank Central Asia" defaultValue={employee.bankName} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="accountNumber">Nomor Rekening</Label>
-                <Input id="accountNumber" name="accountNumber" placeholder="e.g. 1234567890" required defaultValue={employee.accountNumber} />
+                <Input id="accountNumber" name="accountNumber" placeholder="e.g. 1234567890" defaultValue={employee.accountNumber} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="accountHolderName">Nama Rekening</Label>
-                <Input id="accountHolderName" name="accountHolderName" placeholder="e.g. John Doe" required defaultValue={employee.accountHolderName} />
+                <Input id="accountHolderName" name="accountHolderName" placeholder="e.g. John Doe" defaultValue={employee.accountHolderName} />
               </div>
 
               <div className="space-y-2 md:col-span-3">
@@ -322,7 +337,7 @@ export default function EditEmployeePageClient({ employee, departments, position
               </div>
 
                <div className="space-y-2">
-                <Label htmlFor="employeeStatus">Employee Status</Label>
+                <Label htmlFor="employeeStatus">Status Karyawan</Label>
                 <Select name="employeeStatus" defaultValue={employee.employeeStatus}>
                   <SelectTrigger id="employeeStatus">
                     <SelectValue placeholder="Select status" />

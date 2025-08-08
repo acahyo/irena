@@ -72,6 +72,11 @@ export default function NewEmployeePage() {
 
     const formData = new FormData(event.currentTarget);
     const data = Object.fromEntries(formData.entries());
+    
+    // Remove file inputs from data object as we handle them separately
+    delete data.photo;
+    delete data.simPhoto;
+    delete data.sioPhoto;
 
     const employeeData: Partial<Employee> = {
         ...data,
@@ -91,6 +96,7 @@ export default function NewEmployeePage() {
             description: 'New employee has been added.',
         });
         router.push('/dashboard');
+        router.refresh();
     } catch (error) {
         console.error(error);
         toast({
@@ -190,7 +196,7 @@ export default function NewEmployeePage() {
                 <Input id="nik" name="nik" placeholder="e.g. 3201..." required />
               </div>
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="name">Nama Lengkap</Label>
                 <Input id="name" name="name" placeholder="e.g. John Doe" required />
               </div>
               <div className="space-y-2">
@@ -208,10 +214,9 @@ export default function NewEmployeePage() {
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="single">Single</SelectItem>
-                    <SelectItem value="married">Married</SelectItem>
-                    <SelectItem value="divorced">Divorced</SelectItem>
-                    <SelectItem value="widowed">Widowed</SelectItem>
+                    <SelectItem value="single">Lajang</SelectItem>
+                    <SelectItem value="married">Menikah</SelectItem>
+                    <SelectItem value="divorced">Cerai</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -221,25 +226,35 @@ export default function NewEmployeePage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="emergencyContactName">Nama Kontak Darurat</Label>
-                <Input id="emergencyContactName" name="emergencyContactName" placeholder="e.g. Jane Doe" required />
+                <Label htmlFor="email">Email Address</Label>
+                <Input id="email" name="email" type="email" placeholder="e.g. john@example.com" />
               </div>
-              <div className="space-y-2 md:col-span-2">
+
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input id="phone" name="phone" type="tel" placeholder="e.g. 08123456789" />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="emergencyContactName">Nama Kontak Darurat</Label>
+                <Input id="emergencyContactName" name="emergencyContactName" placeholder="e.g. Jane Doe" />
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="emergencyContactNumber">Nomor Kontak Darurat</Label>
-                <Input id="emergencyContactNumber" name="emergencyContactNumber" placeholder="e.g. 08123456789" required />
+                <Input id="emergencyContactNumber" name="emergencyContactNumber" placeholder="e.g. 08123456789" />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="bankName">Nama Bank</Label>
-                <Input id="bankName" name="bankName" placeholder="e.g. Bank Central Asia" required />
+                <Input id="bankName" name="bankName" placeholder="e.g. Bank Central Asia" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="accountNumber">Nomor Rekening</Label>
-                <Input id="accountNumber" name="accountNumber" placeholder="e.g. 1234567890" required />
+                <Input id="accountNumber" name="accountNumber" placeholder="e.g. 1234567890" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="accountHolderName">Nama Rekening</Label>
-                <Input id="accountHolderName" name="accountHolderName" placeholder="e.g. John Doe" required />
+                <Input id="accountHolderName" name="accountHolderName" placeholder="e.g. John Doe" />
               </div>
 
               <div className="space-y-2 md:col-span-3">
@@ -314,12 +329,12 @@ export default function NewEmployeePage() {
                 <DatePicker date={contractEndDate} setDate={setContractEndDate} />
               </div>
                <div className="space-y-2">
-                <Label htmlFor="siteLocation">Lokasi/Site</Label>
+                <Label htmlFor="siteLocation">Lokasi/Site Kerja</Label>
                 <Input id="siteLocation" name="siteLocation" placeholder="e.g. Site A" />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="employeeStatus">Employee Status</Label>
+                <Label htmlFor="employeeStatus">Status Karyawan</Label>
                 <Select name="employeeStatus">
                   <SelectTrigger id="employeeStatus">
                     <SelectValue placeholder="Select status" />

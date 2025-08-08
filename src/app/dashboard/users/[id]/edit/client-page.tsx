@@ -54,7 +54,7 @@ export default function EditUserClientPage({ user }: { user: User }) {
             <form onSubmit={handleSubmit} className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                        <Label htmlFor="name">Full Name</Label>
+                        <Label htmlFor="name">Nama Lengkap</Label>
                         <Input id="name" name="name" placeholder="e.g. John Doe" required defaultValue={user.name} />
                     </div>
                      <div className="space-y-2">
