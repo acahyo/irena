@@ -40,7 +40,6 @@ export default async function DashboardLayout({
 
   return (
     <DashboardClientLayout
-      navItems={navItems}
       settings={settings}
       activeLabelProvider={activeLabel}
     >
@@ -48,4 +47,3 @@ export default async function DashboardLayout({
     </DashboardClientLayout>
   );
 }
-

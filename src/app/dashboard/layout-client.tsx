@@ -23,17 +23,34 @@ import {
 import {
   Building,
   LogOut,
+  Users,
+  Briefcase,
+  Shield,
+  UsersRound,
+  ShieldCheck,
+  Settings,
+  CalendarCheck,
+  LayoutDashboard,
 } from "lucide-react";
 import type { AppSettings } from "@/lib/types";
 
+const navItems = [
+  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", exact: true },
+  { href: "/dashboard/employees", icon: Users, label: "Employees" },
+  { href: "/dashboard/leave-schedule", icon: CalendarCheck, label: "Jadwal Cuti" },
+  { href: "/dashboard/department", icon: Briefcase, label: "Department" },
+  { href: "/dashboard/position", icon: Shield, label: "Position" },
+  { href: "/dashboard/users", icon: UsersRound, label: "Users" },
+  { href: "/dashboard/roles", icon: ShieldCheck, label: "Roles" },
+  { href: "/dashboard/settings", icon: Settings, label: "Settings" },
+];
+
 export default function DashboardClientLayout({
   children,
-  navItems,
   settings,
   activeLabelProvider,
 }: {
   children: React.ReactNode;
-  navItems: { href: string; icon: React.ElementType; label: string; exact?: boolean }[];
   settings: AppSettings;
   activeLabelProvider: (pathname: string) => string;
 }) {
