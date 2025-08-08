@@ -18,7 +18,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Building2, Calendar, FileText, Heart, Home, Landmark, Mail, MapPin, Pencil, Phone, ShieldCheck, Trash2, User, UserCheck, UserSquare, Users, Briefcase } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { format, parseISO } from 'date-fns';
 import type { Employee } from '@/lib/types';
 import {
   AlertDialog,
@@ -34,20 +33,8 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { deleteEmployee } from '@/actions/employees';
 
-// Helper to safely format dates that might be strings or Date objects
-const formatDate = (date: string | Date | undefined): string | undefined => {
-  if (!date) return undefined;
-  // Firestore Timestamps are often serialized as ISO strings
-  const dateObj = typeof date === 'string' ? parseISO(date) : date;
-  try {
-    return format(dateObj, 'PPP');
-  } catch (error) {
-    console.error("Invalid date format:", date);
-    return 'Invalid Date';
-  }
-};
-
-export default function EmployeeProfileClientPage({ employee }: { employee: Employee }) {
+// The employee object passed here should have dates pre-formatted as strings
+export default function EmployeeProfileClientPage({ employee }: { employee: Employee & { dateOfBirth?: string, messEntryDate?: string, contractStartDate?: string, contractEndDate?: string } }) {
     const router = useRouter();
     const { toast } = useToast();
 
@@ -171,7 +158,7 @@ export default function EmployeeProfileClientPage({ employee }: { employee: Empl
             <CardContent className="space-y-4">
                 <DetailItem icon={<UserSquare className="h-5 w-5"/>} label="NIK" value={employee.nik} />
                 <DetailItem icon={<MapPin className="h-5 w-5"/>} label="Place of Birth" value={employee.placeOfBirth} />
-                <DetailItem icon={<Calendar className="h-5 w-5"/>} label="Date of Birth" value={formatDate(employee.dateOfBirth)} />
+                <DetailItem icon={<Calendar className="h-5 w-5"/>} label="Date of Birth" value={employee.dateOfBirth} />
                 <DetailItem icon={<Home className="h-5 w-5"/>} label="Address" value={employee.address} />
                 <DetailItem icon={<Heart className="h-5 w-5"/>} label="Marital Status" value={employee.maritalStatus} />
             </CardContent>
@@ -241,7 +228,7 @@ export default function EmployeeProfileClientPage({ employee }: { employee: Empl
             </CardHeader>
             <CardContent className="space-y-4">
                 <DetailItem icon={<Home className="h-5 w-5"/>} label="Mess Room" value={employee.messRoomNumber} />
-                <DetailItem icon={<Calendar className="h-5 w-5"/>} label="Mess Entry Date" value={formatDate(employee.messEntryDate)} />
+                <DetailItem icon={<Calendar className="h-5 w-5"/>} label="Mess Entry Date" value={employee.messEntryDate} />
                 <DetailItem icon={<Briefcase className="h-5 w-5"/>} label="Peralatan Kerja" value={employee.workEquipment} />
             </CardContent>
         </Card>
@@ -251,8 +238,8 @@ export default function EmployeeProfileClientPage({ employee }: { employee: Empl
                 <CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5" /> Contract Information</CardTitle>
             </CardHeader>
              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 <DetailItem icon={<Calendar className="h-5 w-5"/>} label="Contract Start Date" value={formatDate(employee.contractStartDate)} />
-                <DetailItem icon={<Calendar className="h-5 w-5"/>} label="Contract End Date" value={formatDate(employee.contractEndDate)} />
+                 <DetailItem icon={<Calendar className="h-5 w-5"/>} label="Contract Start Date" value={employee.contractStartDate} />
+                <DetailItem icon={<Calendar className="h-5 w-5"/>} label="Contract End Date" value={employee.contractEndDate} />
             </CardContent>
         </Card>
 

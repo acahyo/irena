@@ -3,14 +3,38 @@
 import { getEmployee } from '@/actions/employees';
 import { notFound } from 'next/navigation';
 import EmployeeProfileClientPage from './client-page';
+import { format, parseISO } from 'date-fns';
 
+
+// Helper to safely format dates that might be strings or Date objects
+const formatDate = (date: string | Date | undefined): string | undefined => {
+  if (!date) return undefined;
+  // Firestore Timestamps are often serialized as ISO strings
+  const dateObj = typeof date === 'string' ? parseISO(date) : date;
+  try {
+    return format(dateObj, 'PPP');
+  } catch (error) {
+    console.error("Invalid date format:", date);
+    return 'Invalid Date';
+  }
+};
 
 export default async function EmployeeProfilePage({ params }: { params: { id: string } }) {
-  const employee = await getEmployee(params.id);
+  const employeeData = await getEmployee(params.id);
 
-  if (!employee) {
+  if (!employeeData) {
     notFound();
   }
+
+  // Pre-format dates on the server before sending to the client component
+  const employee = {
+    ...employeeData,
+    dateOfBirth: formatDate(employeeData.dateOfBirth),
+    messEntryDate: formatDate(employeeData.messEntryDate),
+    contractStartDate: formatDate(employeeData.contractStartDate),
+    contractEndDate: formatDate(employeeData.contractEndDate),
+  };
+
 
   return <EmployeeProfileClientPage employee={employee} />;
 }
