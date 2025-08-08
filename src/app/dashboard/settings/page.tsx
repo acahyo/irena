@@ -86,7 +86,7 @@ export default function SettingsPage() {
     
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        setSettings(prev => prev ? { ...prev, [name]: value } : { [name]: value });
+        setSettings(prev => prev ? { ...prev, [name]: value } : { [name]: value } as AppSettings);
     }
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -95,7 +95,8 @@ export default function SettingsPage() {
         setLoading(true);
         
         try {
-            await saveSettings(settings);
+            const { id, ...settingsToSave } = settings;
+            await saveSettings(settingsToSave);
 
             // Update CSS variables dynamically
             const root = document.documentElement;
@@ -131,10 +132,10 @@ export default function SettingsPage() {
                     onChange={onChange}
                     className="max-w-xs"
                 />
-                <Input type="color" value={value} onChange={onChange} className="h-8 w-8 p-1 border rounded-md" />
+                <Input type="color" value={value} onChange={onChange} className="h-10 w-10 p-1 border rounded-md" />
             </div>
              <p className="text-sm text-muted-foreground">
-                Enter a valid hex color code (e.g., #1A5D1A).
+                Enter a valid hex color code (e.g., #136F63).
             </p>
         </div>
     );
@@ -222,9 +223,9 @@ export default function SettingsPage() {
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                               <ColorInput label="Primary Color" id="primaryColor" value={settings.primaryColor || '#1A5D1A'} onChange={handleInputChange} />
-                               <ColorInput label="Background Color" id="backgroundColor" value={settings.backgroundColor || '#E1F0DA'} onChange={handleInputChange} />
-                               <ColorInput label="Accent Color" id="accentColor" value={settings.accentColor || '#6B7280'} onChange={handleInputChange} />
+                               <ColorInput label="Primary Color" id="primaryColor" value={settings.primaryColor || '#136F63'} onChange={handleInputChange} />
+                               <ColorInput label="Background Color" id="backgroundColor" value={settings.backgroundColor || '#D2E9E6'} onChange={handleInputChange} />
+                               <ColorInput label="Accent Color" id="accentColor" value={settings.accentColor || '#877795'} onChange={handleInputChange} />
                             </CardContent>
                         </Card>
 
