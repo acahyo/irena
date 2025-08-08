@@ -45,5 +45,7 @@ export async function getSettings(): Promise<AppSettings> {
 export async function saveSettings(settings: Omit<AppSettings, 'id'>): Promise<void> {
   const settingsRef = doc(db, 'settings', SETTINGS_ID);
   // We use setDoc with a fixed ID to ensure there's only one settings document.
-  await setDoc(settingsRef, settings);
+  // The id property must be removed before saving.
+  const { id, ...settingsData } = settings as AppSettings;
+  await setDoc(settingsRef, settingsData);
 }
