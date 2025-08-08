@@ -21,7 +21,7 @@ import {
   SidebarInset,
 } from "@/components/ui/sidebar";
 import {
-  Building,
+  FolderKanban,
   LogOut,
   Users,
   Briefcase,
@@ -65,7 +65,7 @@ export default function DashboardClientLayout({
             <Avatar className="h-8 w-8 rounded-md">
                 {settings.logo && <AvatarImage src={settings.logo} alt={settings.appName} />}
                 <AvatarFallback className="rounded-md bg-primary text-primary-foreground">
-                    <Building className="h-5 w-5" />
+                    <FolderKanban className="h-5 w-5" />
                 </AvatarFallback>
             </Avatar>
             <span className="text-lg font-semibold text-sidebar-foreground">

@@ -17,7 +17,7 @@ export async function getSettings(): Promise<AppSettings> {
     return {
       appName: 'Staff Hub',
       appDescription: 'An application for employee management.',
-      logo: '',
+      logo: 'https://drive.google.com/file/d/1ggYVy0-UgoXuQvB96yIdDQm8M4pr7iZt/view?usp=sharing',
       primaryColor: '#136F63',
       backgroundColor: '#D2E9E6',
       accentColor: '#877795',
@@ -34,7 +34,7 @@ export async function getSettings(): Promise<AppSettings> {
   return {
       appName: 'Staff Hub',
       appDescription: 'An application for employee management.',
-      logo: '',
+      logo: 'https://drive.google.com/file/d/1ggYVy0-UgoXuQvB96yIdDQm8M4pr7iZt/view?usp=sharing',
       primaryColor: '#136F63',
       backgroundColor: '#D2E9E6',
       accentColor: '#877795',
