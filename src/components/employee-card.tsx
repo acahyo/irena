@@ -20,7 +20,11 @@ interface EmployeeCardProps {
 
 const formatDate = (date: Date | string | undefined) => {
     if (!date) return 'N/A';
-    return format(new Date(date), 'PP');
+    try {
+        return format(new Date(date), 'PP');
+    } catch (error) {
+        return 'Invalid Date';
+    }
 }
 
 export function EmployeeCard({ employee }: EmployeeCardProps) {

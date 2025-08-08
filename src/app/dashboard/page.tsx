@@ -1,200 +1,163 @@
 
 'use client';
 
-import { useState, useMemo, useRef, useEffect } from 'react';
-import Link from 'next/link';
-import type { Employee, LeaveRequest } from '@/lib/types';
-import { EmployeeCard } from '@/components/employee-card';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { PlusCircle, Search, Upload, Download, Loader2 } from 'lucide-react';
-import * as XLSX from 'xlsx';
-import { useToast } from '@/hooks/use-toast';
+import { useState, useEffect } from 'react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Users, Briefcase, CalendarOff, Loader2 } from 'lucide-react';
 import { getEmployees } from '@/actions/employees';
 import { getLeaveRequests } from '@/actions/leave';
+import type { Employee, LeaveRequest } from '@/lib/types';
 
+export default function DashboardPage() {
+    const [stats, setStats] = useState({
+        totalEmployees: 0,
+        employeesOnLeave: 0,
+        employeesByPosition: [] as { name: string, value: number }[],
+    });
+    const [loading, setLoading] = useState(true);
 
-export default function EmployeeDirectoryPage() {
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [departmentFilter, setDepartmentFilter] = useState('all');
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
+    useEffect(() => {
+        const fetchDashboardData = async () => {
+            setLoading(true);
+            try {
+                const [employees, leaveRequests] = await Promise.all([
+                    getEmployees(),
+                    getLeaveRequests()
+                ]);
 
-  useEffect(() => {
-    const fetchInitialData = async () => {
-      setLoading(true);
-      try {
-        const [fetchedEmployees, leaveRequests] = await Promise.all([
-          getEmployees(),
-          getLeaveRequests(),
-        ]);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
 
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+                const approvedLeave = leaveRequests.filter(
+                    (req) =>
+                        req.status === 'Approved' &&
+                        new Date(req.startDate) <= today &&
+                        new Date(req.endDate) >= today
+                );
+                
+                const employeesByPosition = employees.reduce((acc, emp) => {
+                    const position = emp.position || 'Unassigned';
+                    const existing = acc.find(item => item.name === position);
+                    if (existing) {
+                        existing.value += 1;
+                    } else {
+                        acc.push({ name: position, value: 1 });
+                    }
+                    return acc;
+                }, [] as { name: string, value: number }[]);
 
-        const approvedLeave = leaveRequests.filter(
-          (req) =>
-            req.status === 'Approved' &&
-            new Date(req.startDate) <= today &&
-            new Date(req.endDate) >= today
+                setStats({
+                    totalEmployees: employees.length,
+                    employeesOnLeave: approvedLeave.length,
+                    employeesByPosition: employeesByPosition.sort((a,b) => b.value - a.value),
+                });
+
+            } catch (error) {
+                console.error("Failed to fetch dashboard data", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchDashboardData();
+    }, []);
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-full">
+                <Loader2 className="h-16 w-16 animate-spin text-primary" />
+            </div>
         );
-        
-        const employeesWithLeaveStatus = fetchedEmployees.map((emp) => ({
-          ...emp,
-          onLeave: approvedLeave.some((req) => req.employeeId === emp.id),
-        }));
-        
-        setEmployees(employeesWithLeaveStatus);
-
-      } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Failed to fetch employee or leave data.'
-        })
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchInitialData();
-  }, [toast]);
-
-  const departments = useMemo(() => {
-    const allDepartments = employees.map((emp) => emp.department).filter(Boolean);
-    return ['all', ...Array.from(new Set(allDepartments as string[]))];
-  }, [employees]);
-
-  const filteredEmployees = useMemo(() => {
-    return employees.filter((employee: Employee) => {
-      const matchesSearch = employee.name
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-      const matchesDepartment =
-        departmentFilter === 'all' || employee.department === departmentFilter;
-      return matchesSearch && matchesDepartment;
-    });
-  }, [searchTerm, departmentFilter, employees]);
-
-  const handleExport = () => {
-    const worksheet = XLSX.utils.json_to_sheet(filteredEmployees);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Employees");
-    XLSX.writeFile(workbook, "EmployeeData.xlsx");
-     toast({
-      title: 'Success!',
-      description: 'Employee data has been exported.',
-    });
-  };
-
-  const handleImportClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const data = new Uint8Array(e.target?.result as ArrayBuffer);
-          const workbook = XLSX.read(data, { type: 'array' });
-          const sheetName = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[sheetName];
-          const json = XLSX.utils.sheet_to_json(worksheet);
-          console.log(json); // Here you can process the imported data
-          toast({
-            title: 'Success!',
-            description: 'Employee data has been imported. Check the console for the data.',
-          });
-        } catch (error) {
-          console.error("Error reading file:", error);
-           toast({
-            variant: "destructive",
-            title: 'Import Error',
-            description: 'Failed to import the Excel file.',
-          });
-        }
-      };
-      reader.readAsArrayBuffer(file);
     }
-  };
 
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          <Input
-            placeholder="Search by name..."
-            className="pl-10"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+    return (
+        <div className="space-y-6">
+            <div className="grid gap-6 md:grid-cols-3">
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Total Karyawan</CardTitle>
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{stats.totalEmployees}</div>
+                        <p className="text-xs text-muted-foreground">Jumlah seluruh karyawan terdaftar</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Karyawan Cuti</CardTitle>
+                        <CalendarOff className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{stats.employeesOnLeave}</div>
+                        <p className="text-xs text-muted-foreground">Jumlah karyawan yang sedang cuti</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Total Jabatan</CardTitle>
+                        <Briefcase className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{stats.employeesByPosition.length}</div>
+                        <p className="text-xs text-muted-foreground">Jumlah jabatan yang ada</p>
+                    </CardContent>
+                </Card>
+            </div>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Karyawan Berdasarkan Jabatan</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="h-[350px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={stats.employeesByPosition} layout="vertical" margin={{ left: 20, right: 20 }}>
+                                <XAxis type="number" hide />
+                                <YAxis 
+                                    dataKey="name" 
+                                    type="category" 
+                                    width={150} 
+                                    tickLine={false} 
+                                    axisLine={false}
+                                    tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                                />
+                                <Tooltip
+                                  cursor={{ fill: 'hsl(var(--secondary))' }}
+                                  content={({ active, payload }) => {
+                                      if (active && payload && payload.length) {
+                                        return (
+                                        <div className="rounded-lg border bg-background p-2 shadow-sm">
+                                            <div className="grid grid-cols-2 gap-2">
+                                            <div className="flex flex-col space-y-1">
+                                                <span className="text-[0.70rem] uppercase text-muted-foreground">
+                                                Jabatan
+                                                </span>
+                                                <span className="font-bold text-muted-foreground">
+                                                {payload[0].payload.name}
+                                                </span>
+                                            </div>
+                                            <div className="flex flex-col space-y-1">
+                                                <span className="text-[0.70rem] uppercase text-muted-foreground">
+                                                Jumlah
+                                                </span>
+                                                <span className="font-bold">
+                                                {payload[0].value}
+                                                </span>
+                                            </div>
+                                            </div>
+                                        </div>
+                                        )
+                                    }
+                                    return null
+                                  }}
+                                />
+                                <Bar dataKey="value" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} barSize={20} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </CardContent>
+            </Card>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-            <SelectTrigger className="w-full md:w-[200px]">
-              <SelectValue placeholder="Filter by department" />
-            </SelectTrigger>
-            <SelectContent>
-              {departments.map((dept) => (
-                <SelectItem key={dept} value={dept}>
-                  {dept === 'all' ? 'All Departments' : dept}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            className="hidden"
-            accept=".xlsx, .xls"
-          />
-          <Button variant="outline" onClick={handleImportClick}>
-            <Upload className="mr-2 h-4 w-4" />
-            Import
-          </Button>
-          <Button variant="outline" onClick={handleExport}>
-            <Download className="mr-2 h-4 w-4" />
-            Export
-          </Button>
-          <Button asChild>
-            <Link href="/dashboard/employees/new">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add Employee
-            </Link>
-          </Button>
-        </div>
-      </div>
-
-      {loading ? (
-        <div className="flex justify-center items-center h-48">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      ) : filteredEmployees.length > 0 ? (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredEmployees.map((employee) => (
-            <EmployeeCard key={employee.id} employee={employee} />
-          ))}
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-12 text-center">
-            <h3 className="text-2xl font-bold tracking-tight">No employees found</h3>
-            <p className="text-sm text-muted-foreground">
-                Try adjusting your search or filter criteria or add a new employee.
-            </p>
-        </div>
-      )}
-    </div>
-  );
+    );
 }

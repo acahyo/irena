@@ -31,10 +31,12 @@ import {
   ShieldCheck,
   Settings,
   CalendarCheck,
+  LayoutDashboard,
 } from "lucide-react";
 
 const navItems = [
-  { href: "/dashboard", icon: Users, label: "Employees" },
+  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", exact: true },
+  { href: "/dashboard/employees", icon: Users, label: "Employees" },
   { href: "/dashboard/leave-schedule", icon: CalendarCheck, label: "Jadwal Cuti" },
   { href: "/dashboard/calendar", icon: CalendarDays, label: "Calendar" },
   { href: "/dashboard/sentiment-analysis", icon: HeartPulse, label: "Sentiment AI" },
@@ -71,7 +73,7 @@ export default function DashboardLayout({
               <SidebarMenuItem key={item.href}>
                 <Link href={item.href} passHref>
                   <SidebarMenuButton
-                    isActive={pathname.startsWith(item.href) && (item.href === '/dashboard' ? pathname === item.href : true)}
+                    isActive={item.exact ? pathname === item.href : pathname.startsWith(item.href)}
                     tooltip={{ children: item.label }}
                   >
                     <item.icon />
@@ -110,7 +112,7 @@ export default function DashboardLayout({
           <SidebarTrigger className="flex md:hidden" />
           <div className="flex-1">
              <h1 className="text-lg font-semibold">
-                {navItems.find(item => pathname.startsWith(item.href))?.label || 'Staff Hub'}
+                {navItems.find(item => item.exact ? pathname === item.href : pathname.startsWith(item.href))?.label || 'Staff Hub'}
             </h1>
           </div>
         </header>

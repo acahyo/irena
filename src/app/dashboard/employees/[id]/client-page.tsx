@@ -45,7 +45,7 @@ export default function EmployeeProfileClientPage({ employee }: { employee: Empl
                 title: 'Success!',
                 description: `Employee ${employee.name} has been removed.`,
             });
-            router.push('/dashboard');
+            router.push('/dashboard/employees');
             router.refresh();
         } catch (error) {
             toast({
@@ -99,7 +99,7 @@ export default function EmployeeProfileClientPage({ employee }: { employee: Empl
   return (
     <div className="space-y-6">
        <Button asChild variant="outline" size="sm">
-            <Link href="/dashboard">
+            <Link href="/dashboard/employees">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Employees
             </Link>

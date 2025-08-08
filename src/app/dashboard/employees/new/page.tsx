@@ -96,7 +96,7 @@ export default function NewEmployeePage() {
             title: 'Success!',
             description: 'New employee has been added.',
         });
-        router.push('/dashboard');
+        router.push('/dashboard/employees');
         router.refresh();
     } catch (error) {
         console.error(error);
@@ -172,7 +172,7 @@ export default function NewEmployeePage() {
   return (
     <div className="space-y-6">
       <Button asChild variant="outline" size="sm">
-        <Link href="/dashboard">
+        <Link href="/dashboard/employees">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Employees
         </Link>
