@@ -74,3 +74,8 @@ export type LeaveRequest = {
     reason: string;
     status: 'Pending' | 'Approved' | 'Rejected';
 };
+
+export type Position = {
+    id: string;
+    name: string;
+};

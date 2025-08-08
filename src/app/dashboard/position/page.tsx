@@ -1,4 +1,7 @@
 
+'use client';
+
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Card,
@@ -22,10 +25,65 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, PlusCircle } from 'lucide-react';
-import { positions } from '@/lib/data';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { MoreHorizontal, PlusCircle, Loader2, Trash2, Pencil } from 'lucide-react';
+import { getPositions, deletePosition } from '@/actions/positions';
+import { useToast } from '@/hooks/use-toast';
+import type { Position } from '@/lib/types';
+
 
 export default function PositionPage() {
+  const [positions, setPositions] = useState<Position[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  const fetchPositions = async () => {
+    setLoading(true);
+    try {
+      const data = await getPositions();
+      setPositions(data);
+    } catch (error) {
+       toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to fetch positions.',
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchPositions();
+  }, []);
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deletePosition(id);
+      toast({
+        title: 'Success!',
+        description: 'Position has been deleted.',
+      });
+      fetchPositions(); // Refresh list
+    } catch (error) {
+       toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to delete position.',
+      });
+    }
+  };
+
+
   return (
     <Card>
       <CardHeader>
@@ -53,7 +111,14 @@ export default function PositionPage() {
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {positions.map((pos) => (
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={2} className="h-24 text-center">
+                    <Loader2 className="mx-auto h-8 w-8 animate-spin" />
+                  </TableCell>
+                </TableRow>
+              ) : positions.length > 0 ? (
+                positions.map((pos) => (
                     <TableRow key={pos.id}>
                         <TableCell className="font-medium">{pos.name}</TableCell>
                         <TableCell className="text-right">
@@ -65,20 +130,44 @@ export default function PositionPage() {
                                 </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                    <DropdownMenuItem>Edit</DropdownMenuItem>
-                                    <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                                    <DropdownMenuItem asChild>
+                                      <Link href={`/dashboard/position/${pos.id}/edit`}>
+                                        <Pencil className="mr-2 h-4 w-4" /> Edit
+                                      </Link>
+                                    </DropdownMenuItem>
+                                     <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
+                                                 <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                            </DropdownMenuItem>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                This action cannot be undone. This will permanently delete the position.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction onClick={() => handleDelete(pos.id)}>
+                                                    Continue
+                                                </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </TableCell>
                     </TableRow>
-                ))}
-                 {positions.length === 0 && (
-                    <TableRow>
-                        <TableCell colSpan={2} className="h-24 text-center">
-                            No positions found.
-                        </TableCell>
-                    </TableRow>
-                )}
+                ))
+               ) : (
+                <TableRow>
+                    <TableCell colSpan={2} className="h-24 text-center">
+                        No positions found.
+                    </TableCell>
+                </TableRow>
+              )}
             </TableBody>
         </Table>
       </CardContent>

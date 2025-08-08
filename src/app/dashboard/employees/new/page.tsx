@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
@@ -33,15 +33,18 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { departments, positions } from '@/lib/data';
 import { createEmployee } from '@/actions/employees';
-import type { Employee } from '@/lib/types';
+import { getDepartments } from '@/actions/departments';
+import { getPositions } from '@/actions/positions';
+import type { Employee, Department, Position } from '@/lib/types';
 import { Textarea } from '@/components/ui/textarea';
 
 export default function NewEmployeePage() {
   const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [positions, setPositions] = useState<Position[]>([]);
   const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>();
   const [messEntryDate, setMessEntryDate] = useState<Date | undefined>();
   const [contractStartDate, setContractStartDate] = useState<Date | undefined>();
@@ -49,6 +52,26 @@ export default function NewEmployeePage() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [simPreview, setSimPreview] = useState<string | null>(null);
   const [sioPreview, setSioPreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchDropdownData = async () => {
+      try {
+        const [depts, pos] = await Promise.all([
+          getDepartments(),
+          getPositions(),
+        ]);
+        setDepartments(depts);
+        setPositions(pos);
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Failed to fetch departments or positions.',
+        });
+      }
+    };
+    fetchDropdownData();
+  }, [toast]);
 
   const handleFileChange = (
     event: React.ChangeEvent<HTMLInputElement>,
