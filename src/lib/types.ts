@@ -12,6 +12,7 @@ export type Employee = {
   nik?: string;
   placeOfBirth?: string;
   dateOfBirth?: Date | string;
+  gender?: 'Laki-laki' | 'Perempuan';
   address?: string;
   accountNumber?: string;
   bankName?: string;

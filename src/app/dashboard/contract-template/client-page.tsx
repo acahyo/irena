@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { format } from 'date-fns';
+import { format, differenceInDays } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -31,16 +31,22 @@ const generateContractText = (data: any) => {
     const { 
         employeeName, position, department, 
         startDate, endDate, salary, companyName, 
-        companyAddress, employeeAddress 
+        companyAddress, employeeAddress, placeOfBirth, dateOfBirth, gender
     } = data;
 
-    const formattedStartDate = startDate ? format(startDate, 'PPP') : '[Tanggal Mulai]';
-    const formattedEndDate = endDate ? format(endDate, 'PPP') : '[Tanggal Akhir]';
+    const formattedStartDate = startDate ? format(new Date(startDate), 'PPP') : '[Tanggal Mulai]';
+    const formattedEndDate = endDate ? format(new Date(endDate), 'PPP') : '[Tanggal Akhir]';
     const formattedSalary = salary ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(salary) : '[Jumlah Gaji]';
+    const formattedDateOfBirth = dateOfBirth ? format(new Date(dateOfBirth), 'PPP') : '[Tanggal Lahir]';
+    
+    let contractDuration = '[Jumlah Hari]';
+    if (startDate && endDate) {
+        contractDuration = `${differenceInDays(new Date(endDate), new Date(startDate))} hari`;
+    }
 
     // Using paragraphs and strong tags for better semantic structure
     return `
-<p style="text-align: center;"><strong>SURAT PERJANJIAN KERJA WAKTU TERTENTU (PKWT)</strong></p>
+<p style="text-align: center;"><strong><u>SURAT PERJANJIAN KERJA WAKTU TERTENTU (PKWT)</u></strong></p>
 <p style="text-align: center;">Nomor: [Nomor Surat]</p>
 <br>
 <p>Pada hari ini, ${format(new Date(), 'eeee, dd MMMM yyyy')}, yang bertanda tangan di bawah ini:</p>
@@ -51,26 +57,32 @@ const generateContractText = (data: any) => {
 <p>&nbsp;&nbsp;&nbsp;Dalam hal ini bertindak atas nama <strong>${companyName || '[Nama Perusahaan]'}</strong> yang selanjutnya disebut sebagai <strong>PIHAK PERTAMA</strong>.</p>
 <br>
 <p>2. <strong>Nama:</strong> ${employeeName || '[Nama Karyawan]'}</p>
+<p>&nbsp;&nbsp;&nbsp;<strong>Tempat, Tanggal Lahir:</strong> ${placeOfBirth || '[Tempat Lahir]'}, ${formattedDateOfBirth}</p>
+<p>&nbsp;&nbsp;&nbsp;<strong>Jenis Kelamin:</strong> ${gender || '[Jenis Kelamin]'}</p>
 <p>&nbsp;&nbsp;&nbsp;<strong>Alamat:</strong> ${employeeAddress || '[Alamat Karyawan]'}</p>
 <p>&nbsp;&nbsp;&nbsp;Dalam hal ini bertindak atas nama diri pribadi yang selanjutnya disebut sebagai <strong>PIHAK KEDUA</strong>.</p>
 <br>
 <p>Kedua belah pihak sepakat untuk mengikatkan diri dalam Perjanjian Kerja Waktu Tertentu dengan ketentuan sebagai berikut:</p>
 <br>
-<p><strong>Pasal 1: Jabatan dan Tugas</strong></p>
-<p>PIHAK PERTAMA memberikan pekerjaan kepada PIHAK KEDUA sebagai <strong>${position || '[Jabatan]'}</strong> di departemen <strong>${department || '[Departemen]'}</strong>.</p>
-<br>
-<p><strong>Pasal 2: Jangka Waktu</strong></p>
-<p>Perjanjian kerja ini berlaku untuk jangka waktu tertentu, yaitu dimulai sejak tanggal ${formattedStartDate} dan akan berakhir pada tanggal ${formattedEndDate}.</p>
-<br>
-<p><strong>Pasal 3: Gaji dan Tunjangan</strong></p>
-<p>PIHAK PERTAMA akan membayarkan gaji pokok kepada PIHAK KEDUA sebesar <strong>${formattedSalary}</strong> per bulan.</p>
-<br>
-<p><strong>Pasal 4: Waktu Kerja</strong></p>
-<p>Waktu kerja adalah 8 (delapan) jam sehari atau 40 (empat puluh) jam seminggu.</p>
-<br>
-<p><strong>Pasal 5: Berakhirnya Perjanjian</strong></p>
-<p>Perjanjian kerja ini akan berakhir demi hukum pada saat jangka waktu perjanjian ini selesai.</p>
-<br>
+<table border="1" style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+    <thead style="background-color: #f2f2f2;">
+        <tr>
+            <th style="padding: 8px; text-align: left;" colspan="2">DETAIL KONTRAK</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td style="padding: 8px; width: 30%;"><strong>Nama</strong></td><td style="padding: 8px;">${employeeName || '[Nama Karyawan]'}</td></tr>
+        <tr><td style="padding: 8px;"><strong>Tempat, Tanggal Lahir</strong></td><td style="padding: 8px;">${placeOfBirth || '[Tempat Lahir]'}, ${formattedDateOfBirth}</td></tr>
+        <tr><td style="padding: 8px;"><strong>Jenis Kelamin</strong></td><td style="padding: 8px;">${gender || '[Jenis Kelamin]'}</td></tr>
+        <tr><td style="padding: 8px;"><strong>Alamat</strong></td><td style="padding: 8px;">${employeeAddress || '[Alamat Karyawan]'}</td></tr>
+        <tr><td style="padding: 8px;"><strong>Jabatan</strong></td><td style="padding: 8px;">${position || '[Jabatan]'}</td></tr>
+        <tr><td style="padding: 8px;"><strong>Hari Kontrak</strong></td><td style="padding: 8px;">${contractDuration}</td></tr>
+        <tr><td style="padding: 8px;"><strong>Tanggal Mulai Kontrak</strong></td><td style="padding: 8px;">${formattedStartDate}</td></tr>
+        <tr><td style="padding: 8px;"><strong>Tanggal Akhir Kontrak</strong></td><td style="padding: 8px;">${formattedEndDate}</td></tr>
+        <tr><td style="padding: 8px;"><strong>Upah Pokok</strong></td><td style="padding: 8px;">${formattedSalary}</td></tr>
+        <tr><td style="padding: 8px;"><strong>Lemburan</strong></td><td style="padding: 8px;">[Sesuai Peraturan Perusahaan]</td></tr>
+    </tbody>
+</table>
 <p>Demikian surat perjanjian ini dibuat dengan sesungguhnya dalam keadaan sadar dan tanpa ada paksaan dari pihak manapun.</p>
 <br>
 <br>
@@ -115,6 +127,9 @@ export default function ContractTemplateClientPage({ employees }: { employees: E
                 position: employee.position,
                 department: employee.department,
                 employeeAddress: employee.address,
+                placeOfBirth: employee.placeOfBirth,
+                dateOfBirth: employee.dateOfBirth ? new Date(employee.dateOfBirth) : undefined,
+                gender: employee.gender,
                 startDate: employee.contractStartDate ? new Date(employee.contractStartDate) : new Date(),
                 endDate: employee.contractEndDate ? new Date(employee.contractEndDate) : new Date(),
             });

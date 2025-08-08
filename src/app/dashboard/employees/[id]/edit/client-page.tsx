@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState } from 'react';
@@ -226,6 +225,18 @@ export default function EditEmployeePageClient({ employee, departments, position
               <div className="space-y-2">
                 <Label htmlFor="dateOfBirth">Tanggal Lahir</Label>
                 <DatePicker date={dateOfBirth} setDate={setDateOfBirth} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="gender">Jenis Kelamin</Label>
+                <Select name="gender" defaultValue={employee.gender}>
+                  <SelectTrigger id="gender">
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Laki-laki">Laki-laki</SelectItem>
+                    <SelectItem value="Perempuan">Perempuan</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="maritalStatus">Status Perkawinan</Label>

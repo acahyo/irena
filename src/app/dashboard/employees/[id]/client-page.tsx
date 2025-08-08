@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import Link from 'next/link';
@@ -16,7 +15,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Building2, Calendar, FileText, Heart, Home, Landmark, Mail, MapPin, Pencil, Phone, ShieldCheck, Trash2, User, UserCheck, UserSquare, Users, Briefcase, CalendarCheck } from 'lucide-react';
+import { ArrowLeft, Building2, Calendar, FileText, Heart, Home, Landmark, Mail, MapPin, Pencil, Phone, ShieldCheck, Trash2, User, UserCheck, UserSquare, Users, Briefcase, CalendarCheck, VenetianMask } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { Employee, LeaveRequest } from '@/lib/types';
 import {
@@ -182,6 +181,7 @@ export default function EmployeeProfileClientPage({ employee }: { employee: Empl
                 <DetailItem icon={<UserSquare className="h-5 w-5"/>} label="NIK" value={employee.nik} />
                 <DetailItem icon={<MapPin className="h-5 w-5"/>} label="Place of Birth" value={employee.placeOfBirth} />
                 <DetailItem icon={<Calendar className="h-5 w-5"/>} label="Date of Birth" value={employee.dateOfBirth} />
+                <DetailItem icon={<VenetianMask className="h-5 w-5"/>} label="Gender" value={employee.gender} />
                 <DetailItem icon={<Home className="h-5 w-5"/>} label="Address" value={employee.address} />
                 <DetailItem icon={<Heart className="h-5 w-5"/>} label="Marital Status" value={employee.maritalStatus} />
             </CardContent>

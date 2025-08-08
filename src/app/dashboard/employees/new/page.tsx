@@ -235,6 +235,18 @@ export default function NewEmployeePage() {
                 <DatePicker date={dateOfBirth} setDate={setDateOfBirth} />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="gender">Jenis Kelamin</Label>
+                <Select name="gender">
+                  <SelectTrigger id="gender">
+                    <SelectValue placeholder="Pilih Jenis Kelamin" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Laki-laki">Laki-laki</SelectItem>
+                    <SelectItem value="Perempuan">Perempuan</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="maritalStatus">Status Perkawinan</Label>
                 <Select name="maritalStatus">
                   <SelectTrigger id="maritalStatus">
