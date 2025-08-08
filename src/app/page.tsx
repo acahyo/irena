@@ -1,3 +1,4 @@
+
 import { redirect } from 'next/navigation';
 import { Building } from 'lucide-react';
 
@@ -11,20 +12,27 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { getSettings } from '@/actions/settings';
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const settings = await getSettings();
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-primary p-4">
       <div className="w-full max-w-md">
         <Card className="shadow-2xl">
           <CardHeader className="space-y-1 text-center">
             <div className="flex justify-center pb-4">
-              <div className="rounded-lg bg-primary p-3 text-primary-foreground">
-                <Building className="h-8 w-8" />
-              </div>
+               <Avatar className="h-12 w-12 rounded-lg">
+                {settings.logo && <AvatarImage src={settings.logo} alt={settings.appName} />}
+                <AvatarFallback className="rounded-lg bg-primary text-primary-foreground">
+                    <Building className="h-6 w-6" />
+                </AvatarFallback>
+            </Avatar>
             </div>
             <CardTitle className="text-3xl font-bold tracking-tight">
-              Staff Hub
+              {settings.appName || 'Staff Hub'}
             </CardTitle>
             <CardDescription>
               Welcome back! Please sign in to your account.
@@ -62,3 +70,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

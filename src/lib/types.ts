@@ -79,3 +79,13 @@ export type Position = {
     id: string;
     name: string;
 };
+
+export type AppSettings = {
+  id?: string;
+  appName?: string;
+  appDescription?: string;
+  logo?: string;
+  primaryColor?: string;
+  backgroundColor?: string;
+  accentColor?: string;
+}
