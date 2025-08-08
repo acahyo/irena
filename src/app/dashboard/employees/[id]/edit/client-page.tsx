@@ -310,12 +310,16 @@ export default function EditEmployeePageClient({ employee, departments, position
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="simperNumber">Nomor Simper</Label>
-                <Input id="simperNumber" name="simperNumber" placeholder="e.g. 12345" defaultValue={employee.simperNumber} />
-              </div>
-              <div className="space-y-2">
                 <Label htmlFor="idCardNumber">Nomor ID Card</Label>
                 <Input id="idCardNumber" name="idCardNumber" placeholder="e.g. 67890" defaultValue={employee.idCardNumber} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="workContractNumber">Nomor Kontrak Kerja</Label>
+                <Input id="workContractNumber" name="workContractNumber" placeholder="e.g. KK/2024/001" defaultValue={employee.workContractNumber} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="simperNumber">Nomor Simper</Label>
+                <Input id="simperNumber" name="simperNumber" placeholder="e.g. 12345" defaultValue={employee.simperNumber} />
               </div>
                <div className="space-y-2">
                 <Label htmlFor="position">Jabatan</Label>

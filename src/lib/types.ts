@@ -27,6 +27,7 @@ export type Employee = {
   sioPhoto?: string;
   simperNumber?: string;
   idCardNumber?: string;
+  workContractNumber?: string;
   messRoomNumber?: string;
   messEntryDate?: Date | string;
   workEquipment?: string;

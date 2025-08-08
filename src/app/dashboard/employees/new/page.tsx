@@ -317,12 +317,16 @@ export default function NewEmployeePage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="simperNumber">Nomor Simper</Label>
-                <Input id="simperNumber" name="simperNumber" placeholder="e.g. 12345" />
-              </div>
-              <div className="space-y-2">
                 <Label htmlFor="idCardNumber">Nomor ID Card</Label>
                 <Input id="idCardNumber" name="idCardNumber" placeholder="e.g. 67890" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="workContractNumber">Nomor Kontrak Kerja</Label>
+                <Input id="workContractNumber" name="workContractNumber" placeholder="e.g. KK/2024/001" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="simperNumber">Nomor Simper</Label>
+                <Input id="simperNumber" name="simperNumber" placeholder="e.g. 12345" />
               </div>
                <div className="space-y-2">
                 <Label htmlFor="position">Jabatan</Label>

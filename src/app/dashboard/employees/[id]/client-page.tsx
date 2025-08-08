@@ -219,6 +219,7 @@ export default function EmployeeProfileClientPage({ employee }: { employee: Empl
                 <DetailItem icon={<Users className="h-5 w-5"/>} label="Department" value={employee.department} />
                 <DetailItem icon={<MapPin className="h-5 w-5"/>} label="Site Location" value={employee.siteLocation} />
                 <DetailItem icon={<FileText className="h-5 w-5"/>} label="ID Card Number" value={employee.idCardNumber} />
+                <DetailItem icon={<FileText className="h-5 w-5"/>} label="Work Contract Number" value={employee.workContractNumber} />
                 <DetailItem icon={<FileText className="h-5 w-5"/>} label="Simper Number" value={employee.simperNumber} />
                  <div className="flex items-start gap-4">
                     <div className="text-muted-foreground w-5 mt-1"><ShieldCheck className="h-5 w-5"/></div>
