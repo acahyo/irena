@@ -5,10 +5,11 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, CalendarOff, UserCheck, Loader2, Clock } from 'lucide-react';
+import { Users, CalendarOff, UserCheck, Loader2, Clock, UserX, LogOut, CircleSlash } from 'lucide-react';
 import { getEmployees } from '@/actions/employees';
 import { getLeaveRequests } from '@/actions/leave';
 import type { Employee } from '@/lib/types';
+import { Badge } from '@/components/ui/badge';
 
 const COLORS = ['#136F63', '#877795', '#A29F85', '#C4B79A', '#EAE0C1', '#F7EDE2'];
 
@@ -30,7 +31,12 @@ export default function DashboardPage() {
         totalEmployees: 0,
         employeesOnLeave: 0,
         employeesByPosition: [] as { name: string, value: number }[],
-        activeEmployees: 0,
+        employeesByStatus: {
+            active: 0,
+            nonaktif: 0,
+            resign: 0,
+            phk: 0
+        },
     });
     const [loading, setLoading] = useState(true);
     const [currentDateTime, setCurrentDateTime] = useState<Date | null>(null);
@@ -76,13 +82,22 @@ export default function DashboardPage() {
                     return acc;
                 }, [] as { name: string, value: number }[]);
 
-                const activeEmployees = employees.filter(emp => emp.employeeStatus === 'active').length;
+                const employeesByStatus = employees.reduce((acc, emp) => {
+                    const status = emp.employeeStatus || 'active';
+                    if (acc[status as keyof typeof acc]) {
+                        acc[status as keyof typeof acc]++;
+                    } else {
+                        acc[status as keyof typeof acc] = 1;
+                    }
+                    return acc;
+                }, { active: 0, nonaktif: 0, resign: 0, phk: 0 });
+
 
                 setStats({
                     totalEmployees: employees.length,
                     employeesOnLeave: approvedLeave.length,
                     employeesByPosition: employeesByPosition.sort((a,b) => b.value - a.value),
-                    activeEmployees: activeEmployees,
+                    employeesByStatus: employeesByStatus,
                 });
 
             } catch (error) {
@@ -102,6 +117,16 @@ export default function DashboardPage() {
             </div>
         );
     }
+
+    const StatusItem = ({ icon, label, value, color }: { icon: React.ReactNode, label: string, value: number, color?: string }) => (
+        <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+                {icon}
+                <span className="text-sm">{label}</span>
+            </div>
+            <Badge variant="secondary" className={color}>{value}</Badge>
+        </div>
+    );
 
     return (
         <div className="space-y-6">
@@ -150,13 +175,14 @@ export default function DashboardPage() {
                     </Card>
                 </Link>
                 <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Karyawan Aktif</CardTitle>
-                        <UserCheck className="h-4 w-4 text-muted-foreground" />
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium">Status Karyawan</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{stats.activeEmployees}</div>
-                        <p className="text-xs text-muted-foreground">Jumlah karyawan dengan status aktif</p>
+                    <CardContent className="space-y-3 pt-2">
+                       <StatusItem icon={<UserCheck className="h-4 w-4 text-green-500" />} label="Aktif" value={stats.employeesByStatus.active} color="bg-green-100 text-green-800" />
+                       <StatusItem icon={<UserX className="h-4 w-4 text-yellow-500" />} label="Non-Aktif" value={stats.employeesByStatus.nonaktif} color="bg-yellow-100 text-yellow-800" />
+                       <StatusItem icon={<LogOut className="h-4 w-4 text-blue-500" />} label="Resign" value={stats.employeesByStatus.resign} color="bg-blue-100 text-blue-800" />
+                       <StatusItem icon={<CircleSlash className="h-4 w-4 text-red-500" />} label="PHK" value={stats.employeesByStatus.phk} color="bg-red-100 text-red-800" />
                     </CardContent>
                 </Card>
             </div>
