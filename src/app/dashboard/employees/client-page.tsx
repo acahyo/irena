@@ -79,14 +79,32 @@ export default function EmployeeDirectoryClientPage({ initialEmployees }: { init
       reader.onload = (e) => {
         try {
           const data = new Uint8Array(e.target?.result as ArrayBuffer);
-          const workbook = XLSX.read(data, { type: 'array' });
+          const workbook = XLSX.read(data, { type: 'array', cellDates: true });
           const sheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[sheetName];
-          const json = XLSX.utils.sheet_to_json(worksheet) as Partial<Employee>[];
+          const json = XLSX.utils.sheet_to_json(worksheet) as any[];
           
           startTransition(async () => {
             try {
-              await importEmployees(json);
+              // Convert date objects to strings before sending to server action
+              const employeesToImport = json.map(emp => {
+                const newEmp = { ...emp };
+                if (newEmp.dateOfBirth instanceof Date) {
+                  newEmp.dateOfBirth = newEmp.dateOfBirth.toISOString();
+                }
+                if (newEmp.messEntryDate instanceof Date) {
+                  newEmp.messEntryDate = newEmp.messEntryDate.toISOString();
+                }
+                if (newEmp.contractStartDate instanceof Date) {
+                  newEmp.contractStartDate = newEmp.contractStartDate.toISOString();
+                }
+                if (newEmp.contractEndDate instanceof Date) {
+                  newEmp.contractEndDate = newEmp.contractEndDate.toISOString();
+                }
+                return newEmp;
+              }) as Partial<Employee>[];
+
+              await importEmployees(employeesToImport);
               toast({
                 title: 'Success!',
                 description: 'Employee data has been imported successfully.',
