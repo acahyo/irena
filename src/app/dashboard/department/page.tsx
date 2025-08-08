@@ -1,4 +1,7 @@
 
+'use client';
+
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Card,
@@ -22,10 +25,66 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, PlusCircle } from 'lucide-react';
-import { departments } from '@/lib/data';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { MoreHorizontal, PlusCircle, Loader2, Trash2, Pencil } from 'lucide-react';
+import { getDepartments, deleteDepartment } from '@/actions/departments';
+import { useToast } from '@/hooks/use-toast';
+import type { Department } from '@/lib/types';
+
 
 export default function DepartmentPage() {
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  const fetchDepartments = async () => {
+    setLoading(true);
+    try {
+      const data = await getDepartments();
+      setDepartments(data);
+    } catch (error) {
+       toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to fetch departments.',
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchDepartments();
+  }, []);
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteDepartment(id);
+      toast({
+        title: 'Success!',
+        description: 'Department has been deleted.',
+      });
+      fetchDepartments(); // Refresh list
+    } catch (error) {
+       toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to delete department.',
+      });
+    }
+  };
+
+
   return (
     <Card>
       <CardHeader>
@@ -53,7 +112,14 @@ export default function DepartmentPage() {
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {departments.map((dept) => (
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={2} className="h-24 text-center">
+                    <Loader2 className="mx-auto h-8 w-8 animate-spin" />
+                  </TableCell>
+                </TableRow>
+              ) : departments.length > 0 ? (
+                departments.map((dept) => (
                     <TableRow key={dept.id}>
                         <TableCell className="font-medium">{dept.name}</TableCell>
                         <TableCell className="text-right">
@@ -65,20 +131,44 @@ export default function DepartmentPage() {
                                 </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                    <DropdownMenuItem>Edit</DropdownMenuItem>
-                                    <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                                    <DropdownMenuItem asChild>
+                                      <Link href={`/dashboard/department/${dept.id}/edit`}>
+                                        <Pencil className="mr-2 h-4 w-4" /> Edit
+                                      </Link>
+                                    </DropdownMenuItem>
+                                     <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
+                                                 <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                            </DropdownMenuItem>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                This action cannot be undone. This will permanently delete the department.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction onClick={() => handleDelete(dept.id)}>
+                                                    Continue
+                                                </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </TableCell>
                     </TableRow>
-                ))}
-                 {departments.length === 0 && (
-                    <TableRow>
-                        <TableCell colSpan={2} className="h-24 text-center">
-                            No departments found.
-                        </TableCell>
-                    </TableRow>
-                )}
+                ))
+               ) : (
+                <TableRow>
+                    <TableCell colSpan={2} className="h-24 text-center">
+                        No departments found.
+                    </TableCell>
+                </TableRow>
+              )}
             </TableBody>
         </Table>
       </CardContent>
