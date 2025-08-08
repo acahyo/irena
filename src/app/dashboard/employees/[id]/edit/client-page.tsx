@@ -5,7 +5,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ArrowLeft, Calendar as CalendarIcon, Upload, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -38,16 +38,22 @@ import type { Employee, Department, Position } from '@/lib/types';
 import { updateEmployee } from '@/actions/employees';
 import { Textarea } from '@/components/ui/textarea';
 
+const parseDate = (date: string | Date | undefined): Date | undefined => {
+  if (!date) return undefined;
+  if (date instanceof Date) return date;
+  return parseISO(date);
+};
+
 
 export default function EditEmployeePageClient({ employee, departments, positions }: { employee: Employee, departments: Department[], positions: Position[] }) {
   const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   
-  const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(employee.dateOfBirth);
-  const [messEntryDate, setMessEntryDate] = useState<Date | undefined>(employee.messEntryDate);
-  const [contractStartDate, setContractStartDate] = useState<Date | undefined>(employee.contractStartDate);
-  const [contractEndDate, setContractEndDate] = useState<Date | undefined>(employee.contractEndDate);
+  const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(parseDate(employee.dateOfBirth));
+  const [messEntryDate, setMessEntryDate] = useState<Date | undefined>(parseDate(employee.messEntryDate));
+  const [contractStartDate, setContractStartDate] = useState<Date | undefined>(parseDate(employee.contractStartDate));
+  const [contractEndDate, setContractEndDate] = useState<Date | undefined>(parseDate(employee.contractEndDate));
   const [photoPreview, setPhotoPreview] = useState<string | null>(employee.avatar || null);
   const [simPreview, setSimPreview] = useState<string | null>(employee.simPhoto || null);
   const [sioPreview, setSioPreview] = useState<string | null>(employee.sioPhoto || null);
