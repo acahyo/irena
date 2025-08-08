@@ -24,7 +24,7 @@ export function EmployeeCard({ employee }: EmployeeCardProps) {
       <Card className="h-full flex flex-col transform-gpu transition-all duration-200 ease-in-out hover:-translate-y-1 hover:shadow-lg">
         <CardHeader className="items-center text-center">
             {employee.onLeave && (
-              <Badge variant="secondary" className="absolute top-2 right-2">On Leave</Badge>
+              <Badge variant="destructive" className="absolute top-2 right-2">Sedang Cuti</Badge>
             )}
             <Avatar className="h-24 w-24 border-2 border-primary/20">
               <AvatarImage src={employee.avatar} alt={employee.name} />
