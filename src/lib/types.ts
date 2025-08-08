@@ -62,3 +62,14 @@ export type Role = {
     name: string;
     description: string;
 };
+
+export type LeaveRequest = {
+    id: string;
+    employeeId: string;
+    employeeName: string;
+    startDate: Date;
+    endDate: Date;
+    type: 'Annual Leave' | 'Sick Leave' | 'Unpaid Leave' | 'Other';
+    reason: string;
+    status: 'Pending' | 'Approved' | 'Rejected';
+};

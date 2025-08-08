@@ -1,5 +1,9 @@
 
+'use client';
+
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { format } from 'date-fns';
 import {
   Card,
   CardContent,
@@ -22,96 +26,164 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Loader2, CheckCircle, XCircle, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-
-// Mock data for leave schedule
-const leaveRequests = [
-    { id: '1', employeeName: 'Alice Johnson', startDate: '2024-08-15', endDate: '2024-08-20', type: 'Annual Leave', status: 'Approved' },
-    { id: '2', employeeName: 'Bob Williams', startDate: '2024-09-01', endDate: '2024-09-02', type: 'Sick Leave', status: 'Pending' },
-    { id: '3', employeeName: 'Charlie Brown', startDate: '2024-08-25', endDate: '2024-08-25', type: 'Unpaid Leave', status: 'Rejected' },
-];
+import { useToast } from '@/hooks/use-toast';
+import type { LeaveRequest } from '@/lib/types';
+import { getLeaveRequests, updateLeaveRequestStatus, deleteLeaveRequest } from '@/actions/leave';
 
 const getStatusVariant = (status: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
-      switch (status.toLowerCase()) {
-          case 'approved':
-              return 'default';
-          case 'pending':
-              return 'secondary';
-          case 'rejected':
-              return 'destructive';
-          default:
-              return 'outline';
-      }
-  };
-
+  switch (status) {
+    case 'Approved':
+      return 'default';
+    case 'Pending':
+      return 'secondary';
+    case 'Rejected':
+      return 'destructive';
+    default:
+      return 'outline';
+  }
+};
 
 export default function LeaveSchedulePage() {
+  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  const fetchRequests = async () => {
+    try {
+      setLoading(true);
+      const requests = await getLeaveRequests();
+      setLeaveRequests(requests);
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to fetch leave requests.',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRequests();
+  }, []);
+
+  const handleStatusUpdate = async (id: string, status: 'Approved' | 'Rejected') => {
+    try {
+        await updateLeaveRequestStatus(id, status);
+        toast({
+            title: 'Success!',
+            description: `Leave request has been ${status.toLowerCase()}.`,
+        });
+        fetchRequests(); // Refresh the list
+    } catch (error) {
+        toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'Failed to update leave request status.',
+        });
+    }
+  };
+  
+  const handleDelete = async (id: string) => {
+    try {
+        await deleteLeaveRequest(id);
+        toast({
+            title: 'Success!',
+            description: 'Leave request has been deleted.',
+        });
+        fetchRequests(); // Refresh the list
+    } catch (error) {
+        toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'Failed to delete leave request.',
+        });
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-            <div>
-                <CardTitle>Jadwal Cuti Karyawan</CardTitle>
-                <CardDescription>
-                    Kelola dan lihat jadwal cuti karyawan di sini.
-                </CardDescription>
-            </div>
-            <Button asChild>
-                <Link href="/dashboard/leave-schedule/new">
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Ajukan Cuti
-                </Link>
-            </Button>
+          <div>
+            <CardTitle>Jadwal Cuti Karyawan</CardTitle>
+            <CardDescription>
+              Kelola dan lihat jadwal cuti karyawan di sini.
+            </CardDescription>
+          </div>
+          <Button asChild>
+            <Link href="/dashboard/leave-schedule/new">
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Ajukan Cuti
+            </Link>
+          </Button>
         </div>
       </CardHeader>
       <CardContent>
         <Table>
-            <TableHeader>
-                <TableRow>
-                    <TableHead>Nama Karyawan</TableHead>
-                    <TableHead>Tanggal Mulai</TableHead>
-                    <TableHead>Tanggal Selesai</TableHead>
-                    <TableHead>Jenis Cuti</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="w-[100px] text-right">Aksi</TableHead>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nama Karyawan</TableHead>
+              <TableHead>Tanggal Mulai</TableHead>
+              <TableHead>Tanggal Selesai</TableHead>
+              <TableHead>Jenis Cuti</TableHead>
+              <TableHead>Alasan</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="w-[100px] text-right">Aksi</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={7} className="h-24 text-center">
+                  <Loader2 className="mx-auto h-8 w-8 animate-spin" />
+                </TableCell>
+              </TableRow>
+            ) : leaveRequests.length > 0 ? (
+              leaveRequests.map((req) => (
+                <TableRow key={req.id}>
+                  <TableCell className="font-medium">{req.employeeName}</TableCell>
+                  <TableCell>{format(req.startDate, 'PPP')}</TableCell>
+                  <TableCell>{format(req.endDate, 'PPP')}</TableCell>
+                  <TableCell>{req.type}</TableCell>
+                  <TableCell className="max-w-xs truncate">{req.reason}</TableCell>
+                  <TableCell>
+                    <Badge variant={getStatusVariant(req.status)}>{req.status}</Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <span className="sr-only">Open menu</span>
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleStatusUpdate(req.id, 'Approved')}>
+                           <CheckCircle className="mr-2 h-4 w-4" /> Approve
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleStatusUpdate(req.id, 'Rejected')}>
+                           <XCircle className="mr-2 h-4 w-4" /> Reject
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDelete(req.id)} className="text-destructive">
+                           <Trash2 className="mr-2 h-4 w-4" /> Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
                 </TableRow>
-            </TableHeader>
-            <TableBody>
-                {leaveRequests.map((req) => (
-                    <TableRow key={req.id}>
-                        <TableCell className="font-medium">{req.employeeName}</TableCell>
-                        <TableCell>{req.startDate}</TableCell>
-                        <TableCell>{req.endDate}</TableCell>
-                        <TableCell>{req.type}</TableCell>
-                        <TableCell>
-                            <Badge variant={getStatusVariant(req.status)}>{req.status}</Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                             <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                    <span className="sr-only">Open menu</span>
-                                    <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                    <DropdownMenuItem>Approve</DropdownMenuItem>
-                                    <DropdownMenuItem>Reject</DropdownMenuItem>
-                                    <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </TableCell>
-                    </TableRow>
-                ))}
-                 {leaveRequests.length === 0 && (
-                    <TableRow>
-                        <TableCell colSpan={6} className="h-24 text-center">
-                            Tidak ada jadwal cuti ditemukan.
-                        </TableCell>
-                    </TableRow>
-                )}
-            </TableBody>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={7} className="h-24 text-center">
+                  Tidak ada jadwal cuti ditemukan.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
         </Table>
       </CardContent>
     </Card>
