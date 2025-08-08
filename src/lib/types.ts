@@ -11,7 +11,7 @@ export type Employee = {
   location?: string;
   nik?: string;
   placeOfBirth?: string;
-  dateOfBirth?: Date;
+  dateOfBirth?: Date | string;
   address?: string;
   accountNumber?: string;
   bankName?: string;
@@ -27,10 +27,10 @@ export type Employee = {
   simperNumber?: string;
   idCardNumber?: string;
   messRoomNumber?: string;
-  messEntryDate?: Date;
+  messEntryDate?: Date | string;
   workEquipment?: string;
-  contractStartDate?: Date;
-  contractEndDate?: Date;
+  contractStartDate?: Date | string;
+  contractEndDate?: Date | string;
   position?: string;
   siteLocation?: string;
   onLeave?: boolean;

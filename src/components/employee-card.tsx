@@ -15,7 +15,7 @@ import { Phone, Building, Calendar, Briefcase, User } from 'lucide-react';
 import { Badge } from './ui/badge';
 
 interface EmployeeCardProps {
-  employee: Employee & { contractStartDate?: string, contractEndDate?: string };
+  employee: Employee;
 }
 
 export function EmployeeCard({ employee }: EmployeeCardProps) {
