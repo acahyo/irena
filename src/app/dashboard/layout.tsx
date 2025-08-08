@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/sidebar";
 import {
   Building,
-  CalendarDays,
   LogOut,
   Users,
   Briefcase,
@@ -37,7 +36,6 @@ const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", exact: true },
   { href: "/dashboard/employees", icon: Users, label: "Employees" },
   { href: "/dashboard/leave-schedule", icon: CalendarCheck, label: "Jadwal Cuti" },
-  { href: "/dashboard/calendar", icon: CalendarDays, label: "Calendar" },
   { href: "/dashboard/department", icon: Briefcase, label: "Department" },
   { href: "/dashboard/position", icon: Shield, label: "Position" },
   { href: "/dashboard/users", icon: UsersRound, label: "Users" },
