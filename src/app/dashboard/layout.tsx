@@ -41,7 +41,6 @@ const navItems = [
   { href: "/dashboard/leave-schedule", icon: CalendarCheck, label: "Jadwal Cuti" },
   { href: "/dashboard/calendar", icon: CalendarDays, label: "Calendar" },
   { href: "/dashboard/sentiment-analysis", icon: HeartPulse, label: "Sentiment AI" },
-  { href: "/dashboard/contract-template", icon: FileText, label: "Contract Template" },
   { href: "/dashboard/department", icon: Briefcase, label: "Department" },
   { href: "/dashboard/position", icon: Shield, label: "Position" },
   { href: "/dashboard/users", icon: UsersRound, label: "Users" },
