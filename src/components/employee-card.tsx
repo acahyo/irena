@@ -22,11 +22,11 @@ export function EmployeeCard({ employee }: EmployeeCardProps) {
         <CardHeader className="items-center text-center">
             <Avatar className="h-24 w-24 border-2 border-primary/20">
               <AvatarImage src={employee.avatar} alt={employee.name} />
-              <AvatarFallback>{employee.name.charAt(0)}</AvatarFallback>
+              <AvatarFallback>{employee.name ? employee.name.charAt(0) : '?'}</AvatarFallback>
             </Avatar>
             <div className="w-full truncate pt-4">
               <CardTitle className="truncate">{employee.name}</CardTitle>
-              <CardDescription className="truncate">{employee.role || 'No position'}</CardDescription>
+              <CardDescription className="truncate">{employee.position || 'No position'}</CardDescription>
             </div>
         </CardHeader>
         <CardContent>
