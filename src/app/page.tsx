@@ -1,6 +1,6 @@
 
 import { redirect } from 'next/navigation';
-import { Building } from 'lucide-react';
+import { LogIn } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -27,7 +27,7 @@ export default async function LoginPage() {
                <Avatar className="h-12 w-12 rounded-lg">
                 {settings.logo && <AvatarImage src={settings.logo} alt={settings.appName} />}
                 <AvatarFallback className="rounded-lg bg-primary text-primary-foreground">
-                    <Building className="h-6 w-6" />
+                    <LogIn className="h-6 w-6" />
                 </AvatarFallback>
             </Avatar>
             </div>
@@ -70,4 +70,3 @@ export default async function LoginPage() {
     </div>
   );
 }
-
