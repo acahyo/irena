@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Briefcase, CalendarOff, Loader2 } from 'lucide-react';
+import { Users, CalendarOff, UserCheck, Loader2 } from 'lucide-react';
 import { getEmployees } from '@/actions/employees';
 import { getLeaveRequests } from '@/actions/leave';
 import type { Employee } from '@/lib/types';
@@ -29,6 +29,7 @@ export default function DashboardPage() {
         totalEmployees: 0,
         employeesOnLeave: 0,
         employeesByPosition: [] as { name: string, value: number }[],
+        activeEmployees: 0,
     });
     const [loading, setLoading] = useState(true);
 
@@ -62,10 +63,13 @@ export default function DashboardPage() {
                     return acc;
                 }, [] as { name: string, value: number }[]);
 
+                const activeEmployees = employees.filter(emp => emp.employeeStatus === 'active').length;
+
                 setStats({
                     totalEmployees: employees.length,
                     employeesOnLeave: approvedLeave.length,
                     employeesByPosition: employeesByPosition.sort((a,b) => b.value - a.value),
+                    activeEmployees: activeEmployees,
                 });
 
             } catch (error) {
@@ -111,12 +115,12 @@ export default function DashboardPage() {
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Jabatan</CardTitle>
-                        <Briefcase className="h-4 w-4 text-muted-foreground" />
+                        <CardTitle className="text-sm font-medium">Karyawan Aktif</CardTitle>
+                        <UserCheck className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{stats.employeesByPosition.length}</div>
-                        <p className="text-xs text-muted-foreground">Jumlah jabatan yang ada</p>
+                        <div className="text-2xl font-bold">{stats.activeEmployees}</div>
+                        <p className="text-xs text-muted-foreground">Jumlah karyawan dengan status aktif</p>
                     </CardContent>
                 </Card>
             </div>
