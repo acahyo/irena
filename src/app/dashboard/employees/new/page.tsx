@@ -50,6 +50,7 @@ export default function NewEmployeePage() {
   const [contractStartDate, setContractStartDate] = useState<Date | undefined>();
   const [contractEndDate, setContractEndDate] = useState<Date | undefined>();
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [ktpPreview, setKtpPreview] = useState<string | null>(null);
   const [simPreview, setSimPreview] = useState<string | null>(null);
   const [sioPreview, setSioPreview] = useState<string | null>(null);
 
@@ -99,6 +100,7 @@ export default function NewEmployeePage() {
     
     // Remove file inputs from data object as we handle them separately
     delete data.photo;
+    delete data.ktpPhoto;
     delete data.simPhoto;
     delete data.sioPhoto;
 
@@ -109,6 +111,7 @@ export default function NewEmployeePage() {
         contractStartDate: contractStartDate,
         contractEndDate: contractEndDate,
         avatar: photoPreview,
+        ktpPhoto: ktpPreview,
         simPhoto: simPreview,
         sioPhoto: sioPreview,
     } as Partial<Employee>;
@@ -295,7 +298,8 @@ export default function NewEmployeePage() {
                 </RadioGroup>
               </div>
 
-              <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
+              <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-8">
+                <FileInput id="ktpPhoto" label="Foto KTP" preview={ktpPreview} onChange={(e) => handleFileChange(e, setKtpPreview)} />
                 <FileInput id="simPhoto" label="Foto SIM" preview={simPreview} onChange={(e) => handleFileChange(e, setSimPreview)} />
                 <FileInput id="sioPhoto" label="Foto SIO" preview={sioPreview} onChange={(e) => handleFileChange(e, setSioPreview)} />
               </div>

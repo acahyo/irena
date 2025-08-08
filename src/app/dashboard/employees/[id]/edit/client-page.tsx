@@ -55,6 +55,7 @@ export default function EditEmployeePageClient({ employee, departments, position
   const [contractStartDate, setContractStartDate] = useState<Date | undefined>(parseDate(employee.contractStartDate));
   const [contractEndDate, setContractEndDate] = useState<Date | undefined>(parseDate(employee.contractEndDate));
   const [photoPreview, setPhotoPreview] = useState<string | null>(employee.avatar || null);
+  const [ktpPreview, setKtpPreview] = useState<string | null>(employee.ktpPhoto || null);
   const [simPreview, setSimPreview] = useState<string | null>(employee.simPhoto || null);
   const [sioPreview, setSioPreview] = useState<string | null>(employee.sioPhoto || null);
 
@@ -84,6 +85,7 @@ export default function EditEmployeePageClient({ employee, departments, position
 
     // Remove file inputs from data object as we handle them separately
     delete data.photo;
+    delete data.ktpPhoto;
     delete data.simPhoto;
     delete data.sioPhoto;
 
@@ -94,6 +96,7 @@ export default function EditEmployeePageClient({ employee, departments, position
         contractStartDate: contractStartDate,
         contractEndDate: contractEndDate,
         avatar: photoPreview,
+        ktpPhoto: ktpPreview,
         simPhoto: simPreview,
         sioPhoto: sioPreview,
     } as Partial<Employee>;
@@ -281,7 +284,8 @@ export default function EditEmployeePageClient({ employee, departments, position
                 </RadioGroup>
               </div>
 
-              <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
+              <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-8">
+                <FileInput id="ktpPhoto" label="Foto KTP" preview={ktpPreview} onChange={(e) => handleFileChange(e, setKtpPreview)} />
                 <FileInput id="simPhoto" label="Foto SIM" preview={simPreview} onChange={(e) => handleFileChange(e, setSimPreview)} />
                 <FileInput id="sioPhoto" label="Foto SIO" preview={sioPreview} onChange={(e) => handleFileChange(e, setSioPreview)} />
               </div>

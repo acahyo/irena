@@ -247,7 +247,8 @@ export default function EmployeeProfileClientPage({ employee }: { employee: Empl
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5"/> Documents</CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <PhotoItem label="KTP Photo" src={employee.ktpPhoto} hint="ID card" />
                 <PhotoItem label="SIM Photo" src={employee.simPhoto} hint="drivers license" />
                 <PhotoItem label="SIO Photo" src={employee.sioPhoto} hint="license" />
             </CardContent>

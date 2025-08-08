@@ -21,6 +21,7 @@ export type Employee = {
   emergencyContactNumber?: string;
   bpjsStatus?: 'active' | 'inactive';
   employeeStatus?: 'active' | 'nonaktif' | 'resign' | 'phk';
+  ktpPhoto?: string;
   simPhoto?: string;
   sioPhoto?: string;
   simperNumber?: string;
@@ -42,11 +43,6 @@ export type CalendarEvent = {
 };
 
 export type Department = {
-    id: string;
-    name: string;
-};
-
-export type Position = {
     id: string;
     name: string;
 };
