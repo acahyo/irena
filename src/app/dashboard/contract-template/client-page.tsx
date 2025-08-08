@@ -23,6 +23,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import type { Employee } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { Copy } from 'lucide-react';
 
 const generateContractText = (data: any) => {
     const { 
@@ -111,6 +112,14 @@ export default function ContractTemplateClientPage({ employees }: { employees: E
         toast({ title: "Success", description: "Contract has been generated." });
     };
 
+    const handleCopy = () => {
+        if (generatedContract) {
+            navigator.clipboard.writeText(generatedContract);
+            toast({ title: "Success", description: "Contract copied to clipboard." });
+        }
+    };
+
+
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
@@ -170,17 +179,22 @@ export default function ContractTemplateClientPage({ employees }: { employees: E
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Generated Contract Preview</CardTitle>
+                    <CardTitle>Generated Contract</CardTitle>
                     <CardDescription>
-                        Review the generated contract below. You can copy the text.
+                       Review and edit the generated contract below.
                     </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-4">
                     <Textarea
-                        readOnly
                         className="h-[500px] text-sm bg-muted/50"
-                        value={generatedContract || "Contract preview will appear here..."}
+                        value={generatedContract}
+                        onChange={(e) => setGeneratedContract(e.target.value)}
+                        placeholder="Contract preview will appear here..."
                     />
+                    <Button onClick={handleCopy} disabled={!generatedContract} className="w-full" variant="outline">
+                        <Copy className="mr-2 h-4 w-4" />
+                        Copy Contract
+                    </Button>
                 </CardContent>
             </Card>
         </div>
