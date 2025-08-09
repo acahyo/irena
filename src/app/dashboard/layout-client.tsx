@@ -59,13 +59,11 @@ export default function DashboardClientLayout({
   const userRole = user?.role || '';
 
   const navItems = allNavItems.filter(item => {
-    // Admin can see everything, case-insensitive check
     if (userRole.toLowerCase() === 'administrator') return true;
-    // Check if the item's roles include the user's role
     return item.roles.includes(userRole);
   });
 
-  const activeLabel = navItems.find(item => item.exact ? pathname === item.href : pathname.startsWith(item.href))?.label || settings.appName || 'Staff Hub';
+  const activeLabel = navItems.find(item => item.exact ? pathname === item.href : pathname.startsWith(item.href))?.label || settings.appName || 'Dashboard';
 
 
   return (
@@ -80,7 +78,7 @@ export default function DashboardClientLayout({
                 </AvatarFallback>
             </Avatar>
             <span className="text-lg font-semibold text-sidebar-foreground">
-              {settings.appName || 'Staff Hub'}
+              {settings.appName}
             </span>
           </div>
         </SidebarHeader>

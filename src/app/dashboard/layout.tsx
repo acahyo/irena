@@ -15,7 +15,7 @@ export default async function DashboardLayout({
   // NOTE: This is a placeholder for a real authentication system.
   // In a real app, you would get the logged-in user from a session.
   const users = await getUsers();
-  const currentUser = users.find(u => u.email === 'admin@staffhub.com') || users.find(u => u.role?.toLowerCase().includes('admin')) || users[0];
+  const currentUser = users.find(u => u.email === 'admin@irena.com') || users.find(u => u.role?.toLowerCase().includes('admin')) || users[0];
 
   if (!currentUser) {
     // If no users exist, maybe redirect to a setup page or show an error.
