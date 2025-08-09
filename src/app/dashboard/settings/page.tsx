@@ -15,10 +15,19 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, Upload } from 'lucide-react';
+import { Loader2, Upload, Download } from 'lucide-react';
 import { getSettings, saveSettings } from '@/actions/settings';
 import type { AppSettings } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
+import { getDepartments } from '@/actions/departments';
+import { getEmployees } from '@/actions/employees';
+import { getLeaveRequests } from '@/actions/leave';
+import { getPositions } from '@/actions/positions';
+import { getRoles } from '@/actions/roles';
+import { getUsers } from '@/actions/users';
+
 
 // Helper to convert hex to HSL string
 const hexToHslString = (hex: string | undefined): string | undefined => {
@@ -52,9 +61,10 @@ const hexToHslString = (hex: string | undefined): string | undefined => {
 
 export default function SettingsPage() {
     const { toast } = useToast();
-    const [settings, setSettings] = useState<Omit<AppSettings, 'logo'> | null>(null);
+    const [settings, setSettings] = useState<Omit<AppSettings, 'logo' | 'id'> | null>(null);
     const [logoPreview, setLogoPreview] = useState<string | undefined | null>(null);
     const [loading, setLoading] = useState(false);
+    const [downloading, setDownloading] = useState(false);
     const [pageLoading, setPageLoading] = useState(true);
 
     useEffect(() => {
@@ -62,7 +72,7 @@ export default function SettingsPage() {
             setPageLoading(true);
             try {
                 const data = await getSettings();
-                const { logo, ...rest } = data;
+                const { logo, id, ...rest } = data;
                 setSettings(rest);
                 setLogoPreview(logo);
             } catch (error) {
@@ -105,7 +115,6 @@ export default function SettingsPage() {
 
             await saveSettings(settingsToSave);
 
-            // Update CSS variables dynamically
             const root = document.documentElement;
             if (settings.primaryColor) root.style.setProperty('--primary', hexToHslString(settings.primaryColor) || '');
             if (settings.backgroundColor) root.style.setProperty('--background', hexToHslString(settings.backgroundColor) || '');
@@ -115,7 +124,6 @@ export default function SettingsPage() {
                 title: 'Success!',
                 description: 'Settings have been saved.',
             });
-            // A full page reload might be better to reflect all changes (like sidebar logo/name)
             window.location.reload();
         } catch(error) {
             toast({
@@ -125,6 +133,61 @@ export default function SettingsPage() {
             });
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDownloadBackup = async () => {
+        setDownloading(true);
+        toast({
+            title: 'Preparing Download',
+            description: 'Fetching all data from the database. This may take a moment...',
+        });
+
+        try {
+            const zip = new JSZip();
+            
+            const [
+                departments, 
+                employees, 
+                leaveRequests, 
+                positions, 
+                roles, 
+                users, 
+                appSettings
+            ] = await Promise.all([
+                getDepartments(),
+                getEmployees(),
+                getLeaveRequests(),
+                getPositions(),
+                getRoles(),
+                getUsers(),
+                getSettings()
+            ]);
+
+            zip.file("departments.json", JSON.stringify(departments, null, 2));
+            zip.file("employees.json", JSON.stringify(employees, null, 2));
+            zip.file("leaveRequests.json", JSON.stringify(leaveRequests, null, 2));
+            zip.file("positions.json", JSON.stringify(positions, null, 2));
+            zip.file("roles.json", JSON.stringify(roles, null, 2));
+            zip.file("users.json", JSON.stringify(users, null, 2));
+            zip.file("settings.json", JSON.stringify(appSettings, null, 2));
+
+            const content = await zip.generateAsync({ type: "blob" });
+            saveAs(content, "firestore-backup.zip");
+
+            toast({
+                title: 'Success!',
+                description: 'Database backup has been downloaded.',
+            });
+        } catch (error) {
+            console.error("Backup failed:", error);
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'Failed to download data backup.',
+            });
+        } finally {
+            setDownloading(false);
         }
     };
 
@@ -243,6 +306,21 @@ export default function SettingsPage() {
                             </Button>
                         </div>
                     </form>
+                </CardContent>
+            </Card>
+
+             <Card>
+                <CardHeader>
+                    <CardTitle>Data Backup</CardTitle>
+                    <CardDescription>
+                        Download all data from the Firestore database as a .zip file containing JSON files for each collection.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Button onClick={handleDownloadBackup} disabled={downloading}>
+                        {downloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                        {downloading ? 'Downloading...' : 'Download Data Backup (JSON)'}
+                    </Button>
                 </CardContent>
             </Card>
         </div>
