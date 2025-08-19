@@ -1,4 +1,5 @@
 
+
 export type Employee = {
   id: string;
   name: string;
@@ -37,16 +38,7 @@ export type Employee = {
   onLeave?: boolean;
   daysActive?: number;
   leaveHistory?: LeaveRequest[];
-  basicSalary?: number;
-  mealAllowance?: number;
-  transportAllowance?: number;
-  salaryType?: 'harian' | 'bulanan';
-  dailyWage?: number;
-  overtimeRate?: number;
-  monthlySalary?: number;
-  otAllowance?: number;
-  locationAllowance?: number;
-  otherAllowances?: number;
+  // Salary fields are now in the Position type
 };
 
 export type CalendarEvent = {
@@ -88,6 +80,14 @@ export type LeaveRequest = {
 export type Position = {
     id: string;
     name: string;
+    salaryType?: 'harian' | 'bulanan';
+    dailyWage?: number;
+    overtimeRate?: number;
+    monthlySalary?: number;
+    otAllowance?: number;
+    locationAllowance?: number;
+    mealAllowance?: number;
+    otherAllowances?: number;
 };
 
 export type AppSettings = {
@@ -98,4 +98,9 @@ export type AppSettings = {
   primaryColor?: string;
   backgroundColor?: string;
   accentColor?: string;
+}
+
+// Composite type for pages that need employee data with full position details
+export type EmployeeWithPosition = Employee & {
+  positionDetails?: Position;
 }

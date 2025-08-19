@@ -5,6 +5,8 @@ import { getLeaveRequestsByEmployeeId } from '@/actions/leave';
 import { notFound } from 'next/navigation';
 import EmployeeProfileClientPage from './client-page';
 import { format, parseISO } from 'date-fns';
+import { getPositions } from '@/actions/positions';
+import type { EmployeeWithPosition } from '@/lib/types';
 
 
 // Helper to safely format dates that might be strings or Date objects
@@ -27,11 +29,17 @@ export default async function EmployeeProfilePage({ params }: { params: { id: st
     notFound();
   }
 
-  const leaveHistoryData = await getLeaveRequestsByEmployeeId(params.id);
+  const [leaveHistoryData, positions] = await Promise.all([
+    getLeaveRequestsByEmployeeId(params.id),
+    getPositions(),
+  ]);
+
+  const positionDetails = positions.find(p => p.name === employeeData.position);
 
   // Pre-format dates on the server before sending to the client component
-  const employee = {
+  const employee: EmployeeWithPosition = {
     ...employeeData,
+    positionDetails: positionDetails,
     dateOfBirth: formatDate(employeeData.dateOfBirth),
     messEntryDate: formatDate(employeeData.messEntryDate),
     contractStartDate: formatDate(employeeData.contractStartDate),

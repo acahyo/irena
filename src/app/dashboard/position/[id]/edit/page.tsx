@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, WalletCards } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -19,6 +19,13 @@ import { Label } from '@/components/ui/label';
 import { getPosition, updatePosition } from '@/actions/positions';
 import type { Position } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export default function EditPositionPage() {
     const router = useRouter();
@@ -27,6 +34,7 @@ export default function EditPositionPage() {
     const [position, setPosition] = useState<Position | null>(null);
     const [loading, setLoading] = useState(false);
     const [pageLoading, setPageLoading] = useState(true);
+    const [salaryType, setSalaryType] = useState<string | undefined>();
     
     const id = params.id as string;
 
@@ -38,6 +46,7 @@ export default function EditPositionPage() {
                     const data = await getPosition(id);
                     if (data) {
                         setPosition(data);
+                        setSalaryType(data.salaryType);
                     } else {
                         toast({
                             variant: 'destructive',
@@ -66,10 +75,10 @@ export default function EditPositionPage() {
 
         setLoading(true);
         const formData = new FormData(event.currentTarget);
-        const name = formData.get('name') as string;
+        const data = Object.fromEntries(formData.entries());
 
         try {
-            await updatePosition(id, { name });
+            await updatePosition(id, data as Partial<Position>);
             toast({
                 title: 'Success!',
                 description: 'Position has been updated.',
@@ -126,7 +135,7 @@ export default function EditPositionPage() {
         <CardHeader>
           <CardTitle>Edit Position</CardTitle>
           <CardDescription>
-            Update the position name below.
+            Update the position name and its associated salary details below.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -135,6 +144,67 @@ export default function EditPositionPage() {
                     <Label htmlFor="name">Position Name</Label>
                     <Input id="name" name="name" defaultValue={position.name} required />
                 </div>
+                 <div className="space-y-2 md:col-span-3">
+                 <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2"><WalletCards /> Salary Details</CardTitle>
+                      <CardDescription>Choose salary type and fill in the details.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                       <div className="space-y-2">
+                          <Label htmlFor="salaryType">Salary Type</Label>
+                          <Select name="salaryType" value={salaryType} onValueChange={setSalaryType}>
+                            <SelectTrigger id="salaryType">
+                              <SelectValue placeholder="Select Salary Type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="harian">Daily Salary</SelectItem>
+                              <SelectItem value="bulanan">Monthly Salary</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        {salaryType === 'harian' && (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-md border p-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="dailyWage">Daily Wage (Rp)</Label>
+                              <Input id="dailyWage" name="dailyWage" type="number" placeholder="e.g. 150000" defaultValue={position.dailyWage} />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="overtimeRate">Overtime per Hour (Rp)</Label>
+                              <Input id="overtimeRate" name="overtimeRate" type="number" placeholder="e.g. 25000" defaultValue={position.overtimeRate} />
+                            </div>
+                          </div>
+                        )}
+
+                        {salaryType === 'bulanan' && (
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-md border p-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="monthlySalary">Monthly Salary (Rp)</Label>
+                              <Input id="monthlySalary" name="monthlySalary" type="number" placeholder="e.g. 4500000" defaultValue={position.monthlySalary} />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="otAllowance">OT & Attendance Allowance (Rp)</Label>
+                              <Input id="otAllowance" name="otAllowance" type="number" placeholder="e.g. 500000" defaultValue={position.otAllowance} />
+                            </div>
+                             <div className="space-y-2">
+                              <Label htmlFor="locationAllowance">Location Allowance (Rp)</Label>
+                              <Input id="locationAllowance" name="locationAllowance" type="number" placeholder="e.g. 300000" defaultValue={position.locationAllowance} />
+                            </div>
+                             <div className="space-y-2">
+                              <Label htmlFor="mealAllowance">Meal Allowance (Rp)</Label>
+                              <Input id="mealAllowance" name="mealAllowance" type="number" placeholder="e.g. 750000" defaultValue={position.mealAllowance} />
+                            </div>
+                             <div className="space-y-2 md:col-span-2">
+                              <Label htmlFor="otherAllowances">Other Allowances (Rp)</Label>
+                              <Input id="otherAllowances" name="otherAllowances" type="number" placeholder="e.g. 200000" defaultValue={position.otherAllowances} />
+                            </div>
+                          </div>
+                        )}
+
+                    </CardContent>
+                 </Card>
+              </div>
                  <div className="flex justify-end gap-2 pt-4">
                     <Button type="button" variant="outline" onClick={() => router.back()} disabled={loading}>
                         Cancel

@@ -40,6 +40,7 @@ import { MoreHorizontal, PlusCircle, Trash2, Pencil } from 'lucide-react';
 import { getPositions, deletePosition } from '@/actions/positions';
 import { useToast } from '@/hooks/use-toast';
 import type { Position } from '@/lib/types';
+import { Badge } from '@/components/ui/badge';
 
 
 export default function PositionClientPage({ initialPositions }: { initialPositions: Position[]}) {
@@ -76,7 +77,7 @@ export default function PositionClientPage({ initialPositions }: { initialPositi
             <div>
                 <CardTitle>Positions</CardTitle>
                 <CardDescription>
-                    Manage your company positions and roles here.
+                    Manage your company positions and their salary details.
                 </CardDescription>
             </div>
             <Button asChild>
@@ -92,6 +93,7 @@ export default function PositionClientPage({ initialPositions }: { initialPositi
             <TableHeader>
                 <TableRow>
                     <TableHead>Position Name</TableHead>
+                    <TableHead>Salary Type</TableHead>
                     <TableHead className="w-[100px] text-right">Actions</TableHead>
                 </TableRow>
             </TableHeader>
@@ -100,6 +102,13 @@ export default function PositionClientPage({ initialPositions }: { initialPositi
                 positions.map((pos) => (
                     <TableRow key={pos.id}>
                         <TableCell className="font-medium">{pos.name}</TableCell>
+                        <TableCell>
+                            {pos.salaryType ? (
+                                <Badge variant="outline" className="capitalize">{pos.salaryType}</Badge>
+                            ) : (
+                                <span className="text-muted-foreground">Not Set</span>
+                            )}
+                        </TableCell>
                         <TableCell className="text-right">
                              <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -142,7 +151,7 @@ export default function PositionClientPage({ initialPositions }: { initialPositi
                 ))
                ) : (
                 <TableRow>
-                    <TableCell colSpan={2} className="h-24 text-center">
+                    <TableCell colSpan={3} className="h-24 text-center">
                         No positions found.
                     </TableCell>
                 </TableRow>

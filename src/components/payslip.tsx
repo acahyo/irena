@@ -1,11 +1,12 @@
 
-import type { Employee, AppSettings } from '@/lib/types';
+import type { Employee, AppSettings, Position } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 
 interface PayslipData {
   employee: Employee;
+  position: Position;
   period: string;
   earnings: Record<string, number>;
   deductions: Record<string, number>;
@@ -27,6 +28,20 @@ const formatCurrency = (amount: number) => {
 const formatPeriod = (period: string) => {
     const date = new Date(`${period}-02`); // Use day 2 to avoid timezone issues
     return format(date, 'MMMM yyyy', { locale: id });
+}
+
+// Helper to format salary labels
+const formatLabel = (key: string) => {
+    const labels: Record<string, string> = {
+        monthlySalary: "Gaji Pokok Bulanan",
+        otAllowance: "Tunjangan OT & Kehadiran",
+        locationAllowance: "Tunjangan Lokasi",
+        mealAllowance: "Tunjangan Makan",
+        otherAllowances: "Tunjangan Lain-lain",
+        dailyWage: "Gaji Harian (Total)",
+        overtime: "Lembur (Total)",
+    };
+    return labels[key] || key;
 }
 
 
@@ -116,9 +131,9 @@ export default function Payslip({
         <div>
           <h3 className="text-lg font-semibold text-gray-700 pb-2 border-b">Penghasilan</h3>
           <div className="divide-y">
-            <SalaryRow label="Gaji Pokok" value={earnings.basicSalary} />
-            <SalaryRow label="Tunjangan Transportasi" value={earnings.transportAllowance} />
-            <SalaryRow label="Tunjangan Makan" value={earnings.mealAllowance} />
+            {Object.entries(earnings).map(([key, value]) => (
+                <SalaryRow key={key} label={formatLabel(key)} value={value} />
+            ))}
           </div>
         </div>
         <div>

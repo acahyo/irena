@@ -5,7 +5,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, WalletCards } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -17,21 +17,30 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { createPosition } from '@/actions/positions';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import type { Position } from '@/lib/types';
 
 export default function NewPositionPage() {
     const router = useRouter();
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
+    const [salaryType, setSalaryType] = useState<string | undefined>();
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setLoading(true);
 
         const formData = new FormData(event.currentTarget);
-        const name = formData.get('name') as string;
+        const data = Object.fromEntries(formData.entries());
 
         try {
-            await createPosition({ name });
+            await createPosition(data as Omit<Position, 'id'>);
             toast({
                 title: 'Success!',
                 description: 'New position has been added.',
@@ -62,7 +71,7 @@ export default function NewPositionPage() {
         <CardHeader>
           <CardTitle>Add New Position</CardTitle>
           <CardDescription>
-            Fill out the form below to add a new position.
+            Fill out the form below to add a new position and define its salary structure.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -71,6 +80,67 @@ export default function NewPositionPage() {
                     <Label htmlFor="name">Position Name</Label>
                     <Input id="name" name="name" placeholder="e.g. Software Engineer" required />
                 </div>
+                 <div className="space-y-2 md:col-span-3">
+                 <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2"><WalletCards /> Salary Details</CardTitle>
+                      <CardDescription>Choose salary type and fill in the details.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                       <div className="space-y-2">
+                          <Label htmlFor="salaryType">Salary Type</Label>
+                          <Select name="salaryType" value={salaryType} onValueChange={setSalaryType}>
+                            <SelectTrigger id="salaryType">
+                              <SelectValue placeholder="Select Salary Type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="harian">Daily Salary</SelectItem>
+                              <SelectItem value="bulanan">Monthly Salary</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        {salaryType === 'harian' && (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-md border p-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="dailyWage">Daily Wage (Rp)</Label>
+                              <Input id="dailyWage" name="dailyWage" type="number" placeholder="e.g. 150000" />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="overtimeRate">Overtime per Hour (Rp)</Label>
+                              <Input id="overtimeRate" name="overtimeRate" type="number" placeholder="e.g. 25000" />
+                            </div>
+                          </div>
+                        )}
+
+                        {salaryType === 'bulanan' && (
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-md border p-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="monthlySalary">Monthly Salary (Rp)</Label>
+                              <Input id="monthlySalary" name="monthlySalary" type="number" placeholder="e.g. 4500000" />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="otAllowance">OT & Attendance Allowance (Rp)</Label>
+                              <Input id="otAllowance" name="otAllowance" type="number" placeholder="e.g. 500000" />
+                            </div>
+                             <div className="space-y-2">
+                              <Label htmlFor="locationAllowance">Location Allowance (Rp)</Label>
+                              <Input id="locationAllowance" name="locationAllowance" type="number" placeholder="e.g. 300000" />
+                            </div>
+                             <div className="space-y-2">
+                              <Label htmlFor="mealAllowance">Meal Allowance (Rp)</Label>
+                              <Input id="mealAllowance" name="mealAllowance" type="number" placeholder="e.g. 750000" />
+                            </div>
+                             <div className="space-y-2 md:col-span-2">
+                              <Label htmlFor="otherAllowances">Other Allowances (Rp)</Label>
+                              <Input id="otherAllowances" name="otherAllowances" type="number" placeholder="e.g. 200000" />
+                            </div>
+                          </div>
+                        )}
+
+                    </CardContent>
+                 </Card>
+              </div>
                  <div className="flex justify-end gap-2 pt-4">
                     <Button type="button" variant="outline" onClick={() => router.back()} disabled={loading}>
                         Cancel

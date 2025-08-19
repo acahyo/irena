@@ -20,15 +20,17 @@ import {
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Printer } from 'lucide-react';
-import type { Employee, AppSettings } from '@/lib/types';
+import type { Employee, AppSettings, Position } from '@/lib/types';
 import Payslip from '@/components/payslip';
 
 export default function PayslipClientPage({
   initialEmployees,
   settings,
+  positions,
 }: {
   initialEmployees: Employee[];
   settings: AppSettings;
+  positions: Position[];
 }) {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
   const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
@@ -44,14 +46,35 @@ export default function PayslipClientPage({
       alert('Employee not found');
       return;
     }
+    
+    const position = positions.find(p => p.name === employee.position);
+    if (!position || !position.salaryType) {
+        alert('Salary details for this employee\'s position are not set.');
+        return;
+    }
 
     // This is where you would typically fetch real salary data for the period.
-    // For this example, we'll use static data from the employee object.
-    const earnings = {
-      basicSalary: employee.basicSalary || 5000000,
-      transportAllowance: employee.transportAllowance || 500000,
-      mealAllowance: employee.mealAllowance || 750000,
-    };
+    // For this example, we'll use static data from the employee's position object.
+    let earnings: Record<string, number> = {};
+    if(position.salaryType === 'bulanan') {
+        earnings = {
+            monthlySalary: position.monthlySalary || 0,
+            otAllowance: position.otAllowance || 0,
+            locationAllowance: position.locationAllowance || 0,
+            mealAllowance: position.mealAllowance || 0,
+            otherAllowances: position.otherAllowances || 0,
+        };
+    } else { // harian
+        // This is a simplification. Real calculation would need attendance data.
+        // We'll calculate for 22 work days as an example.
+        const workDays = 22;
+        earnings = {
+            dailyWage: (position.dailyWage || 0) * workDays,
+            overtime: (position.overtimeRate || 0) * 10, // Example 10 overtime hours
+        }
+    }
+
+
     const deductions = {
       tax: 250000,
       bpjs: 150000,
@@ -68,6 +91,7 @@ export default function PayslipClientPage({
       totalEarnings,
       totalDeductions,
       netSalary,
+      position,
     });
   };
 

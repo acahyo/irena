@@ -18,7 +18,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Building2, Calendar, FileText, Heart, Home, Landmark, Mail, MapPin, Pencil, Phone, ShieldCheck, Trash2, User, UserCheck, UserSquare, Users, Briefcase, CalendarCheck, VenetianMask, WalletCards, Star, DollarSign } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import type { Employee, LeaveRequest } from '@/lib/types';
+import type { EmployeeWithPosition, LeaveRequest } from '@/lib/types';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -66,7 +66,7 @@ const formatCurrency = (amount: number | undefined | null) => {
 
 
 // The employee object passed here should have dates pre-formatted as strings
-export default function EmployeeProfileClientPage({ employee }: { employee: Employee & { dateOfBirth?: string, messEntryDate?: string, contractStartDate?: string, contractEndDate?: string } }) {
+export default function EmployeeProfileClientPage({ employee }: { employee: EmployeeWithPosition & { dateOfBirth?: string, messEntryDate?: string, contractStartDate?: string, contractEndDate?: string } }) {
     const router = useRouter();
     const { toast } = useToast();
 
@@ -286,26 +286,26 @@ export default function EmployeeProfileClientPage({ employee }: { employee: Empl
         <Card className="lg:col-span-3">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><WalletCards /> Salary Details</CardTitle>
-                <CardDescription>Tipe Gaji: <Badge variant="outline" className="capitalize">{employee.salaryType || 'Belum Diatur'}</Badge></CardDescription>
+                <CardDescription>Tipe Gaji: <Badge variant="outline" className="capitalize">{employee.positionDetails?.salaryType || 'Belum Diatur'}</Badge></CardDescription>
             </CardHeader>
             <CardContent>
-                 {employee.salaryType === 'harian' && (
+                 {employee.positionDetails?.salaryType === 'harian' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                       <DetailItem icon={<DollarSign className="h-5 w-5"/>} label="Upah per Hari" value={employee.dailyWage} currency />
-                       <DetailItem icon={<Star className="h-5 w-5"/>} label="Lembur per Jam" value={employee.overtimeRate} currency />
+                       <DetailItem icon={<DollarSign className="h-5 w-5"/>} label="Upah per Hari" value={employee.positionDetails?.dailyWage} currency />
+                       <DetailItem icon={<Star className="h-5 w-5"/>} label="Lembur per Jam" value={employee.positionDetails?.overtimeRate} currency />
                     </div>
                  )}
-                 {employee.salaryType === 'bulanan' && (
+                 {employee.positionDetails?.salaryType === 'bulanan' && (
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                       <DetailItem icon={<DollarSign className="h-5 w-5"/>} label="Gaji Pokok Bulanan" value={employee.monthlySalary} currency />
-                       <DetailItem icon={<Star className="h-5 w-5"/>} label="Tunjangan OT & Kehadiran" value={employee.otAllowance} currency />
-                       <DetailItem icon={<MapPin className="h-5 w-5"/>} label="Tunjangan Lokasi" value={employee.locationAllowance} currency />
-                       <DetailItem icon={<Briefcase className="h-5 w-5"/>} label="Tunjangan Makan" value={employee.mealAllowance} currency />
-                       <DetailItem icon={<Star className="h-5 w-5"/>} label="Tunjangan Lain-lain" value={employee.otherAllowances} currency />
+                       <DetailItem icon={<DollarSign className="h-5 w-5"/>} label="Gaji Pokok Bulanan" value={employee.positionDetails?.monthlySalary} currency />
+                       <DetailItem icon={<Star className="h-5 w-5"/>} label="Tunjangan OT & Kehadiran" value={employee.positionDetails?.otAllowance} currency />
+                       <DetailItem icon={<MapPin className="h-5 w-5"/>} label="Tunjangan Lokasi" value={employee.positionDetails?.locationAllowance} currency />
+                       <DetailItem icon={<Briefcase className="h-5 w-5"/>} label="Tunjangan Makan" value={employee.positionDetails?.mealAllowance} currency />
+                       <DetailItem icon={<Star className="h-5 w-5"/>} label="Tunjangan Lain-lain" value={employee.positionDetails?.otherAllowances} currency />
                     </div>
                  )}
-                 {!employee.salaryType && (
-                    <p className="text-muted-foreground text-center py-4">Detail gaji belum diatur untuk karyawan ini.</p>
+                 {!employee.positionDetails?.salaryType && (
+                    <p className="text-muted-foreground text-center py-4">Detail gaji belum diatur untuk jabatan karyawan ini.</p>
                  )}
             </CardContent>
         </Card>
