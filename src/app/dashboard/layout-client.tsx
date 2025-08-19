@@ -43,16 +43,9 @@ const allNavItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", exact: true, roles: ["Administrator", "HR"] },
   { href: "/dashboard/employees", icon: Users, label: "Employees", roles: ["Administrator", "HR"] },
   { href: "/dashboard/leave-schedule", icon: CalendarCheck, label: "Jadwal Cuti", roles: ["Administrator", "HR"] },
-  { 
-    label: "Finance",
-    icon: Wallet,
-    roles: ["Administrator", "HR"],
-    subItems: [
-        { href: "/dashboard/attendance", label: "Input Absensi", roles: ["Administrator", "HR"] },
-        { href: "/dashboard/payslip", label: "Cetak Slip Gaji", roles: ["Administrator", "HR"] },
-        { href: "/dashboard/payslip-collective", label: "Slip Gaji Kolektif", roles: ["Administrator", "HR"] },
-    ]
-  },
+  { href: "/dashboard/attendance", icon: ClipboardCheck, label: "Input Absensi", roles: ["Administrator", "HR"] },
+  { href: "/dashboard/payslip", icon: Printer, label: "Cetak Slip Gaji", roles: ["Administrator", "HR"] },
+  { href: "/dashboard/payslip-collective", icon: Printer, label: "Slip Gaji Kolektif", roles: ["Administrator", "HR"] },
   { href: "/dashboard/department", icon: Briefcase, label: "Department", roles: ["Administrator", "HR"] },
   { href: "/dashboard/position", icon: Shield, label: "Position", roles: ["Administrator", "HR"] },
   { href: "/dashboard/users", icon: UsersRound, label: "Users", roles: ["Administrator"] },
@@ -83,7 +76,7 @@ export default function DashboardClientLayout({
         if (item.href && (item.exact ? pathname === item.href : pathname.startsWith(item.href))) {
             return item.label;
         }
-        if (item.subItems) {
+        if ('subItems' in item && item.subItems) {
             for (const subItem of item.subItems) {
                 if (pathname.startsWith(subItem.href)) {
                     return subItem.label;
@@ -117,7 +110,7 @@ export default function DashboardClientLayout({
           <SidebarMenu>
             {navItems.map((item, index) => (
               <SidebarMenuItem key={`${item.label}-${index}`}>
-                {item.href ? (
+                {'href' in item && item.href ? (
                     <Link href={item.href} passHref>
                         <SidebarMenuButton
                             isActive={item.exact ? pathname === item.href : pathname.startsWith(item.href)}
@@ -128,6 +121,7 @@ export default function DashboardClientLayout({
                         </SidebarMenuButton>
                     </Link>
                 ) : (
+                    'subItems' in item && item.subItems && (
                     <>
                         <SidebarMenuButton
                             isSubmenu
@@ -137,20 +131,19 @@ export default function DashboardClientLayout({
                             <item.icon />
                             <span>{item.label}</span>
                         </SidebarMenuButton>
-                         {item.subItems && (
-                            <SidebarMenuSub>
-                                {item.subItems.map(subItem => (
-                                     <SidebarMenuItem key={subItem.href}>
-                                        <Link href={subItem.href}>
-                                            <SidebarMenuSubButton isActive={pathname.startsWith(subItem.href)}>
-                                                {subItem.label}
-                                            </SidebarMenuSubButton>
-                                        </Link>
-                                     </SidebarMenuItem>
-                                ))}
-                            </SidebarMenuSub>
-                        )}
+                         <SidebarMenuSub>
+                            {item.subItems.map(subItem => (
+                                 <SidebarMenuItem key={subItem.href}>
+                                    <Link href={subItem.href}>
+                                        <SidebarMenuSubButton isActive={pathname.startsWith(subItem.href)}>
+                                            {subItem.label}
+                                        </SidebarMenuSubButton>
+                                    </Link>
+                                 </SidebarMenuItem>
+                            ))}
+                        </SidebarMenuSub>
                     </>
+                    )
                 )}
               </SidebarMenuItem>
             ))}
