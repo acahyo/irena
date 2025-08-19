@@ -729,7 +729,7 @@ const SidebarMenuSub = React.forwardRef<
   }
 
   const { buttonProps } = menuItem;
-  const isOpen = buttonProps["data-state"] === 'open';
+  const isOpen = menuItem?.buttonProps?.["data-state"] === 'open';
   
   return (
     <ul
