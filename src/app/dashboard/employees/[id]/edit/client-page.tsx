@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { ArrowLeft, Calendar as CalendarIcon, Upload, Loader2, WalletCards } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -40,13 +40,10 @@ import { Textarea } from '@/components/ui/textarea';
 const parseDate = (date: string | Date | undefined): Date | undefined => {
   if (!date) return undefined;
   if (date instanceof Date) return date;
-  try {
-    const parsed = parseISO(date);
-    if (!isNaN(parsed.getTime())) {
-      return parsed;
-    }
-  } catch (e) {
-    // ignore error
+  // Use new Date() to avoid timezone issues that can occur with parseISO on the client vs. server
+  const parsed = new Date(date);
+  if (!isNaN(parsed.getTime())) {
+    return parsed;
   }
   return undefined;
 };
