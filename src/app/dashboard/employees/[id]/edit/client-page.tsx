@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
@@ -49,10 +49,19 @@ export default function EditEmployeePageClient({ employee, departments, position
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   
-  const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(parseDate(employee.dateOfBirth));
-  const [messEntryDate, setMessEntryDate] = useState<Date | undefined>(parseDate(employee.messEntryDate));
-  const [contractStartDate, setContractStartDate] = useState<Date | undefined>(parseDate(employee.contractStartDate));
-  const [contractEndDate, setContractEndDate] = useState<Date | undefined>(parseDate(employee.contractEndDate));
+  const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>();
+  const [messEntryDate, setMessEntryDate] = useState<Date | undefined>();
+  const [contractStartDate, setContractStartDate] = useState<Date | undefined>();
+  const [contractEndDate, setContractEndDate] = useState<Date | undefined>();
+
+  // Initialize date states on the client to avoid hydration mismatch
+  useEffect(() => {
+    setDateOfBirth(parseDate(employee.dateOfBirth));
+    setMessEntryDate(parseDate(employee.messEntryDate));
+    setContractStartDate(parseDate(employee.contractStartDate));
+    setContractEndDate(parseDate(employee.contractEndDate));
+  }, [employee]);
+
   const [photoPreview, setPhotoPreview] = useState<string | null>(employee.avatar || null);
   const [ktpPreview, setKtpPreview] = useState<string | null>(employee.ktpPhoto || null);
   const [simPreview, setSimPreview] = useState<string | null>(employee.simPhoto || null);
