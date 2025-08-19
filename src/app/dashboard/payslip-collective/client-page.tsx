@@ -19,6 +19,7 @@ import type { EmployeeWithPosition, AppSettings, AttendanceRecord } from '@/lib/
 import PayslipViewer, { type PayslipData } from '@/components/payslip-viewer';
 import { useToast } from '@/hooks/use-toast';
 import { getAttendanceByPeriod } from '@/actions/attendance';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
 export default function PayslipCollectiveClientPage({
@@ -32,10 +33,25 @@ export default function PayslipCollectiveClientPage({
 }) {
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<Set<string>>(new Set());
   const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
+  const [positionFilter, setPositionFilter] = useState('all');
   const [payslipsData, setPayslipsData] = useState<PayslipData[]>([]);
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(initialAttendance);
   const [isGenerating, startTransition] = useTransition();
   const { toast } = useToast();
+
+  const positions = useMemo(() => {
+    const allPositions = initialEmployees
+      .map((emp) => emp.position)
+      .filter(Boolean); // Filter out undefined/null positions
+    return ['all', ...Array.from(new Set(allPositions as string[]))];
+  }, [initialEmployees]);
+
+  const filteredEmployees = useMemo(() => {
+    if (positionFilter === 'all') {
+      return initialEmployees;
+    }
+    return initialEmployees.filter((emp) => emp.position === positionFilter);
+  }, [initialEmployees, positionFilter]);
 
   useEffect(() => {
     // Fetch new attendance data when period changes
@@ -54,8 +70,8 @@ export default function PayslipCollectiveClientPage({
   
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-        const allIds = new Set(initialEmployees.map(e => e.id));
-        setSelectedEmployeeIds(allIds);
+        const filteredIds = new Set(filteredEmployees.map(e => e.id));
+        setSelectedEmployeeIds(filteredIds);
     } else {
         setSelectedEmployeeIds(new Set());
     }
@@ -159,21 +175,36 @@ export default function PayslipCollectiveClientPage({
                 disabled={isGenerating}
               />
             </div>
-            <div className="md:col-span-2 space-y-2">
+            <div className="space-y-2">
+                <Label htmlFor="position-filter">Jabatan</Label>
+                <Select value={positionFilter} onValueChange={setPositionFilter} disabled={isGenerating}>
+                    <SelectTrigger id="position-filter">
+                        <SelectValue placeholder="Filter by position" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {positions.map((pos) => (
+                            <SelectItem key={pos} value={pos}>
+                                {pos === 'all' ? 'Semua Jabatan' : pos}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
+            <div className="md:col-span-3 space-y-2">
                 <Label>Pilih Karyawan</Label>
                 <div className="border rounded-md p-4">
                      <div className="flex items-center space-x-2 pb-2 border-b">
                         <Checkbox
                             id="select-all"
                             onCheckedChange={handleSelectAll}
-                            checked={selectedEmployeeIds.size === initialEmployees.length && initialEmployees.length > 0}
-                            disabled={isGenerating}
+                            checked={filteredEmployees.length > 0 && selectedEmployeeIds.size === filteredEmployees.length}
+                            disabled={isGenerating || filteredEmployees.length === 0}
                         />
-                        <Label htmlFor="select-all" className="font-bold">Pilih Semua</Label>
+                        <Label htmlFor="select-all" className="font-bold">Pilih Semua ({filteredEmployees.length})</Label>
                     </div>
                     <ScrollArea className="h-48">
                         <div className="space-y-2 p-2">
-                        {initialEmployees.map(emp => (
+                        {filteredEmployees.map(emp => (
                             <div key={emp.id} className="flex items-center space-x-2">
                                 <Checkbox
                                     id={`emp-${emp.id}`}
@@ -184,6 +215,9 @@ export default function PayslipCollectiveClientPage({
                                 <Label htmlFor={`emp-${emp.id}`}>{emp.name}</Label>
                             </div>
                         ))}
+                        {filteredEmployees.length === 0 && (
+                            <p className="text-center text-sm text-muted-foreground py-4">Tidak ada karyawan ditemukan untuk filter ini.</p>
+                        )}
                         </div>
                     </ScrollArea>
                 </div>
