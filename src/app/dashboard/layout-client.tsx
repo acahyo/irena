@@ -43,9 +43,17 @@ const allNavItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", exact: true, roles: ["Administrator", "HR"] },
   { href: "/dashboard/employees", icon: Users, label: "Employees", roles: ["Administrator", "HR"] },
   { href: "/dashboard/leave-schedule", icon: CalendarCheck, label: "Jadwal Cuti", roles: ["Administrator", "HR"] },
-  { href: "/dashboard/attendance", icon: ClipboardCheck, label: "Input Absensi", roles: ["Administrator", "HR"] },
-  { href: "/dashboard/payslip", icon: Printer, label: "Cetak Slip Gaji", roles: ["Administrator", "HR"] },
-  { href: "/dashboard/payslip-collective", icon: Printer, label: "Slip Gaji Kolektif", roles: ["Administrator", "HR"] },
+  { href: "/dashboard/payroll", icon: Wallet, label: "Payroll", roles: ["Administrator", "HR"] },
+  {
+    label: "Finance",
+    icon: Wallet,
+    roles: ["Administrator", "HR"],
+    subItems: [
+        { href: "/dashboard/attendance", label: "Input Absensi" },
+        { href: "/dashboard/payslip", label: "Cetak Slip Gaji" },
+        { href: "/dashboard/payslip-collective", label: "Slip Gaji Kolektif" },
+    ],
+  },
   { href: "/dashboard/department", icon: Briefcase, label: "Department", roles: ["Administrator", "HR"] },
   { href: "/dashboard/position", icon: Shield, label: "Position", roles: ["Administrator", "HR"] },
   { href: "/dashboard/users", icon: UsersRound, label: "Users", roles: ["Administrator"] },
@@ -73,7 +81,7 @@ export default function DashboardClientLayout({
 
   const getActiveLabel = () => {
     for (const item of navItems) {
-        if (item.href && (item.exact ? pathname === item.href : pathname.startsWith(item.href))) {
+        if ('href' in item && item.href && (item.exact ? pathname === item.href : pathname.startsWith(item.href))) {
             return item.label;
         }
         if ('subItems' in item && item.subItems) {
@@ -134,7 +142,7 @@ export default function DashboardClientLayout({
                          <SidebarMenuSub>
                             {item.subItems.map(subItem => (
                                  <SidebarMenuItem key={subItem.href}>
-                                    <Link href={subItem.href}>
+                                    <Link href={subItem.href} asChild>
                                         <SidebarMenuSubButton isActive={pathname.startsWith(subItem.href)}>
                                             {subItem.label}
                                         </SidebarMenuSubButton>

@@ -114,3 +114,9 @@ export type AttendanceRecord = {
 export type EmployeeWithPosition = Employee & {
   positionDetails?: Position;
 }
+
+// Composite type for payroll page
+export type EmployeeWithDetails = Employee & {
+  positionDetails?: Position;
+  totalSalary?: number;
+}
