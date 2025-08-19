@@ -1,9 +1,10 @@
+
 "use client"
 
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
-import { PanelLeft } from "lucide-react"
+import { ChevronDown, PanelLeft } from "lucide-react"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
@@ -539,6 +540,7 @@ const SidebarMenuButton = React.forwardRef<
     asChild?: boolean
     isActive?: boolean
     tooltip?: string | React.ComponentProps<typeof TooltipContent>
+    isSubmenu?: boolean
   } & VariantProps<typeof sidebarMenuButtonVariants>
 >(
   (
@@ -549,26 +551,59 @@ const SidebarMenuButton = React.forwardRef<
       size = "default",
       tooltip,
       className,
+      isSubmenu,
       ...props
     },
     ref
   ) => {
     const Comp = asChild ? Slot : "button"
     const { isMobile, state } = useSidebar()
+    
+    const [isOpen, setIsOpen] = React.useState(isActive);
+    
+    React.useEffect(() => {
+        if(state === 'collapsed') {
+            setIsOpen(false);
+        }
+    }, [state]);
 
-    const button = (
+    React.useEffect(() => {
+        if (isActive) {
+            setIsOpen(true);
+        }
+    }, [isActive]);
+    
+    const buttonContent = (
       <Comp
         ref={ref}
         data-sidebar="menu-button"
         data-size={size}
         data-active={isActive}
+        data-state={isSubmenu && isOpen ? 'open' : 'closed'}
         className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
+        onClick={(e) => {
+            if (isSubmenu) {
+                if (state === 'expanded') {
+                    setIsOpen(!isOpen);
+                }
+            }
+            props.onClick?.(e);
+        }}
         {...props}
-      />
-    )
+      >
+        {props.children}
+        {isSubmenu && (
+            <ChevronDown className={cn(
+                "ml-auto h-4 w-4 shrink-0 transition-transform duration-200",
+                isOpen && "rotate-180",
+                "group-data-[collapsible=icon]:hidden"
+            )} />
+        )}
+      </Comp>
+    );
 
     if (!tooltip) {
-      return button
+      return buttonContent
     }
 
     if (typeof tooltip === "string") {
@@ -579,7 +614,7 @@ const SidebarMenuButton = React.forwardRef<
 
     return (
       <Tooltip>
-        <TooltipTrigger asChild>{button}</TooltipTrigger>
+        <TooltipTrigger asChild>{buttonContent}</TooltipTrigger>
         <TooltipContent
           side="right"
           align="center"
@@ -685,18 +720,32 @@ SidebarMenuSkeleton.displayName = "SidebarMenuSkeleton"
 const SidebarMenuSub = React.forwardRef<
   HTMLUListElement,
   React.ComponentProps<"ul">
->(({ className, ...props }, ref) => (
-  <ul
-    ref={ref}
-    data-sidebar="menu-sub"
-    className={cn(
-      "mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l border-sidebar-border px-2.5 py-0.5",
-      "group-data-[collapsible=icon]:hidden",
-      className
-    )}
-    {...props}
-  />
-))
+>(({ className, ...props }, ref) => {
+  const { isMobile, state } = useSidebar();
+  const menuItem = React.useContext(SidebarMenuItemContext);
+
+  if (!menuItem) {
+    throw new Error("SidebarMenuSub must be used within a SidebarMenuItem")
+  }
+
+  const { buttonProps } = menuItem;
+  const isOpen = buttonProps["data-state"] === 'open';
+  
+  return (
+    <ul
+        ref={ref}
+        data-sidebar="menu-sub"
+        className={cn(
+        "mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l border-sidebar-border pl-2.5 py-0.5",
+        "group-data-[collapsible=icon]:hidden",
+        "overflow-hidden transition-all duration-300 ease-in-out",
+        !isOpen && "h-0 py-0 border-transparent",
+        className
+        )}
+        {...props}
+    />
+  )
+})
 SidebarMenuSub.displayName = "SidebarMenuSub"
 
 const SidebarMenuSubItem = React.forwardRef<
@@ -722,8 +771,8 @@ const SidebarMenuSubButton = React.forwardRef<
       data-size={size}
       data-active={isActive}
       className={cn(
-        "flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sidebar-foreground outline-none ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-sidebar-accent-foreground",
-        "data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground",
+        "flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sidebar-foreground/80 outline-none ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
+        "data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground data-[active=true]:font-medium",
         size === "sm" && "text-xs",
         size === "md" && "text-sm",
         "group-data-[collapsible=icon]:hidden",
@@ -734,6 +783,35 @@ const SidebarMenuSubButton = React.forwardRef<
   )
 })
 SidebarMenuSubButton.displayName = "SidebarMenuSubButton"
+
+type SidebarMenuItemContextType = {
+  buttonProps: Record<string, any>;
+};
+const SidebarMenuItemContext = React.createContext<SidebarMenuItemContextType | null>(null);
+
+const OriginalSidebarMenuItem = React.forwardRef<
+  HTMLLIElement,
+  React.ComponentProps<"li">
+>(({ className, ...props }, ref) => {
+  const button = React.Children.toArray(props.children).find(
+    (child) => (React.isValidElement(child) && child.type === SidebarMenuButton)
+  ) as React.ReactElement | undefined;
+  
+  const buttonProps = button?.props;
+
+  return (
+    <SidebarMenuItemContext.Provider value={{ buttonProps }}>
+        <li
+            ref={ref}
+            data-sidebar="menu-item"
+            className={cn("group/menu-item relative", className)}
+            {...props}
+        />
+    </SidebarMenuItemContext.Provider>
+  )
+});
+OriginalSidebarMenuItem.displayName = "SidebarMenuItem";
+
 
 export {
   Sidebar,
@@ -750,7 +828,7 @@ export {
   SidebarMenuAction,
   SidebarMenuBadge,
   SidebarMenuButton,
-  SidebarMenuItem,
+  OriginalSidebarMenuItem as SidebarMenuItem,
   SidebarMenuSkeleton,
   SidebarMenuSub,
   SidebarMenuSubButton,

@@ -19,6 +19,8 @@ import {
   SidebarMenuButton,
   SidebarFooter,
   SidebarInset,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
 import {
   FolderKanban,
@@ -33,6 +35,7 @@ import {
   LayoutDashboard,
   Printer,
   ClipboardCheck,
+  Wallet,
 } from "lucide-react";
 import type { AppSettings, User } from "@/lib/types";
 
@@ -40,11 +43,18 @@ const allNavItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", exact: true, roles: ["Administrator", "HR"] },
   { href: "/dashboard/employees", icon: Users, label: "Employees", roles: ["Administrator", "HR"] },
   { href: "/dashboard/leave-schedule", icon: CalendarCheck, label: "Jadwal Cuti", roles: ["Administrator", "HR"] },
-  { href: "/dashboard/attendance", icon: ClipboardCheck, label: "Input Absensi", roles: ["Administrator", "HR"] },
+  { 
+    label: "Finance",
+    icon: Wallet,
+    roles: ["Administrator", "HR"],
+    subItems: [
+        { href: "/dashboard/attendance", label: "Input Absensi", roles: ["Administrator", "HR"] },
+        { href: "/dashboard/payslip", label: "Cetak Slip Gaji", roles: ["Administrator", "HR"] },
+        { href: "/dashboard/payslip-collective", label: "Slip Gaji Kolektif", roles: ["Administrator", "HR"] },
+    ]
+  },
   { href: "/dashboard/department", icon: Briefcase, label: "Department", roles: ["Administrator", "HR"] },
   { href: "/dashboard/position", icon: Shield, label: "Position", roles: ["Administrator", "HR"] },
-  { href: "/dashboard/payslip", icon: Printer, label: "Cetak Slip Gaji", roles: ["Administrator", "HR"] },
-  { href: "/dashboard/payslip-collective", icon: Users, label: "Slip Gaji Kolektif", roles: ["Administrator", "HR"] },
   { href: "/dashboard/users", icon: UsersRound, label: "Users", roles: ["Administrator"] },
   { href: "/dashboard/roles", icon: ShieldCheck, label: "Roles", roles: ["Administrator"] },
   { href: "/dashboard/settings", icon: Settings, label: "Settings", roles: ["Administrator"] },
@@ -68,7 +78,23 @@ export default function DashboardClientLayout({
     return item.roles.includes(userRole);
   });
 
-  const activeLabel = navItems.find(item => item.exact ? pathname === item.href : pathname.startsWith(item.href))?.label || settings.appName || 'Dashboard';
+  const getActiveLabel = () => {
+    for (const item of navItems) {
+        if (item.href && (item.exact ? pathname === item.href : pathname.startsWith(item.href))) {
+            return item.label;
+        }
+        if (item.subItems) {
+            for (const subItem of item.subItems) {
+                if (pathname.startsWith(subItem.href)) {
+                    return subItem.label;
+                }
+            }
+        }
+    }
+    return settings.appName || 'Dashboard';
+  }
+
+  const activeLabel = getActiveLabel();
 
 
   return (
@@ -89,17 +115,43 @@ export default function DashboardClientLayout({
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
-            {navItems.map((item) => (
-              <SidebarMenuItem key={item.href}>
-                <Link href={item.href} passHref>
-                  <SidebarMenuButton
-                    isActive={item.exact ? pathname === item.href : pathname.startsWith(item.href)}
-                    tooltip={{ children: item.label }}
-                  >
-                    <item.icon />
-                    <span>{item.label}</span>
-                  </SidebarMenuButton>
-                </Link>
+            {navItems.map((item, index) => (
+              <SidebarMenuItem key={`${item.label}-${index}`}>
+                {item.href ? (
+                    <Link href={item.href} passHref>
+                        <SidebarMenuButton
+                            isActive={item.exact ? pathname === item.href : pathname.startsWith(item.href)}
+                            tooltip={{ children: item.label }}
+                        >
+                            <item.icon />
+                            <span>{item.label}</span>
+                        </SidebarMenuButton>
+                    </Link>
+                ) : (
+                    <>
+                        <SidebarMenuButton
+                            isSubmenu
+                            isActive={item.subItems?.some(sub => pathname.startsWith(sub.href))}
+                            tooltip={{ children: item.label }}
+                        >
+                            <item.icon />
+                            <span>{item.label}</span>
+                        </SidebarMenuButton>
+                         {item.subItems && (
+                            <SidebarMenuSub>
+                                {item.subItems.map(subItem => (
+                                     <SidebarMenuItem key={subItem.href}>
+                                        <Link href={subItem.href} passHref legacyBehavior>
+                                            <SidebarMenuSubButton isActive={pathname.startsWith(subItem.href)}>
+                                                {subItem.label}
+                                            </SidebarMenuSubButton>
+                                        </Link>
+                                     </SidebarMenuItem>
+                                ))}
+                            </SidebarMenuSub>
+                        )}
+                    </>
+                )}
               </SidebarMenuItem>
             ))}
           </SidebarMenu>
