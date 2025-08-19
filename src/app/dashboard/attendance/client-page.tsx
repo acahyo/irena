@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef, useTransition } from 'react';
 import {
   Card,
   CardContent,
@@ -19,9 +19,9 @@ import {
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Download, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { getAttendanceByPeriod, saveAttendanceRecord } from '@/actions/attendance';
+import { getAttendanceByPeriod, saveAttendanceRecord, importAttendanceRecords } from '@/actions/attendance';
 import type { EmployeeWithPosition, AttendanceRecord } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -32,6 +32,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import * as XLSX from 'xlsx';
+import { useRouter } from 'next/navigation';
 
 type AttendanceData = {
     [employeeId: string]: {
@@ -52,6 +55,10 @@ export default function AttendanceClientPage({
   const [attendanceData, setAttendanceData] = useState<AttendanceData>({});
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isImporting, startImportTransition] = useTransition();
+  const router = useRouter();
+
 
   const positions = useMemo(() => {
     const allPositions = employees.map((emp) => emp.position).filter(Boolean);
@@ -143,6 +150,87 @@ export default function AttendanceClientPage({
       }
   };
 
+  const handleExport = () => {
+    const dataToExport = filteredEmployees.map(emp => ({
+        employeeId: emp.id,
+        employeeName: emp.name,
+        period: period,
+        attendanceDays: attendanceData[emp.id]?.attendanceDays ?? 0,
+        overtimeHours: attendanceData[emp.id]?.overtimeHours ?? 0,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Attendance");
+    XLSX.writeFile(workbook, `absensi_${period}.xlsx`);
+    toast({
+      title: 'Success!',
+      description: 'Attendance data has been exported.',
+    });
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target?.result as ArrayBuffer);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const sheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[sheetName];
+          const json = XLSX.utils.sheet_to_json(worksheet) as any[];
+          
+          const recordsToImport: Omit<AttendanceRecord, 'id'>[] = json.map(row => {
+            const employee = employees.find(emp => emp.id === row.employeeId);
+            return {
+                employeeId: row.employeeId,
+                employeeName: employee?.name || 'Unknown Employee',
+                period: row.period || period,
+                attendanceDays: row.attendanceDays ? Number(row.attendanceDays) : undefined,
+                overtimeHours: row.overtimeHours ? Number(row.overtimeHours) : undefined,
+            }
+          }).filter(record => record.employeeId); // Ensure employeeId exists
+
+          startImportTransition(async () => {
+            try {
+              await importAttendanceRecords(recordsToImport);
+              toast({
+                title: 'Success!',
+                description: 'Attendance data has been imported successfully.',
+              });
+              // Refetch data for the current period to update the view
+              await handlePeriodChange(period);
+            } catch (importError) {
+               toast({
+                variant: "destructive",
+                title: 'Import Error',
+                description: 'Failed to save imported data to the database.',
+              });
+            }
+          });
+
+        } catch (error) {
+          console.error("Error reading file:", error);
+           toast({
+            variant: "destructive",
+            title: 'File Read Error',
+            description: 'Failed to read the Excel file.',
+          });
+        } finally {
+            if(fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+  };
+
 
   return (
     <Card>
@@ -156,7 +244,7 @@ export default function AttendanceClientPage({
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Select value={positionFilter} onValueChange={setPositionFilter}>
-              <SelectTrigger className="w-full md:w-[200px]">
+              <SelectTrigger className="w-full md:w-[180px]">
                   <SelectValue placeholder="Filter by position" />
               </SelectTrigger>
               <SelectContent>
@@ -172,8 +260,24 @@ export default function AttendanceClientPage({
               type="month"
               value={period}
               onChange={(e) => handlePeriodChange(e.target.value)}
-              className="w-full md:w-[180px]"
+              className="w-full md:w-[150px]"
             />
+             <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                className="hidden"
+                accept=".xlsx, .xls"
+                disabled={isImporting}
+              />
+            <Button variant="outline" onClick={handleImportClick} disabled={isImporting}>
+              {isImporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+              Import
+            </Button>
+            <Button variant="outline" onClick={handleExport}>
+              <Download className="mr-2 h-4 w-4" />
+              Export
+            </Button>
           </div>
         </div>
       </CardHeader>

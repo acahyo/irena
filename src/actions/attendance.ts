@@ -2,7 +2,7 @@
 'use server';
 
 import { db } from '@/lib/firebase';
-import { collection, getDocs, doc, setDoc, query, where } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, query, where, writeBatch } from 'firebase/firestore';
 import type { AttendanceRecord } from '@/lib/types';
 
 // Get all attendance records for a specific period
@@ -36,4 +36,17 @@ export async function saveAttendanceRecord(data: Omit<AttendanceRecord, 'id'>): 
   const docId = `${employeeId}_${period}`;
   const docRef = doc(db, 'attendance', docId);
   await setDoc(docRef, data, { merge: true });
+}
+
+// Import multiple attendance records
+export async function importAttendanceRecords(records: Omit<AttendanceRecord, 'id'>[]): Promise<void> {
+    const batch = writeBatch(db);
+    
+    records.forEach(record => {
+        const docId = `${record.employeeId}_${record.period}`;
+        const docRef = doc(db, 'attendance', docId);
+        batch.set(docRef, record, { merge: true });
+    });
+
+    await batch.commit();
 }
