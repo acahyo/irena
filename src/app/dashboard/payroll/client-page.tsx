@@ -18,6 +18,13 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Download } from 'lucide-react';
 import type { EmployeeWithDetails } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -34,11 +41,25 @@ const formatCurrency = (amount: number | undefined | null) => {
 
 export default function PayrollClientPage({ employees }: { employees: EmployeeWithDetails[] }) {
   const { toast } = useToast();
+  const [bankFilter, setBankFilter] = useState('all');
+
+  const banks = useMemo(() => {
+    const allBanks = employees.map((emp) => emp.bankName).filter(Boolean);
+    return ['all', ...Array.from(new Set(allBanks as string[]))];
+  }, [employees]);
+
+  const filteredEmployees = useMemo(() => {
+    if (bankFilter === 'all') {
+      return employees;
+    }
+    return employees.filter((emp) => emp.bankName === bankFilter);
+  }, [employees, bankFilter]);
 
   const handleExport = () => {
-    const dataToExport = employees.map(emp => ({
+    const dataToExport = filteredEmployees.map(emp => ({
         'Nama Karyawan': emp.name,
         'Nomor Rekening': emp.accountNumber,
+        'Bank': emp.bankName,
         'Total Gaji': emp.totalSalary,
     }));
 
@@ -49,9 +70,10 @@ export default function PayrollClientPage({ employees }: { employees: EmployeeWi
     worksheet['!cols'] = [
         { wch: 25 }, // Nama Karyawan
         { wch: 20 }, // Nomor Rekening
+        { wch: 20 }, // Bank
         { wch: 20 }, // Total Gaji
     ];
-    XLSX.writeFile(workbook, `payroll_summary.xlsx`);
+    XLSX.writeFile(workbook, `payroll_summary_${bankFilter}.xlsx`);
     toast({
       title: 'Success!',
       description: 'Payroll data has been exported.',
@@ -69,6 +91,18 @@ export default function PayrollClientPage({ employees }: { employees: EmployeeWi
             </CardDescription>
           </div>
            <div className="flex flex-wrap items-center gap-2">
+                 <Select value={bankFilter} onValueChange={setBankFilter}>
+                    <SelectTrigger className="w-full md:w-[180px]">
+                        <SelectValue placeholder="Filter by Bank" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {banks.map((bank) => (
+                            <SelectItem key={bank} value={bank}>
+                                {bank === 'all' ? 'Semua Bank' : bank}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
                  <Button variant="outline" onClick={handleExport}>
                     <Download className="mr-2 h-4 w-4" />
                     Export
@@ -81,23 +115,25 @@ export default function PayrollClientPage({ employees }: { employees: EmployeeWi
           <TableHeader>
             <TableRow>
               <TableHead>Nama Karyawan</TableHead>
+              <TableHead>Bank</TableHead>
               <TableHead>Nomor Rekening</TableHead>
               <TableHead className="text-right">Total Gaji</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {employees.length > 0 ? (
-              employees.map((emp) => (
+            {filteredEmployees.length > 0 ? (
+              filteredEmployees.map((emp) => (
                 <TableRow key={emp.id}>
                   <TableCell className="font-medium">{emp.name}</TableCell>
+                  <TableCell>{emp.bankName || 'N/A'}</TableCell>
                   <TableCell>{emp.accountNumber || 'N/A'}</TableCell>
                   <TableCell className="text-right font-semibold">{formatCurrency(emp.totalSalary)}</TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={3} className="h-24 text-center">
-                  Tidak ada data karyawan ditemukan.
+                <TableCell colSpan={4} className="h-24 text-center">
+                  Tidak ada data karyawan ditemukan untuk filter ini.
                 </TableCell>
               </TableRow>
             )}
