@@ -13,6 +13,7 @@ interface PayslipData {
   totalEarnings: number;
   totalDeductions: number;
   netSalary: number;
+  attendanceDays?: number;
 }
 
 // Helper to format currency
@@ -31,14 +32,14 @@ const formatPeriod = (period: string) => {
 }
 
 // Helper to format salary labels
-const formatLabel = (key: string) => {
+const formatLabel = (key: string, attendanceDays?: number) => {
     const labels: Record<string, string> = {
         monthlySalary: "Gaji Pokok Bulanan",
         otAllowance: "Tunjangan OT & Kehadiran",
         locationAllowance: "Tunjangan Lokasi",
         mealAllowance: "Tunjangan Makan",
         otherAllowances: "Tunjangan Lain-lain",
-        dailyWage: "Gaji Harian (Total)",
+        dailyWage: `Gaji Harian (${attendanceDays || 'N/A'} hari)`,
         overtime: "Lembur (Total)",
     };
     return labels[key] || key;
@@ -60,6 +61,7 @@ export default function Payslip({
     totalEarnings,
     totalDeductions,
     netSalary,
+    attendanceDays,
   } = data;
 
   const DetailRow = ({ label, value }: { label: string; value: string | undefined }) => (
@@ -132,7 +134,7 @@ export default function Payslip({
           <h3 className="text-lg font-semibold text-gray-700 pb-2 border-b">Penghasilan</h3>
           <div className="divide-y">
             {Object.entries(earnings).map(([key, value]) => (
-                <SalaryRow key={key} label={formatLabel(key)} value={value} />
+                <SalaryRow key={key} label={formatLabel(key, attendanceDays)} value={value} />
             ))}
           </div>
         </div>

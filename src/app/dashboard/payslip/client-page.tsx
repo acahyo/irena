@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -22,6 +22,7 @@ import { Input } from '@/components/ui/input';
 import { Printer } from 'lucide-react';
 import type { Employee, AppSettings, Position } from '@/lib/types';
 import Payslip from '@/components/payslip';
+import { useToast } from '@/hooks/use-toast';
 
 export default function PayslipClientPage({
   initialEmployees,
@@ -35,21 +36,42 @@ export default function PayslipClientPage({
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
   const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
   const [payslipData, setPayslipData] = useState<any>(null);
+  const [attendanceDays, setAttendanceDays] = useState<number>(22);
+  const { toast } = useToast();
+
+  const selectedEmployeePosition = useMemo(() => {
+    if (!selectedEmployeeId) return null;
+    const employee = initialEmployees.find((e) => e.id === selectedEmployeeId);
+    if (!employee || !employee.position) return null;
+    return positions.find((p) => p.name === employee.position) || null;
+  }, [selectedEmployeeId, initialEmployees, positions]);
 
   const handleGenerate = () => {
     if (!selectedEmployeeId || !period) {
-      alert('Please select an employee and a period.');
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Please select an employee and a period.',
+      });
       return;
     }
     const employee = initialEmployees.find((e) => e.id === selectedEmployeeId);
     if (!employee) {
-      alert('Employee not found');
+       toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Employee not found.',
+      });
       return;
     }
     
     const position = positions.find(p => p.name === employee.position);
     if (!position || !position.salaryType) {
-        alert('Salary details for this employee\'s position are not set.');
+        toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'Salary details for this employee\'s position are not set.',
+        });
         return;
     }
 
@@ -65,12 +87,11 @@ export default function PayslipClientPage({
             otherAllowances: position.otherAllowances || 0,
         };
     } else { // harian
-        // This is a simplification. Real calculation would need attendance data.
-        // We'll calculate for 22 work days as an example.
-        const workDays = 22;
+        // We'll calculate based on attendance days
         earnings = {
-            dailyWage: (position.dailyWage || 0) * workDays,
-            overtime: (position.overtimeRate || 0) * 10, // Example 10 overtime hours
+            dailyWage: (position.dailyWage || 0) * attendanceDays,
+            // Example 10 overtime hours - this could be another input field in the future
+            overtime: (position.overtimeRate || 0) * 10, 
         }
     }
 
@@ -92,6 +113,7 @@ export default function PayslipClientPage({
       totalDeductions,
       netSalary,
       position,
+      attendanceDays: position.salaryType === 'harian' ? attendanceDays : undefined,
     });
   };
 
@@ -109,7 +131,7 @@ export default function PayslipClientPage({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-2">
               <Label htmlFor="employee">Karyawan</Label>
               <Select
@@ -137,6 +159,18 @@ export default function PayslipClientPage({
                 onChange={(e) => setPeriod(e.target.value)}
               />
             </div>
+             {selectedEmployeePosition?.salaryType === 'harian' && (
+               <div className="space-y-2">
+                <Label htmlFor="attendance">Jumlah Kehadiran (hari)</Label>
+                <Input
+                  id="attendance"
+                  type="number"
+                  value={attendanceDays}
+                  onChange={(e) => setAttendanceDays(Number(e.target.value))}
+                  placeholder="e.g. 22"
+                />
+              </div>
+            )}
           </div>
           <div className="flex justify-end pt-6">
             <Button onClick={handleGenerate}>Buat Slip Gaji</Button>
