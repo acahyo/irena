@@ -1,5 +1,4 @@
 
-
 export type Employee = {
   id: string;
   name: string;
@@ -41,6 +40,13 @@ export type Employee = {
   basicSalary?: number;
   mealAllowance?: number;
   transportAllowance?: number;
+  salaryType?: 'harian' | 'bulanan';
+  dailyWage?: number;
+  overtimeRate?: number;
+  monthlySalary?: number;
+  otAllowance?: number;
+  locationAllowance?: number;
+  otherAllowances?: number;
 };
 
 export type CalendarEvent = {

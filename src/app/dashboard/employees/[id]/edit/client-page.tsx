@@ -5,7 +5,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { format, parseISO } from 'date-fns';
-import { ArrowLeft, Calendar as CalendarIcon, Upload, Loader2 } from 'lucide-react';
+import { ArrowLeft, Calendar as CalendarIcon, Upload, Loader2, WalletCards } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -65,6 +65,8 @@ export default function EditEmployeePageClient({ employee, departments, position
   const [ktpPreview, setKtpPreview] = useState<string | null>(employee.ktpPhoto || null);
   const [simPreview, setSimPreview] = useState<string | null>(employee.simPhoto || null);
   const [sioPreview, setSioPreview] = useState<string | null>(employee.sioPhoto || null);
+  const [salaryType, setSalaryType] = useState<string | undefined>(employee.salaryType);
+
 
   const handleFileChange = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -98,9 +100,6 @@ export default function EditEmployeePageClient({ employee, departments, position
 
     const employeeData: Partial<Employee> = {
         ...data,
-        basicSalary: data.basicSalary ? Number(data.basicSalary) : undefined,
-        mealAllowance: data.mealAllowance ? Number(data.mealAllowance) : undefined,
-        transportAllowance: data.transportAllowance ? Number(data.transportAllowance) : undefined,
         dateOfBirth: dateOfBirth,
         messEntryDate: messEntryDate,
         contractStartDate: contractStartDate,
@@ -377,25 +376,68 @@ export default function EditEmployeePageClient({ employee, departments, position
                 <Label htmlFor="workEquipment">Peralatan Kerja</Label>
                 <Textarea id="workEquipment" name="workEquipment" placeholder="e.g. Laptop, Mouse, Keyboard" defaultValue={employee.workEquipment} />
               </div>
-              
-               <div className="space-y-2 md:col-span-3">
-                <Label>Detail Gaji</Label>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 rounded-md border p-4">
-                     <div className="space-y-2">
-                        <Label htmlFor="basicSalary">Gaji Pokok</Label>
-                        <Input id="basicSalary" name="basicSalary" type="number" placeholder="e.g. 5000000" defaultValue={employee.basicSalary} />
-                    </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="transportAllowance">Tunjangan Transportasi</Label>
-                        <Input id="transportAllowance" name="transportAllowance" type="number" placeholder="e.g. 500000" defaultValue={employee.transportAllowance} />
-                    </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="mealAllowance">Tunjangan Makan</Label>
-                        <Input id="mealAllowance" name="mealAllowance" type="number" placeholder="e.g. 750000" defaultValue={employee.mealAllowance} />
-                    </div>
-                </div>
-              </div>
 
+              <div className="space-y-2 md:col-span-3">
+                 <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2"><WalletCards /> Detail Gaji</CardTitle>
+                      <CardDescription>Pilih tipe gaji dan isi detailnya di bawah ini.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                       <div className="space-y-2">
+                          <Label htmlFor="salaryType">Tipe Gaji</Label>
+                          <Select name="salaryType" value={salaryType} onValueChange={setSalaryType}>
+                            <SelectTrigger id="salaryType">
+                              <SelectValue placeholder="Pilih Tipe Gaji" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="harian">Gaji Harian</SelectItem>
+                              <SelectItem value="bulanan">Gaji Bulanan</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        {salaryType === 'harian' && (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-md border p-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="dailyWage">Upah per Hari (Rp)</Label>
+                              <Input id="dailyWage" name="dailyWage" type="number" placeholder="e.g. 150000" defaultValue={employee.dailyWage} />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="overtimeRate">Lembur per Jam (Rp)</Label>
+                              <Input id="overtimeRate" name="overtimeRate" type="number" placeholder="e.g. 25000" defaultValue={employee.overtimeRate} />
+                            </div>
+                          </div>
+                        )}
+
+                        {salaryType === 'bulanan' && (
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-md border p-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="monthlySalary">Gaji Pokok Bulanan (Rp)</Label>
+                              <Input id="monthlySalary" name="monthlySalary" type="number" placeholder="e.g. 4500000" defaultValue={employee.monthlySalary} />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="otAllowance">Tunjangan OT & Kehadiran (Rp)</Label>
+                              <Input id="otAllowance" name="otAllowance" type="number" placeholder="e.g. 500000" defaultValue={employee.otAllowance} />
+                            </div>
+                             <div className="space-y-2">
+                              <Label htmlFor="locationAllowance">Tunjangan Lokasi (Rp)</Label>
+                              <Input id="locationAllowance" name="locationAllowance" type="number" placeholder="e.g. 300000" defaultValue={employee.locationAllowance} />
+                            </div>
+                             <div className="space-y-2">
+                              <Label htmlFor="mealAllowance">Tunjangan Makan (Rp)</Label>
+                              <Input id="mealAllowance" name="mealAllowance" type="number" placeholder="e.g. 750000" defaultValue={employee.mealAllowance} />
+                            </div>
+                             <div className="space-y-2 md:col-span-2">
+                              <Label htmlFor="otherAllowances">Tunjangan Lain-lain (Rp)</Label>
+                              <Input id="otherAllowances" name="otherAllowances" type="number" placeholder="e.g. 200000" defaultValue={employee.otherAllowances} />
+                            </div>
+                          </div>
+                        )}
+
+                    </CardContent>
+                 </Card>
+              </div>
 
                <div className="space-y-2">
                 <Label htmlFor="employeeStatus">Status Karyawan</Label>

@@ -13,9 +13,10 @@ import {
     CardContent,
     CardHeader,
     CardTitle,
+    CardDescription
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Building2, Calendar, FileText, Heart, Home, Landmark, Mail, MapPin, Pencil, Phone, ShieldCheck, Trash2, User, UserCheck, UserSquare, Users, Briefcase, CalendarCheck, VenetianMask } from 'lucide-react';
+import { ArrowLeft, Building2, Calendar, FileText, Heart, Home, Landmark, Mail, MapPin, Pencil, Phone, ShieldCheck, Trash2, User, UserCheck, UserSquare, Users, Briefcase, CalendarCheck, VenetianMask, WalletCards, Star, DollarSign } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { Employee, LeaveRequest } from '@/lib/types';
 import {
@@ -54,6 +55,15 @@ const getStatusVariant = (status: string): 'default' | 'secondary' | 'destructiv
   }
 };
 
+const formatCurrency = (amount: number | undefined | null) => {
+    if (amount === undefined || amount === null) return 'N/A';
+    return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0,
+    }).format(amount);
+};
+
 
 // The employee object passed here should have dates pre-formatted as strings
 export default function EmployeeProfileClientPage({ employee }: { employee: Employee & { dateOfBirth?: string, messEntryDate?: string, contractStartDate?: string, contractEndDate?: string } }) {
@@ -78,14 +88,20 @@ export default function EmployeeProfileClientPage({ employee }: { employee: Empl
         }
     };
 
-  const DetailItem = ({ icon, label, value }: { icon: React.ReactNode, label: string, value?: string | null }) => {
-    if (!value) return null;
+  const DetailItem = ({ icon, label, value, currency = false }: { icon: React.ReactNode, label: string, value?: string | number | null, currency?: boolean }) => {
+    if (!value && value !== 0) return null;
+    
+    let displayValue = value;
+    if (currency && typeof value === 'number') {
+        displayValue = formatCurrency(value);
+    }
+    
     return (
       <div className="flex items-start gap-4">
         <div className="text-muted-foreground w-5 mt-1">{icon}</div>
         <div>
           <p className="font-semibold text-sm">{label}</p>
-          <p className="text-muted-foreground">{value}</p>
+          <p className="text-muted-foreground">{displayValue}</p>
         </div>
       </div>
     );
@@ -256,7 +272,7 @@ export default function EmployeeProfileClientPage({ employee }: { employee: Empl
                 <DetailItem icon={<Briefcase className="h-5 w-5"/>} label="Peralatan Kerja" value={employee.workEquipment} />
             </CardContent>
         </Card>
-
+        
         <Card className="lg:col-span-3">
              <CardHeader>
                 <CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5" /> Contract Information</CardTitle>
@@ -264,6 +280,33 @@ export default function EmployeeProfileClientPage({ employee }: { employee: Empl
              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
                  <DetailItem icon={<Calendar className="h-5 w-5"/>} label="Contract Start Date" value={employee.contractStartDate} />
                 <DetailItem icon={<Calendar className="h-5 w-5"/>} label="Contract End Date" value={employee.contractEndDate} />
+            </CardContent>
+        </Card>
+
+        <Card className="lg:col-span-3">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><WalletCards /> Salary Details</CardTitle>
+                <CardDescription>Tipe Gaji: <Badge variant="outline" className="capitalize">{employee.salaryType || 'Belum Diatur'}</Badge></CardDescription>
+            </CardHeader>
+            <CardContent>
+                 {employee.salaryType === 'harian' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                       <DetailItem icon={<DollarSign className="h-5 w-5"/>} label="Upah per Hari" value={employee.dailyWage} currency />
+                       <DetailItem icon={<Star className="h-5 w-5"/>} label="Lembur per Jam" value={employee.overtimeRate} currency />
+                    </div>
+                 )}
+                 {employee.salaryType === 'bulanan' && (
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                       <DetailItem icon={<DollarSign className="h-5 w-5"/>} label="Gaji Pokok Bulanan" value={employee.monthlySalary} currency />
+                       <DetailItem icon={<Star className="h-5 w-5"/>} label="Tunjangan OT & Kehadiran" value={employee.otAllowance} currency />
+                       <DetailItem icon={<MapPin className="h-5 w-5"/>} label="Tunjangan Lokasi" value={employee.locationAllowance} currency />
+                       <DetailItem icon={<Briefcase className="h-5 w-5"/>} label="Tunjangan Makan" value={employee.mealAllowance} currency />
+                       <DetailItem icon={<Star className="h-5 w-5"/>} label="Tunjangan Lain-lain" value={employee.otherAllowances} currency />
+                    </div>
+                 )}
+                 {!employee.salaryType && (
+                    <p className="text-muted-foreground text-center py-4">Detail gaji belum diatur untuk karyawan ini.</p>
+                 )}
             </CardContent>
         </Card>
         
