@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import {
   Card,
   CardContent,
@@ -21,7 +21,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Printer, Loader2 } from 'lucide-react';
 import type { EmployeeWithPosition, AppSettings, Position, AttendanceRecord } from '@/lib/types';
-import Payslip from '@/components/payslip';
+import PayslipViewer, { type PayslipData } from '@/components/payslip-viewer';
 import { useToast } from '@/hooks/use-toast';
 import { getAttendanceByEmployeeAndPeriod } from '@/actions/attendance';
 
@@ -36,7 +36,7 @@ export default function PayslipClientPage({
 }) {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
   const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
-  const [payslipData, setPayslipData] = useState<any>(null);
+  const [payslipData, setPayslipData] = useState<PayslipData | null>(null);
   const [attendanceDays, setAttendanceDays] = useState<number>(0);
   const [overtimeHours, setOvertimeHours] = useState<number>(0);
   const { toast } = useToast();
@@ -125,6 +125,7 @@ export default function PayslipClientPage({
     const netSalary = totalEarnings - totalDeductions;
 
     setPayslipData({
+      id: selectedEmployee.id,
       employee: selectedEmployee,
       period,
       earnings,
@@ -136,10 +137,6 @@ export default function PayslipClientPage({
       attendanceDays: attendanceDays,
       overtimeHours: overtimeHours,
     });
-  };
-
-  const handlePrint = () => {
-    window.print();
   };
 
   return (
@@ -188,7 +185,7 @@ export default function PayslipClientPage({
                 value={attendanceDays}
                 onChange={(e) => setAttendanceDays(Number(e.target.value))}
                 placeholder="e.g. 22"
-                disabled={isFetchingAttendance}
+                disabled={isFetchingAttendance || selectedEmployee?.positionDetails?.salaryType !== 'harian'}
               />
             </div>
              {selectedEmployee?.positionDetails?.salaryType === 'harian' && (
@@ -215,15 +212,11 @@ export default function PayslipClientPage({
       </Card>
 
       {payslipData && (
-        <>
-          <Payslip data={payslipData} settings={settings} />
-          <div className="flex justify-center print:hidden">
-            <Button onClick={handlePrint}>
-              <Printer className="mr-2 h-4 w-4" />
-              Cetak
-            </Button>
-          </div>
-        </>
+        <PayslipViewer 
+            payslips={[payslipData]}
+            settings={settings}
+            showControls={true}
+        />
       )}
     </div>
   );
