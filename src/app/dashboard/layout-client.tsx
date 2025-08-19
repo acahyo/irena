@@ -35,7 +35,7 @@ import {
 import type { AppSettings, User } from "@/lib/types";
 
 const allNavItems = [
-  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", exact: true, roles: ["Administrator"] },
+  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", exact: true, roles: ["Administrator", "HR"] },
   { href: "/dashboard/employees", icon: Users, label: "Employees", roles: ["Administrator", "HR"] },
   { href: "/dashboard/leave-schedule", icon: CalendarCheck, label: "Jadwal Cuti", roles: ["Administrator", "HR"] },
   { href: "/dashboard/department", icon: Briefcase, label: "Department", roles: ["Administrator", "HR"] },
