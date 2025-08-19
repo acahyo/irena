@@ -21,7 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getAttendanceByPeriod } from '@/actions/attendance';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-const BPJS_RATES = {
+const BPJS_RATES: Record<string, number> = {
     miki: 280000,
     iba: 322000,
 };
@@ -130,12 +130,15 @@ export default function PayslipCollectiveClientPage({
                 return; // Skip if no salary type
             }
             
-            const bpjsDeduction = employee.bpjsStatus === 'active' && employee.bpjsType
+            const totalEarnings = Object.values(earnings).reduce((sum, val) => sum + val, 0);
+
+            const bpjsDeduction = employee.bpjsStatus === 'active' && employee.bpjsType && BPJS_RATES[employee.bpjsType]
                 ? BPJS_RATES[employee.bpjsType]
                 : 150000; // Default or fallback BPJS deduction
 
-            const deductions = { tax: 250000, bpjs: bpjsDeduction };
-            const totalEarnings = Object.values(earnings).reduce((sum, val) => sum + val, 0);
+            const taxDeduction = totalEarnings * 0.02;
+
+            const deductions = { tax: taxDeduction, bpjs: bpjsDeduction };
             const totalDeductions = Object.values(deductions).reduce((sum, val) => sum + val, 0);
             const netSalary = totalEarnings - totalDeductions;
             
