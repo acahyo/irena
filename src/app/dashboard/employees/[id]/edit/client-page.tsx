@@ -40,9 +40,9 @@ import { Textarea } from '@/components/ui/textarea';
 const parseDate = (date: string | Date | undefined): Date | undefined => {
   if (!date) return undefined;
   if (date instanceof Date) return date;
-  // Handle timezone offset issues between server and client rendering
-  const d = new Date(date);
-  return new Date(d.valueOf() + d.getTimezoneOffset() * 60 * 1000);
+  // Dates from server are strings. Treat them as UTC to avoid timezone shifts.
+  const parts = date.split('T')[0].split('-').map(Number);
+  return new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
 };
 
 
