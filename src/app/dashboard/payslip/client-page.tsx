@@ -141,9 +141,12 @@ export default function PayslipClientPage({
 
     const totalEarnings = Object.values(earnings).reduce((sum, val) => sum + val, 0);
     
-    const bpjsDeduction = selectedEmployee.bpjsStatus === 'active' && selectedEmployee.bpjsType && BPJS_RATES[selectedEmployee.bpjsType]
-        ? BPJS_RATES[selectedEmployee.bpjsType]
-        : 150000; // Default or fallback BPJS deduction
+    let bpjsDeduction = 0;
+    if (selectedEmployee.bpjsStatus === 'active') {
+        bpjsDeduction = selectedEmployee.bpjsType && BPJS_RATES[selectedEmployee.bpjsType]
+            ? BPJS_RATES[selectedEmployee.bpjsType]
+            : 0; 
+    }
 
     const taxDeduction = totalEarnings * 0.02;
 
