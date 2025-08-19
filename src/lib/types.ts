@@ -38,6 +38,9 @@ export type Employee = {
   onLeave?: boolean;
   daysActive?: number;
   leaveHistory?: LeaveRequest[];
+  basicSalary?: number;
+  mealAllowance?: number;
+  transportAllowance?: number;
 };
 
 export type CalendarEvent = {

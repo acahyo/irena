@@ -98,6 +98,9 @@ export default function EditEmployeePageClient({ employee, departments, position
 
     const employeeData: Partial<Employee> = {
         ...data,
+        basicSalary: data.basicSalary ? Number(data.basicSalary) : undefined,
+        mealAllowance: data.mealAllowance ? Number(data.mealAllowance) : undefined,
+        transportAllowance: data.transportAllowance ? Number(data.transportAllowance) : undefined,
         dateOfBirth: dateOfBirth,
         messEntryDate: messEntryDate,
         contractStartDate: contractStartDate,
@@ -374,6 +377,25 @@ export default function EditEmployeePageClient({ employee, departments, position
                 <Label htmlFor="workEquipment">Peralatan Kerja</Label>
                 <Textarea id="workEquipment" name="workEquipment" placeholder="e.g. Laptop, Mouse, Keyboard" defaultValue={employee.workEquipment} />
               </div>
+              
+               <div className="space-y-2 md:col-span-3">
+                <Label>Detail Gaji</Label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 rounded-md border p-4">
+                     <div className="space-y-2">
+                        <Label htmlFor="basicSalary">Gaji Pokok</Label>
+                        <Input id="basicSalary" name="basicSalary" type="number" placeholder="e.g. 5000000" defaultValue={employee.basicSalary} />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="transportAllowance">Tunjangan Transportasi</Label>
+                        <Input id="transportAllowance" name="transportAllowance" type="number" placeholder="e.g. 500000" defaultValue={employee.transportAllowance} />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="mealAllowance">Tunjangan Makan</Label>
+                        <Input id="mealAllowance" name="mealAllowance" type="number" placeholder="e.g. 750000" defaultValue={employee.mealAllowance} />
+                    </div>
+                </div>
+              </div>
+
 
                <div className="space-y-2">
                 <Label htmlFor="employeeStatus">Status Karyawan</Label>

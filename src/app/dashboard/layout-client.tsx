@@ -31,6 +31,7 @@ import {
   Settings,
   CalendarCheck,
   LayoutDashboard,
+  Printer,
 } from "lucide-react";
 import type { AppSettings, User } from "@/lib/types";
 
@@ -40,6 +41,7 @@ const allNavItems = [
   { href: "/dashboard/leave-schedule", icon: CalendarCheck, label: "Jadwal Cuti", roles: ["Administrator", "HR"] },
   { href: "/dashboard/department", icon: Briefcase, label: "Department", roles: ["Administrator", "HR"] },
   { href: "/dashboard/position", icon: Shield, label: "Position", roles: ["Administrator", "HR"] },
+  { href: "/dashboard/payslip", icon: Printer, label: "Cetak Slip Gaji", roles: ["Administrator", "HR"] },
   { href: "/dashboard/users", icon: UsersRound, label: "Users", roles: ["Administrator"] },
   { href: "/dashboard/roles", icon: ShieldCheck, label: "Roles", roles: ["Administrator"] },
   { href: "/dashboard/settings", icon: Settings, label: "Settings", roles: ["Administrator"] },
