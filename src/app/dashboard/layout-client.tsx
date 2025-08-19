@@ -141,7 +141,7 @@ export default function DashboardClientLayout({
                             <SidebarMenuSub>
                                 {item.subItems.map(subItem => (
                                      <SidebarMenuItem key={subItem.href}>
-                                        <Link href={subItem.href} passHref legacyBehavior>
+                                        <Link href={subItem.href}>
                                             <SidebarMenuSubButton isActive={pathname.startsWith(subItem.href)}>
                                                 {subItem.label}
                                             </SidebarMenuSubButton>
