@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -19,35 +19,68 @@ import {
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Printer } from 'lucide-react';
-import type { Employee, AppSettings, Position } from '@/lib/types';
+import { Printer, Loader2 } from 'lucide-react';
+import type { EmployeeWithPosition, AppSettings, Position, AttendanceRecord } from '@/lib/types';
 import Payslip from '@/components/payslip';
 import { useToast } from '@/hooks/use-toast';
+import { getAttendanceByEmployeeAndPeriod } from '@/actions/attendance';
 
 export default function PayslipClientPage({
   initialEmployees,
   settings,
-  positions,
+  initialAttendance,
 }: {
-  initialEmployees: Employee[];
+  initialEmployees: EmployeeWithPosition[];
   settings: AppSettings;
-  positions: Position[];
+  initialAttendance: AttendanceRecord[];
 }) {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
   const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
   const [payslipData, setPayslipData] = useState<any>(null);
-  const [attendanceDays, setAttendanceDays] = useState<number>(22);
+  const [attendanceDays, setAttendanceDays] = useState<number>(0);
+  const [overtimeHours, setOvertimeHours] = useState<number>(0);
   const { toast } = useToast();
+  const [isFetchingAttendance, setIsFetchingAttendance] = useState(false);
 
-  const selectedEmployeePosition = useMemo(() => {
+  const selectedEmployee = useMemo(() => {
     if (!selectedEmployeeId) return null;
-    const employee = initialEmployees.find((e) => e.id === selectedEmployeeId);
-    if (!employee || !employee.position) return null;
-    return positions.find((p) => p.name === employee.position) || null;
-  }, [selectedEmployeeId, initialEmployees, positions]);
+    return initialEmployees.find((e) => e.id === selectedEmployeeId) || null;
+  }, [selectedEmployeeId, initialEmployees]);
+
+  // Effect to fetch attendance data when employee or period changes
+  useEffect(() => {
+    const fetchAttendance = async () => {
+        if (!selectedEmployeeId || !period) {
+            setAttendanceDays(0);
+            setOvertimeHours(0);
+            return;
+        };
+        setIsFetchingAttendance(true);
+        try {
+            // First, check initial attendance data passed from server
+            const initialRecord = initialAttendance.find(rec => rec.employeeId === selectedEmployeeId && rec.period === period);
+            if (initialRecord) {
+                setAttendanceDays(initialRecord.attendanceDays || 0);
+                setOvertimeHours(initialRecord.overtimeHours || 0);
+            } else {
+                // If not found (e.g., period changed), fetch from db
+                const record = await getAttendanceByEmployeeAndPeriod(selectedEmployeeId, period);
+                setAttendanceDays(record?.attendanceDays || 0);
+                setOvertimeHours(record?.overtimeHours || 0);
+            }
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch attendance data.' });
+            setAttendanceDays(0);
+            setOvertimeHours(0);
+        } finally {
+            setIsFetchingAttendance(false);
+        }
+    };
+    fetchAttendance();
+  }, [selectedEmployeeId, period, toast, initialAttendance]);
 
   const handleGenerate = () => {
-    if (!selectedEmployeeId || !period) {
+    if (!selectedEmployeeId || !period || !selectedEmployee) {
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -55,17 +88,8 @@ export default function PayslipClientPage({
       });
       return;
     }
-    const employee = initialEmployees.find((e) => e.id === selectedEmployeeId);
-    if (!employee) {
-       toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Employee not found.',
-      });
-      return;
-    }
     
-    const position = positions.find(p => p.name === employee.position);
+    const position = selectedEmployee.positionDetails;
     if (!position || !position.salaryType) {
         toast({
             variant: 'destructive',
@@ -75,10 +99,9 @@ export default function PayslipClientPage({
         return;
     }
 
-    // This is where you would typically fetch real salary data for the period.
-    // For this example, we'll use static data from the employee's position object.
     let earnings: Record<string, number> = {};
     if(position.salaryType === 'bulanan') {
+        // For monthly salary, we can assume full salary unless logic for deductions based on attendance is added
         earnings = {
             monthlySalary: position.monthlySalary || 0,
             otAllowance: position.otAllowance || 0,
@@ -87,14 +110,11 @@ export default function PayslipClientPage({
             otherAllowances: position.otherAllowances || 0,
         };
     } else { // harian
-        // We'll calculate based on attendance days
         earnings = {
             dailyWage: (position.dailyWage || 0) * attendanceDays,
-            // Example 10 overtime hours - this could be another input field in the future
-            overtime: (position.overtimeRate || 0) * 10, 
+            overtime: (position.overtimeRate || 0) * overtimeHours, 
         }
     }
-
 
     const deductions = {
       tax: 250000,
@@ -105,7 +125,7 @@ export default function PayslipClientPage({
     const netSalary = totalEarnings - totalDeductions;
 
     setPayslipData({
-      employee,
+      employee: selectedEmployee,
       period,
       earnings,
       deductions,
@@ -113,7 +133,8 @@ export default function PayslipClientPage({
       totalDeductions,
       netSalary,
       position,
-      attendanceDays: position.salaryType === 'harian' ? attendanceDays : undefined,
+      attendanceDays: attendanceDays,
+      overtimeHours: overtimeHours,
     });
   };
 
@@ -127,7 +148,7 @@ export default function PayslipClientPage({
         <CardHeader>
           <CardTitle>Cetak Slip Gaji</CardTitle>
           <CardDescription>
-            Pilih karyawan dan periode untuk membuat slip gaji.
+            Pilih karyawan dan periode untuk membuat slip gaji. Data absensi akan terisi otomatis.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -159,21 +180,36 @@ export default function PayslipClientPage({
                 onChange={(e) => setPeriod(e.target.value)}
               />
             </div>
-             {selectedEmployeePosition?.salaryType === 'harian' && (
+            <div className="space-y-2">
+              <Label htmlFor="attendance">Jumlah Kehadiran (hari)</Label>
+              <Input
+                id="attendance"
+                type="number"
+                value={attendanceDays}
+                onChange={(e) => setAttendanceDays(Number(e.target.value))}
+                placeholder="e.g. 22"
+                disabled={isFetchingAttendance}
+              />
+            </div>
+             {selectedEmployee?.positionDetails?.salaryType === 'harian' && (
                <div className="space-y-2">
-                <Label htmlFor="attendance">Jumlah Kehadiran (hari)</Label>
+                <Label htmlFor="overtime">Jumlah Jam Lembur</Label>
                 <Input
-                  id="attendance"
+                  id="overtime"
                   type="number"
-                  value={attendanceDays}
-                  onChange={(e) => setAttendanceDays(Number(e.target.value))}
-                  placeholder="e.g. 22"
+                  value={overtimeHours}
+                  onChange={(e) => setOvertimeHours(Number(e.target.value))}
+                  placeholder="e.g. 10"
+                  disabled={isFetchingAttendance}
                 />
               </div>
             )}
           </div>
           <div className="flex justify-end pt-6">
-            <Button onClick={handleGenerate}>Buat Slip Gaji</Button>
+            <Button onClick={handleGenerate} disabled={isFetchingAttendance}>
+                {isFetchingAttendance && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Buat Slip Gaji
+            </Button>
           </div>
         </CardContent>
       </Card>

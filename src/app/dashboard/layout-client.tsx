@@ -32,6 +32,7 @@ import {
   CalendarCheck,
   LayoutDashboard,
   Printer,
+  ClipboardCheck,
 } from "lucide-react";
 import type { AppSettings, User } from "@/lib/types";
 
@@ -39,6 +40,7 @@ const allNavItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", exact: true, roles: ["Administrator", "HR"] },
   { href: "/dashboard/employees", icon: Users, label: "Employees", roles: ["Administrator", "HR"] },
   { href: "/dashboard/leave-schedule", icon: CalendarCheck, label: "Jadwal Cuti", roles: ["Administrator", "HR"] },
+  { href: "/dashboard/attendance", icon: ClipboardCheck, label: "Input Absensi", roles: ["Administrator", "HR"] },
   { href: "/dashboard/department", icon: Briefcase, label: "Department", roles: ["Administrator", "HR"] },
   { href: "/dashboard/position", icon: Shield, label: "Position", roles: ["Administrator", "HR"] },
   { href: "/dashboard/payslip", icon: Printer, label: "Cetak Slip Gaji", roles: ["Administrator", "HR"] },

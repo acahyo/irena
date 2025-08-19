@@ -14,6 +14,7 @@ interface PayslipData {
   totalDeductions: number;
   netSalary: number;
   attendanceDays?: number;
+  overtimeHours?: number;
 }
 
 // Helper to format currency
@@ -32,15 +33,15 @@ const formatPeriod = (period: string) => {
 }
 
 // Helper to format salary labels
-const formatLabel = (key: string, attendanceDays?: number) => {
+const formatLabel = (key: string, attendanceDays?: number, overtimeHours?: number) => {
     const labels: Record<string, string> = {
         monthlySalary: "Gaji Pokok Bulanan",
         otAllowance: "Tunjangan OT & Kehadiran",
         locationAllowance: "Tunjangan Lokasi",
         mealAllowance: "Tunjangan Makan",
         otherAllowances: "Tunjangan Lain-lain",
-        dailyWage: `Gaji Harian (${attendanceDays || 'N/A'} hari)`,
-        overtime: "Lembur (Total)",
+        dailyWage: `Gaji Harian (${attendanceDays ?? '...'} hari)`,
+        overtime: `Lembur (${overtimeHours ?? '...'} jam)`,
     };
     return labels[key] || key;
 }
@@ -62,9 +63,10 @@ export default function Payslip({
     totalDeductions,
     netSalary,
     attendanceDays,
+    overtimeHours,
   } = data;
 
-  const DetailRow = ({ label, value }: { label: string; value: string | undefined }) => (
+  const DetailRow = ({ label, value }: { label: string; value: string | undefined | number }) => (
     <div>
       <p className="text-sm text-gray-500">{label}</p>
       <p className="font-medium">{value || '-'}</p>
@@ -116,6 +118,7 @@ export default function Payslip({
                 <DetailRow label="Departemen" value={employee.department} />
                 <DetailRow label="Lokasi/Site" value={employee.siteLocation} />
                 <DetailRow label="Status" value={employee.employeeStatus} />
+                {attendanceDays !== undefined && <DetailRow label="Total Kehadiran" value={`${attendanceDays} hari`} />}
            </div>
         </div>
         <div>
@@ -134,7 +137,7 @@ export default function Payslip({
           <h3 className="text-lg font-semibold text-gray-700 pb-2 border-b">Penghasilan</h3>
           <div className="divide-y">
             {Object.entries(earnings).map(([key, value]) => (
-                <SalaryRow key={key} label={formatLabel(key, attendanceDays)} value={value} />
+                <SalaryRow key={key} label={formatLabel(key, attendanceDays, overtimeHours)} value={value} />
             ))}
           </div>
         </div>

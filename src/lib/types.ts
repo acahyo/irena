@@ -100,6 +100,16 @@ export type AppSettings = {
   accentColor?: string;
 }
 
+export type AttendanceRecord = {
+    id: string; // Will be composite key like `employeeId_period`
+    employeeId: string;
+    employeeName: string;
+    period: string; // YYYY-MM
+    attendanceDays?: number;
+    overtimeHours?: number;
+};
+
+
 // Composite type for pages that need employee data with full position details
 export type EmployeeWithPosition = Employee & {
   positionDetails?: Position;
