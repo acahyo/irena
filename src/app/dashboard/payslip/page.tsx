@@ -5,13 +5,15 @@ import { getSettings } from '@/actions/settings';
 import { getPositions } from '@/actions/positions';
 import { getAttendanceByPeriod } from '@/actions/attendance';
 import type { EmployeeWithPosition, AttendanceRecord } from '@/lib/types';
+import { getDepartments } from '@/actions/departments';
 
 
 export default async function PayslipPage() {
-  const [employees, settings, positions] = await Promise.all([
+  const [employees, settings, positions, departments] = await Promise.all([
     getEmployees(),
     getSettings(),
-    getPositions()
+    getPositions(),
+    getDepartments()
   ]);
 
   const employeesWithDetails: EmployeeWithPosition[] = employees.map(emp => {
@@ -29,6 +31,7 @@ export default async function PayslipPage() {
       initialEmployees={employeesWithDetails}
       settings={settings}
       initialAttendance={attendanceRecords}
+      departments={departments}
     />
   );
 }

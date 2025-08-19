@@ -20,7 +20,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Printer, Loader2 } from 'lucide-react';
-import type { EmployeeWithPosition, AppSettings, Position, AttendanceRecord } from '@/lib/types';
+import type { EmployeeWithPosition, AppSettings, Position, AttendanceRecord, Department } from '@/lib/types';
 import PayslipViewer, { type PayslipData } from '@/components/payslip-viewer';
 import { useToast } from '@/hooks/use-toast';
 import { getAttendanceByEmployeeAndPeriod } from '@/actions/attendance';
@@ -29,10 +29,12 @@ export default function PayslipClientPage({
   initialEmployees,
   settings,
   initialAttendance,
+  departments,
 }: {
   initialEmployees: EmployeeWithPosition[];
   settings: AppSettings;
   initialAttendance: AttendanceRecord[];
+  departments: Department[];
 }) {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
   const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
@@ -41,11 +43,27 @@ export default function PayslipClientPage({
   const [overtimeHours, setOvertimeHours] = useState<number>(0);
   const { toast } = useToast();
   const [isFetchingAttendance, setIsFetchingAttendance] = useState(false);
+  const [departmentFilter, setDepartmentFilter] = useState('all');
+
+  const filteredEmployees = useMemo(() => {
+    if (departmentFilter === 'all') {
+        return initialEmployees;
+    }
+    return initialEmployees.filter(emp => emp.department === departmentFilter);
+  }, [initialEmployees, departmentFilter]);
 
   const selectedEmployee = useMemo(() => {
     if (!selectedEmployeeId) return null;
     return initialEmployees.find((e) => e.id === selectedEmployeeId) || null;
   }, [selectedEmployeeId, initialEmployees]);
+  
+  // When filter changes, if the selected employee is no longer in the filtered list, reset it.
+  useEffect(() => {
+    if (selectedEmployeeId && !filteredEmployees.find(e => e.id === selectedEmployeeId)) {
+        setSelectedEmployeeId(null);
+        setPayslipData(null);
+    }
+  }, [filteredEmployees, selectedEmployeeId]);
 
   // Effect to fetch attendance data when employee or period changes
   useEffect(() => {
@@ -149,7 +167,21 @@ export default function PayslipClientPage({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+             <div className="space-y-2">
+                <Label htmlFor="department">Departemen</Label>
+                <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+                    <SelectTrigger id="department-filter">
+                        <SelectValue placeholder="Filter by Department" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">Semua Departemen</SelectItem>
+                        {departments.map((dept) => (
+                            <SelectItem key={dept.id} value={dept.name}>{dept.name}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="employee">Karyawan</Label>
               <Select
@@ -160,7 +192,7 @@ export default function PayslipClientPage({
                   <SelectValue placeholder="Pilih Karyawan" />
                 </SelectTrigger>
                 <SelectContent>
-                  {initialEmployees.map((emp) => (
+                  {filteredEmployees.map((emp) => (
                     <SelectItem key={emp.id} value={emp.id}>
                       {emp.name} ({emp.nik})
                     </SelectItem>
