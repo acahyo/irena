@@ -40,12 +40,9 @@ import { Textarea } from '@/components/ui/textarea';
 const parseDate = (date: string | Date | undefined): Date | undefined => {
   if (!date) return undefined;
   if (date instanceof Date) return date;
-  // Use new Date() to avoid timezone issues that can occur with parseISO on the client vs. server
-  const parsed = new Date(date);
-  if (!isNaN(parsed.getTime())) {
-    return parsed;
-  }
-  return undefined;
+  // Handle timezone offset issues between server and client rendering
+  const d = new Date(date);
+  return new Date(d.valueOf() + d.getTimezoneOffset() * 60 * 1000);
 };
 
 
