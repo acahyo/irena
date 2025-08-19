@@ -50,7 +50,7 @@ export default function LoginPageClient({ settings }: { settings: AppSettings })
         <Card className="shadow-2xl">
           <CardHeader className="space-y-1 text-center">
             <div className="flex justify-center pb-4">
-               <Avatar className="h-24 w-24 rounded-lg">
+               <Avatar className="h-[100px] w-[100px] rounded-lg">
                 {settings.logo && <AvatarImage src={settings.logo} alt={settings.appName || 'Logo'} />}
                 <AvatarFallback className="rounded-lg bg-primary text-primary-foreground">
                     <LogIn className="h-8 w-8" />
