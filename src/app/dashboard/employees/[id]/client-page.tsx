@@ -248,6 +248,17 @@ export default function EmployeeProfileClientPage({ employee }: { employee: Empl
                         ) : <p className="text-muted-foreground">N/A</p>}
                     </div>
                 </div>
+                {employee.bpjsStatus === 'active' && employee.bpjsType && (
+                    <div className="flex items-start gap-4">
+                        <div className="text-muted-foreground w-5 mt-1"><ShieldCheck className="h-5 w-5"/></div>
+                        <div>
+                            <p className="font-semibold text-sm">BPJS Type</p>
+                            <Badge variant='outline' className="capitalize mt-1">
+                                {employee.bpjsType.toUpperCase()}
+                            </Badge>
+                        </div>
+                    </div>
+                 )}
                  <div className="flex items-start gap-4">
                     <div className="text-muted-foreground w-5 mt-1"><UserCheck className="h-5 w-5"/></div>
                     <div>

@@ -53,6 +53,7 @@ export default function NewEmployeePage() {
   const [ktpPreview, setKtpPreview] = useState<string | null>(null);
   const [simPreview, setSimPreview] = useState<string | null>(null);
   const [sioPreview, setSioPreview] = useState<string | null>(null);
+  const [bpjsStatus, setBpjsStatus] = useState<string | undefined>();
 
 
   useEffect(() => {
@@ -299,7 +300,7 @@ export default function NewEmployeePage() {
 
               <div className="space-y-2 md:col-span-3">
                 <Label>Status BPJS</Label>
-                <RadioGroup name="bpjsStatus" className="flex gap-4">
+                 <RadioGroup name="bpjsStatus" className="flex gap-4" onValueChange={setBpjsStatus}>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="active" id="bpjs-active" />
                     <Label htmlFor="bpjs-active">Aktif</Label>
@@ -310,6 +311,22 @@ export default function NewEmployeePage() {
                   </div>
                 </RadioGroup>
               </div>
+
+              {bpjsStatus === 'active' && (
+                <div className="space-y-2 md:col-span-3">
+                    <Label htmlFor="bpjsType">Tipe BPJS</Label>
+                    <Select name="bpjsType">
+                        <SelectTrigger id="bpjsType">
+                            <SelectValue placeholder="Pilih Tipe BPJS" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="miki">BPJS MIKI (Potongan 280.000)</SelectItem>
+                            <SelectItem value="iba">BPJS IBA (Potongan 322.000)</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+              )}
+
 
               <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-8">
                 <FileInput id="ktpPhoto" label="Foto KTP" preview={ktpPreview} onChange={(e) => handleFileChange(e, setKtpPreview)} />

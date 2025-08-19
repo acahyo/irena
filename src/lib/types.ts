@@ -21,6 +21,7 @@ export type Employee = {
   emergencyContactName?: string;
   emergencyContactNumber?: string;
   bpjsStatus?: 'active' | 'inactive';
+  bpjsType?: 'miki' | 'iba';
   employeeStatus?: 'active' | 'nonaktif' | 'resign' | 'phk';
   ktpPhoto?: string;
   simPhoto?: string;

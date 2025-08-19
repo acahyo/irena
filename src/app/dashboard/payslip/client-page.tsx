@@ -25,6 +25,11 @@ import PayslipViewer, { type PayslipData } from '@/components/payslip-viewer';
 import { useToast } from '@/hooks/use-toast';
 import { getAttendanceByEmployeeAndPeriod } from '@/actions/attendance';
 
+const BPJS_RATES = {
+    miki: 280000,
+    iba: 322000,
+};
+
 export default function PayslipClientPage({
   initialEmployees,
   settings,
@@ -134,9 +139,13 @@ export default function PayslipClientPage({
         }
     }
 
+    const bpjsDeduction = selectedEmployee.bpjsStatus === 'active' && selectedEmployee.bpjsType
+        ? BPJS_RATES[selectedEmployee.bpjsType]
+        : 150000; // Default or fallback BPJS deduction
+
     const deductions = {
       tax: 250000,
-      bpjs: 150000,
+      bpjs: bpjsDeduction,
     };
     const totalEarnings = Object.values(earnings).reduce((sum, val) => sum + val, 0);
     const totalDeductions = Object.values(deductions).reduce((sum, val) => sum + val, 0);

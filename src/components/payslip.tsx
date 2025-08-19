@@ -33,7 +33,9 @@ const formatPeriod = (period: string) => {
 }
 
 // Helper to format salary labels
-const formatLabel = (key: string, attendanceDays?: number, overtimeHours?: number) => {
+const formatLabel = (key: string, employee: Employee, attendanceDays?: number, overtimeHours?: number) => {
+    const bpjsLabel = employee.bpjsType ? `Iuran BPJS (${employee.bpjsType.toUpperCase()})` : "Iuran BPJS";
+    
     const labels: Record<string, string> = {
         monthlySalary: "Gaji Pokok Bulanan",
         otAllowance: "Tunjangan OT & Kehadiran",
@@ -43,7 +45,7 @@ const formatLabel = (key: string, attendanceDays?: number, overtimeHours?: numbe
         dailyWage: `Gaji Harian (${attendanceDays ?? '...'} hari)`,
         overtime: `Lembur (${overtimeHours ?? '...'} jam)`,
         tax: "Pajak (PPH 21)",
-        bpjs: "Iuran BPJS",
+        bpjs: bpjsLabel,
     };
     return labels[key] || key.charAt(0).toUpperCase() + key.slice(1);
 }
@@ -124,6 +126,7 @@ export default function Payslip({
                   <DetailRow label="Lokasi/Site" value={employee.siteLocation} />
                   <DetailRow label="Status" value={employee.employeeStatus} />
                   {attendanceDays !== undefined && <DetailRow label="Total Kehadiran" value={`${attendanceDays} hari`} />}
+                  {employee.bpjsStatus === 'active' && <DetailRow label="Tipe BPJS" value={employee.bpjsType?.toUpperCase()} />}
             </div>
           </div>
           <div>
@@ -142,7 +145,7 @@ export default function Payslip({
             <h3 className="text-lg font-semibold text-gray-700 pb-2 border-b">Penghasilan</h3>
             <div className="divide-y">
               {Object.entries(earnings).map(([key, value]) => (
-                  <SalaryRow key={key} label={formatLabel(key, attendanceDays, overtimeHours)} value={value} />
+                  <SalaryRow key={key} label={formatLabel(key, employee, attendanceDays, overtimeHours)} value={value} />
               ))}
             </div>
           </div>
@@ -150,7 +153,7 @@ export default function Payslip({
             <h3 className="text-lg font-semibold text-gray-700 pb-2 border-b">Potongan</h3>
             <div className="divide-y">
               {Object.entries(deductions).map(([key, value]) => (
-                <SalaryRow key={key} label={formatLabel(key)} value={value} />
+                <SalaryRow key={key} label={formatLabel(key, employee)} value={value} />
               ))}
             </div>
           </div>
