@@ -1,6 +1,7 @@
 
 'use client';
 
+import * as React from 'react';
 import { useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Printer, Download, Loader2 } from 'lucide-react';
