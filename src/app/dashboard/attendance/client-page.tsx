@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useTransition } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -9,7 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -26,7 +25,13 @@ import { getAttendanceByPeriod, saveAttendanceRecord } from '@/actions/attendanc
 import type { EmployeeWithPosition, AttendanceRecord } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 type AttendanceData = {
     [employeeId: string]: {
@@ -43,9 +48,22 @@ export default function AttendanceClientPage({
   initialAttendance: AttendanceRecord[];
 }) {
   const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
+  const [positionFilter, setPositionFilter] = useState('all');
   const [attendanceData, setAttendanceData] = useState<AttendanceData>({});
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  const positions = useMemo(() => {
+    const allPositions = employees.map((emp) => emp.position).filter(Boolean);
+    return ['all', ...Array.from(new Set(allPositions as string[]))];
+  }, [employees]);
+
+  const filteredEmployees = useMemo(() => {
+    if (positionFilter === 'all') {
+      return employees;
+    }
+    return employees.filter((emp) => emp.position === positionFilter);
+  }, [employees, positionFilter]);
 
   useEffect(() => {
     // Populate initial state from fetched records
@@ -99,6 +117,11 @@ export default function AttendanceClientPage({
       const record = attendanceData[employeeId];
       if (!employee || !record) return;
 
+      // Only save if there's actual data to save
+      if (record.attendanceDays === undefined && record.overtimeHours === undefined) {
+        return;
+      }
+
       try {
           await saveAttendanceRecord({
               employeeId: employee.id,
@@ -131,14 +154,25 @@ export default function AttendanceClientPage({
               Masukkan jumlah kehadiran dan lembur untuk setiap karyawan. Data disimpan otomatis.
             </CardDescription>
           </div>
-          <div className="flex items-center gap-2">
-            <Label htmlFor="period">Periode</Label>
+          <div className="flex flex-wrap items-center gap-2">
+            <Select value={positionFilter} onValueChange={setPositionFilter}>
+              <SelectTrigger className="w-full md:w-[200px]">
+                  <SelectValue placeholder="Filter by position" />
+              </SelectTrigger>
+              <SelectContent>
+                  {positions.map((pos) => (
+                      <SelectItem key={pos} value={pos}>
+                          {pos === 'all' ? 'Semua Jabatan' : pos}
+                      </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
             <Input
               id="period"
               type="month"
               value={period}
               onChange={(e) => handlePeriodChange(e.target.value)}
-              className="w-[180px]"
+              className="w-full md:w-[180px]"
             />
           </div>
         </div>
@@ -160,8 +194,8 @@ export default function AttendanceClientPage({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {employees.length > 0 ? (
-              employees.map((emp) => (
+            {filteredEmployees.length > 0 ? (
+              filteredEmployees.map((emp) => (
                 <TableRow key={emp.id}>
                   <TableCell>
                       <div className="flex items-center gap-3">
@@ -207,7 +241,7 @@ export default function AttendanceClientPage({
             ) : (
               <TableRow>
                 <TableCell colSpan={5} className="h-24 text-center">
-                  Tidak ada data karyawan ditemukan.
+                  Tidak ada data karyawan ditemukan untuk filter ini.
                 </TableCell>
               </TableRow>
             )}
@@ -218,4 +252,3 @@ export default function AttendanceClientPage({
     </Card>
   );
 }
-
