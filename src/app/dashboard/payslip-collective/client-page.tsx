@@ -20,6 +20,7 @@ import PayslipViewer, { type PayslipData } from '@/components/payslip-viewer';
 import { useToast } from '@/hooks/use-toast';
 import { getAttendanceByPeriod } from '@/actions/attendance';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 
 const BPJS_RATES: Record<string, number> = {
     miki: 280000,
@@ -39,6 +40,7 @@ export default function PayslipCollectiveClientPage({
   const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
   const [positionFilter, setPositionFilter] = useState('all');
   const [payslipsData, setPayslipsData] = useState<PayslipData[]>([]);
+  const [keterangan, setKeterangan] = useState('');
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(initialAttendance);
   const [isGenerating, startTransition] = useTransition();
   const { toast } = useToast();
@@ -157,6 +159,7 @@ export default function PayslipCollectiveClientPage({
                 position,
                 attendanceDays,
                 overtimeHours,
+                keterangan: keterangan,
             });
         });
 
@@ -235,6 +238,16 @@ export default function PayslipCollectiveClientPage({
                         </div>
                     </ScrollArea>
                 </div>
+            </div>
+            <div className="space-y-2 md:col-span-full">
+              <Label htmlFor="keterangan">Keterangan (Opsional)</Label>
+              <Textarea 
+                id="keterangan"
+                value={keterangan}
+                onChange={(e) => setKeterangan(e.target.value)}
+                placeholder="Tambahkan catatan atau keterangan yang akan diterapkan pada semua slip gaji yang dibuat..."
+                disabled={isGenerating}
+              />
             </div>
           </div>
           <div className="flex justify-end pt-6">

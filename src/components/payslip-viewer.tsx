@@ -22,6 +22,7 @@ export interface PayslipData {
   netSalary: number;
   attendanceDays?: number;
   overtimeHours?: number;
+  keterangan?: string;
 }
 
 interface PayslipViewerProps {

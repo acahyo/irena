@@ -15,6 +15,7 @@ interface PayslipData {
   netSalary: number;
   attendanceDays?: number;
   overtimeHours?: number;
+  keterangan?: string;
 }
 
 // Helper to format currency
@@ -68,6 +69,7 @@ export default function Payslip({
     netSalary,
     attendanceDays,
     overtimeHours,
+    keterangan
   } = data;
 
   const DetailRow = ({ label, value }: { label: string; value: string | undefined | number }) => (
@@ -174,6 +176,13 @@ export default function Payslip({
           <h3 className="text-xl uppercase tracking-wider">Gaji Bersih (Take Home Pay)</h3>
           <p className="text-4xl font-bold mt-2">{formatCurrency(netSalary)}</p>
         </section>
+
+        {keterangan && (
+            <section className="mt-8">
+                <h3 className="text-lg font-semibold text-gray-700">Keterangan:</h3>
+                <p className="text-sm text-gray-600 whitespace-pre-wrap">{keterangan}</p>
+            </section>
+        )}
 
         <footer className="mt-12 text-center text-xs text-gray-400">
           <p>Ini adalah slip gaji yang dibuat secara otomatis oleh sistem.</p>
