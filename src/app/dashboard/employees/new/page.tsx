@@ -141,9 +141,11 @@ export default function NewEmployeePage() {
   const DatePicker = ({
     date,
     setDate,
+    showYearDropdown = false
   }: {
     date: Date | undefined;
     setDate: (date: Date | undefined) => void;
+    showYearDropdown?: boolean;
   }) => (
     <Popover>
       <PopoverTrigger asChild>
@@ -159,7 +161,15 @@ export default function NewEmployeePage() {
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0">
-        <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
+        <Calendar 
+            mode="single" 
+            selected={date} 
+            onSelect={setDate} 
+            initialFocus 
+            captionLayout={showYearDropdown ? "dropdown-buttons" : "buttons"}
+            fromYear={showYearDropdown ? 1960 : undefined}
+            toYear={showYearDropdown ? new Date().getFullYear() : undefined}
+        />
       </PopoverContent>
     </Popover>
   );
@@ -234,7 +244,7 @@ export default function NewEmployeePage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="dateOfBirth">Tanggal Lahir</Label>
-                <DatePicker date={dateOfBirth} setDate={setDateOfBirth} />
+                <DatePicker date={dateOfBirth} setDate={setDateOfBirth} showYearDropdown />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="gender">Jenis Kelamin</Label>

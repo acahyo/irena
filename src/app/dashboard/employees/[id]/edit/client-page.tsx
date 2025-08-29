@@ -39,8 +39,8 @@ import { Textarea } from '@/components/ui/textarea';
 
 const parseDate = (date: string | Date | undefined): Date | undefined => {
   if (!date) return undefined;
-  // Handle both string and Date objects.
-  return typeof date === 'string' ? new Date(date) : date;
+  if (typeof date === 'string') return new Date(date);
+  return date;
 };
 
 
@@ -134,28 +134,45 @@ export default function EditEmployeePageClient({ employee, departments, position
   const DatePicker = ({
     date,
     setDate,
+    showYearDropdown = false
   }: {
     date: Date | undefined;
     setDate: (date: Date | undefined) => void;
-  }) => (
+    showYearDropdown?: boolean;
+  }) => {
+     const [initialDate, setInitialDate] = useState<Date | undefined>();
+      useEffect(() => {
+        setInitialDate(date);
+      }, [date]);
+
+    return (
     <Popover>
       <PopoverTrigger asChild>
         <Button
           variant={'outline'}
           className={cn(
             'w-full justify-start text-left font-normal',
-            !date && 'text-muted-foreground'
+            !initialDate && 'text-muted-foreground'
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
-          {date ? format(date, 'PPP') : <span>Pick a date</span>}
+          {initialDate ? format(initialDate, 'PPP') : <span>Pick a date</span>}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0">
-        <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
+        <Calendar 
+            mode="single" 
+            selected={initialDate} 
+            onSelect={setDate} 
+            initialFocus 
+            captionLayout={showYearDropdown ? "dropdown-buttons" : "buttons"}
+            fromYear={showYearDropdown ? 1960 : undefined}
+            toYear={showYearDropdown ? new Date().getFullYear() : undefined}
+        />
       </PopoverContent>
     </Popover>
-  );
+  )
+};
 
   const FileInput = ({
     id,
@@ -227,7 +244,7 @@ export default function EditEmployeePageClient({ employee, departments, position
               </div>
               <div className="space-y-2">
                 <Label htmlFor="dateOfBirth">Tanggal Lahir</Label>
-                <DatePicker date={dateOfBirth} setDate={setDateOfBirth} />
+                <DatePicker date={dateOfBirth} setDate={setDateOfBirth} showYearDropdown />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="gender">Jenis Kelamin</Label>
