@@ -14,13 +14,18 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Settings2 } from 'lucide-react';
 import type { EmployeeWithPosition, AppSettings, AttendanceRecord } from '@/lib/types';
-import PayslipViewer, { type PayslipData } from '@/components/payslip-viewer';
+import PayslipViewer, { type PayslipData, type PayslipOptions } from '@/components/payslip-viewer';
 import { useToast } from '@/hooks/use-toast';
 import { getAttendanceByPeriod } from '@/actions/attendance';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 
 const BPJS_RATES: Record<string, number> = {
     miki: 280000,
@@ -45,6 +50,15 @@ export default function PayslipCollectiveClientPage({
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(initialAttendance);
   const [isGenerating, startTransition] = useTransition();
   const { toast } = useToast();
+  const [payslipOptions, setPayslipOptions] = useState<PayslipOptions>({
+    showEmployeeInfo: true,
+    showPaymentInfo: true,
+    showSignatures: true,
+  });
+
+  const handleOptionChange = (option: keyof PayslipOptions, value: boolean) => {
+    setPayslipOptions(prev => ({ ...prev, [option]: value }));
+  };
 
   const positions = useMemo(() => {
     const allPositions = initialEmployees
@@ -165,6 +179,7 @@ export default function PayslipCollectiveClientPage({
                 attendanceDays,
                 overtimeHours,
                 keterangan: keterangan,
+                options: payslipOptions,
             });
         });
 
@@ -254,10 +269,34 @@ export default function PayslipCollectiveClientPage({
                 disabled={isGenerating}
               />
             </div>
-            <div className="space-y-2 flex items-center gap-2">
-                <Checkbox id="apply-pph" checked={applyPph} onCheckedChange={(checked) => setApplyPph(Boolean(checked))} />
-                <Label htmlFor="apply-pph" className="cursor-pointer">Terapkan Potongan PPH 21 (2%)</Label>
-            </div>
+             <Collapsible className="md:col-span-3">
+                <CollapsibleTrigger asChild>
+                    <Button variant="outline" size="sm">
+                        <Settings2 className="mr-2 h-4 w-4"/>
+                        Tampilkan Opsi Tampilan
+                    </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-4 space-y-4 rounded-md border p-4">
+                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div className="flex items-center space-x-2">
+                            <Checkbox id="showEmployeeInfo" checked={payslipOptions.showEmployeeInfo} onCheckedChange={(checked) => handleOptionChange('showEmployeeInfo', !!checked)} />
+                            <Label htmlFor="showEmployeeInfo" className="cursor-pointer">Info Karyawan</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <Checkbox id="showPaymentInfo" checked={payslipOptions.showPaymentInfo} onCheckedChange={(checked) => handleOptionChange('showPaymentInfo', !!checked)} />
+                            <Label htmlFor="showPaymentInfo" className="cursor-pointer">Info Pembayaran</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <Checkbox id="showSignatures" checked={payslipOptions.showSignatures} onCheckedChange={(checked) => handleOptionChange('showSignatures', !!checked)} />
+                            <Label htmlFor="showSignatures" className="cursor-pointer">Tanda Tangan</Label>
+                        </div>
+                         <div className="flex items-center space-x-2">
+                            <Checkbox id="apply-pph" checked={applyPph} onCheckedChange={(checked) => setApplyPph(Boolean(checked))} />
+                            <Label htmlFor="apply-pph" className="cursor-pointer">Potongan PPH 21 (2%)</Label>
+                        </div>
+                    </div>
+                </CollapsibleContent>
+            </Collapsible>
           </div>
           <div className="flex justify-end pt-6">
             <Button onClick={handleGenerate} disabled={isGenerating}>

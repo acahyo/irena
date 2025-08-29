@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -19,13 +19,20 @@ import {
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Printer, Loader2 } from 'lucide-react';
-import type { EmployeeWithPosition, AppSettings, Position, AttendanceRecord, Department } from '@/lib/types';
-import PayslipViewer, { type PayslipData } from '@/components/payslip-viewer';
+import { Printer, Loader2, Settings2 } from 'lucide-react';
+import type { EmployeeWithPosition, AppSettings, Department } from '@/lib/types';
+import PayslipViewer, { type PayslipData, type PayslipOptions } from '@/components/payslip-viewer';
 import { useToast } from '@/hooks/use-toast';
 import { getAttendanceByEmployeeAndPeriod } from '@/actions/attendance';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
+import { AttendanceRecord } from '@/lib/types';
+
 
 const BPJS_RATES: Record<string, number> = {
     miki: 280000,
@@ -53,6 +60,15 @@ export default function PayslipClientPage({
   const { toast } = useToast();
   const [isFetchingAttendance, setIsFetchingAttendance] = useState(false);
   const [departmentFilter, setDepartmentFilter] = useState('all');
+  const [payslipOptions, setPayslipOptions] = useState<PayslipOptions>({
+    showEmployeeInfo: true,
+    showPaymentInfo: true,
+    showSignatures: true,
+  });
+
+  const handleOptionChange = (option: keyof PayslipOptions, value: boolean) => {
+    setPayslipOptions(prev => ({ ...prev, [option]: value }));
+  };
 
   const filteredEmployees = useMemo(() => {
     if (departmentFilter === 'all') {
@@ -175,6 +191,7 @@ export default function PayslipClientPage({
       attendanceDays: attendanceDays,
       overtimeHours: overtimeHours,
       keterangan: keterangan,
+      options: payslipOptions,
     });
   };
 
@@ -263,11 +280,38 @@ export default function PayslipClientPage({
                 placeholder="Tambahkan catatan atau keterangan tambahan untuk slip gaji ini..."
               />
             </div>
-             <div className="space-y-2 flex items-center gap-2">
-                <Checkbox id="apply-pph" checked={applyPph} onCheckedChange={(checked) => setApplyPph(Boolean(checked))} />
-                <Label htmlFor="apply-pph" className="cursor-pointer">Terapkan Potongan PPH 21 (2%)</Label>
-            </div>
           </div>
+          
+           <Collapsible className="mt-6">
+                <CollapsibleTrigger asChild>
+                    <Button variant="outline" size="sm">
+                        <Settings2 className="mr-2 h-4 w-4"/>
+                        Tampilkan Opsi Tampilan
+                    </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-4 space-y-4 rounded-md border p-4">
+                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div className="flex items-center space-x-2">
+                            <Checkbox id="showEmployeeInfo" checked={payslipOptions.showEmployeeInfo} onCheckedChange={(checked) => handleOptionChange('showEmployeeInfo', !!checked)} />
+                            <Label htmlFor="showEmployeeInfo" className="cursor-pointer">Info Karyawan</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <Checkbox id="showPaymentInfo" checked={payslipOptions.showPaymentInfo} onCheckedChange={(checked) => handleOptionChange('showPaymentInfo', !!checked)} />
+                            <Label htmlFor="showPaymentInfo" className="cursor-pointer">Info Pembayaran</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <Checkbox id="showSignatures" checked={payslipOptions.showSignatures} onCheckedChange={(checked) => handleOptionChange('showSignatures', !!checked)} />
+                            <Label htmlFor="showSignatures" className="cursor-pointer">Tanda Tangan</Label>
+                        </div>
+                         <div className="flex items-center space-x-2">
+                            <Checkbox id="apply-pph" checked={applyPph} onCheckedChange={(checked) => setApplyPph(Boolean(checked))} />
+                            <Label htmlFor="apply-pph" className="cursor-pointer">Potongan PPH 21 (2%)</Label>
+                        </div>
+                    </div>
+                </CollapsibleContent>
+            </Collapsible>
+
+
           <div className="flex justify-end pt-6">
             <Button onClick={handleGenerate} disabled={isFetchingAttendance}>
                 {isFetchingAttendance && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

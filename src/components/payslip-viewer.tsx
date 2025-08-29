@@ -10,6 +10,12 @@ import type { EmployeeWithPosition, AppSettings, Position } from '@/lib/types';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
+export interface PayslipOptions {
+  showEmployeeInfo?: boolean;
+  showPaymentInfo?: boolean;
+  showSignatures?: boolean;
+}
+
 export interface PayslipData {
   id: string;
   employee: EmployeeWithPosition;
@@ -23,6 +29,7 @@ export interface PayslipData {
   attendanceDays?: number;
   overtimeHours?: number;
   keterangan?: string;
+  options?: PayslipOptions;
 }
 
 interface PayslipViewerProps {

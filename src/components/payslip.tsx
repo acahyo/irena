@@ -3,20 +3,8 @@ import type { Employee, AppSettings, Position } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
+import type { PayslipData } from './payslip-viewer';
 
-interface PayslipData {
-  employee: Employee;
-  position: Position;
-  period: string;
-  earnings: Record<string, number>;
-  deductions: Record<string, number>;
-  totalEarnings: number;
-  totalDeductions: number;
-  netSalary: number;
-  attendanceDays?: number;
-  overtimeHours?: number;
-  keterangan?: string;
-}
 
 // Helper to format currency
 const formatCurrency = (amount: number) => {
@@ -69,7 +57,8 @@ export default function Payslip({
     netSalary,
     attendanceDays,
     overtimeHours,
-    keterangan
+    keterangan,
+    options = { showEmployeeInfo: true, showPaymentInfo: true, showSignatures: true },
   } = data;
 
   const DetailRow = ({ label, value }: { label: string; value: string | undefined | number }) => (
@@ -116,33 +105,39 @@ export default function Payslip({
             <p className="text-gray-500">Periode: {formatPeriod(period)}</p>
           </div>
         </header>
-
-        <section className="grid grid-cols-2 gap-8 mt-6">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-700 mb-2">Informasi Karyawan</h3>
-            <div className="grid grid-cols-2 gap-4">
-                  <DetailRow label="Nama" value={employee.name} />
-                  <DetailRow label="NIK" value={employee.nik} />
-                  <DetailRow label="Jabatan" value={employee.position} />
-                  <DetailRow label="Departemen" value={employee.department} />
-                  <DetailRow label="Lokasi/Site" value={employee.siteLocation} />
-                  <DetailRow label="Status" value={employee.employeeStatus} />
-                  {attendanceDays !== undefined && <DetailRow label="Total Kehadiran" value={`${attendanceDays} hari`} />}
-                  {employee.bpjsStatus === 'active' && <DetailRow label="Tipe BPJS" value={employee.bpjsType?.toUpperCase()} />}
-            </div>
-          </div>
-          <div>
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">Informasi Pembayaran</h3>
-              <div className="grid grid-cols-2 gap-4">
-                  <DetailRow label="Tanggal Pembayaran" value={format(new Date(), 'dd MMMM yyyy', { locale: id })} />
-                  <DetailRow label="Bank" value={employee.bankName} />
-                  <DetailRow label="No. Rekening" value={employee.accountNumber} />
-                  <DetailRow label="Nama Pemilik" value={employee.accountHolderName} />
+        
+        {(options.showEmployeeInfo || options.showPaymentInfo) && (
+          <section className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
+            {options.showEmployeeInfo && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">Informasi Karyawan</h3>
+                <div className="grid grid-cols-2 gap-4">
+                      <DetailRow label="Nama" value={employee.name} />
+                      <DetailRow label="NIK" value={employee.nik} />
+                      <DetailRow label="Jabatan" value={employee.position} />
+                      <DetailRow label="Departemen" value={employee.department} />
+                      <DetailRow label="Lokasi/Site" value={employee.siteLocation} />
+                      <DetailRow label="Status" value={employee.employeeStatus} />
+                      {attendanceDays !== undefined && <DetailRow label="Total Kehadiran" value={`${attendanceDays} hari`} />}
+                      {employee.bpjsStatus === 'active' && <DetailRow label="Tipe BPJS" value={employee.bpjsType?.toUpperCase()} />}
+                </div>
               </div>
-          </div>
-        </section>
+            )}
+            {options.showPaymentInfo && (
+              <div>
+                  <h3 className="text-lg font-semibold text-gray-700 mb-2">Informasi Pembayaran</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                      <DetailRow label="Tanggal Pembayaran" value={format(new Date(), 'dd MMMM yyyy', { locale: id })} />
+                      <DetailRow label="Bank" value={employee.bankName} />
+                      <DetailRow label="No. Rekening" value={employee.accountNumber} />
+                      <DetailRow label="Nama Pemilik" value={employee.accountHolderName} />
+                  </div>
+              </div>
+            )}
+          </section>
+        )}
 
-        <section className="grid grid-cols-2 gap-8 mt-8">
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
           <div>
             <h3 className="text-lg font-semibold text-gray-700 pb-2 border-b">Penghasilan</h3>
             <div className="divide-y">
@@ -154,14 +149,14 @@ export default function Payslip({
           <div>
             <h3 className="text-lg font-semibold text-gray-700 pb-2 border-b">Potongan</h3>
             <div className="divide-y">
-              {Object.entries(deductions).map(([key, value]) => (
+              {Object.keys(deductions).length > 0 ? Object.entries(deductions).map(([key, value]) => (
                 <SalaryRow key={key} label={formatLabel(key, employee)} value={value} />
-              ))}
+              )) : <p className="text-gray-500 text-sm py-2">Tidak ada potongan.</p>}
             </div>
           </div>
         </section>
         
-        <section className="grid grid-cols-2 gap-8 mt-4">
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
           <div className="flex justify-between font-bold text-lg py-2 bg-gray-100 px-4 rounded">
               <p>Total Penghasilan</p>
               <p>{formatCurrency(totalEarnings)}</p>
@@ -183,6 +178,22 @@ export default function Payslip({
                 <p className="text-sm text-gray-600 whitespace-pre-wrap">{keterangan}</p>
             </section>
         )}
+        
+        {options.showSignatures && (
+           <section className="grid grid-cols-2 gap-8 mt-12 pt-8">
+                <div className="text-center">
+                    <p className="mb-16">Diterima oleh,</p>
+                    <p className="font-bold border-t pt-2">{employee.name}</p>
+                    <p className="text-sm text-gray-500">Karyawan</p>
+                </div>
+                 <div className="text-center">
+                    <p className="mb-16">Disetujui oleh,</p>
+                    <p className="font-bold border-t pt-2">(___________________)</p>
+                    <p className="text-sm text-gray-500">Manajer/Direktur</p>
+                </div>
+            </section>
+        )}
+
 
         <footer className="mt-12 text-center text-xs text-gray-400">
           <p>Ini adalah slip gaji yang dibuat secara otomatis oleh sistem.</p>
