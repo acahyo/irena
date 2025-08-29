@@ -65,6 +65,12 @@ export default function PayslipClientPage({
     showPaymentInfo: true,
     showSignatures: true,
   });
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
 
   const handleOptionChange = (option: keyof PayslipOptions, value: boolean) => {
     setPayslipOptions(prev => ({ ...prev, [option]: value }));
@@ -258,7 +264,7 @@ export default function PayslipClientPage({
                 disabled={isFetchingAttendance || selectedEmployee?.positionDetails?.salaryType !== 'harian'}
               />
             </div>
-             {selectedEmployee?.positionDetails?.salaryType === 'harian' && (
+             {isClient && selectedEmployee?.positionDetails?.salaryType === 'harian' && (
                <div className="space-y-2">
                 <Label htmlFor="overtime">Jumlah Jam Lembur</Label>
                 <Input
