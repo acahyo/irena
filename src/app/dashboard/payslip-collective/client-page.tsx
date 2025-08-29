@@ -41,6 +41,7 @@ export default function PayslipCollectiveClientPage({
   const [positionFilter, setPositionFilter] = useState('all');
   const [payslipsData, setPayslipsData] = useState<PayslipData[]>([]);
   const [keterangan, setKeterangan] = useState('');
+  const [applyPph, setApplyPph] = useState(true);
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(initialAttendance);
   const [isGenerating, startTransition] = useTransition();
   const { toast } = useToast();
@@ -134,16 +135,20 @@ export default function PayslipCollectiveClientPage({
             
             const totalEarnings = Object.values(earnings).reduce((sum, val) => sum + val, 0);
 
-            let bpjsDeduction = 0;
+            const deductions: Record<string, number> = {};
+
             if (employee.bpjsStatus === 'active') {
-                bpjsDeduction = employee.bpjsType && BPJS_RATES[employee.bpjsType]
+                deductions.bpjs = employee.bpjsType && BPJS_RATES[employee.bpjsType]
                     ? BPJS_RATES[employee.bpjsType]
                     : 0;
+            } else {
+              deductions.bpjs = 0;
             }
 
-            const taxDeduction = totalEarnings * 0.02;
+            if (applyPph) {
+              deductions.tax = totalEarnings * 0.02;
+            }
 
-            const deductions = { tax: taxDeduction, bpjs: bpjsDeduction };
             const totalDeductions = Object.values(deductions).reduce((sum, val) => sum + val, 0);
             const netSalary = totalEarnings - totalDeductions;
             
@@ -248,6 +253,10 @@ export default function PayslipCollectiveClientPage({
                 placeholder="Tambahkan catatan atau keterangan yang akan diterapkan pada semua slip gaji yang dibuat..."
                 disabled={isGenerating}
               />
+            </div>
+            <div className="space-y-2 flex items-center gap-2">
+                <Checkbox id="apply-pph" checked={applyPph} onCheckedChange={(checked) => setApplyPph(Boolean(checked))} />
+                <Label htmlFor="apply-pph" className="cursor-pointer">Terapkan Potongan PPH 21 (2%)</Label>
             </div>
           </div>
           <div className="flex justify-end pt-6">

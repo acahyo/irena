@@ -25,6 +25,7 @@ import PayslipViewer, { type PayslipData } from '@/components/payslip-viewer';
 import { useToast } from '@/hooks/use-toast';
 import { getAttendanceByEmployeeAndPeriod } from '@/actions/attendance';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const BPJS_RATES: Record<string, number> = {
     miki: 280000,
@@ -48,6 +49,7 @@ export default function PayslipClientPage({
   const [attendanceDays, setAttendanceDays] = useState<number>(0);
   const [overtimeHours, setOvertimeHours] = useState<number>(0);
   const [keterangan, setKeterangan] = useState('');
+  const [applyPph, setApplyPph] = useState(true);
   const { toast } = useToast();
   const [isFetchingAttendance, setIsFetchingAttendance] = useState(false);
   const [departmentFilter, setDepartmentFilter] = useState('all');
@@ -143,19 +145,19 @@ export default function PayslipClientPage({
 
     const totalEarnings = Object.values(earnings).reduce((sum, val) => sum + val, 0);
     
-    let bpjsDeduction = 0;
+    const deductions: Record<string, number> = {};
+    
     if (selectedEmployee.bpjsStatus === 'active') {
-        bpjsDeduction = selectedEmployee.bpjsType && BPJS_RATES[selectedEmployee.bpjsType]
+        deductions.bpjs = selectedEmployee.bpjsType && BPJS_RATES[selectedEmployee.bpjsType]
             ? BPJS_RATES[selectedEmployee.bpjsType]
             : 0; 
+    } else {
+      deductions.bpjs = 0;
     }
 
-    const taxDeduction = totalEarnings * 0.02;
-
-    const deductions = {
-      tax: taxDeduction,
-      bpjs: bpjsDeduction,
-    };
+    if (applyPph) {
+      deductions.tax = totalEarnings * 0.02;
+    }
     
     const totalDeductions = Object.values(deductions).reduce((sum, val) => sum + val, 0);
     const netSalary = totalEarnings - totalDeductions;
@@ -260,6 +262,10 @@ export default function PayslipClientPage({
                 onChange={(e) => setKeterangan(e.target.value)}
                 placeholder="Tambahkan catatan atau keterangan tambahan untuk slip gaji ini..."
               />
+            </div>
+             <div className="space-y-2 flex items-center gap-2">
+                <Checkbox id="apply-pph" checked={applyPph} onCheckedChange={(checked) => setApplyPph(Boolean(checked))} />
+                <Label htmlFor="apply-pph" className="cursor-pointer">Terapkan Potongan PPH 21 (2%)</Label>
             </div>
           </div>
           <div className="flex justify-end pt-6">
