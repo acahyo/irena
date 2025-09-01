@@ -26,13 +26,16 @@ const formatLabel = (key: string, employee: Employee, attendanceDays?: number, o
     const bpjsLabel = employee.bpjsType ? `Iuran BPJS (${employee.bpjsType.toUpperCase()})` : "Iuran BPJS";
     
     const labels: Record<string, string> = {
-        monthlySalary: "Gaji Pokok Bulanan",
+        monthlySalary: "Gaji Pokok",
         otAllowance: "Tunjangan OT & Kehadiran",
         locationAllowance: "Tunjangan Lokasi",
         mealAllowance: "Tunjangan Makan",
         otherAllowances: "Tunjangan Lain-lain",
         dailyWage: `Gaji Harian (${attendanceDays ?? '...'} hari)`,
         overtime: `Lembur (${overtimeHours ?? '...'} jam)`,
+        tunjanganJabatan: "Tunjangan Jabatan",
+        tunjanganKehadiran: "Tunjangan Kehadiran",
+        tunjanganKinerja: "Tunjangan Kinerja",
         tax: "Pajak (PPH 21)",
         bpjs: bpjsLabel,
     };

@@ -9,7 +9,8 @@ import type { Position } from '@/lib/types';
 const toNumeric = (obj: any) => {
     const numericFields: (keyof Position)[] = [
         'dailyWage', 'overtimeRate', 'monthlySalary', 'otAllowance', 
-        'locationAllowance', 'mealAllowance', 'otherAllowances'
+        'locationAllowance', 'mealAllowance', 'otherAllowances',
+        'tunjanganJabatan', 'tunjanganKehadiran', 'tunjanganKinerja'
     ];
     const newObj = { ...obj };
     numericFields.forEach(field => {

@@ -143,6 +143,13 @@ export default function PayslipCollectiveClientPage({
                     dailyWage: (position.dailyWage || 0) * attendanceDays,
                     overtime: (position.overtimeRate || 0) * overtimeHours, 
                 }
+            } else if (position.salaryType === 'direksi') {
+                earnings = {
+                    monthlySalary: position.monthlySalary || 0, // Gaji Pokok
+                    tunjanganJabatan: position.tunjanganJabatan || 0,
+                    tunjanganKehadiran: position.tunjanganKehadiran || 0,
+                    tunjanganKinerja: position.tunjanganKinerja || 0,
+                };
             } else {
                 return; // Skip if no salary type
             }
@@ -151,13 +158,13 @@ export default function PayslipCollectiveClientPage({
 
             const deductions: Record<string, number> = {};
 
+            let bpjsDeduction = 0;
             if (employee.bpjsStatus === 'active') {
-                deductions.bpjs = employee.bpjsType && BPJS_RATES[employee.bpjsType]
+                bpjsDeduction = employee.bpjsType && BPJS_RATES[employee.bpjsType]
                     ? BPJS_RATES[employee.bpjsType]
                     : 0;
-            } else {
-              deductions.bpjs = 0;
             }
+            deductions.bpjs = bpjsDeduction;
 
             if (applyPph) {
               deductions.tax = totalEarnings * 0.02;

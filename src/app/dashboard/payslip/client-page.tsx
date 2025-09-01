@@ -158,24 +158,32 @@ export default function PayslipClientPage({
             mealAllowance: position.mealAllowance || 0,
             otherAllowances: position.otherAllowances || 0,
         };
-    } else { // harian
+    } else if (position.salaryType === 'harian') { // harian
         earnings = {
             dailyWage: (position.dailyWage || 0) * attendanceDays,
             overtime: (position.overtimeRate || 0) * overtimeHours, 
         }
+    } else if (position.salaryType === 'direksi') {
+        earnings = {
+            monthlySalary: position.monthlySalary || 0, // Gaji Pokok
+            tunjanganJabatan: position.tunjanganJabatan || 0,
+            tunjanganKehadiran: position.tunjanganKehadiran || 0,
+            tunjanganKinerja: position.tunjanganKinerja || 0,
+        };
     }
+
 
     const totalEarnings = Object.values(earnings).reduce((sum, val) => sum + val, 0);
     
     const deductions: Record<string, number> = {};
     
+    let bpjsDeduction = 0;
     if (selectedEmployee.bpjsStatus === 'active') {
-        deductions.bpjs = selectedEmployee.bpjsType && BPJS_RATES[selectedEmployee.bpjsType]
+        bpjsDeduction = selectedEmployee.bpjsType && BPJS_RATES[selectedEmployee.bpjsType]
             ? BPJS_RATES[selectedEmployee.bpjsType]
             : 0; 
-    } else {
-      deductions.bpjs = 0;
     }
+    deductions.bpjs = bpjsDeduction;
 
     if (applyPph) {
       deductions.tax = totalEarnings * 0.02;

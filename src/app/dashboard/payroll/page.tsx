@@ -1,4 +1,5 @@
 
+
 import { getEmployees } from '@/actions/employees';
 import { getPositions } from '@/actions/positions';
 import PayrollClientPage from './client-page';
@@ -33,6 +34,11 @@ export default async function PayrollPage() {
               const overtimeHours = attendanceDetails?.overtimeHours || 0;
               totalSalary = ((positionDetails.dailyWage || 0) * attendanceDays) + 
                             ((positionDetails.overtimeRate || 0) * overtimeHours);
+          } else if (positionDetails.salaryType === 'direksi') {
+              totalSalary = (positionDetails.monthlySalary || 0) + // Gaji Pokok
+                            (positionDetails.tunjanganJabatan || 0) +
+                            (positionDetails.tunjanganKehadiran || 0) +
+                            (positionDetails.tunjanganKinerja || 0);
           }
       }
 

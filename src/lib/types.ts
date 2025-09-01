@@ -81,15 +81,22 @@ export type LeaveRequest = {
 export type Position = {
     id: string;
     name: string;
-    salaryType?: 'harian' | 'bulanan';
+    salaryType?: 'harian' | 'bulanan' | 'direksi';
+    // Harian
     dailyWage?: number;
     overtimeRate?: number;
-    monthlySalary?: number;
+    // Bulanan
+    monthlySalary?: number; // Also used as Gaji Pokok for Direksi
     otAllowance?: number;
     locationAllowance?: number;
     mealAllowance?: number;
     otherAllowances?: number;
+    // Direksi
+    tunjanganJabatan?: number;
+    tunjanganKehadiran?: number;
+    tunjanganKinerja?: number;
 };
+
 
 export type AppSettings = {
   id?: string;

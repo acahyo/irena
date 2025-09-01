@@ -96,6 +96,7 @@ export default function NewPositionPage() {
                             <SelectContent>
                               <SelectItem value="harian">Daily Salary</SelectItem>
                               <SelectItem value="bulanan">Monthly Salary</SelectItem>
+                              <SelectItem value="direksi">Direksi</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -134,6 +135,27 @@ export default function NewPositionPage() {
                              <div className="space-y-2 md:col-span-2">
                               <Label htmlFor="otherAllowances">Other Allowances (Rp)</Label>
                               <Input id="otherAllowances" name="otherAllowances" type="number" placeholder="e.g. 200000" />
+                            </div>
+                          </div>
+                        )}
+                        
+                        {salaryType === 'direksi' && (
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-md border p-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="monthlySalary">Gaji Pokok (Rp)</Label>
+                              <Input id="monthlySalary" name="monthlySalary" type="number" placeholder="e.g. 10000000" />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="tunjanganJabatan">Tunjangan Jabatan (Rp)</Label>
+                              <Input id="tunjanganJabatan" name="tunjanganJabatan" type="number" placeholder="e.g. 5000000" />
+                            </div>
+                             <div className="space-y-2">
+                              <Label htmlFor="tunjanganKehadiran">Tunjangan Kehadiran (Rp)</Label>
+                              <Input id="tunjanganKehadiran" name="tunjanganKehadiran" type="number" placeholder="e.g. 1000000" />
+                            </div>
+                             <div className="space-y-2">
+                              <Label htmlFor="tunjanganKinerja">Tunjangan Kinerja (Rp)</Label>
+                              <Input id="tunjanganKinerja" name="tunjanganKinerja" type="number" placeholder="e.g. 2000000" />
                             </div>
                           </div>
                         )}
