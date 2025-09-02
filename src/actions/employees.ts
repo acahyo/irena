@@ -2,8 +2,9 @@
 'use server';
 
 import { db } from '@/lib/firebase';
-import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, Timestamp, writeBatch } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, Timestamp, writeBatch, setDoc } from 'firebase/firestore';
 import type { Employee } from '@/lib/types';
+import { format } from 'date-fns';
 
 // Helper to convert Firestore Timestamps to Dates in a document
 function convertTimestampsToDates(docData: any) {
@@ -43,21 +44,34 @@ export async function getEmployee(id: string): Promise<Employee | null> {
 
 // Create a new employee
 export async function createEmployee(employee: Partial<Employee>): Promise<string> {
-  // Convert numeric fields from string to number
-  const numericFields: (keyof Employee)[] = [
-    'basicSalary', 'mealAllowance', 'transportAllowance', 'dailyWage', 'overtimeRate',
-    'monthlySalary', 'otAllowance', 'locationAllowance', 'otherAllowances'
-  ];
-  const employeeData = { ...employee };
+    // Convert numeric fields from string to number
+    const numericFields: (keyof Employee)[] = [
+        'basicSalary', 'mealAllowance', 'transportAllowance', 'dailyWage', 'overtimeRate',
+        'monthlySalary', 'otAllowance', 'locationAllowance', 'otherAllowances'
+    ];
+    const employeeData = { ...employee };
 
-  numericFields.forEach(field => {
-    if (employeeData[field] && typeof employeeData[field] === 'string') {
-      (employeeData as any)[field] = Number(employeeData[field]);
-    }
-  });
+    numericFields.forEach(field => {
+        if (employeeData[field] && typeof employeeData[field] === 'string') {
+        (employeeData as any)[field] = Number(employeeData[field]);
+        }
+    });
 
-  const docRef = await addDoc(collection(db, 'employees'), employeeData);
-  return docRef.id;
+    // Generate custom employee ID
+    const registrationDate = format(new Date(), 'ddMMyyyy');
+    const birthYear = employee.dateOfBirth ? format(new Date(employee.dateOfBirth), 'yyyy') : '0000';
+    
+    // Get current employee count for sequential number
+    const employeesSnapshot = await getDocs(collection(db, 'employees'));
+    const sequentialNumber = (employeesSnapshot.size + 1).toString().padStart(4, '0');
+    
+    const employeeId = `IBA${registrationDate}${birthYear}${sequentialNumber}`;
+
+    // Use setDoc with the custom ID
+    const docRef = doc(db, 'employees', employeeId);
+    await setDoc(docRef, employeeData);
+
+    return employeeId;
 }
 
 // Update an existing employee
