@@ -40,6 +40,9 @@ type AttendanceData = {
     [employeeId: string]: {
         attendanceDays?: number;
         overtimeHours?: number;
+        potonganIdCard?: number;
+        potonganSimper?: number;
+        potonganDenda?: number;
     }
 }
 
@@ -78,7 +81,10 @@ export default function AttendanceClientPage({
     initialAttendance.forEach(record => {
         initialData[record.employeeId] = {
             attendanceDays: record.attendanceDays,
-            overtimeHours: record.overtimeHours
+            overtimeHours: record.overtimeHours,
+            potonganIdCard: record.potonganIdCard,
+            potonganSimper: record.potonganSimper,
+            potonganDenda: record.potonganDenda,
         };
     });
     setAttendanceData(initialData);
@@ -93,7 +99,10 @@ export default function AttendanceClientPage({
         records.forEach(record => {
             newData[record.employeeId] = {
                 attendanceDays: record.attendanceDays,
-                overtimeHours: record.overtimeHours
+                overtimeHours: record.overtimeHours,
+                potonganIdCard: record.potonganIdCard,
+                potonganSimper: record.potonganSimper,
+                potonganDenda: record.potonganDenda,
             };
         });
         setAttendanceData(newData);
@@ -108,7 +117,7 @@ export default function AttendanceClientPage({
     }
   };
 
-  const handleInputChange = (employeeId: string, field: 'attendanceDays' | 'overtimeHours', value: string) => {
+  const handleInputChange = (employeeId: string, field: keyof AttendanceData[string], value: string) => {
       const numericValue = value === '' ? undefined : Number(value);
       setAttendanceData(prev => ({
           ...prev,
@@ -125,7 +134,11 @@ export default function AttendanceClientPage({
       if (!employee || !record) return;
 
       // Only save if there's actual data to save
-      if (record.attendanceDays === undefined && record.overtimeHours === undefined) {
+      if (
+        record.attendanceDays === undefined && record.overtimeHours === undefined &&
+        record.potonganIdCard === undefined && record.potonganSimper === undefined &&
+        record.potonganDenda === undefined
+      ) {
         return;
       }
 
@@ -136,6 +149,9 @@ export default function AttendanceClientPage({
               period: period,
               attendanceDays: record.attendanceDays,
               overtimeHours: record.overtimeHours,
+              potonganIdCard: record.potonganIdCard,
+              potonganSimper: record.potonganSimper,
+              potonganDenda: record.potonganDenda,
           });
           toast({
               title: 'Saved!',
@@ -157,6 +173,9 @@ export default function AttendanceClientPage({
         period: period,
         attendanceDays: attendanceData[emp.id]?.attendanceDays ?? 0,
         overtimeHours: attendanceData[emp.id]?.overtimeHours ?? 0,
+        potonganIdCard: attendanceData[emp.id]?.potonganIdCard ?? 0,
+        potonganSimper: attendanceData[emp.id]?.potonganSimper ?? 0,
+        potonganDenda: attendanceData[emp.id]?.potonganDenda ?? 0,
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
@@ -193,6 +212,9 @@ export default function AttendanceClientPage({
                 period: row.period || period,
                 attendanceDays: row.attendanceDays ? Number(row.attendanceDays) : undefined,
                 overtimeHours: row.overtimeHours ? Number(row.overtimeHours) : undefined,
+                potonganIdCard: row.potonganIdCard ? Number(row.potonganIdCard) : undefined,
+                potonganSimper: row.potonganSimper ? Number(row.potonganSimper) : undefined,
+                potonganDenda: row.potonganDenda ? Number(row.potonganDenda) : undefined,
             }
           }).filter(record => record.employeeId); // Ensure employeeId exists
 
@@ -239,7 +261,7 @@ export default function AttendanceClientPage({
           <div>
             <CardTitle>Input Absensi Karyawan</CardTitle>
             <CardDescription>
-              Masukkan jumlah kehadiran dan lembur untuk setiap karyawan. Data disimpan otomatis.
+              Masukkan jumlah kehadiran, lembur, dan potongan untuk setiap karyawan. Data disimpan otomatis.
             </CardDescription>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -292,9 +314,11 @@ export default function AttendanceClientPage({
             <TableRow>
               <TableHead>Karyawan</TableHead>
               <TableHead>Jabatan</TableHead>
-              <TableHead>Tipe Gaji</TableHead>
-              <TableHead className="w-[180px]">Jumlah Kehadiran (hari)</TableHead>
-              <TableHead className="w-[180px]">Jumlah Jam Lembur</TableHead>
+              <TableHead className="w-[180px]">Kehadiran (hari)</TableHead>
+              <TableHead className="w-[180px]">Jam Lembur</TableHead>
+              <TableHead className="w-[180px]">Potongan ID Card</TableHead>
+              <TableHead className="w-[180px]">Potongan SIMPER</TableHead>
+              <TableHead className="w-[180px]">Potongan Denda</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -311,13 +335,6 @@ export default function AttendanceClientPage({
                       </div>
                   </TableCell>
                   <TableCell>{emp.position || 'N/A'}</TableCell>
-                   <TableCell>
-                    {emp.positionDetails?.salaryType ? (
-                      <Badge variant="outline" className="capitalize">{emp.positionDetails.salaryType}</Badge>
-                    ) : (
-                      <Badge variant="destructive">Not Set</Badge>
-                    )}
-                   </TableCell>
                   <TableCell>
                     <Input
                       type="number"
@@ -340,11 +357,38 @@ export default function AttendanceClientPage({
                         <p className="text-sm text-muted-foreground text-center">-</p>
                     )}
                   </TableCell>
+                   <TableCell>
+                    <Input
+                      type="number"
+                      placeholder="e.g. 50000"
+                      value={attendanceData[emp.id]?.potonganIdCard ?? ''}
+                      onChange={(e) => handleInputChange(emp.id, 'potonganIdCard', e.target.value)}
+                      onBlur={() => handleInputBlur(emp.id)}
+                    />
+                  </TableCell>
+                   <TableCell>
+                    <Input
+                      type="number"
+                      placeholder="e.g. 50000"
+                      value={attendanceData[emp.id]?.potonganSimper ?? ''}
+                      onChange={(e) => handleInputChange(emp.id, 'potonganSimper', e.target.value)}
+                      onBlur={() => handleInputBlur(emp.id)}
+                    />
+                  </TableCell>
+                   <TableCell>
+                    <Input
+                      type="number"
+                      placeholder="e.g. 100000"
+                      value={attendanceData[emp.id]?.potonganDenda ?? ''}
+                      onChange={(e) => handleInputChange(emp.id, 'potonganDenda', e.target.value)}
+                      onBlur={() => handleInputBlur(emp.id)}
+                    />
+                  </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
+                <TableCell colSpan={7} className="h-24 text-center">
                   Tidak ada data karyawan ditemukan untuk filter ini.
                 </TableCell>
               </TableRow>

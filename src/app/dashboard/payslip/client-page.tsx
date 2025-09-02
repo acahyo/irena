@@ -20,7 +20,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Printer, Loader2, Settings2 } from 'lucide-react';
-import type { EmployeeWithPosition, AppSettings, Department } from '@/lib/types';
+import type { EmployeeWithPosition, AppSettings, Department, AttendanceRecord } from '@/lib/types';
 import PayslipViewer, { type PayslipData, type PayslipOptions } from '@/components/payslip-viewer';
 import { useToast } from '@/hooks/use-toast';
 import { getAttendanceByEmployeeAndPeriod } from '@/actions/attendance';
@@ -31,7 +31,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { AttendanceRecord } from '@/lib/types';
 
 
 const BPJS_RATES: Record<string, number> = {
@@ -53,8 +52,7 @@ export default function PayslipClientPage({
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
   const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
   const [payslipData, setPayslipData] = useState<PayslipData | null>(null);
-  const [attendanceDays, setAttendanceDays] = useState<number>(0);
-  const [overtimeHours, setOvertimeHours] = useState<number>(0);
+  const [attendanceRecord, setAttendanceRecord] = useState<AttendanceRecord | null>(null);
   const [keterangan, setKeterangan] = useState('');
   const [applyPph, setApplyPph] = useState(true);
   const { toast } = useToast();
@@ -100,8 +98,7 @@ export default function PayslipClientPage({
   useEffect(() => {
     const fetchAttendance = async () => {
         if (!selectedEmployeeId || !period) {
-            setAttendanceDays(0);
-            setOvertimeHours(0);
+            setAttendanceRecord(null);
             return;
         };
         setIsFetchingAttendance(true);
@@ -109,18 +106,15 @@ export default function PayslipClientPage({
             // First, check initial attendance data passed from server
             const initialRecord = initialAttendance.find(rec => rec.employeeId === selectedEmployeeId && rec.period === period);
             if (initialRecord) {
-                setAttendanceDays(initialRecord.attendanceDays || 0);
-                setOvertimeHours(initialRecord.overtimeHours || 0);
+                setAttendanceRecord(initialRecord);
             } else {
                 // If not found (e.g., period changed), fetch from db
                 const record = await getAttendanceByEmployeeAndPeriod(selectedEmployeeId, period);
-                setAttendanceDays(record?.attendanceDays || 0);
-                setOvertimeHours(record?.overtimeHours || 0);
+                setAttendanceRecord(record);
             }
         } catch (error) {
             toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch attendance data.' });
-            setAttendanceDays(0);
-            setOvertimeHours(0);
+            setAttendanceRecord(null);
         } finally {
             setIsFetchingAttendance(false);
         }
@@ -147,6 +141,9 @@ export default function PayslipClientPage({
         });
         return;
     }
+    
+    const attendanceDays = attendanceRecord?.attendanceDays || 0;
+    const overtimeHours = attendanceRecord?.overtimeHours || 0;
 
     let earnings: Record<string, number> = {};
     if(position.salaryType === 'bulanan') {
@@ -183,12 +180,25 @@ export default function PayslipClientPage({
             ? BPJS_RATES[selectedEmployee.bpjsType]
             : 0; 
     }
-    deductions.bpjs = bpjsDeduction;
+    if (bpjsDeduction > 0) {
+      deductions.bpjs = bpjsDeduction;
+    }
+
 
     if (applyPph) {
       deductions.tax = totalEarnings * 0.02;
     }
     
+    if (attendanceRecord?.potonganIdCard) {
+        deductions.potonganIdCard = attendanceRecord.potonganIdCard;
+    }
+    if (attendanceRecord?.potonganSimper) {
+        deductions.potonganSimper = attendanceRecord.potonganSimper;
+    }
+    if (attendanceRecord?.potonganDenda) {
+        deductions.potonganDenda = attendanceRecord.potonganDenda;
+    }
+
     const totalDeductions = Object.values(deductions).reduce((sum, val) => sum + val, 0);
     const netSalary = totalEarnings - totalDeductions;
 
@@ -266,10 +276,9 @@ export default function PayslipClientPage({
               <Input
                 id="attendance"
                 type="number"
-                value={attendanceDays}
-                onChange={(e) => setAttendanceDays(Number(e.target.value))}
+                value={attendanceRecord?.attendanceDays || ''}
+                disabled
                 placeholder="e.g. 22"
-                disabled={isFetchingAttendance || selectedEmployee?.positionDetails?.salaryType !== 'harian'}
               />
             </div>
              {isClient && selectedEmployee?.positionDetails?.salaryType === 'harian' && (
@@ -278,10 +287,9 @@ export default function PayslipClientPage({
                 <Input
                   id="overtime"
                   type="number"
-                  value={overtimeHours}
-                  onChange={(e) => setOvertimeHours(Number(e.target.value))}
+                  value={attendanceRecord?.overtimeHours || ''}
+                  disabled
                   placeholder="e.g. 10"
-                  disabled={isFetchingAttendance}
                 />
               </div>
             )}

@@ -6,7 +6,7 @@ import { useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Printer, Download, Loader2 } from 'lucide-react';
 import Payslip from '@/components/payslip';
-import type { EmployeeWithPosition, AppSettings, Position } from '@/lib/types';
+import type { EmployeeWithPosition, AppSettings, Position, AttendanceRecord } from '@/lib/types';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 

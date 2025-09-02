@@ -38,6 +38,9 @@ const formatLabel = (key: string, employee: Employee, attendanceDays?: number, o
         tunjanganKinerja: "Tunjangan Kinerja",
         tax: "Pajak (PPH 21)",
         bpjs: bpjsLabel,
+        potonganIdCard: "Potongan ID Card",
+        potonganSimper: "Potongan SIMPER",
+        potonganDenda: "Potongan Denda/Panjar",
     };
     return labels[key] || key.charAt(0).toUpperCase() + key.slice(1);
 }

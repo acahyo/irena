@@ -164,10 +164,22 @@ export default function PayslipCollectiveClientPage({
                     ? BPJS_RATES[employee.bpjsType]
                     : 0;
             }
-            deductions.bpjs = bpjsDeduction;
+            if (bpjsDeduction > 0) {
+              deductions.bpjs = bpjsDeduction;
+            }
 
             if (applyPph) {
               deductions.tax = totalEarnings * 0.02;
+            }
+            
+            if (attendance?.potonganIdCard) {
+                deductions.potonganIdCard = attendance.potonganIdCard;
+            }
+            if (attendance?.potonganSimper) {
+                deductions.potonganSimper = attendance.potonganSimper;
+            }
+            if (attendance?.potonganDenda) {
+                deductions.potonganDenda = attendance.potonganDenda;
             }
 
             const totalDeductions = Object.values(deductions).reduce((sum, val) => sum + val, 0);

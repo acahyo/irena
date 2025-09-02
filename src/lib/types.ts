@@ -115,6 +115,9 @@ export type AttendanceRecord = {
     period: string; // YYYY-MM
     attendanceDays?: number;
     overtimeHours?: number;
+    potonganIdCard?: number;
+    potonganSimper?: number;
+    potonganDenda?: number;
 };
 
 
