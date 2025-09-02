@@ -43,8 +43,8 @@ export default function EmployeeDirectoryClientPage({ initialEmployees }: { init
   const filteredEmployees = useMemo(() => {
     return employees.filter((employee: Employee) => {
       const matchesSearch = employee.name
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
+        ? employee.name.toLowerCase().includes(searchTerm.toLowerCase())
+        : false;
       const matchesDepartment =
         departmentFilter === 'all' || employee.department === departmentFilter;
       return matchesSearch && matchesDepartment;
