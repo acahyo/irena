@@ -127,6 +127,7 @@ export default function PayslipCollectiveClientPage({
             const attendance = attendanceRecords.find(a => a.employeeId === employeeId && a.period === period);
             const attendanceDays = attendance?.attendanceDays || 0;
             const overtimeHours = attendance?.overtimeHours || 0;
+            const bonus = attendance?.bonus || 0;
             const position = employee.positionDetails;
 
             let earnings: Record<string, number> = {};
@@ -154,6 +155,10 @@ export default function PayslipCollectiveClientPage({
                 return; // Skip if no salary type
             }
             
+            if (bonus > 0) {
+                earnings.bonus = bonus;
+            }
+
             const totalEarnings = Object.values(earnings).reduce((sum, val) => sum + val, 0);
 
             const deductions: Record<string, number> = {};

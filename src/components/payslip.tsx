@@ -41,6 +41,7 @@ const formatLabel = (key: string, employee: Employee, attendanceDays?: number, o
         potonganIdCard: "Potongan ID Card",
         potonganSimper: "Potongan SIMPER",
         potonganDenda: "Potongan Denda/Panjar",
+        bonus: "Bonus",
     };
     return labels[key] || key.charAt(0).toUpperCase() + key.slice(1);
 }

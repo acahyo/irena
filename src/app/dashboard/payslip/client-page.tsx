@@ -144,6 +144,7 @@ export default function PayslipClientPage({
     
     const attendanceDays = attendanceRecord?.attendanceDays || 0;
     const overtimeHours = attendanceRecord?.overtimeHours || 0;
+    const bonus = attendanceRecord?.bonus || 0;
 
     let earnings: Record<string, number> = {};
     if(position.salaryType === 'bulanan') {
@@ -167,6 +168,10 @@ export default function PayslipClientPage({
             tunjanganKehadiran: position.tunjanganKehadiran || 0,
             tunjanganKinerja: position.tunjanganKinerja || 0,
         };
+    }
+    
+    if (bonus > 0) {
+        earnings.bonus = bonus;
     }
 
 

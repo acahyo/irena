@@ -2,7 +2,7 @@
 'use server';
 
 import { db } from '@/lib/firebase';
-import { collection, getDocs, doc, setDoc, query, where, writeBatch } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, getDoc, query, where, writeBatch } from 'firebase/firestore';
 import type { AttendanceRecord } from '@/lib/types';
 
 // Get all attendance records for a specific period

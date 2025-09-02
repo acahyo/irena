@@ -43,6 +43,7 @@ type AttendanceData = {
         potonganIdCard?: number;
         potonganSimper?: number;
         potonganDenda?: number;
+        bonus?: number;
     }
 }
 
@@ -85,6 +86,7 @@ export default function AttendanceClientPage({
             potonganIdCard: record.potonganIdCard,
             potonganSimper: record.potonganSimper,
             potonganDenda: record.potonganDenda,
+            bonus: record.bonus,
         };
     });
     setAttendanceData(initialData);
@@ -103,6 +105,7 @@ export default function AttendanceClientPage({
                 potonganIdCard: record.potonganIdCard,
                 potonganSimper: record.potonganSimper,
                 potonganDenda: record.potonganDenda,
+                bonus: record.bonus,
             };
         });
         setAttendanceData(newData);
@@ -137,7 +140,7 @@ export default function AttendanceClientPage({
       if (
         record.attendanceDays === undefined && record.overtimeHours === undefined &&
         record.potonganIdCard === undefined && record.potonganSimper === undefined &&
-        record.potonganDenda === undefined
+        record.potonganDenda === undefined && record.bonus === undefined
       ) {
         return;
       }
@@ -152,6 +155,7 @@ export default function AttendanceClientPage({
               potonganIdCard: record.potonganIdCard,
               potonganSimper: record.potonganSimper,
               potonganDenda: record.potonganDenda,
+              bonus: record.bonus,
           });
           toast({
               title: 'Saved!',
@@ -173,6 +177,7 @@ export default function AttendanceClientPage({
         period: period,
         attendanceDays: attendanceData[emp.id]?.attendanceDays ?? 0,
         overtimeHours: attendanceData[emp.id]?.overtimeHours ?? 0,
+        bonus: attendanceData[emp.id]?.bonus ?? 0,
         potonganIdCard: attendanceData[emp.id]?.potonganIdCard ?? 0,
         potonganSimper: attendanceData[emp.id]?.potonganSimper ?? 0,
         potonganDenda: attendanceData[emp.id]?.potonganDenda ?? 0,
@@ -212,6 +217,7 @@ export default function AttendanceClientPage({
                 period: row.period || period,
                 attendanceDays: row.attendanceDays ? Number(row.attendanceDays) : undefined,
                 overtimeHours: row.overtimeHours ? Number(row.overtimeHours) : undefined,
+                bonus: row.bonus ? Number(row.bonus) : undefined,
                 potonganIdCard: row.potonganIdCard ? Number(row.potonganIdCard) : undefined,
                 potonganSimper: row.potonganSimper ? Number(row.potonganSimper) : undefined,
                 potonganDenda: row.potonganDenda ? Number(row.potonganDenda) : undefined,
@@ -316,6 +322,7 @@ export default function AttendanceClientPage({
               <TableHead>Jabatan</TableHead>
               <TableHead className="w-[180px]">Kehadiran (hari)</TableHead>
               <TableHead className="w-[180px]">Jam Lembur</TableHead>
+              <TableHead className="w-[180px]">Bonus</TableHead>
               <TableHead className="w-[180px]">Potongan ID Card</TableHead>
               <TableHead className="w-[180px]">Potongan SIMPER</TableHead>
               <TableHead className="w-[180px]">Potongan Denda</TableHead>
@@ -360,6 +367,15 @@ export default function AttendanceClientPage({
                    <TableCell>
                     <Input
                       type="number"
+                      placeholder="e.g. 500000"
+                      value={attendanceData[emp.id]?.bonus ?? ''}
+                      onChange={(e) => handleInputChange(emp.id, 'bonus', e.target.value)}
+                      onBlur={() => handleInputBlur(emp.id)}
+                    />
+                  </TableCell>
+                   <TableCell>
+                    <Input
+                      type="number"
                       placeholder="e.g. 50000"
                       value={attendanceData[emp.id]?.potonganIdCard ?? ''}
                       onChange={(e) => handleInputChange(emp.id, 'potonganIdCard', e.target.value)}
@@ -388,7 +404,7 @@ export default function AttendanceClientPage({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center">
+                <TableCell colSpan={8} className="h-24 text-center">
                   Tidak ada data karyawan ditemukan untuk filter ini.
                 </TableCell>
               </TableRow>
