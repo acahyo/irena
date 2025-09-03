@@ -23,22 +23,15 @@ export default async function PayrollPage() {
 
       let totalSalary = 0;
       if (positionDetails) {
-          if (positionDetails.salaryType === 'bulanan') {
-              totalSalary = (positionDetails.monthlySalary || 0) + 
-                            (positionDetails.otAllowance || 0) + 
-                            (positionDetails.locationAllowance || 0) + 
-                            (positionDetails.mealAllowance || 0) + 
-                            (positionDetails.otherAllowances || 0);
+          if (positionDetails.salaryType === 'bulanan' || positionDetails.salaryType === 'direksi') {
+              const baseSalary = positionDetails.monthlySalary || 0;
+              const allowancesTotal = positionDetails.allowances?.reduce((sum, allowance) => sum + allowance.amount, 0) || 0;
+              totalSalary = baseSalary + allowancesTotal;
           } else if (positionDetails.salaryType === 'harian') {
               const attendanceDays = attendanceDetails?.attendanceDays || 0;
               const overtimeHours = attendanceDetails?.overtimeHours || 0;
               totalSalary = ((positionDetails.dailyWage || 0) * attendanceDays) + 
                             ((positionDetails.overtimeRate || 0) * overtimeHours);
-          } else if (positionDetails.salaryType === 'direksi') {
-              totalSalary = (positionDetails.monthlySalary || 0) + // Gaji Pokok
-                            (positionDetails.tunjanganJabatan || 0) +
-                            (positionDetails.tunjanganKehadiran || 0) +
-                            (positionDetails.tunjanganKinerja || 0);
           }
       }
 

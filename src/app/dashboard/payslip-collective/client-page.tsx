@@ -131,26 +131,16 @@ export default function PayslipCollectiveClientPage({
             const position = employee.positionDetails;
 
             let earnings: Record<string, number> = {};
-            if(position.salaryType === 'bulanan') {
-                earnings = {
-                    monthlySalary: position.monthlySalary || 0,
-                    otAllowance: position.otAllowance || 0,
-                    locationAllowance: position.locationAllowance || 0,
-                    mealAllowance: position.mealAllowance || 0,
-                    otherAllowances: position.otherAllowances || 0,
-                };
+            if(position.salaryType === 'bulanan' || position.salaryType === 'direksi') {
+                earnings.monthlySalary = position.monthlySalary || 0;
+                position.allowances?.forEach(allowance => {
+                    earnings[allowance.name] = allowance.amount;
+                });
             } else if(position.salaryType === 'harian') {
                 earnings = {
                     dailyWage: (position.dailyWage || 0) * attendanceDays,
                     overtime: (position.overtimeRate || 0) * overtimeHours, 
                 }
-            } else if (position.salaryType === 'direksi') {
-                earnings = {
-                    monthlySalary: position.monthlySalary || 0, // Gaji Pokok
-                    tunjanganJabatan: position.tunjanganJabatan || 0,
-                    tunjanganKehadiran: position.tunjanganKehadiran || 0,
-                    tunjanganKinerja: position.tunjanganKinerja || 0,
-                };
             } else {
                 return; // Skip if no salary type
             }
@@ -164,10 +154,8 @@ export default function PayslipCollectiveClientPage({
             const deductions: Record<string, number> = {};
 
             let bpjsDeduction = 0;
-            if (employee.bpjsStatus === 'active') {
-                bpjsDeduction = employee.bpjsType && BPJS_RATES[employee.bpjsType]
-                    ? BPJS_RATES[employee.bpjsType]
-                    : 0;
+            if (employee.bpjsStatus === 'active' && employee.bpjsType && BPJS_RATES[employee.bpjsType]) {
+                bpjsDeduction = BPJS_RATES[employee.bpjsType];
             }
             if (bpjsDeduction > 0) {
               deductions.bpjs = bpjsDeduction;

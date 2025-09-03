@@ -1,10 +1,11 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Loader2, WalletCards } from 'lucide-react';
+import { ArrowLeft, Loader2, WalletCards, PlusCircle, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -16,7 +17,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { getPosition, updatePosition } from '@/actions/positions';
-import type { Position } from '@/lib/types';
+import type { Position, Allowance } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
@@ -26,6 +27,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+type AllowanceField = {
+    id: number;
+    name: string;
+    amount: number;
+};
+
 export default function EditPositionPage() {
     const router = useRouter();
     const params = useParams();
@@ -34,8 +41,21 @@ export default function EditPositionPage() {
     const [loading, setLoading] = useState(false);
     const [pageLoading, setPageLoading] = useState(true);
     const [salaryType, setSalaryType] = useState<string | undefined>();
+    const [allowances, setAllowances] = useState<AllowanceField[]>([]);
     
     const id = params.id as string;
+
+    const addAllowance = () => {
+        setAllowances([...allowances, { id: Date.now(), name: '', amount: 0 }]);
+    };
+
+    const removeAllowance = (id: number) => {
+        setAllowances(allowances.filter(a => a.id !== id));
+    };
+
+    const handleAllowanceChange = (id: number, field: 'name' | 'amount', value: string | number) => {
+        setAllowances(allowances.map(a => a.id === id ? { ...a, [field]: value } : a));
+    };
 
     useEffect(() => {
         if (id) {
@@ -46,6 +66,9 @@ export default function EditPositionPage() {
                     if (data) {
                         setPosition(data);
                         setSalaryType(data.salaryType);
+                        if (data.allowances) {
+                           setAllowances(data.allowances.map((a, i) => ({ ...a, id: Date.now() + i })));
+                        }
                     } else {
                         toast({
                             variant: 'destructive',
@@ -75,9 +98,17 @@ export default function EditPositionPage() {
         setLoading(true);
         const formData = new FormData(event.currentTarget);
         const data = Object.fromEntries(formData.entries());
+        
+        // Manual override for dynamic allowances
+        const finalData = { ...data };
+        allowances.forEach((allowance, index) => {
+            finalData[`allowanceName-${index}`] = allowance.name;
+            finalData[`allowanceAmount-${index}`] = allowance.amount.toString();
+        });
+
 
         try {
-            await updatePosition(id, data as Partial<Position>);
+            await updatePosition(id, finalData);
             toast({
                 title: 'Success!',
                 description: 'Jabatan telah diperbarui.',
@@ -147,7 +178,7 @@ export default function EditPositionPage() {
                  <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2"><WalletCards /> Detail Gaji</CardTitle>
-                      <CardDescription>Pilih tipe gaji dan isi detailnya.</CardDescription>
+                      <CardDescription>Pilih tipe gaji dan isi komponennya.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
                        <div className="space-y-2">
@@ -177,50 +208,58 @@ export default function EditPositionPage() {
                           </div>
                         )}
 
-                        {salaryType === 'bulanan' && (
-                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-md border p-4">
+                        {(salaryType === 'bulanan' || salaryType === 'direksi') && (
+                           <div className="space-y-4 rounded-md border p-4">
                             <div className="space-y-2">
-                              <Label htmlFor="monthlySalary">Gaji Bulanan (Rp)</Label>
+                              <Label htmlFor="monthlySalary">Gaji Pokok Bulanan (Rp)</Label>
                               <Input id="monthlySalary" name="monthlySalary" type="number" placeholder="e.g. 4500000" defaultValue={position.monthlySalary} />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="otAllowance">Tunjangan OT &amp; Kehadiran (Rp)</Label>
-                              <Input id="otAllowance" name="otAllowance" type="number" placeholder="e.g. 500000" defaultValue={position.otAllowance} />
-                            </div>
-                             <div className="space-y-2">
-                              <Label htmlFor="locationAllowance">Tunjangan Lokasi (Rp)</Label>
-                              <Input id="locationAllowance" name="locationAllowance" type="number" placeholder="e.g. 300000" defaultValue={position.locationAllowance} />
-                            </div>
-                             <div className="space-y-2">
-                              <Label htmlFor="mealAllowance">Tunjangan Makan (Rp)</Label>
-                              <Input id="mealAllowance" name="mealAllowance" type="number" placeholder="e.g. 750000" defaultValue={position.mealAllowance} />
-                            </div>
-                             <div className="space-y-2 md:col-span-2">
-                              <Label htmlFor="otherAllowances">Tunjangan Lain-lain (Rp)</Label>
-                              <Input id="otherAllowances" name="otherAllowances" type="number" placeholder="e.g. 200000" defaultValue={position.otherAllowances} />
                             </div>
                           </div>
                         )}
-
-                        {salaryType === 'direksi' && (
-                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-md border p-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="monthlySalary">Gaji Pokok (Rp)</Label>
-                              <Input id="monthlySalary" name="monthlySalary" type="number" placeholder="e.g. 10000000" defaultValue={position.monthlySalary} />
+                        
+                        {(salaryType === 'bulanan' || salaryType === 'direksi') && (
+                            <div className="space-y-4">
+                                <Label>Tunjangan</Label>
+                                <div className="space-y-4">
+                                {allowances.map((allowance, index) => (
+                                    <div key={allowance.id} className="flex items-end gap-2 p-2 border rounded-md">
+                                        <div className="flex-1 space-y-2">
+                                            <Label htmlFor={`allowanceName-${index}`} className="text-xs">Nama Tunjangan</Label>
+                                            <Input
+                                                id={`allowanceName-${index}`}
+                                                name={`allowanceName-${index}`}
+                                                value={allowance.name}
+                                                onChange={(e) => handleAllowanceChange(allowance.id, 'name', e.target.value)}
+                                                placeholder="e.g. Tunjangan Jabatan"
+                                            />
+                                        </div>
+                                        <div className="flex-1 space-y-2">
+                                            <Label htmlFor={`allowanceAmount-${index}`} className="text-xs">Jumlah (Rp)</Label>
+                                            <Input
+                                                id={`allowanceAmount-${index}`}
+                                                name={`allowanceAmount-${index}`}
+                                                type="number"
+                                                value={allowance.amount}
+                                                onChange={(e) => handleAllowanceChange(allowance.id, 'amount', Number(e.target.value))}
+                                                placeholder="e.g. 500000"
+                                            />
+                                        </div>
+                                        <Button
+                                            type="button"
+                                            variant="destructive"
+                                            size="icon"
+                                            onClick={() => removeAllowance(allowance.id)}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                ))}
+                                </div>
+                                <Button type="button" variant="outline" size="sm" onClick={addAllowance}>
+                                    <PlusCircle className="mr-2 h-4 w-4" />
+                                    Tambah Tunjangan
+                                </Button>
                             </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="tunjanganJabatan">Tunjangan Jabatan (Rp)</Label>
-                              <Input id="tunjanganJabatan" name="tunjanganJabatan" type="number" placeholder="e.g. 5000000" defaultValue={position.tunjanganJabatan} />
-                            </div>
-                             <div className="space-y-2">
-                              <Label htmlFor="tunjanganKehadiran">Tunjangan Kehadiran (Rp)</Label>
-                              <Input id="tunjanganKehadiran" name="tunjanganKehadiran" type="number" placeholder="e.g. 1000000" defaultValue={position.tunjanganKehadiran} />
-                            </div>
-                             <div className="space-y-2">
-                              <Label htmlFor="tunjanganKinerja">Tunjangan Kinerja (Rp)</Label>
-                              <Input id="tunjanganKinerja" name="tunjanganKinerja" type="number" placeholder="e.g. 2000000" defaultValue={position.tunjanganKinerja} />
-                            </div>
-                          </div>
                         )}
 
                     </CardContent>

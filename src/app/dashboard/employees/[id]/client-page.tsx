@@ -301,18 +301,17 @@ export default function EmployeeProfileClientPage({ employee }: { employee: Empl
             </CardHeader>
             <CardContent>
                  {employee.positionDetails?.salaryType === 'harian' && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                        <DetailItem icon={<DollarSign className="h-5 w-5"/>} label="Upah per Hari" value={employee.positionDetails?.dailyWage} currency />
                        <DetailItem icon={<Star className="h-5 w-5"/>} label="Lembur per Jam" value={employee.positionDetails?.overtimeRate} currency />
                     </div>
                  )}
-                 {employee.positionDetails?.salaryType === 'bulanan' && (
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 {(employee.positionDetails?.salaryType === 'bulanan' || employee.positionDetails?.salaryType === 'direksi') && (
+                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                        <DetailItem icon={<DollarSign className="h-5 w-5"/>} label="Gaji Pokok Bulanan" value={employee.positionDetails?.monthlySalary} currency />
-                       <DetailItem icon={<Star className="h-5 w-5"/>} label="Tunjangan OT & Kehadiran" value={employee.positionDetails?.otAllowance} currency />
-                       <DetailItem icon={<MapPin className="h-5 w-5"/>} label="Tunjangan Lokasi" value={employee.positionDetails?.locationAllowance} currency />
-                       <DetailItem icon={<Briefcase className="h-5 w-5"/>} label="Tunjangan Makan" value={employee.positionDetails?.mealAllowance} currency />
-                       <DetailItem icon={<Star className="h-5 w-5"/>} label="Tunjangan Lain-lain" value={employee.positionDetails?.otherAllowances} currency />
+                       {employee.positionDetails.allowances?.map((allowance, index) => (
+                           <DetailItem key={index} icon={<Star className="h-5 w-5"/>} label={allowance.name} value={allowance.amount} currency />
+                       ))}
                     </div>
                  )}
                  {!employee.positionDetails?.salaryType && (

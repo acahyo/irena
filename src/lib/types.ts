@@ -1,5 +1,10 @@
 
 
+export type Allowance = {
+  name: string;
+  amount: number;
+};
+
 export type Employee = {
   id: string;
   name: string;
@@ -87,14 +92,8 @@ export type Position = {
     overtimeRate?: number;
     // Bulanan
     monthlySalary?: number; // Also used as Gaji Pokok for Direksi
-    otAllowance?: number;
-    locationAllowance?: number;
-    mealAllowance?: number;
-    otherAllowances?: number;
-    // Direksi
-    tunjanganJabatan?: number;
-    tunjanganKehadiran?: number;
-    tunjanganKinerja?: number;
+    // Dynamic Allowances
+    allowances?: Allowance[];
 };
 
 

@@ -1,4 +1,5 @@
 
+
 import type { Employee, AppSettings, Position } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format } from 'date-fns';
@@ -27,15 +28,8 @@ const formatLabel = (key: string, employee: Employee, attendanceDays?: number, o
     
     const labels: Record<string, string> = {
         monthlySalary: "Gaji Pokok",
-        otAllowance: "Tunjangan OT & Kehadiran",
-        locationAllowance: "Tunjangan Lokasi",
-        mealAllowance: "Tunjangan Makan",
-        otherAllowances: "Tunjangan Lain-lain",
         dailyWage: `Gaji Harian (${attendanceDays ?? '...'} hari)`,
         overtime: `Lembur (${overtimeHours ?? '...'} jam)`,
-        tunjanganJabatan: "Tunjangan Jabatan",
-        tunjanganKehadiran: "Tunjangan Kehadiran",
-        tunjanganKinerja: "Tunjangan Kinerja",
         tax: "Pajak (PPH 21)",
         bpjs: bpjsLabel,
         potonganIdCard: "Potongan ID Card",
@@ -43,7 +37,7 @@ const formatLabel = (key: string, employee: Employee, attendanceDays?: number, o
         potonganDenda: "Potongan Denda/Panjar",
         bonus: "Bonus",
     };
-    return labels[key] || key.charAt(0).toUpperCase() + key.slice(1);
+    return labels[key] || key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1').trim();
 }
 
 

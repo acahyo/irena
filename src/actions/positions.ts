@@ -3,24 +3,39 @@
 
 import { db } from '@/lib/firebase';
 import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
-import type { Position } from '@/lib/types';
+import type { Position, Allowance } from '@/lib/types';
 
-// Helper to convert string numbers to actual numbers for Firestore
-const toNumeric = (obj: any) => {
-    const numericFields: (keyof Position)[] = [
-        'dailyWage', 'overtimeRate', 'monthlySalary', 'otAllowance', 
-        'locationAllowance', 'mealAllowance', 'otherAllowances',
-        'tunjanganJabatan', 'tunjanganKehadiran', 'tunjanganKinerja'
-    ];
-    const newObj = { ...obj };
-    numericFields.forEach(field => {
-        if (newObj[field] && typeof newObj[field] === 'string') {
-            newObj[field] = Number(newObj[field]);
-        } else if (newObj[field] === '') {
-            newObj[field] = null;
+// Helper to convert form data to a structured Position object
+const processFormData = (data: any) => {
+    const positionData: Partial<Position> = {
+        name: data.name,
+        salaryType: data.salaryType,
+    };
+
+    if (data.salaryType === 'harian') {
+        positionData.dailyWage = Number(data.dailyWage) || 0;
+        positionData.overtimeRate = Number(data.overtimeRate) || 0;
+    } else if (data.salaryType === 'bulanan' || data.salaryType === 'direksi') {
+        positionData.monthlySalary = Number(data.monthlySalary) || 0;
+    }
+    
+    const allowances: Allowance[] = [];
+    Object.keys(data).forEach(key => {
+        if (key.startsWith('allowanceName-')) {
+            const index = key.split('-')[1];
+            const name = data[key];
+            const amount = Number(data[`allowanceAmount-${index}`]);
+            if (name && amount > 0) {
+                allowances.push({ name, amount });
+            }
         }
     });
-    return newObj;
+
+    if (allowances.length > 0) {
+        positionData.allowances = allowances;
+    }
+
+    return positionData;
 };
 
 
@@ -47,17 +62,17 @@ export async function getPosition(id: string): Promise<Position | null> {
 }
 
 // Create a new position
-export async function createPosition(position: Omit<Position, 'id'>): Promise<string> {
-  const numericPosition = toNumeric(position);
-  const docRef = await addDoc(collection(db, 'positions'), numericPosition);
+export async function createPosition(data: { [k: string]: FormDataEntryValue }): Promise<string> {
+  const position = processFormData(data);
+  const docRef = await addDoc(collection(db, 'positions'), position);
   return docRef.id;
 }
 
 // Update an existing position
-export async function updatePosition(id: string, position: Partial<Position>): Promise<void> {
-  const numericPosition = toNumeric(position);
+export async function updatePosition(id: string, data: { [k: string]: FormDataEntryValue }): Promise<void> {
+  const position = processFormData(data);
   const docRef = doc(db, 'positions', id);
-  await updateDoc(docRef, numericPosition);
+  await updateDoc(docRef, position);
 }
 
 // Delete a position
