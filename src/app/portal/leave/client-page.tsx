@@ -98,8 +98,8 @@ export default function MyLeaveClientPage({
         ...req,
         startDate: format(new Date(req.startDate), 'PPP'),
         endDate: format(new Date(req.endDate), 'PPP'),
-    })) as LeaveRequest[];
-    setLeaveRequests(updatedRequests);
+    }));
+    setLeaveRequests(updatedRequests as LeaveRequest[]);
   };
 
   const NewLeaveForm = () => {
