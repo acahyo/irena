@@ -41,6 +41,7 @@ export type Employee = {
   contractEndDate?: Date | string;
   position?: string;
   siteLocation?: string;
+  password?: string;
   onLeave?: boolean;
   daysActive?: number;
   leaveHistory?: LeaveRequest[];

@@ -5,6 +5,8 @@ import { db } from '@/lib/firebase';
 import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, Timestamp, writeBatch, setDoc } from 'firebase/firestore';
 import type { Employee } from '@/lib/types';
 import { format } from 'date-fns';
+import { createHash } from 'crypto';
+
 
 // Helper to convert Firestore Timestamps to Dates in a document
 function convertTimestampsToDates(docData: any) {
@@ -25,6 +27,8 @@ export async function getEmployees(): Promise<Employee[]> {
   const employees: Employee[] = [];
   querySnapshot.forEach((doc) => {
     const data = convertTimestampsToDates(doc.data());
+    // Ensure password is not sent to the client
+    delete data.password;
     employees.push({ id: doc.id, ...data } as Employee);
   });
   return employees;
@@ -36,7 +40,10 @@ export async function getEmployee(id: string): Promise<Employee | null> {
   const docSnap = await getDoc(docRef);
 
   if (docSnap.exists()) {
-    return { id: docSnap.id, ...convertTimestampsToDates(docSnap.data()) } as Employee;
+    const data = convertTimestampsToDates(docSnap.data());
+    // Ensure password is not sent to the client
+    delete data.password;
+    return { id: docSnap.id, ...data } as Employee;
   } else {
     return null;
   }
@@ -67,6 +74,9 @@ export async function createEmployee(employee: Partial<Employee>): Promise<strin
     
     const employeeId = `IBA${registrationDate}${birthYear}${sequentialNumber}`;
 
+    // Set default password
+    employeeData.password = createHash('md5').update('irena@2025').digest('hex');
+
     // Use setDoc with the custom ID
     const docRef = doc(db, 'employees', employeeId);
     await setDoc(docRef, employeeData);
@@ -91,6 +101,14 @@ export async function updateEmployee(id: string, employee: Partial<Employee>): P
     }
   });
 
+  // Hash password only if it's being changed (i.e., it's not empty)
+  if (employeeData.password) {
+      employeeData.password = createHash('md5').update(employeeData.password).digest('hex');
+  } else {
+      // Avoid overwriting the existing password with an empty one
+      delete employeeData.password;
+  }
+
   const docRef = doc(db, 'employees', id);
   await updateDoc(docRef, employeeData);
 }
@@ -104,11 +122,13 @@ export async function deleteEmployee(id: string): Promise<void> {
 // Import multiple employees
 export async function importEmployees(employees: Partial<Employee>[]) {
     const batch = writeBatch(db);
+    const defaultPassword = createHash('md5').update('irena@2025').digest('hex');
     
     employees.forEach(employee => {
         const docRef = doc(collection(db, 'employees'));
         // We don't need to add an id, Firestore does it automatically
         const { id, ...employeeData } = employee; 
+        employeeData.password = defaultPassword;
         batch.set(docRef, employeeData);
     });
 

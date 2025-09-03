@@ -55,7 +55,11 @@ export default function LoginPageClient({ settings }: { settings: AppSettings })
         const result = await authenticateUser({ email, password });
 
         if (result.success) {
-            router.push('/dashboard');
+            if (result.userType === 'admin') {
+                router.push('/dashboard');
+            } else if (result.userType === 'employee') {
+                router.push('/portal');
+            }
         } else {
             setError(T.authError(result.message || T.defaultError));
         }
