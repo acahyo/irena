@@ -3,11 +3,13 @@ import { getEmployees } from '@/actions/employees';
 import { getPositions } from '@/actions/positions';
 import AttendanceClientPage from './client-page';
 import { getAttendanceByPeriod } from '@/actions/attendance';
+import { getSettings } from '@/actions/settings';
 
 export default async function AttendancePage() {
-  const [employees, positions] = await Promise.all([
+  const [employees, positions, settings] = await Promise.all([
     getEmployees(),
-    getPositions()
+    getPositions(),
+    getSettings(),
   ]);
   
   const employeesWithPositionDetails = employees.map(emp => {
@@ -23,6 +25,7 @@ export default async function AttendancePage() {
     <AttendanceClientPage
       employees={employeesWithPositionDetails}
       initialAttendance={initialAttendance}
+      settings={settings}
     />
   );
 }

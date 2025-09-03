@@ -17,6 +17,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { DashboardClock } from './client-page';
+import { getSettings } from '@/actions/settings';
 
 
 async function getDashboardData() {
@@ -77,8 +78,34 @@ async function getDashboardData() {
 
 
 export default async function DashboardPage() {
-    const stats = await getDashboardData();
+    const [stats, settings] = await Promise.all([
+        getDashboardData(),
+        getSettings()
+    ]);
     
+    const lang = settings.language || 'id';
+
+    const T = {
+        totalEmployees: lang === 'id' ? 'Total Karyawan' : 'Total Employees',
+        totalEmployeesDesc: lang === 'id' ? 'Jumlah seluruh karyawan terdaftar' : 'Total number of registered employees',
+        employeesOnLeave: lang === 'id' ? 'Karyawan Cuti' : 'Employees on Leave',
+        employeesOnLeaveDesc: lang === 'id' ? 'Jumlah karyawan yang sedang cuti' : 'Number of employees currently on leave',
+        employeeStatus: lang === 'id' ? 'Status Karyawan' : 'Employee Status',
+        active: lang === 'id' ? 'Aktif' : 'Active',
+        inactive: lang === 'id' ? 'Non-Aktif' : 'Inactive',
+        resign: lang === 'id' ? 'Resign' : 'Resigned',
+        phk: lang === 'id' ? 'PHK' : 'Terminated',
+        employeesByPosition: lang === 'id' ? 'Karyawan Berdasarkan Jabatan' : 'Employees by Position',
+        no: lang === 'id' ? 'No' : 'No',
+        position: lang === 'id' ? 'Jabatan' : 'Position',
+        employeeCount: lang === 'id' ? 'Jumlah Karyawan' : 'Number of Employees',
+        noPositionData: lang === 'id' ? 'Tidak ada data jabatan.' : 'No position data available.',
+        leaveRecommendation: lang === 'id' ? 'Rekomendasi Cuti' : 'Leave Recommendation',
+        leaveRecommendationDesc: lang === 'id' ? 'Karyawan aktif lebih dari 120 hari yang direkomendasikan untuk mengambil cuti.' : 'Active employees for more than 120 days recommended to take leave.',
+        days: lang === 'id' ? 'hari' : 'days',
+        noRecommendation: lang === 'id' ? 'Tidak ada karyawan yang memenuhi kriteria saat ini.' : 'No employees meet the criteria at this time.',
+    };
+
     const StatusItem = ({ icon, label, value, color }: { icon: React.ReactNode, label: string, value: number, color?: string }) => (
         <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -92,55 +119,55 @@ export default async function DashboardPage() {
     return (
         <div className="space-y-6">
              <div className="grid gap-6 md:grid-cols-4">
-                 <DashboardClock />
+                 <DashboardClock lang={lang} />
                 <Link href="/dashboard/employees" className="transition-all duration-200 ease-in-out hover:-translate-y-1 hover:shadow-lg">
                     <Card className="h-full">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Total Karyawan</CardTitle>
+                            <CardTitle className="text-sm font-medium">{T.totalEmployees}</CardTitle>
                             <Users className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{stats.totalEmployees}</div>
-                            <p className="text-xs text-muted-foreground">Jumlah seluruh karyawan terdaftar</p>
+                            <p className="text-xs text-muted-foreground">{T.totalEmployeesDesc}</p>
                         </CardContent>
                     </Card>
                 </Link>
                 <Link href="/dashboard/leave-schedule" className="transition-all duration-200 ease-in-out hover:-translate-y-1 hover:shadow-lg">
                     <Card className="h-full">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Karyawan Cuti</CardTitle>
+                            <CardTitle className="text-sm font-medium">{T.employeesOnLeave}</CardTitle>
                             <CalendarOff className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{stats.employeesOnLeave}</div>
-                            <p className="text-xs text-muted-foreground">Jumlah karyawan yang sedang cuti</p>
+                            <p className="text-xs text-muted-foreground">{T.employeesOnLeaveDesc}</p>
                         </CardContent>
                     </Card>
                 </Link>
                 <Card>
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">Status Karyawan</CardTitle>
+                        <CardTitle className="text-sm font-medium">{T.employeeStatus}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3 pt-2">
-                       <StatusItem icon={<UserCheck className="h-4 w-4 text-green-500" />} label="Aktif" value={stats.employeesByStatus.active} color="bg-green-100 text-green-800" />
-                       <StatusItem icon={<UserX className="h-4 w-4 text-yellow-500" />} label="Non-Aktif" value={stats.employeesByStatus.nonaktif} color="bg-yellow-100 text-yellow-800" />
-                       <StatusItem icon={<LogOut className="h-4 w-4 text-blue-500" />} label="Resign" value={stats.employeesByStatus.resign} color="bg-blue-100 text-blue-800" />
-                       <StatusItem icon={<CircleSlash className="h-4 w-4 text-red-500" />} label="PHK" value={stats.employeesByStatus.phk} color="bg-red-100 text-red-800" />
+                       <StatusItem icon={<UserCheck className="h-4 w-4 text-green-500" />} label={T.active} value={stats.employeesByStatus.active} color="bg-green-100 text-green-800" />
+                       <StatusItem icon={<UserX className="h-4 w-4 text-yellow-500" />} label={T.inactive} value={stats.employeesByStatus.nonaktif} color="bg-yellow-100 text-yellow-800" />
+                       <StatusItem icon={<LogOut className="h-4 w-4 text-blue-500" />} label={T.resign} value={stats.employeesByStatus.resign} color="bg-blue-100 text-blue-800" />
+                       <StatusItem icon={<CircleSlash className="h-4 w-4 text-red-500" />} label={T.phk} value={stats.employeesByStatus.phk} color="bg-red-100 text-red-800" />
                     </CardContent>
                 </Card>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <Card className="lg:col-span-2">
                     <CardHeader>
-                        <CardTitle>Karyawan Berdasarkan Jabatan</CardTitle>
+                        <CardTitle>{T.employeesByPosition}</CardTitle>
                     </CardHeader>
                     <CardContent>
                        <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className="w-[50px]">No</TableHead>
-                                    <TableHead>Jabatan</TableHead>
-                                    <TableHead className="text-right">Jumlah Karyawan</TableHead>
+                                    <TableHead className="w-[50px]">{T.no}</TableHead>
+                                    <TableHead>{T.position}</TableHead>
+                                    <TableHead className="text-right">{T.employeeCount}</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -154,7 +181,7 @@ export default async function DashboardPage() {
                                 {stats.employeesByPosition.length === 0 && (
                                      <TableRow>
                                         <TableCell colSpan={3} className="h-24 text-center">
-                                            Tidak ada data jabatan.
+                                            {T.noPositionData}
                                         </TableCell>
                                     </TableRow>
                                 )}
@@ -166,12 +193,12 @@ export default async function DashboardPage() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <ListChecks />
-                            Rekomendasi Cuti
+                            {T.leaveRecommendation}
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
                         <p className="text-sm text-muted-foreground mb-4">
-                            Karyawan aktif lebih dari 120 hari yang direkomendasikan untuk mengambil cuti.
+                            {T.leaveRecommendationDesc}
                         </p>
                         <ScrollArea className="h-[300px]">
                             <div className="space-y-4">
@@ -186,13 +213,13 @@ export default async function DashboardPage() {
                                                 <Link href={`/dashboard/employees/${emp.id}`} className="text-sm font-medium leading-none hover:underline">{emp.name}</Link>
                                                 <p className="text-xs text-muted-foreground">{emp.position}</p>
                                             </div>
-                                            <div className="ml-auto font-medium text-xs">{emp.daysActive} hari</div>
+                                            <div className="ml-auto font-medium text-xs">{emp.daysActive} {T.days}</div>
                                         </div>
                                     ))
                                 ) : (
                                     <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-8">
                                         <UserRound className="h-8 w-8 mb-2" />
-                                        <p className="text-sm">Tidak ada karyawan yang memenuhi kriteria saat ini.</p>
+                                        <p className="text-sm">{T.noRecommendation}</p>
                                     </div>
                                 )}
                             </div>

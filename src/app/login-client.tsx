@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { LogIn, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,24 @@ export default function LoginPageClient({ settings }: { settings: AppSettings })
     const router = useRouter();
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    
+    const lang = settings.language || 'id';
+
+    const T = useMemo(() => ({
+        welcome: lang === 'id' ? 'Selamat datang kembali! Silakan masuk ke akun Anda.' : 'Welcome back! Please sign in to your account.',
+        emailLabel: lang === 'id' ? 'Email' : 'Email',
+        passwordLabel: lang === 'id' ? 'Kata Sandi' : 'Password',
+        signInButton: lang === 'id' ? 'Masuk' : 'Sign In',
+        signingInButton: lang === 'id' ? 'Sedang Masuk...' : 'Signing In...',
+        defaultError: lang === 'id' ? 'Terjadi kesalahan tak terduga. Silakan coba lagi.' : 'An unexpected error occurred. Please try again.',
+        authError: (msg: string) => {
+            if (lang === 'id') {
+                if (msg.toLowerCase().includes('invalid')) return 'Email atau kata sandi tidak valid.';
+                if (msg.toLowerCase().includes('required')) return 'Email dan kata sandi wajib diisi.';
+            }
+            return msg;
+        }
+    }), [lang]);
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -39,7 +57,7 @@ export default function LoginPageClient({ settings }: { settings: AppSettings })
         if (result.success) {
             router.push('/dashboard');
         } else {
-            setError(result.message);
+            setError(T.authError(result.message || T.defaultError));
         }
         setLoading(false);
     };
@@ -61,7 +79,7 @@ export default function LoginPageClient({ settings }: { settings: AppSettings })
               {settings.appName}
             </CardTitle>
             <CardDescription>
-              Welcome back! Please sign in to your account.
+              {T.welcome}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -75,7 +93,7 @@ export default function LoginPageClient({ settings }: { settings: AppSettings })
             )}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{T.emailLabel}</Label>
                 <Input
                   id="email"
                   name="email"
@@ -87,11 +105,11 @@ export default function LoginPageClient({ settings }: { settings: AppSettings })
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{T.passwordLabel}</Label>
                 <Input id="password" name="password" type="password" required defaultValue="" disabled={loading} />
               </div>
               <Button type="submit" className="w-full !mt-6" disabled={loading}>
-                {loading ? 'Signing In...' : 'Sign In'}
+                {loading ? T.signingInButton : T.signInButton}
               </Button>
             </form>
           </CardContent>

@@ -1,7 +1,9 @@
+
 'use client';
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useMemo } from "react";
 import {
   Avatar,
   AvatarFallback,
@@ -39,19 +41,19 @@ import {
 } from "lucide-react";
 import type { AppSettings, User } from "@/lib/types";
 
-const allNavItems = [
-  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", exact: true, roles: ["Administrator", "HR"] },
-  { href: "/dashboard/employees", icon: Users, label: "Employees", roles: ["Administrator", "HR"] },
-  { href: "/dashboard/leave-schedule", icon: CalendarCheck, label: "Jadwal Cuti", roles: ["Administrator", "HR"] },
+const getNavItems = (lang: 'id' | 'en') => [
+  { href: "/dashboard", icon: LayoutDashboard, label: lang === 'id' ? "Dasbor" : "Dashboard", exact: true, roles: ["Administrator", "HR"] },
+  { href: "/dashboard/employees", icon: Users, label: lang === 'id' ? "Karyawan" : "Employees", roles: ["Administrator", "HR"] },
+  { href: "/dashboard/leave-schedule", icon: CalendarCheck, label: lang === 'id' ? "Jadwal Cuti" : "Leave Schedule", roles: ["Administrator", "HR"] },
   { href: "/dashboard/payroll", icon: Wallet, label: "Payroll", roles: ["Administrator", "HR"] },
-  { href: "/dashboard/attendance", icon: ClipboardCheck, label: "Input Absensi", roles: ["Administrator", "HR"] },
-  { href: "/dashboard/payslip", icon: Printer, label: "Cetak Slip Gaji", roles: ["Administrator", "HR"] },
-  { href: "/dashboard/payslip-collective", icon: Printer, label: "Slip Gaji Kolektif", roles: ["Administrator", "HR"] },
-  { href: "/dashboard/department", icon: Briefcase, label: "Department", roles: ["Administrator", "HR"] },
-  { href: "/dashboard/position", icon: WalletCards, label: "Jabatan & Gaji", roles: ["Administrator", "HR"] },
+  { href: "/dashboard/attendance", icon: ClipboardCheck, label: lang === 'id' ? "Input Absensi" : "Attendance Input", roles: ["Administrator", "HR"] },
+  { href: "/dashboard/payslip", icon: Printer, label: lang === 'id' ? "Cetak Slip Gaji" : "Print Payslip", roles: ["Administrator", "HR"] },
+  { href: "/dashboard/payslip-collective", icon: Printer, label: lang === 'id' ? "Slip Gaji Kolektif" : "Collective Payslip", roles: ["Administrator", "HR"] },
+  { href: "/dashboard/department", icon: Briefcase, label: lang === 'id' ? "Departemen" : "Department", roles: ["Administrator", "HR"] },
+  { href: "/dashboard/position", icon: WalletCards, label: lang === 'id' ? "Jabatan & Gaji" : "Position & Salary", roles: ["Administrator", "HR"] },
   { href: "/dashboard/users", icon: UsersRound, label: "Users", roles: ["Administrator"] },
   { href: "/dashboard/roles", icon: ShieldCheck, label: "Roles", roles: ["Administrator"] },
-  { href: "/dashboard/settings", icon: Settings, label: "Settings", roles: ["Administrator"] },
+  { href: "/dashboard/settings", icon: Settings, label: lang === 'id' ? "Pengaturan" : "Settings", roles: ["Administrator"] },
 ];
 
 export default function DashboardClientLayout({
@@ -64,8 +66,11 @@ export default function DashboardClientLayout({
   user: User;
 }) {
   const pathname = usePathname();
+  const lang = settings.language || 'id';
   
   const userRole = user?.role || '';
+  
+  const allNavItems = useMemo(() => getNavItems(lang), [lang]);
 
   const navItems = allNavItems.filter(item => {
     if (userRole.toLowerCase() === 'administrator') return true;
@@ -166,9 +171,9 @@ export default function DashboardClientLayout({
             </div>
           </div>
           <Link href="/" passHref>
-            <SidebarMenuButton tooltip={{ children: 'Log Out' }}>
+            <SidebarMenuButton tooltip={{ children: lang === 'id' ? 'Keluar' : 'Log Out' }}>
               <LogOut />
-              <span>Log Out</span>
+              <span>{lang === 'id' ? 'Keluar' : 'Log Out'}</span>
             </SidebarMenuButton>
           </Link>
         </SidebarFooter>

@@ -22,7 +22,7 @@ import { Label } from '@/components/ui/label';
 import { Loader2, Download, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getAttendanceByPeriod, saveAttendanceRecord, importAttendanceRecords } from '@/actions/attendance';
-import type { EmployeeWithPosition, AttendanceRecord } from '@/lib/types';
+import type { EmployeeWithPosition, AttendanceRecord, AppSettings } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -50,9 +50,11 @@ type AttendanceData = {
 export default function AttendanceClientPage({
   employees,
   initialAttendance,
+  settings,
 }: {
   employees: EmployeeWithPosition[];
   initialAttendance: AttendanceRecord[];
+  settings: AppSettings;
 }) {
   const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
   const [positionFilter, setPositionFilter] = useState('all');
@@ -62,6 +64,38 @@ export default function AttendanceClientPage({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isImporting, startImportTransition] = useTransition();
   const router = useRouter();
+
+  const lang = settings.language || 'id';
+
+  const T = useMemo(() => ({
+      title: lang === 'id' ? 'Input Absensi Karyawan' : 'Employee Attendance Input',
+      description: lang === 'id' ? 'Masukkan jumlah kehadiran, lembur, dan potongan untuk setiap karyawan. Data disimpan otomatis.' : 'Enter attendance, overtime, and deductions for each employee. Data is saved automatically.',
+      filterByPosition: lang === 'id' ? 'Filter berdasarkan jabatan' : 'Filter by position',
+      allPositions: lang === 'id' ? 'Semua Jabatan' : 'All Positions',
+      import: lang === 'id' ? 'Impor' : 'Import',
+      export: lang === 'id' ? 'Ekspor' : 'Export',
+      employee: lang === 'id' ? 'Karyawan' : 'Employee',
+      position: lang === 'id' ? 'Jabatan' : 'Position',
+      attendanceDays: lang === 'id' ? 'Kehadiran (hari)' : 'Attendance (days)',
+      overtimeHours: lang === 'id' ? 'Jam Lembur' : 'Overtime Hours',
+      bonus: lang === 'id' ? 'Bonus' : 'Bonus',
+      idCardDeduction: lang === 'id' ? 'Potongan ID Card' : 'ID Card Deduction',
+      simperDeduction: lang === 'id' ? 'Potongan SIMPER' : 'SIMPER Deduction',
+      fineDeduction: lang === 'id' ? 'Potongan Denda' : 'Fine Deduction',
+      noData: lang === 'id' ? 'Tidak ada data karyawan ditemukan untuk filter ini.' : 'No employee data found for this filter.',
+      fetchError: lang === 'id' ? 'Gagal mengambil data absensi untuk periode yang dipilih.' : 'Failed to fetch attendance data for the selected period.',
+      saveSuccess: lang === 'id' ? 'Absensi untuk {name} telah diperbarui.' : 'Attendance for {name} has been updated.',
+      saveError: lang === 'id' ? 'Gagal menyimpan absensi untuk {name}.' : 'Failed to save attendance for {name}.',
+      exportSuccess: lang === 'id' ? 'Data absensi telah diekspor.' : 'Attendance data has been exported.',
+      importSuccess: lang === 'id' ? 'Data absensi telah berhasil diimpor.' : 'Attendance data has been imported successfully.',
+      importError: lang === 'id' ? 'Gagal menyimpan data yang diimpor ke database.' : 'Failed to save imported data to the database.',
+      fileReadError: lang === 'id' ? 'Gagal membaca file Excel.' : 'Failed to read the Excel file.',
+      saved: lang === 'id' ? 'Tersimpan!' : 'Saved!',
+      error: lang === 'id' ? 'Error' : 'Error',
+      importErrorTitle: lang === 'id' ? 'Gagal Impor' : 'Import Error',
+      success: lang === 'id' ? 'Sukses!' : 'Success!',
+
+  }), [lang]);
 
 
   const positions = useMemo(() => {
@@ -112,8 +146,8 @@ export default function AttendanceClientPage({
     } catch (error) {
         toast({
             variant: 'destructive',
-            title: 'Error',
-            description: 'Failed to fetch attendance data for the selected period.',
+            title: T.error,
+            description: T.fetchError,
         });
     } finally {
         setIsLoading(false);
@@ -158,14 +192,14 @@ export default function AttendanceClientPage({
               bonus: record.bonus,
           });
           toast({
-              title: 'Saved!',
-              description: `Attendance for ${employee.name} has been updated.`,
+              title: T.saved,
+              description: T.saveSuccess.replace('{name}', employee.name),
           });
       } catch (error) {
            toast({
               variant: 'destructive',
-              title: 'Error',
-              description: `Failed to save attendance for ${employee.name}.`,
+              title: T.error,
+              description: T.saveError.replace('{name}', employee.name),
           });
       }
   };
@@ -188,8 +222,8 @@ export default function AttendanceClientPage({
     XLSX.utils.book_append_sheet(workbook, worksheet, "Attendance");
     XLSX.writeFile(workbook, `absensi_${period}.xlsx`);
     toast({
-      title: 'Success!',
-      description: 'Attendance data has been exported.',
+      title: T.success,
+      description: T.exportSuccess,
     });
   };
 
@@ -228,16 +262,16 @@ export default function AttendanceClientPage({
             try {
               await importAttendanceRecords(recordsToImport);
               toast({
-                title: 'Success!',
-                description: 'Attendance data has been imported successfully.',
+                title: T.success,
+                description: T.importSuccess,
               });
               // Refetch data for the current period to update the view
               await handlePeriodChange(period);
             } catch (importError) {
                toast({
                 variant: "destructive",
-                title: 'Import Error',
-                description: 'Failed to save imported data to the database.',
+                title: T.importErrorTitle,
+                description: T.importError,
               });
             }
           });
@@ -246,8 +280,8 @@ export default function AttendanceClientPage({
           console.error("Error reading file:", error);
            toast({
             variant: "destructive",
-            title: 'File Read Error',
-            description: 'Failed to read the Excel file.',
+            title: T.fileReadError,
+            description: T.fileReadError,
           });
         } finally {
             if(fileInputRef.current) {
@@ -265,20 +299,20 @@ export default function AttendanceClientPage({
       <CardHeader>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <CardTitle>Input Absensi Karyawan</CardTitle>
+            <CardTitle>{T.title}</CardTitle>
             <CardDescription>
-              Masukkan jumlah kehadiran, lembur, dan potongan untuk setiap karyawan. Data disimpan otomatis.
+              {T.description}
             </CardDescription>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Select value={positionFilter} onValueChange={setPositionFilter}>
               <SelectTrigger className="w-full md:w-[180px]">
-                  <SelectValue placeholder="Filter by position" />
+                  <SelectValue placeholder={T.filterByPosition} />
               </SelectTrigger>
               <SelectContent>
                   {positions.map((pos) => (
                       <SelectItem key={pos} value={pos}>
-                          {pos === 'all' ? 'Semua Jabatan' : pos}
+                          {pos === 'all' ? T.allPositions : pos}
                       </SelectItem>
                   ))}
               </SelectContent>
@@ -300,11 +334,11 @@ export default function AttendanceClientPage({
               />
             <Button variant="outline" onClick={handleImportClick} disabled={isImporting}>
               {isImporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-              Import
+              {T.import}
             </Button>
             <Button variant="outline" onClick={handleExport}>
               <Download className="mr-2 h-4 w-4" />
-              Export
+              {T.export}
             </Button>
           </div>
         </div>
@@ -318,14 +352,14 @@ export default function AttendanceClientPage({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Karyawan</TableHead>
-              <TableHead>Jabatan</TableHead>
-              <TableHead className="w-[180px]">Kehadiran (hari)</TableHead>
-              <TableHead className="w-[180px]">Jam Lembur</TableHead>
-              <TableHead className="w-[180px]">Bonus</TableHead>
-              <TableHead className="w-[180px]">Potongan ID Card</TableHead>
-              <TableHead className="w-[180px]">Potongan SIMPER</TableHead>
-              <TableHead className="w-[180px]">Potongan Denda</TableHead>
+              <TableHead>{T.employee}</TableHead>
+              <TableHead>{T.position}</TableHead>
+              <TableHead className="w-[180px]">{T.attendanceDays}</TableHead>
+              <TableHead className="w-[180px]">{T.overtimeHours}</TableHead>
+              <TableHead className="w-[180px]">{T.bonus}</TableHead>
+              <TableHead className="w-[180px]">{T.idCardDeduction}</TableHead>
+              <TableHead className="w-[180px]">{T.simperDeduction}</TableHead>
+              <TableHead className="w-[180px]">{T.fineDeduction}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -405,7 +439,7 @@ export default function AttendanceClientPage({
             ) : (
               <TableRow>
                 <TableCell colSpan={8} className="h-24 text-center">
-                  Tidak ada data karyawan ditemukan untuk filter ini.
+                  {T.noData}
                 </TableCell>
               </TableRow>
             )}
