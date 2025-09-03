@@ -6,6 +6,7 @@ import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
 import type { User, Employee } from '@/lib/types';
 import { cookies } from 'next/headers';
+import { getEmployee } from './employees';
 
 const SESSION_COOKIE_NAME = 'employee-session';
 
@@ -92,14 +93,16 @@ export async function getEmployeeSession(): Promise<Employee | null> {
 
     if (sessionCookie) {
         try {
-            const sessionData = JSON.parse(sessionCookie.value) as Employee;
+            const sessionData = JSON.parse(sessionCookie.value);
             // Basic validation to ensure the session object is what we expect
-            if (sessionData && sessionData.id && sessionData.email) {
-                 return sessionData;
+            if (sessionData && sessionData.id) {
+                 // Fetch the full, up-to-date employee record from the database
+                 const employee = await getEmployee(sessionData.id);
+                 return employee;
             }
             return null;
         } catch (error) {
-            console.error("Error parsing session cookie:", error);
+            console.error("Error parsing session cookie or fetching employee:", error);
             return null;
         }
     }
