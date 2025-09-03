@@ -27,6 +27,7 @@ import { getLeaveRequests } from '@/actions/leave';
 import { getPositions } from '@/actions/positions';
 import { getRoles } from '@/actions/roles';
 import { getUsers } from '@/actions/users';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
 // Helper to convert hex to HSL string
@@ -99,6 +100,10 @@ export default function SettingsPage() {
     
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
+        setSettings(prev => prev ? { ...prev, [name]: value } : { [name]: value } as AppSettings);
+    }
+    
+    const handleSelectChange = (name: keyof AppSettings, value: string) => {
         setSettings(prev => prev ? { ...prev, [name]: value } : { [name]: value } as AppSettings);
     }
 
@@ -275,9 +280,23 @@ export default function SettingsPage() {
                             </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="appName">Application Name</Label>
-                            <Input id="appName" name="appName" value={settings.appName || ''} onChange={handleInputChange} />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <Label htmlFor="appName">Application Name</Label>
+                                <Input id="appName" name="appName" value={settings.appName || ''} onChange={handleInputChange} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="language">Language</Label>
+                                <Select value={settings.language || 'id'} onValueChange={(value) => handleSelectChange('language', value)}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select Language" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="id">Bahasa Indonesia</SelectItem>
+                                        <SelectItem value="en">English</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </div>
 
                         <div className="space-y-2">

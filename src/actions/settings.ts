@@ -21,6 +21,7 @@ export async function getSettings(): Promise<AppSettings> {
       primaryColor: '#136F63',
       backgroundColor: '#D2E9E6',
       accentColor: '#877795',
+      language: 'id',
     };
   }
   
@@ -38,6 +39,7 @@ export async function getSettings(): Promise<AppSettings> {
       primaryColor: '#136F63',
       backgroundColor: '#D2E9E6',
       accentColor: '#877795',
+      language: 'id',
   };
 }
 

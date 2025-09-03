@@ -105,6 +105,7 @@ export type AppSettings = {
   primaryColor?: string;
   backgroundColor?: string;
   accentColor?: string;
+  language?: 'id' | 'en';
 }
 
 export type AttendanceRecord = {
