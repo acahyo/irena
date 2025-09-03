@@ -15,9 +15,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, Upload, Download, ShieldCheck } from 'lucide-react';
+import { Loader2, Upload, Download, ShieldCheck, GripVertical } from 'lucide-react';
 import { getSettings, saveSettings } from '@/actions/settings';
-import type { AppSettings, Role } from '@/lib/types';
+import type { AppSettings, Role, MenuOrderItem } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
@@ -86,6 +86,8 @@ export default function SettingsPage() {
     const [roles, setRoles] = useState<Role[]>([]);
     const [permissions, setPermissions] = useState<Record<string, string[]>>({});
     const [savingPermissions, setSavingPermissions] = useState(false);
+    const [menuOrder, setMenuOrder] = useState<MenuOrderItem[]>([]);
+    const [draggedItem, setDraggedItem] = useState<MenuOrderItem | null>(null);
 
     useEffect(() => {
         const fetchInitialData = async () => {
@@ -103,6 +105,12 @@ export default function SettingsPage() {
                     initialPermissions[role.id] = role.accessibleMenus || [];
                 });
                 setPermissions(initialPermissions);
+
+                const existingMenuOrder = settingsData.menuOrder || [];
+                const allMenuIds = new Set(allMenus.map(m => m.id));
+                const existingMenuIds = new Set(existingMenuOrder.map(m => m.id));
+                const newMenuItems = allMenus.filter(m => !existingMenuIds.has(m.id)).map(m => ({ id: m.id }));
+                setMenuOrder([...existingMenuOrder, ...newMenuItems]);
 
             } catch (error) {
                 toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch settings data.' });
@@ -179,6 +187,7 @@ export default function SettingsPage() {
             const settingsToSave: Omit<AppSettings, 'id'> = {
                 ...settings,
                 logo: logoPreview || '',
+                menuOrder: menuOrder,
             };
 
             await saveSettings(settingsToSave);
@@ -278,6 +287,32 @@ export default function SettingsPage() {
         </div>
     );
     
+    // Drag and drop handlers
+    const handleDragStart = (e: React.DragEvent<HTMLDivElement>, item: MenuOrderItem) => {
+        setDraggedItem(item);
+    };
+
+    const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+    };
+
+    const handleDrop = (e: React.DragEvent<HTMLDivElement>, targetItem: MenuOrderItem) => {
+        e.preventDefault();
+        if (!draggedItem || draggedItem.id === targetItem.id) {
+            return;
+        }
+
+        const currentIndex = menuOrder.findIndex(item => item.id === draggedItem.id);
+        const targetIndex = menuOrder.findIndex(item => item.id === targetItem.id);
+
+        const newMenuOrder = [...menuOrder];
+        const [removed] = newMenuOrder.splice(currentIndex, 1);
+        newMenuOrder.splice(targetIndex, 0, removed);
+
+        setMenuOrder(newMenuOrder);
+        setDraggedItem(null);
+    };
+
     if (pageLoading || !settings) {
         return (
              <div className="space-y-6">
@@ -314,15 +349,16 @@ export default function SettingsPage() {
 
     return (
         <div className="space-y-6">
-            <Card>
-                <CardHeader>
-                    <CardTitle>{lang === 'id' ? 'Pengaturan Aplikasi' : 'Application Settings'}</CardTitle>
-                    <CardDescription>
-                        {lang === 'id' ? 'Kelola branding dan tampilan aplikasi Anda.' : 'Manage your application\'s branding and appearance.'}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <form onSubmit={handleSubmit} className="space-y-8">
+            <form onSubmit={handleSubmit}>
+                <div className="space-y-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>{lang === 'id' ? 'Pengaturan Aplikasi' : 'Application Settings'}</CardTitle>
+                        <CardDescription>
+                            {lang === 'id' ? 'Kelola branding dan tampilan aplikasi Anda.' : 'Manage your application\'s branding and appearance.'}
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-8">
                         <div className="space-y-2">
                             <Label>{lang === 'id' ? 'Logo Aplikasi' : 'Application Logo'}</Label>
                             <div className="flex items-center gap-4">
@@ -380,69 +416,94 @@ export default function SettingsPage() {
                                <ColorInput label={lang === 'id' ? 'Warna Aksen' : 'Accent Color'} id="accentColor" value={settings.accentColor || '#877795'} onChange={handleInputChange} />
                             </CardContent>
                         </Card>
+                    </CardContent>
+                </Card>
 
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Urutan Menu Sidebar</CardTitle>
+                        <CardDescription>Seret dan lepas untuk mengatur urutan menu utama di sidebar.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-2 rounded-md border p-2">
+                            {menuOrder.map(item => (
+                                <div
+                                    key={item.id}
+                                    draggable
+                                    onDragStart={(e) => handleDragStart(e, item)}
+                                    onDragOver={handleDragOver}
+                                    onDrop={(e) => handleDrop(e, item)}
+                                    className="flex items-center gap-2 rounded-md p-2 bg-background hover:bg-muted cursor-grab active:cursor-grabbing"
+                                >
+                                    <GripVertical className="h-5 w-5 text-muted-foreground" />
+                                    <span>{allMenus.find(m => m.id === item.id)?.label || item.id}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <ShieldCheck /> {lang === 'id' ? 'Hak Akses Menu Peran' : 'Role Menu Access'}
+                        </CardTitle>
+                        <CardDescription>
+                            {lang === 'id' ? 'Atur menu mana yang dapat diakses oleh setiap peran pengguna. Peran Administrator selalu memiliki akses penuh.' : 'Set which menus are accessible to each user role. The Administrator role always has full access.'}
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {roles.filter(r => r.name.toLowerCase() !== 'administrator').map(role => (
+                            <div key={role.id} className="border p-4 rounded-md">
+                                <h4 className="font-semibold mb-3">{role.name}</h4>
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                    {allMenus.map(menu => (
+                                        <div key={menu.id} className="flex items-center space-x-2">
+                                            <Checkbox
+                                                id={`${role.id}-${menu.id}`}
+                                                checked={permissions[role.id]?.includes(menu.id)}
+                                                onCheckedChange={(checked) => handlePermissionChange(role.id, menu.id, !!checked)}
+                                            />
+                                            <Label htmlFor={`${role.id}-${menu.id}`} className="font-normal cursor-pointer">
+                                                {menu.label}
+                                            </Label>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
                         <div className="flex justify-end pt-4">
-                            <Button type="submit" disabled={loading}>
-                                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                {lang === 'id' ? 'Simpan Pengaturan' : 'Save Settings'}
+                            <Button type="button" onClick={handleSavePermissions} disabled={savingPermissions}>
+                                {savingPermissions && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                {lang === 'id' ? 'Simpan Hak Akses' : 'Save Permissions'}
                             </Button>
                         </div>
-                    </form>
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <ShieldCheck /> {lang === 'id' ? 'Hak Akses Menu Peran' : 'Role Menu Access'}
-                    </CardTitle>
-                    <CardDescription>
-                        {lang === 'id' ? 'Atur menu mana yang dapat diakses oleh setiap peran pengguna. Peran Administrator selalu memiliki akses penuh.' : 'Set which menus are accessible to each user role. The Administrator role always has full access.'}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    {roles.filter(r => r.name.toLowerCase() !== 'administrator').map(role => (
-                        <div key={role.id} className="border p-4 rounded-md">
-                            <h4 className="font-semibold mb-3">{role.name}</h4>
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                {allMenus.map(menu => (
-                                    <div key={menu.id} className="flex items-center space-x-2">
-                                        <Checkbox
-                                            id={`${role.id}-${menu.id}`}
-                                            checked={permissions[role.id]?.includes(menu.id)}
-                                            onCheckedChange={(checked) => handlePermissionChange(role.id, menu.id, !!checked)}
-                                        />
-                                        <Label htmlFor={`${role.id}-${menu.id}`} className="font-normal cursor-pointer">
-                                            {menu.label}
-                                        </Label>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    ))}
-                    <div className="flex justify-end pt-4">
-                        <Button onClick={handleSavePermissions} disabled={savingPermissions}>
-                            {savingPermissions && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            {lang === 'id' ? 'Simpan Hak Akses' : 'Save Permissions'}
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>{lang === 'id' ? 'Cadangan Data' : 'Data Backup'}</CardTitle>
+                        <CardDescription>
+                            {lang === 'id' ? 'Unduh semua data dari database Firestore sebagai file .zip yang berisi file JSON untuk setiap koleksi.' : 'Download all data from the Firestore database as a .zip file containing JSON files for each collection.'}
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Button type="button" onClick={handleDownloadBackup} disabled={downloading}>
+                            {downloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                            {downloading ? (lang === 'id' ? 'Mengunduh...' : 'Downloading...') : (lang === 'id' ? 'Unduh Cadangan Data (JSON)' : 'Download Data Backup (JSON)')}
                         </Button>
-                    </div>
-                </CardContent>
-            </Card>
-
-             <Card>
-                <CardHeader>
-                    <CardTitle>{lang === 'id' ? 'Cadangan Data' : 'Data Backup'}</CardTitle>
-                    <CardDescription>
-                        {lang === 'id' ? 'Unduh semua data dari database Firestore sebagai file .zip yang berisi file JSON untuk setiap koleksi.' : 'Download all data from the Firestore database as a .zip file containing JSON files for each collection.'}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Button onClick={handleDownloadBackup} disabled={downloading}>
-                        {downloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-                        {downloading ? (lang === 'id' ? 'Mengunduh...' : 'Downloading...') : (lang === 'id' ? 'Unduh Cadangan Data (JSON)' : 'Download Data Backup (JSON)')}
+                    </CardContent>
+                </Card>
+                
+                <div className="flex justify-end pt-4 sticky bottom-0 bg-background/80 py-4 backdrop-blur-sm">
+                    <Button type="submit" disabled={loading || savingPermissions}>
+                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {lang === 'id' ? 'Simpan Semua Pengaturan' : 'Save All Settings'}
                     </Button>
-                </CardContent>
-            </Card>
+                </div>
+              </div>
+            </form>
         </div>
     );
 }

@@ -72,19 +72,29 @@ export default function DashboardClientLayout({
   const pathname = usePathname();
   const lang = settings.language || 'id';
   
-  const allNavItems = useMemo(() => getAllNavItems(lang), [lang]);
+  const defaultNavItems = useMemo(() => getAllNavItems(lang), [lang]);
+
+  const orderedNavItems = useMemo(() => {
+    if (!settings.menuOrder || settings.menuOrder.length === 0) {
+        return defaultNavItems;
+    }
+    const menuMap = new Map(defaultNavItems.map(item => [item.id, item]));
+    return settings.menuOrder
+        .map(orderItem => menuMap.get(orderItem.id))
+        .filter((item): item is typeof defaultNavItems[0] => !!item);
+  }, [defaultNavItems, settings.menuOrder]);
   
   const navItems = useMemo(() => {
     if (!role) return [];
-    if (role.name.toLowerCase() === 'administrator') return allNavItems;
+    if (role.name.toLowerCase() === 'administrator') return orderedNavItems;
 
     const accessibleMenus = role.accessibleMenus || [];
-    return allNavItems.filter(item => accessibleMenus.includes(item.id));
-  }, [allNavItems, role]);
+    return orderedNavItems.filter(item => accessibleMenus.includes(item.id));
+  }, [orderedNavItems, role]);
 
 
   const getActiveLabel = () => {
-    for (const item of allNavItems) { // Check against all possible items
+    for (const item of defaultNavItems) { // Check against all possible items
         if ('href' in item && item.href && (item.exact ? pathname === item.href : pathname.startsWith(item.href))) {
             return item.label;
         }
@@ -121,7 +131,7 @@ export default function DashboardClientLayout({
         <SidebarContent>
           <SidebarMenu>
             {navItems.map((item, index) => (
-              <SidebarMenuItem key={`${item.label}-${index}`}>
+              <SidebarMenuItem key={`${item.id}-${index}`}>
                 {'href' in item && item.href ? (
                     <Link href={item.href} passHref>
                         <SidebarMenuButton

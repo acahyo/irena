@@ -101,6 +101,10 @@ export type Position = {
     allowances?: Allowance[];
 };
 
+export type MenuOrderItem = {
+  id: string;
+  subItems?: string[];
+}
 
 export type AppSettings = {
   id?: string;
@@ -111,6 +115,7 @@ export type AppSettings = {
   backgroundColor?: string;
   accentColor?: string;
   language?: 'id' | 'en';
+  menuOrder?: MenuOrderItem[];
 }
 
 export type AttendanceRecord = {
