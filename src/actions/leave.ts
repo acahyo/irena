@@ -45,6 +45,8 @@ export async function getLeaveRequestsByEmployeeId(employeeId: string): Promise<
 export async function createLeaveRequest(request: Omit<LeaveRequest, 'id' | 'status'>): Promise<string> {
   const docRef = await addDoc(collection(db, 'leaveRequests'), {
       ...request,
+      startDate: new Date(request.startDate),
+      endDate: new Date(request.endDate),
       status: 'Pending',
   });
   return docRef.id;

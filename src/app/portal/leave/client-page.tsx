@@ -40,6 +40,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ArrowLeft, Calendar as CalendarIcon, Loader2, PlusCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 
 
 const getStatusVariant = (status: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
@@ -68,6 +69,7 @@ export default function MyLeaveClientPage({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const lang = settings.language || 'id';
 
@@ -92,16 +94,6 @@ export default function MyLeaveClientPage({
     submitting: lang === 'id' ? 'Mengirim...' : 'Submitting...',
   }), [lang]);
   
-  const refreshRequests = async () => {
-    const updatedRequestsRaw = await getLeaveRequestsByEmployeeId(employee.id);
-    const updatedRequests = updatedRequestsRaw.map(req => ({
-        ...req,
-        startDate: format(new Date(req.startDate), 'PPP'),
-        endDate: format(new Date(req.endDate), 'PPP'),
-    }));
-    setLeaveRequests(updatedRequests as LeaveRequest[]);
-  };
-
   const NewLeaveForm = () => {
     const [startDate, setStartDate] = useState<Date | undefined>();
     const [endDate, setEndDate] = useState<Date | undefined>();
@@ -128,8 +120,8 @@ export default function MyLeaveClientPage({
             try {
                 await createLeaveRequest(leaveData);
                 toast({ title: T.success, description: T.requestSuccess });
-                await refreshRequests();
                 setIsDialogOpen(false);
+                router.refresh(); // This will re-fetch server data and re-render the page
             } catch (error) {
                 toast({ variant: 'destructive', title: T.error, description: T.requestError });
             }
@@ -218,8 +210,8 @@ export default function MyLeaveClientPage({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {leaveRequests.length > 0 ? (
-                leaveRequests.map((req) => (
+              {initialRequests.length > 0 ? (
+                initialRequests.map((req) => (
                   <TableRow key={req.id}>
                     <TableCell>{req.startDate as string}</TableCell>
                     <TableCell>{req.endDate as string}</TableCell>
