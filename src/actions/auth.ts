@@ -3,11 +3,23 @@
 
 import { createHash } from 'crypto';
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
 import type { User, Employee } from '@/lib/types';
 import { cookies } from 'next/headers';
 
 const SESSION_COOKIE_NAME = 'employee-session';
+
+// Helper to convert Firestore Timestamps to Dates in a document
+function convertTimestampsToDates(docData: any) {
+    if (!docData) return docData;
+    const data = { ...docData };
+    for (const key in data) {
+        if (data[key] instanceof Timestamp) {
+            data[key] = data[key].toDate();
+        }
+    }
+    return data;
+}
 
 export async function authenticateUser({ email, password }: Pick<User, 'email' | 'password'>): Promise<{ success: boolean; message: string; userType: 'admin' | 'employee' | null }> {
     if (!email || !password) {
@@ -43,9 +55,12 @@ export async function authenticateUser({ email, password }: Pick<User, 'email' |
             
             if (employee.password === hashedPassword) {
                 // Set employee session cookie
+                // IMPORTANT: Only store serializable data in the cookie. Avoid complex objects like Dates.
                 const sessionData = {
                     id: employeeDoc.id,
-                    ...employee
+                    name: employee.name,
+                    email: employee.email,
+                    avatar: employee.avatar,
                 };
                 cookies().set(SESSION_COOKIE_NAME, JSON.stringify(sessionData), {
                     httpOnly: true,
