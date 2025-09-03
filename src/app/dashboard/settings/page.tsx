@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,9 +15,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, Upload, Download } from 'lucide-react';
+import { Loader2, Upload, Download, ShieldCheck } from 'lucide-react';
 import { getSettings, saveSettings } from '@/actions/settings';
-import type { AppSettings } from '@/lib/types';
+import type { AppSettings, Role } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
@@ -25,9 +25,10 @@ import { getDepartments } from '@/actions/departments';
 import { getEmployees } from '@/actions/employees';
 import { getLeaveRequests } from '@/actions/leave';
 import { getPositions } from '@/actions/positions';
-import { getRoles } from '@/actions/roles';
+import { getRoles, updateRolePermissions } from '@/actions/roles';
 import { getUsers } from '@/actions/users';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 
 
 // Helper to convert hex to HSL string
@@ -59,6 +60,21 @@ const hexToHslString = (hex: string | undefined): string | undefined => {
     return `${h} ${s}% ${l}%`;
 };
 
+const allMenus = [
+  { id: 'dashboard', label: 'Dasbor' },
+  { id: 'employees', label: 'Karyawan' },
+  { id: 'leave-schedule', label: 'Jadwal Cuti' },
+  { id: 'payroll', label: 'Payroll' },
+  { id: 'attendance', label: 'Input Absensi' },
+  { id: 'payslip', label: 'Cetak Slip Gaji' },
+  { id: 'payslip-collective', label: 'Slip Gaji Kolektif' },
+  { id: 'department', label: 'Departemen' },
+  { id: 'position', label: 'Jabatan & Gaji' },
+  { id: 'users', label: 'Users' },
+  { id: 'roles', label: 'Roles' },
+  { id: 'settings', label: 'Pengaturan' },
+];
+
 
 export default function SettingsPage() {
     const { toast } = useToast();
@@ -67,23 +83,70 @@ export default function SettingsPage() {
     const [loading, setLoading] = useState(false);
     const [downloading, setDownloading] = useState(false);
     const [pageLoading, setPageLoading] = useState(true);
+    const [roles, setRoles] = useState<Role[]>([]);
+    const [permissions, setPermissions] = useState<Record<string, string[]>>({});
+    const [savingPermissions, setSavingPermissions] = useState(false);
 
     useEffect(() => {
-        const fetchSettings = async () => {
+        const fetchInitialData = async () => {
             setPageLoading(true);
             try {
-                const data = await getSettings();
-                const { logo, id, ...rest } = data;
+                const [settingsData, rolesData] = await Promise.all([getSettings(), getRoles()]);
+                
+                const { logo, id, ...rest } = settingsData;
                 setSettings(rest);
                 setLogoPreview(logo);
+                
+                setRoles(rolesData);
+                const initialPermissions: Record<string, string[]> = {};
+                rolesData.forEach(role => {
+                    initialPermissions[role.id] = role.accessibleMenus || [];
+                });
+                setPermissions(initialPermissions);
+
             } catch (error) {
-                toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch settings.' });
+                toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch settings data.' });
             } finally {
                 setPageLoading(false);
             }
         };
-        fetchSettings();
+        fetchInitialData();
     }, [toast]);
+    
+    const lang = settings?.language || 'id';
+
+    const handlePermissionChange = (roleId: string, menuId: string, checked: boolean) => {
+        setPermissions(prev => {
+            const currentMenus = prev[roleId] || [];
+            const newMenus = checked
+                ? [...currentMenus, menuId]
+                : currentMenus.filter(id => id !== menuId);
+            return { ...prev, [roleId]: newMenus };
+        });
+    };
+
+    const handleSavePermissions = async () => {
+        setSavingPermissions(true);
+        try {
+            const updates = Object.entries(permissions).map(([roleId, accessibleMenus]) => ({
+                roleId,
+                accessibleMenus,
+            }));
+            await updateRolePermissions(updates);
+            toast({
+                title: 'Success!',
+                description: lang === 'id' ? 'Hak akses menu telah diperbarui.' : 'Menu permissions have been updated.',
+            });
+        } catch (error) {
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: lang === 'id' ? 'Gagal menyimpan hak akses.' : 'Failed to save permissions.',
+            });
+        } finally {
+            setSavingPermissions(false);
+        }
+    };
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -156,7 +219,7 @@ export default function SettingsPage() {
                 employees, 
                 leaveRequests, 
                 positions, 
-                roles, 
+                rolesData, 
                 users, 
                 appSettings
             ] = await Promise.all([
@@ -173,7 +236,7 @@ export default function SettingsPage() {
             zip.file("employees.json", JSON.stringify(employees, null, 2));
             zip.file("leaveRequests.json", JSON.stringify(leaveRequests, null, 2));
             zip.file("positions.json", JSON.stringify(positions, null, 2));
-            zip.file("roles.json", JSON.stringify(roles, null, 2));
+            zip.file("roles.json", JSON.stringify(rolesData, null, 2));
             zip.file("users.json", JSON.stringify(users, null, 2));
             zip.file("settings.json", JSON.stringify(appSettings, null, 2));
 
@@ -253,15 +316,15 @@ export default function SettingsPage() {
         <div className="space-y-6">
             <Card>
                 <CardHeader>
-                    <CardTitle>Application Settings</CardTitle>
+                    <CardTitle>{lang === 'id' ? 'Pengaturan Aplikasi' : 'Application Settings'}</CardTitle>
                     <CardDescription>
-                        Manage your application's branding and appearance.
+                        {lang === 'id' ? 'Kelola branding dan tampilan aplikasi Anda.' : 'Manage your application\'s branding and appearance.'}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleSubmit} className="space-y-8">
                         <div className="space-y-2">
-                            <Label>Application Logo</Label>
+                            <Label>{lang === 'id' ? 'Logo Aplikasi' : 'Application Logo'}</Label>
                             <div className="flex items-center gap-4">
                                 <Avatar className="h-24 w-24 rounded-md">
                                     <AvatarImage src={logoPreview || undefined} alt="App Logo" className="object-contain" />
@@ -282,11 +345,11 @@ export default function SettingsPage() {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <Label htmlFor="appName">Application Name</Label>
+                                <Label htmlFor="appName">{lang === 'id' ? 'Nama Aplikasi' : 'Application Name'}</Label>
                                 <Input id="appName" name="appName" value={settings.appName || ''} onChange={handleInputChange} />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="language">Language</Label>
+                                <Label htmlFor="language">{lang === 'id' ? 'Bahasa' : 'Language'}</Label>
                                 <Select value={settings.language || 'id'} onValueChange={(value) => handleSelectChange('language', value)}>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select Language" />
@@ -300,45 +363,83 @@ export default function SettingsPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="appDescription">Application Description</Label>
+                            <Label htmlFor="appDescription">{lang === 'id' ? 'Deskripsi Aplikasi' : 'Application Description'}</Label>
                             <Textarea id="appDescription" name="appDescription" value={settings.appDescription || ''} onChange={handleInputChange} />
                         </div>
 
                         <Card>
                             <CardHeader>
-                                <CardTitle>Theme Colors</CardTitle>
+                                <CardTitle>{lang === 'id' ? 'Warna Tema' : 'Theme Colors'}</CardTitle>
                                 <CardDescription>
-                                   Changes will be applied application-wide after saving.
+                                   {lang === 'id' ? 'Perubahan akan diterapkan di seluruh aplikasi setelah disimpan.' : 'Changes will be applied application-wide after saving.'}
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                               <ColorInput label="Primary Color" id="primaryColor" value={settings.primaryColor || '#136F63'} onChange={handleInputChange} />
-                               <ColorInput label="Background Color" id="backgroundColor" value={settings.backgroundColor || '#D2E9E6'} onChange={handleInputChange} />
-                               <ColorInput label="Accent Color" id="accentColor" value={settings.accentColor || '#877795'} onChange={handleInputChange} />
+                               <ColorInput label={lang === 'id' ? 'Warna Primer' : 'Primary Color'} id="primaryColor" value={settings.primaryColor || '#136F63'} onChange={handleInputChange} />
+                               <ColorInput label={lang === 'id' ? 'Warna Latar' : 'Background Color'} id="backgroundColor" value={settings.backgroundColor || '#D2E9E6'} onChange={handleInputChange} />
+                               <ColorInput label={lang === 'id' ? 'Warna Aksen' : 'Accent Color'} id="accentColor" value={settings.accentColor || '#877795'} onChange={handleInputChange} />
                             </CardContent>
                         </Card>
 
                         <div className="flex justify-end pt-4">
                             <Button type="submit" disabled={loading}>
                                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Save Settings
+                                {lang === 'id' ? 'Simpan Pengaturan' : 'Save Settings'}
                             </Button>
                         </div>
                     </form>
                 </CardContent>
             </Card>
 
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <ShieldCheck /> {lang === 'id' ? 'Hak Akses Menu Peran' : 'Role Menu Access'}
+                    </CardTitle>
+                    <CardDescription>
+                        {lang === 'id' ? 'Atur menu mana yang dapat diakses oleh setiap peran pengguna. Peran Administrator selalu memiliki akses penuh.' : 'Set which menus are accessible to each user role. The Administrator role always has full access.'}
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    {roles.filter(r => r.name.toLowerCase() !== 'administrator').map(role => (
+                        <div key={role.id} className="border p-4 rounded-md">
+                            <h4 className="font-semibold mb-3">{role.name}</h4>
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                {allMenus.map(menu => (
+                                    <div key={menu.id} className="flex items-center space-x-2">
+                                        <Checkbox
+                                            id={`${role.id}-${menu.id}`}
+                                            checked={permissions[role.id]?.includes(menu.id)}
+                                            onCheckedChange={(checked) => handlePermissionChange(role.id, menu.id, !!checked)}
+                                        />
+                                        <Label htmlFor={`${role.id}-${menu.id}`} className="font-normal cursor-pointer">
+                                            {menu.label}
+                                        </Label>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                    <div className="flex justify-end pt-4">
+                        <Button onClick={handleSavePermissions} disabled={savingPermissions}>
+                            {savingPermissions && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {lang === 'id' ? 'Simpan Hak Akses' : 'Save Permissions'}
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+
              <Card>
                 <CardHeader>
-                    <CardTitle>Data Backup</CardTitle>
+                    <CardTitle>{lang === 'id' ? 'Cadangan Data' : 'Data Backup'}</CardTitle>
                     <CardDescription>
-                        Download all data from the Firestore database as a .zip file containing JSON files for each collection.
+                        {lang === 'id' ? 'Unduh semua data dari database Firestore sebagai file .zip yang berisi file JSON untuk setiap koleksi.' : 'Download all data from the Firestore database as a .zip file containing JSON files for each collection.'}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Button onClick={handleDownloadBackup} disabled={downloading}>
                         {downloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-                        {downloading ? 'Downloading...' : 'Download Data Backup (JSON)'}
+                        {downloading ? (lang === 'id' ? 'Mengunduh...' : 'Downloading...') : (lang === 'id' ? 'Unduh Cadangan Data (JSON)' : 'Download Data Backup (JSON)')}
                     </Button>
                 </CardContent>
             </Card>

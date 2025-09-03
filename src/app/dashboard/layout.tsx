@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import DashboardClientLayout from "./layout-client";
 import { getSettings } from "@/actions/settings";
 import { getUsers } from "@/actions/users";
-import type { User } from "@/lib/types";
+import { getRoles } from "@/actions/roles";
+import type { User, Role } from "@/lib/types";
 
 
 export default async function DashboardLayout({
@@ -14,7 +15,7 @@ export default async function DashboardLayout({
   const settings = await getSettings();
   // NOTE: This is a placeholder for a real authentication system.
   // In a real app, you would get the logged-in user from a session.
-  const users = await getUsers();
+  const [users, roles] = await Promise.all([getUsers(), getRoles()]);
   const currentUser = users.find(u => u.email === 'admin@irena.com') || users.find(u => u.role?.toLowerCase().includes('admin')) || users[0];
 
   if (!currentUser) {
@@ -23,10 +24,13 @@ export default async function DashboardLayout({
     redirect('/');
   }
 
+  const currentUserRole = roles.find(r => r.name === currentUser.role) || null;
+
   return (
     <DashboardClientLayout
       settings={settings}
       user={currentUser}
+      role={currentUserRole}
     >
       {children}
     </DashboardClientLayout>

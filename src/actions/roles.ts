@@ -2,7 +2,7 @@
 'use server';
 
 import { db } from '@/lib/firebase';
-import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
 import type { Role } from '@/lib/types';
 
 // Get all roles
@@ -38,6 +38,17 @@ export async function updateRole(id: string, role: Partial<Role>): Promise<void>
   const docRef = doc(db, 'roles', id);
   await updateDoc(docRef, role);
 }
+
+// Update multiple role permissions
+export async function updateRolePermissions(updates: { roleId: string; accessibleMenus: string[] }[]): Promise<void> {
+    const batch = writeBatch(db);
+    updates.forEach(({ roleId, accessibleMenus }) => {
+        const docRef = doc(db, 'roles', roleId);
+        batch.update(docRef, { accessibleMenus });
+    });
+    await batch.commit();
+}
+
 
 // Delete a role
 export async function deleteRole(id: string): Promise<void> {

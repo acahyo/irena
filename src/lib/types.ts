@@ -70,6 +70,7 @@ export type Role = {
     id: string;
     name: string;
     description: string;
+    accessibleMenus?: string[];
 };
 
 export type LeaveRequest = {
@@ -90,9 +91,12 @@ export type Position = {
     // Harian
     dailyWage?: number;
     overtimeRate?: number;
-    // Bulanan
-    monthlySalary?: number; // Also used as Gaji Pokok for Direksi
-    // Dynamic Allowances
+    // Bulanan or Direksi
+    monthlySalary?: number; // Gaji Pokok
+    tunjanganJabatan?: number;
+    tunjanganKehadiran?: number;
+    tunjanganKinerja?: number;
+    // Dynamic Allowances for Bulanan
     allowances?: Allowance[];
 };
 

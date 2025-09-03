@@ -39,46 +39,52 @@ import {
   Wallet,
   WalletCards,
 } from "lucide-react";
-import type { AppSettings, User } from "@/lib/types";
+import type { AppSettings, User, Role } from "@/lib/types";
 
-const getNavItems = (lang: 'id' | 'en') => [
-  { href: "/dashboard", icon: LayoutDashboard, label: lang === 'id' ? "Dasbor" : "Dashboard", exact: true, roles: ["Administrator", "HR"] },
-  { href: "/dashboard/employees", icon: Users, label: lang === 'id' ? "Karyawan" : "Employees", roles: ["Administrator", "HR"] },
-  { href: "/dashboard/leave-schedule", icon: CalendarCheck, label: lang === 'id' ? "Jadwal Cuti" : "Leave Schedule", roles: ["Administrator", "HR"] },
-  { href: "/dashboard/payroll", icon: Wallet, label: "Payroll", roles: ["Administrator", "HR"] },
-  { href: "/dashboard/attendance", icon: ClipboardCheck, label: lang === 'id' ? "Input Absensi" : "Attendance Input", roles: ["Administrator", "HR"] },
-  { href: "/dashboard/payslip", icon: Printer, label: lang === 'id' ? "Cetak Slip Gaji" : "Print Payslip", roles: ["Administrator", "HR"] },
-  { href: "/dashboard/payslip-collective", icon: Printer, label: lang === 'id' ? "Slip Gaji Kolektif" : "Collective Payslip", roles: ["Administrator", "HR"] },
-  { href: "/dashboard/department", icon: Briefcase, label: lang === 'id' ? "Departemen" : "Department", roles: ["Administrator", "HR"] },
-  { href: "/dashboard/position", icon: WalletCards, label: lang === 'id' ? "Jabatan & Gaji" : "Position & Salary", roles: ["Administrator", "HR"] },
-  { href: "/dashboard/users", icon: UsersRound, label: "Users", roles: ["Administrator"] },
-  { href: "/dashboard/roles", icon: ShieldCheck, label: "Roles", roles: ["Administrator"] },
-  { href: "/dashboard/settings", icon: Settings, label: lang === 'id' ? "Pengaturan" : "Settings", roles: ["Administrator"] },
+
+const getAllNavItems = (lang: 'id' | 'en') => [
+  { id: 'dashboard', href: "/dashboard", icon: LayoutDashboard, label: lang === 'id' ? "Dasbor" : "Dashboard", exact: true },
+  { id: 'employees', href: "/dashboard/employees", icon: Users, label: lang === 'id' ? "Karyawan" : "Employees" },
+  { id: 'leave-schedule', href: "/dashboard/leave-schedule", icon: CalendarCheck, label: lang === 'id' ? "Jadwal Cuti" : "Leave Schedule" },
+  { id: 'payroll', href: "/dashboard/payroll", icon: Wallet, label: "Payroll" },
+  { id: 'attendance', href: "/dashboard/attendance", icon: ClipboardCheck, label: lang === 'id' ? "Input Absensi" : "Attendance Input" },
+  { id: 'payslip', href: "/dashboard/payslip", icon: Printer, label: lang === 'id' ? "Cetak Slip Gaji" : "Print Payslip" },
+  { id: 'payslip-collective', href: "/dashboard/payslip-collective", icon: Printer, label: lang === 'id' ? "Slip Gaji Kolektif" : "Collective Payslip" },
+  { id: 'department', href: "/dashboard/department", icon: Briefcase, label: lang === 'id' ? "Departemen" : "Department" },
+  { id: 'position', href: "/dashboard/position", icon: WalletCards, label: lang === 'id' ? "Jabatan & Gaji" : "Position & Salary" },
+  { id: 'users', href: "/dashboard/users", icon: UsersRound, label: "Users" },
+  { id: 'roles', href: "/dashboard/roles", icon: ShieldCheck, label: "Roles" },
+  { id: 'settings', href: "/dashboard/settings", icon: Settings, label: lang === 'id' ? "Pengaturan" : "Settings" },
 ];
+
 
 export default function DashboardClientLayout({
   children,
   settings,
   user,
+  role,
 }: {
   children: React.ReactNode;
   settings: AppSettings;
   user: User;
+  role: Role | null;
 }) {
   const pathname = usePathname();
   const lang = settings.language || 'id';
   
-  const userRole = user?.role || '';
+  const allNavItems = useMemo(() => getAllNavItems(lang), [lang]);
   
-  const allNavItems = useMemo(() => getNavItems(lang), [lang]);
+  const navItems = useMemo(() => {
+    if (!role) return [];
+    if (role.name.toLowerCase() === 'administrator') return allNavItems;
 
-  const navItems = allNavItems.filter(item => {
-    if (userRole.toLowerCase() === 'administrator') return true;
-    return item.roles.includes(userRole);
-  });
+    const accessibleMenus = role.accessibleMenus || [];
+    return allNavItems.filter(item => accessibleMenus.includes(item.id));
+  }, [allNavItems, role]);
+
 
   const getActiveLabel = () => {
-    for (const item of navItems) {
+    for (const item of allNavItems) { // Check against all possible items
         if ('href' in item && item.href && (item.exact ? pathname === item.href : pathname.startsWith(item.href))) {
             return item.label;
         }
