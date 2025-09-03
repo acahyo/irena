@@ -45,8 +45,7 @@ export async function authenticateUser({ email, password }: Pick<User, 'email' |
                 // Set employee session cookie
                 const sessionData = {
                     id: employeeDoc.id,
-                    email: employee.email,
-                    name: employee.name,
+                    ...employee
                 };
                 cookies().set(SESSION_COOKIE_NAME, JSON.stringify(sessionData), {
                     httpOnly: true,
@@ -75,8 +74,13 @@ export async function getEmployeeSession(): Promise<Employee | null> {
     if (sessionCookie) {
         try {
             const sessionData = JSON.parse(sessionCookie.value) as Employee;
-            return sessionData;
+            // Basic validation to ensure the session object is what we expect
+            if (sessionData && sessionData.id && sessionData.email) {
+                 return sessionData;
+            }
+            return null;
         } catch (error) {
+            console.error("Error parsing session cookie:", error);
             return null;
         }
     }
