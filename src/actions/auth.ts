@@ -21,7 +21,10 @@ function convertTimestampsToDates(docData: any) {
     return data;
 }
 
-export async function authenticateUser({ email, password }: Pick<User, 'email' | 'password'>): Promise<{ success: boolean; message: string; userType: 'admin' | 'employee' | null }> {
+export async function authenticateUser(
+    { email, password }: Pick<User, 'email' | 'password'>, 
+    userType: 'admin' | 'employee'
+): Promise<{ success: boolean; message: string; userType: 'admin' | 'employee' | null }> {
     if (!email || !password) {
         return { success: false, message: 'Email and password are required.', userType: null };
     }
@@ -29,51 +32,52 @@ export async function authenticateUser({ email, password }: Pick<User, 'email' |
     try {
         const hashedPassword = createHash('md5').update(password).digest('hex');
 
-        // 1. Check for Admin User
-        const usersRef = collection(db, 'users');
-        const adminQuery = query(usersRef, where('email', '==', email));
-        const adminSnapshot = await getDocs(adminQuery);
+        if (userType === 'admin') {
+            // Check for Admin User
+            const usersRef = collection(db, 'users');
+            const adminQuery = query(usersRef, where('email', '==', email));
+            const adminSnapshot = await getDocs(adminQuery);
 
-        if (!adminSnapshot.empty) {
-            const userDoc = adminSnapshot.docs[0];
-            const user = userDoc.data() as User;
+            if (!adminSnapshot.empty) {
+                const userDoc = adminSnapshot.docs[0];
+                const user = userDoc.data() as User;
 
-            if (user.password === hashedPassword) {
-                // Set admin session if needed, or handle as before
-                return { success: true, message: 'Admin login successful.', userType: 'admin' };
+                if (user.password === hashedPassword) {
+                    // In a real app, you'd set a session for the admin here as well.
+                    return { success: true, message: 'Admin login successful.', userType: 'admin' };
+                }
             }
-        }
+        } else if (userType === 'employee') {
+            // Check for Employee User
+            const employeesRef = collection(db, 'employees');
+            const employeeQuery = query(employeesRef, where('email', '==', email));
+            const employeeSnapshot = await getDocs(employeeQuery);
 
-        // 2. Check for Employee User
-        const employeesRef = collection(db, 'employees');
-        const employeeQuery = query(employeesRef, where('email', '==', email));
-        const employeeSnapshot = await getDocs(employeeQuery);
+            if (!employeeSnapshot.empty) {
+                const employeeDoc = employeeSnapshot.docs[0];
+                const employee = employeeDoc.data() as Employee;
+                
+                if (employee.password === hashedPassword) {
+                    // Set employee session cookie
+                    const sessionData = {
+                        id: employeeDoc.id,
+                        name: employee.name || 'Employee',
+                        email: employee.email || '',
+                        avatar: employee.avatar || '',
+                    };
+                    cookies().set(SESSION_COOKIE_NAME, JSON.stringify(sessionData), {
+                        httpOnly: true,
+                        secure: process.env.NODE_ENV === 'production',
+                        maxAge: 60 * 60 * 24 * 7, // 1 week
+                        path: '/',
+                    });
 
-        if (!employeeSnapshot.empty) {
-            const employeeDoc = employeeSnapshot.docs[0];
-            const employee = employeeDoc.data() as Employee;
-            
-            if (employee.password === hashedPassword) {
-                // Set employee session cookie
-                // IMPORTANT: Only store serializable data in the cookie. Avoid complex objects like Dates.
-                const sessionData = {
-                    id: employeeDoc.id,
-                    name: employee.name || 'Employee',
-                    email: employee.email || '',
-                    avatar: employee.avatar || '',
-                };
-                cookies().set(SESSION_COOKIE_NAME, JSON.stringify(sessionData), {
-                    httpOnly: true,
-                    secure: process.env.NODE_ENV === 'production',
-                    maxAge: 60 * 60 * 24 * 7, // 1 week
-                    path: '/',
-                });
-
-                return { success: true, message: 'Employee login successful.', userType: 'employee' };
+                    return { success: true, message: 'Employee login successful.', userType: 'employee' };
+                }
             }
         }
         
-        // 3. If no user found in either collection
+        // If no user found
         return { success: false, message: 'Invalid email or password.', userType: null };
 
     } catch (error) {

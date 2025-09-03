@@ -3,7 +3,7 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { LogIn, AlertCircle, User, Building } from 'lucide-react';
+import { LogIn, AlertCircle, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -21,7 +21,7 @@ import type { AppSettings } from '@/lib/types';
 import Link from 'next/link';
 
 
-export default function EmployeeLoginPageClient({ settings }: { settings: AppSettings }) {
+export default function AdminLoginPageClient({ settings }: { settings: AppSettings }) {
     const router = useRouter();
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -29,13 +29,13 @@ export default function EmployeeLoginPageClient({ settings }: { settings: AppSet
     const lang = settings.language || 'id';
 
     const T = useMemo(() => ({
-        welcome: lang === 'id' ? 'Selamat datang! Silakan masuk ke akun karyawan Anda.' : 'Welcome! Please sign in to your employee account.',
+        welcome: lang === 'id' ? 'Selamat datang kembali! Silakan masuk ke akun admin Anda.' : 'Welcome back! Please sign in to your admin account.',
         emailLabel: lang === 'id' ? 'Email' : 'Email',
         passwordLabel: lang === 'id' ? 'Kata Sandi' : 'Password',
         signInButton: lang === 'id' ? 'Masuk' : 'Sign In',
         signingInButton: lang === 'id' ? 'Sedang Masuk...' : 'Signing In...',
         defaultError: lang === 'id' ? 'Terjadi kesalahan tak terduga. Silakan coba lagi.' : 'An unexpected error occurred. Please try again.',
-        notAdmin: lang === 'id' ? 'Bukan karyawan? Masuk sebagai Admin' : 'Not an employee? Sign in as Admin',
+        notEmployee: lang === 'id' ? 'Bukan admin? Masuk sebagai Karyawan' : 'Not an admin? Sign in as Employee',
         authError: (msg: string) => {
             if (lang === 'id') {
                 if (msg.toLowerCase().includes('invalid')) return 'Email atau kata sandi tidak valid.';
@@ -54,10 +54,10 @@ export default function EmployeeLoginPageClient({ settings }: { settings: AppSet
         const email = formData.get('email') as string;
         const password = formData.get('password') as string;
 
-        const result = await authenticateUser({ email, password }, 'employee');
+        const result = await authenticateUser({ email, password }, 'admin');
 
         if (result.success) {
-            router.push('/portal');
+            router.push('/dashboard');
         } else {
             setError(T.authError(result.message || T.defaultError));
         }
@@ -73,12 +73,12 @@ export default function EmployeeLoginPageClient({ settings }: { settings: AppSet
                <Avatar className="h-[100px] w-[100px] rounded-lg">
                 {settings.logo && <AvatarImage src={settings.logo} alt={settings.appName || 'Logo'} />}
                 <AvatarFallback className="rounded-lg bg-primary text-primary-foreground">
-                    <User className="h-8 w-8" />
+                    <LogIn className="h-8 w-8" />
                 </AvatarFallback>
             </Avatar>
             </div>
             <CardTitle className="text-3xl font-bold tracking-tight">
-              {lang === 'id' ? 'Portal Karyawan' : 'Employee Portal'}
+              {settings.appName}
             </CardTitle>
             <CardDescription>
               {T.welcome}
@@ -115,9 +115,9 @@ export default function EmployeeLoginPageClient({ settings }: { settings: AppSet
               </Button>
             </form>
              <div className="mt-4 text-center text-sm">
-              <Link href="/" className="underline text-muted-foreground hover:text-primary">
-                 <div className="flex items-center justify-center gap-1">
-                    <Building className="h-4 w-4" /> {T.notAdmin}
+              <Link href="/login/employee" className="underline text-muted-foreground hover:text-primary">
+                <div className="flex items-center justify-center gap-1">
+                    <User className="h-4 w-4" /> {T.notEmployee}
                 </div>
               </Link>
             </div>
