@@ -58,5 +58,5 @@ export default async function MyProfilePage() {
     }))
   };
 
-  return <EmployeeProfileClientPage employee={employee} />;
+  return <EmployeeProfileClientPage employee={employee} isPortalView={true} />;
 }

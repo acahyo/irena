@@ -66,7 +66,7 @@ const formatCurrency = (amount: number | undefined | null) => {
 
 
 // The employee object passed here should have dates pre-formatted as strings
-export default function EmployeeProfileClientPage({ employee }: { employee: EmployeeWithPosition & { dateOfBirth?: string, messEntryDate?: string, contractStartDate?: string, contractEndDate?: string } }) {
+export default function EmployeeProfileClientPage({ employee, isPortalView = false }: { employee: EmployeeWithPosition & { dateOfBirth?: string, messEntryDate?: string, contractStartDate?: string, contractEndDate?: string }, isPortalView?: boolean }) {
     const router = useRouter();
     const { toast } = useToast();
 
@@ -136,12 +136,14 @@ export default function EmployeeProfileClientPage({ employee }: { employee: Empl
 
   return (
     <div className="space-y-6">
-       <Button asChild variant="outline" size="sm">
-            <Link href="/dashboard/employees">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Employees
-            </Link>
-        </Button>
+       {!isPortalView && (
+            <Button asChild variant="outline" size="sm">
+                <Link href="/dashboard/employees">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back to Employees
+                </Link>
+            </Button>
+       )}
 
       <Card>
         <CardHeader className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
@@ -155,35 +157,46 @@ export default function EmployeeProfileClientPage({ employee }: { employee: Empl
             <p className="text-sm text-muted-foreground">{employee.department} - {employee.siteLocation}</p>
           </div>
            <div className="flex gap-2">
-            <Button asChild variant="outline">
-                <Link href={`/dashboard/employees/${employee.id}/edit`}>
-                    <Pencil className="mr-2 h-4 w-4" />
-                    Edit
-                </Link>
-            </Button>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive">
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Remove
+            {isPortalView ? (
+                <Button asChild variant="outline">
+                    <Link href="/portal/profile/edit">
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Edit Profile
+                    </Link>
                 </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete the
-                    employee's record from our servers.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleRemove}>
-                    Continue
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            ) : (
+                <>
+                    <Button asChild variant="outline">
+                        <Link href={`/dashboard/employees/${employee.id}/edit`}>
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Edit
+                        </Link>
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Remove
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the
+                            employee's record from our servers.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleRemove}>
+                            Continue
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                </>
+            )}
           </div>
         </CardHeader>
       </Card>
