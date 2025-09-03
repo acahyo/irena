@@ -58,9 +58,9 @@ export async function authenticateUser({ email, password }: Pick<User, 'email' |
                 // IMPORTANT: Only store serializable data in the cookie. Avoid complex objects like Dates.
                 const sessionData = {
                     id: employeeDoc.id,
-                    name: employee.name,
-                    email: employee.email,
-                    avatar: employee.avatar,
+                    name: employee.name || 'Employee',
+                    email: employee.email || '',
+                    avatar: employee.avatar || '',
                 };
                 cookies().set(SESSION_COOKIE_NAME, JSON.stringify(sessionData), {
                     httpOnly: true,

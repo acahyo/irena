@@ -9,6 +9,10 @@ const formatDate = (date: string | Date | undefined): string | undefined => {
   if (!date) return undefined;
   const dateObj = typeof date === 'string' ? parseISO(date) : date;
   try {
+    // Check if date is valid before formatting
+    if (isNaN(dateObj.getTime())) {
+        return 'Invalid Date';
+    }
     return format(dateObj, 'PP');
   } catch (error) {
     console.error('Invalid date format:', date);

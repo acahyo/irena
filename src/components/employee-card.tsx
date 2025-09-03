@@ -31,7 +31,7 @@ export function EmployeeCard({ employee }: EmployeeCardProps) {
               <AvatarFallback>{employee.name ? employee.name.charAt(0) : '?'}</AvatarFallback>
             </Avatar>
             <div className="w-full truncate pt-4">
-              <CardTitle className="truncate">{employee.name}</CardTitle>
+              <CardTitle className="truncate">{employee.name || 'No Name'}</CardTitle>
               <CardDescription className="truncate">{employee.position || 'No position'}</CardDescription>
               <CardDescription className="truncate text-xs pt-1">{employee.idCardNumber || 'No ID Card'}</CardDescription>
             </div>

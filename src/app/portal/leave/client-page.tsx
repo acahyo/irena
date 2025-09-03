@@ -93,7 +93,12 @@ export default function MyLeaveClientPage({
   }), [lang]);
   
   const refreshRequests = async () => {
-    const updatedRequests = await getLeaveRequestsByEmployeeId(employee.id);
+    const updatedRequestsRaw = await getLeaveRequestsByEmployeeId(employee.id);
+    const updatedRequests = updatedRequestsRaw.map(req => ({
+        ...req,
+        startDate: format(new Date(req.startDate), 'PPP'),
+        endDate: format(new Date(req.endDate), 'PPP'),
+    })) as LeaveRequest[];
     setLeaveRequests(updatedRequests);
   };
 
@@ -216,8 +221,8 @@ export default function MyLeaveClientPage({
               {leaveRequests.length > 0 ? (
                 leaveRequests.map((req) => (
                   <TableRow key={req.id}>
-                    <TableCell>{format(req.startDate, 'PPP')}</TableCell>
-                    <TableCell>{format(req.endDate, 'PPP')}</TableCell>
+                    <TableCell>{req.startDate as string}</TableCell>
+                    <TableCell>{req.endDate as string}</TableCell>
                     <TableCell>{req.type}</TableCell>
                     <TableCell className="max-w-xs truncate">{req.reason}</TableCell>
                     <TableCell>
