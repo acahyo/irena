@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from "next/link";
@@ -36,6 +35,7 @@ import {
   Printer,
   ClipboardCheck,
   Wallet,
+  WalletCards,
 } from "lucide-react";
 import type { AppSettings, User } from "@/lib/types";
 
@@ -48,7 +48,7 @@ const allNavItems = [
   { href: "/dashboard/payslip", icon: Printer, label: "Cetak Slip Gaji", roles: ["Administrator", "HR"] },
   { href: "/dashboard/payslip-collective", icon: Printer, label: "Slip Gaji Kolektif", roles: ["Administrator", "HR"] },
   { href: "/dashboard/department", icon: Briefcase, label: "Department", roles: ["Administrator", "HR"] },
-  { href: "/dashboard/position", icon: Shield, label: "Position", roles: ["Administrator", "HR"] },
+  { href: "/dashboard/position", icon: WalletCards, label: "Jabatan & Gaji", roles: ["Administrator", "HR"] },
   { href: "/dashboard/users", icon: UsersRound, label: "Users", roles: ["Administrator"] },
   { href: "/dashboard/roles", icon: ShieldCheck, label: "Roles", roles: ["Administrator"] },
   { href: "/dashboard/settings", icon: Settings, label: "Settings", roles: ["Administrator"] },

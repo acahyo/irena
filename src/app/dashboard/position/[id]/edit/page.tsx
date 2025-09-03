@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -81,7 +80,7 @@ export default function EditPositionPage() {
             await updatePosition(id, data as Partial<Position>);
             toast({
                 title: 'Success!',
-                description: 'Position has been updated.',
+                description: 'Jabatan telah diperbarui.',
             });
             router.push('/dashboard/position');
             router.refresh();
@@ -89,7 +88,7 @@ export default function EditPositionPage() {
              toast({
                 variant: 'destructive',
                 title: 'Error',
-                description: 'Failed to update position.',
+                description: 'Gagal memperbarui jabatan.',
             });
         } finally {
             setLoading(false);
@@ -127,39 +126,39 @@ export default function EditPositionPage() {
        <Button asChild variant="outline" size="sm">
             <Link href="/dashboard/position">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Positions
+                Kembali ke Jabatan &amp; Gaji
             </Link>
         </Button>
 
       <Card>
         <CardHeader>
-          <CardTitle>Edit Position</CardTitle>
+          <CardTitle>Edit Jabatan</CardTitle>
           <CardDescription>
-            Update the position name and its associated salary details below.
+            Perbarui nama jabatan dan detail gaji terkait di bawah ini.
           </CardDescription>
         </CardHeader>
         <CardContent>
             <form onSubmit={handleSubmit} className="space-y-8">
                 <div className="space-y-2">
-                    <Label htmlFor="name">Position Name</Label>
+                    <Label htmlFor="name">Nama Jabatan</Label>
                     <Input id="name" name="name" defaultValue={position.name} required />
                 </div>
                  <div className="space-y-2 md:col-span-3">
                  <Card>
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2"><WalletCards /> Salary Details</CardTitle>
-                      <CardDescription>Choose salary type and fill in the details.</CardDescription>
+                      <CardTitle className="flex items-center gap-2"><WalletCards /> Detail Gaji</CardTitle>
+                      <CardDescription>Pilih tipe gaji dan isi detailnya.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
                        <div className="space-y-2">
-                          <Label htmlFor="salaryType">Salary Type</Label>
+                          <Label htmlFor="salaryType">Tipe Gaji</Label>
                           <Select name="salaryType" value={salaryType} onValueChange={setSalaryType}>
                             <SelectTrigger id="salaryType">
-                              <SelectValue placeholder="Select Salary Type" />
+                              <SelectValue placeholder="Pilih Tipe Gaji" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="harian">Daily Salary</SelectItem>
-                              <SelectItem value="bulanan">Monthly Salary</SelectItem>
+                              <SelectItem value="harian">Gaji Harian</SelectItem>
+                              <SelectItem value="bulanan">Gaji Bulanan</SelectItem>
                               <SelectItem value="direksi">Direksi</SelectItem>
                             </SelectContent>
                           </Select>
@@ -168,11 +167,11 @@ export default function EditPositionPage() {
                         {salaryType === 'harian' && (
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-md border p-4">
                             <div className="space-y-2">
-                              <Label htmlFor="dailyWage">Daily Wage (Rp)</Label>
+                              <Label htmlFor="dailyWage">Upah Harian (Rp)</Label>
                               <Input id="dailyWage" name="dailyWage" type="number" placeholder="e.g. 150000" defaultValue={position.dailyWage} />
                             </div>
                             <div className="space-y-2">
-                              <Label htmlFor="overtimeRate">Overtime per Hour (Rp)</Label>
+                              <Label htmlFor="overtimeRate">Lembur per Jam (Rp)</Label>
                               <Input id="overtimeRate" name="overtimeRate" type="number" placeholder="e.g. 25000" defaultValue={position.overtimeRate} />
                             </div>
                           </div>
@@ -181,23 +180,23 @@ export default function EditPositionPage() {
                         {salaryType === 'bulanan' && (
                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-md border p-4">
                             <div className="space-y-2">
-                              <Label htmlFor="monthlySalary">Monthly Salary (Rp)</Label>
+                              <Label htmlFor="monthlySalary">Gaji Bulanan (Rp)</Label>
                               <Input id="monthlySalary" name="monthlySalary" type="number" placeholder="e.g. 4500000" defaultValue={position.monthlySalary} />
                             </div>
                             <div className="space-y-2">
-                              <Label htmlFor="otAllowance">OT & Attendance Allowance (Rp)</Label>
+                              <Label htmlFor="otAllowance">Tunjangan OT &amp; Kehadiran (Rp)</Label>
                               <Input id="otAllowance" name="otAllowance" type="number" placeholder="e.g. 500000" defaultValue={position.otAllowance} />
                             </div>
                              <div className="space-y-2">
-                              <Label htmlFor="locationAllowance">Location Allowance (Rp)</Label>
+                              <Label htmlFor="locationAllowance">Tunjangan Lokasi (Rp)</Label>
                               <Input id="locationAllowance" name="locationAllowance" type="number" placeholder="e.g. 300000" defaultValue={position.locationAllowance} />
                             </div>
                              <div className="space-y-2">
-                              <Label htmlFor="mealAllowance">Meal Allowance (Rp)</Label>
+                              <Label htmlFor="mealAllowance">Tunjangan Makan (Rp)</Label>
                               <Input id="mealAllowance" name="mealAllowance" type="number" placeholder="e.g. 750000" defaultValue={position.mealAllowance} />
                             </div>
                              <div className="space-y-2 md:col-span-2">
-                              <Label htmlFor="otherAllowances">Other Allowances (Rp)</Label>
+                              <Label htmlFor="otherAllowances">Tunjangan Lain-lain (Rp)</Label>
                               <Input id="otherAllowances" name="otherAllowances" type="number" placeholder="e.g. 200000" defaultValue={position.otherAllowances} />
                             </div>
                           </div>
@@ -229,11 +228,11 @@ export default function EditPositionPage() {
               </div>
                  <div className="flex justify-end gap-2 pt-4">
                     <Button type="button" variant="outline" onClick={() => router.back()} disabled={loading}>
-                        Cancel
+                        Batal
                     </Button>
                     <Button type="submit" disabled={loading}>
                         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Update Position
+                        Perbarui Jabatan
                     </Button>
                 </div>
             </form>

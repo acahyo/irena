@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -75,15 +74,15 @@ export default function PositionClientPage({ initialPositions }: { initialPositi
       <CardHeader>
         <div className="flex items-center justify-between">
             <div>
-                <CardTitle>Positions</CardTitle>
+                <CardTitle>Jabatan &amp; Gaji</CardTitle>
                 <CardDescription>
-                    Manage your company positions and their salary details.
+                    Kelola jabatan perusahaan dan detail gaji terkait.
                 </CardDescription>
             </div>
             <Button asChild>
                 <Link href="/dashboard/position/new">
                     <PlusCircle className="mr-2 h-4 w-4" />
-                    Add Position
+                    Tambah Jabatan
                 </Link>
             </Button>
         </div>
@@ -92,9 +91,9 @@ export default function PositionClientPage({ initialPositions }: { initialPositi
         <Table>
             <TableHeader>
                 <TableRow>
-                    <TableHead>Position Name</TableHead>
-                    <TableHead>Salary Type</TableHead>
-                    <TableHead className="w-[100px] text-right">Actions</TableHead>
+                    <TableHead>Nama Jabatan</TableHead>
+                    <TableHead>Tipe Gaji</TableHead>
+                    <TableHead className="w-[100px] text-right">Aksi</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
@@ -152,7 +151,7 @@ export default function PositionClientPage({ initialPositions }: { initialPositi
                ) : (
                 <TableRow>
                     <TableCell colSpan={3} className="h-24 text-center">
-                        No positions found.
+                        Tidak ada jabatan ditemukan.
                     </TableCell>
                 </TableRow>
               )}
