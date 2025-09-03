@@ -22,7 +22,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import type { LeaveRequest, AppSettings, Employee } from '@/lib/types';
-import { getLeaveRequestsByEmployeeId, createLeaveRequest } from '@/actions/leave';
+import { createLeaveRequest } from '@/actions/leave';
 import {
     Dialog,
     DialogContent,
@@ -38,7 +38,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { ArrowLeft, Calendar as CalendarIcon, Loader2, PlusCircle } from 'lucide-react';
+import { Calendar as CalendarIcon, Loader2, PlusCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
@@ -65,7 +65,6 @@ export default function MyLeaveClientPage({
     employee: Employee,
     settings: AppSettings
 }) {
-  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>(initialRequests);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
@@ -121,7 +120,8 @@ export default function MyLeaveClientPage({
                 await createLeaveRequest(leaveData);
                 toast({ title: T.success, description: T.requestSuccess });
                 setIsDialogOpen(false);
-                router.refresh(); // This will re-fetch server data and re-render the page
+                router.push('/portal/leave'); // Navigate to refresh the data reliably
+                router.refresh(); 
             } catch (error) {
                 toast({ variant: 'destructive', title: T.error, description: T.requestError });
             }
