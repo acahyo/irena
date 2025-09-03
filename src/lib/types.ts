@@ -103,6 +103,7 @@ export type Position = {
 
 export type MenuOrderItem = {
   id: string;
+  isGroup?: boolean;
   subItems?: string[];
 }
 

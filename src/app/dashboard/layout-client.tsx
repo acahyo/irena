@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import Link from "next/link";
@@ -28,9 +29,8 @@ import {
   LogOut,
   Users,
   Briefcase,
-  Shield,
-  UsersRound,
   ShieldCheck,
+  UsersRound,
   Settings,
   CalendarCheck,
   LayoutDashboard,
@@ -38,11 +38,12 @@ import {
   ClipboardCheck,
   Wallet,
   WalletCards,
+  ChevronDown,
 } from "lucide-react";
-import type { AppSettings, User, Role } from "@/lib/types";
+import type { AppSettings, User, Role, MenuOrderItem } from "@/lib/types";
 
 
-const getAllNavItems = (lang: 'id' | 'en') => [
+const allNavItemsList = (lang: 'id' | 'en') => [
   { id: 'dashboard', href: "/dashboard", icon: LayoutDashboard, label: lang === 'id' ? "Dasbor" : "Dashboard", exact: true },
   { id: 'employees', href: "/dashboard/employees", icon: Users, label: lang === 'id' ? "Karyawan" : "Employees" },
   { id: 'leave-schedule', href: "/dashboard/leave-schedule", icon: CalendarCheck, label: lang === 'id' ? "Jadwal Cuti" : "Leave Schedule" },
@@ -72,38 +73,55 @@ export default function DashboardClientLayout({
   const pathname = usePathname();
   const lang = settings.language || 'id';
   
-  const defaultNavItems = useMemo(() => getAllNavItems(lang), [lang]);
+  const allNavItemsMap = useMemo(() => {
+      const map = new Map();
+      allNavItemsList(lang).forEach(item => map.set(item.id, item));
+      return map;
+  }, [lang]);
 
   const orderedNavItems = useMemo(() => {
-    if (!settings.menuOrder || settings.menuOrder.length === 0) {
-        return defaultNavItems;
-    }
-    const menuMap = new Map(defaultNavItems.map(item => [item.id, item]));
-    return settings.menuOrder
-        .map(orderItem => menuMap.get(orderItem.id))
-        .filter((item): item is typeof defaultNavItems[0] => !!item);
-  }, [defaultNavItems, settings.menuOrder]);
+    const defaultOrder = allNavItemsList(lang).map(item => ({ id: item.id }));
+    const menuOrder = settings.menuOrder && settings.menuOrder.length > 0 ? settings.menuOrder : defaultOrder;
+
+    return menuOrder.map(orderItem => {
+        if (orderItem.isGroup) {
+            return {
+                id: orderItem.id,
+                isGroup: true,
+                label: `Grup Menu`, // You might want a way to name groups
+                icon: FolderKanban,
+                subItems: (orderItem.subItems || [])
+                    .map(subId => allNavItemsMap.get(subId))
+                    .filter(Boolean),
+            };
+        }
+        return allNavItemsMap.get(orderItem.id);
+    }).filter(Boolean); // Filter out any undefined items
+  }, [allNavItemsMap, settings.menuOrder, lang]);
   
   const navItems = useMemo(() => {
     if (!role) return [];
     if (role.name.toLowerCase() === 'administrator') return orderedNavItems;
 
-    const accessibleMenus = role.accessibleMenus || [];
-    return orderedNavItems.filter(item => accessibleMenus.includes(item.id));
+    const accessibleMenus = new Set(role.accessibleMenus || []);
+    
+    return orderedNavItems.map(item => {
+        if (item.isGroup) {
+            const accessibleSubItems = item.subItems.filter((sub: any) => accessibleMenus.has(sub.id));
+            if (accessibleSubItems.length > 0) {
+                return { ...item, subItems: accessibleSubItems };
+            }
+            return null;
+        }
+        return accessibleMenus.has(item.id) ? item : null;
+    }).filter(Boolean);
   }, [orderedNavItems, role]);
 
 
   const getActiveLabel = () => {
-    for (const item of defaultNavItems) { // Check against all possible items
-        if ('href' in item && item.href && (item.exact ? pathname === item.href : pathname.startsWith(item.href))) {
+    for (const item of allNavItemsList(lang)) {
+        if (item.href && (item.exact ? pathname === item.href : pathname.startsWith(item.href))) {
             return item.label;
-        }
-        if ('subItems' in item && item.subItems) {
-            for (const subItem of item.subItems) {
-                if (pathname.startsWith(subItem.href)) {
-                    return subItem.label;
-                }
-            }
         }
     }
     return settings.appName || 'Dashboard';
@@ -130,9 +148,31 @@ export default function DashboardClientLayout({
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
-            {navItems.map((item, index) => (
+            {navItems.map((item: any, index) => (
               <SidebarMenuItem key={`${item.id}-${index}`}>
-                {'href' in item && item.href ? (
+                {item.isGroup ? (
+                   <>
+                        <SidebarMenuButton
+                            isSubmenu
+                            isActive={item.subItems?.some((sub: any) => pathname.startsWith(sub.href))}
+                            tooltip={{ children: item.label }}
+                        >
+                            <item.icon />
+                            <span>{item.label}</span>
+                        </SidebarMenuButton>
+                         <SidebarMenuSub>
+                            {item.subItems.map((subItem: any) => (
+                                 <SidebarMenuItem key={subItem.href}>
+                                    <Link href={subItem.href} passHref>
+                                        <SidebarMenuSubButton isActive={pathname.startsWith(subItem.href)}>
+                                            {subItem.label}
+                                        </SidebarMenuSubButton>
+                                    </Link>
+                                 </SidebarMenuItem>
+                            ))}
+                        </SidebarMenuSub>
+                    </>
+                ) : (
                     <Link href={item.href} passHref>
                         <SidebarMenuButton
                             isActive={item.exact ? pathname === item.href : pathname.startsWith(item.href)}
@@ -142,30 +182,6 @@ export default function DashboardClientLayout({
                             <span>{item.label}</span>
                         </SidebarMenuButton>
                     </Link>
-                ) : (
-                    'subItems' in item && item.subItems && (
-                    <>
-                        <SidebarMenuButton
-                            isSubmenu
-                            isActive={item.subItems?.some(sub => pathname.startsWith(sub.href))}
-                            tooltip={{ children: item.label }}
-                        >
-                            <item.icon />
-                            <span>{item.label}</span>
-                        </SidebarMenuButton>
-                         <SidebarMenuSub>
-                            {item.subItems.map(subItem => (
-                                 <SidebarMenuItem key={subItem.href}>
-                                    <Link href={subItem.href} asChild>
-                                        <SidebarMenuSubButton isActive={pathname.startsWith(subItem.href)}>
-                                            {subItem.label}
-                                        </SidebarMenuSubButton>
-                                    </Link>
-                                 </SidebarMenuItem>
-                            ))}
-                        </SidebarMenuSub>
-                    </>
-                    )
                 )}
               </SidebarMenuItem>
             ))}
@@ -174,7 +190,7 @@ export default function DashboardClientLayout({
         <SidebarFooter>
           <div className="flex items-center gap-2">
             <Avatar className="h-8 w-8">
-              <AvatarImage src="https://placehold.co/100x100/877795/FFFFFF" alt={user.name} />
+              <AvatarImage src={user.avatar || "https://placehold.co/100x100/877795/FFFFFF"} alt={user.name} />
               <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col text-sm">
