@@ -71,6 +71,7 @@ const allMenus = [
   { id: 'payslip-collective', label: 'Slip Gaji Kolektif' },
   { id: 'department', label: 'Departemen' },
   { id: 'position', label: 'Jabatan & Gaji' },
+  { id: 'site', label: 'Lokasi/Site' },
   { id: 'users', label: 'Users' },
   { id: 'roles', label: 'Roles' },
   { id: 'settings', label: 'Pengaturan' },

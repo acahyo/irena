@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -36,7 +37,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { createEmployee } from '@/actions/employees';
 import { getDepartments } from '@/actions/departments';
 import { getPositions } from '@/actions/positions';
-import type { Employee, Department, Position } from '@/lib/types';
+import { getSites } from '@/actions/sites';
+import type { Employee, Department, Position, Site } from '@/lib/types';
 import { Textarea } from '@/components/ui/textarea';
 
 export default function NewEmployeePage() {
@@ -45,6 +47,7 @@ export default function NewEmployeePage() {
   const [loading, setLoading] = useState(false);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [positions, setPositions] = useState<Position[]>([]);
+  const [sites, setSites] = useState<Site[]>([]);
   const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>();
   const [messEntryDate, setMessEntryDate] = useState<Date | undefined>();
   const [contractStartDate, setContractStartDate] = useState<Date | undefined>();
@@ -59,17 +62,19 @@ export default function NewEmployeePage() {
   useEffect(() => {
     const fetchDropdownData = async () => {
       try {
-        const [depts, pos] = await Promise.all([
+        const [depts, pos, siteData] = await Promise.all([
           getDepartments(),
           getPositions(),
+          getSites(),
         ]);
         setDepartments(depts);
         setPositions(pos);
+        setSites(siteData);
       } catch (error) {
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: 'Failed to fetch departments or positions.',
+          description: 'Failed to fetch dropdown data.',
         });
       }
     };
@@ -402,7 +407,16 @@ export default function NewEmployeePage() {
               </div>
                <div className="space-y-2">
                 <Label htmlFor="siteLocation">Lokasi/Site Kerja</Label>
-                <Input id="siteLocation" name="siteLocation" placeholder="e.g. Site A" />
+                 <Select name="siteLocation">
+                  <SelectTrigger id="siteLocation">
+                    <SelectValue placeholder="Pilih Lokasi/Site" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sites.map((site) => (
+                      <SelectItem key={site.id} value={site.name}>{site.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
                <div className="space-y-2 md:col-span-3">

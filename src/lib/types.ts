@@ -59,6 +59,11 @@ export type Department = {
     name: string;
 };
 
+export type Site = {
+    id: string;
+    name: string;
+};
+
 export type User = {
     id: string;
     name: string;

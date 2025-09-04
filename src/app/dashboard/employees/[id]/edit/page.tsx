@@ -6,6 +6,7 @@ import EditEmployeePageClient from './client-page';
 import { getEmployee } from '@/actions/employees';
 import { getDepartments } from '@/actions/departments';
 import { getPositions } from '@/actions/positions';
+import { getSites } from '@/actions/sites';
 
 
 export default async function EditEmployeePage({ params }: { params: { id: string } }) {
@@ -15,8 +16,11 @@ export default async function EditEmployeePage({ params }: { params: { id: strin
     notFound();
   }
 
-  const departments = await getDepartments();
-  const positions = await getPositions();
+  const [departments, positions, sites] = await Promise.all([
+    getDepartments(),
+    getPositions(),
+    getSites()
+  ]);
 
-  return <EditEmployeePageClient employee={employee} departments={departments} positions={positions} />;
+  return <EditEmployeePageClient employee={employee} departments={departments} positions={positions} sites={sites} />;
 }

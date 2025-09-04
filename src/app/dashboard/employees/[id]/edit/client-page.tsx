@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -33,7 +34,7 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import type { Employee, Department, Position } from '@/lib/types';
+import type { Employee, Department, Position, Site } from '@/lib/types';
 import { updateEmployee } from '@/actions/employees';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -44,7 +45,7 @@ const parseDate = (date: string | Date | undefined): Date | undefined => {
 };
 
 
-export default function EditEmployeePageClient({ employee, departments, positions }: { employee: Employee, departments: Department[], positions: Position[] }) {
+export default function EditEmployeePageClient({ employee, departments, positions, sites }: { employee: Employee, departments: Department[], positions: Position[], sites: Site[] }) {
   const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -402,7 +403,16 @@ export default function EditEmployeePageClient({ employee, departments, position
               </div>
                <div className="space-y-2">
                 <Label htmlFor="siteLocation">Lokasi/Site</Label>
-                <Input id="siteLocation" name="siteLocation" placeholder="e.g. Site A" defaultValue={employee.siteLocation} />
+                <Select name="siteLocation" defaultValue={employee.siteLocation}>
+                  <SelectTrigger id="siteLocation">
+                    <SelectValue placeholder="Select site" />
+                  </SelectTrigger>
+                  <SelectContent>
+                     {sites.map((site) => (
+                        <SelectItem key={site.id} value={site.name}>{site.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               
               <div className="space-y-2 md:col-span-3">

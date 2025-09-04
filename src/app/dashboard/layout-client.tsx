@@ -39,6 +39,7 @@ import {
   Wallet,
   WalletCards,
   ChevronDown,
+  MapPin,
 } from "lucide-react";
 import type { AppSettings, User, Role, MenuOrderItem } from "@/lib/types";
 
@@ -53,6 +54,7 @@ const allNavItemsList = (lang: 'id' | 'en') => [
   { id: 'payslip-collective', href: "/dashboard/payslip-collective", icon: Printer, label: lang === 'id' ? "Slip Gaji Kolektif" : "Collective Payslip" },
   { id: 'department', href: "/dashboard/department", icon: Briefcase, label: lang === 'id' ? "Departemen" : "Department" },
   { id: 'position', href: "/dashboard/position", icon: WalletCards, label: lang === 'id' ? "Jabatan & Gaji" : "Position & Salary" },
+  { id: 'site', href: "/dashboard/site", icon: MapPin, label: lang === 'id' ? "Lokasi/Site" : "Site Location" },
   { id: 'users', href: "/dashboard/users", icon: UsersRound, label: "Users" },
   { id: 'roles', href: "/dashboard/roles", icon: ShieldCheck, label: "Roles" },
   { id: 'settings', href: "/dashboard/settings", icon: Settings, label: lang === 'id' ? "Pengaturan" : "Settings" },
