@@ -81,10 +81,19 @@ export default function DashboardClientLayout({
   }, [lang]);
 
   const orderedNavItems = useMemo(() => {
-    const defaultOrder = allNavItemsList(lang).map(item => ({ id: item.id }));
-    const menuOrder = settings.menuOrder && settings.menuOrder.length > 0 ? settings.menuOrder : defaultOrder;
+    // If a menu order is saved in settings, use it. Otherwise, use the default list.
+    const menuOrderSource = settings.menuOrder && settings.menuOrder.length > 0 
+        ? settings.menuOrder 
+        : allNavItemsList(lang).map(item => ({ id: item.id, isGroup: false, subItems: [] }));
+    
+    // Ensure all menus are present, even if not in the saved order, to prevent them from disappearing.
+    const allKnownIds = new Set(allNavItemsList(lang).map(i => i.id));
+    const usedIds = new Set(menuOrderSource.flatMap(item => item.isGroup ? (item.subItems || []) : [item.id]));
+    const missingItems = Array.from(allKnownIds).filter(id => !usedIds.has(id)).map(id => ({ id, isGroup: false, subItems: [] }));
 
-    return menuOrder.map(orderItem => {
+    const finalMenuOrder = [...menuOrderSource, ...missingItems];
+
+    return finalMenuOrder.map(orderItem => {
         if (orderItem.isGroup) {
             return {
                 id: orderItem.id,
