@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -35,7 +34,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+} from "@/components/ui/alert-dialog"
 import { MoreHorizontal, PlusCircle, Trash2, Pencil } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { User } from '@/lib/types';

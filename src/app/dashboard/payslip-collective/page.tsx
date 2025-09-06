@@ -1,4 +1,3 @@
-
 import { getEmployees } from '@/actions/employees';
 import PayslipCollectiveClientPage from './client-page';
 import { getSettings } from '@/actions/settings';

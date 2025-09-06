@@ -1,5 +1,3 @@
-
-
 import type { Employee, CalendarEvent, Department, Position, User, Role } from './types';
 
 export const employees: Employee[] = [

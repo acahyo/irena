@@ -1,5 +1,3 @@
-
-
 import { getEmployees } from '@/actions/employees';
 import { getLeaveRequests } from '@/actions/leave';
 import EmployeeDirectoryClientPage from './client-page';

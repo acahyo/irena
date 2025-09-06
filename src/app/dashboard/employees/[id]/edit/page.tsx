@@ -1,5 +1,3 @@
-
-
 import { notFound } from 'next/navigation';
 import type { Employee } from '@/lib/types';
 import EditEmployeePageClient from './client-page';

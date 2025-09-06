@@ -1,5 +1,3 @@
-
-
 import Link from 'next/link';
 import type { Employee } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';

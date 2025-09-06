@@ -1,4 +1,3 @@
-
 import { getUsers } from '@/actions/users';
 import UsersClientPage from './client-page';
 

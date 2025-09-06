@@ -1,4 +1,3 @@
-
 import { getLeaveRequests } from '@/actions/leave';
 import LeaveScheduleClientPage from './client-page';
 

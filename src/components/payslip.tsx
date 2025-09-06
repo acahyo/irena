@@ -1,4 +1,3 @@
-
 import type { Employee, AppSettings, Position } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format } from 'date-fns';

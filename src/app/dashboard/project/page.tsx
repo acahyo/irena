@@ -1,4 +1,3 @@
-
 import { getSites } from '@/actions/sites';
 import ProjectClientPage from './client-page';
 

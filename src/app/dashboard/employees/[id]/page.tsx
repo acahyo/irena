@@ -1,5 +1,3 @@
-
-
 import { getEmployee } from '@/actions/employees';
 import { getLeaveRequestsByEmployeeId } from '@/actions/leave';
 import { notFound } from 'next/navigation';

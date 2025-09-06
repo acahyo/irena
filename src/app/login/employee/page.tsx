@@ -1,4 +1,3 @@
-
 import { getSettings } from '@/actions/settings';
 import EmployeeLoginPageClient from '../../login-client';
 

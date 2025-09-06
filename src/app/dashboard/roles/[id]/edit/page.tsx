@@ -1,4 +1,3 @@
-
 import { notFound } from 'next/navigation';
 import { getRole } from '@/actions/roles';
 import EditRolePageClient from './client-page';

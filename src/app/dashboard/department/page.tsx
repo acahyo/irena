@@ -1,4 +1,3 @@
-
 import { getDepartments } from '@/actions/departments';
 import DepartmentClientPage from './client-page';
 

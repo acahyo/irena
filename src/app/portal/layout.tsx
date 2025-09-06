@@ -1,4 +1,3 @@
-
 import { redirect } from "next/navigation";
 import { getSettings } from "@/actions/settings";
 import { getEmployee } from "@/actions/employees";

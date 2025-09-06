@@ -1,4 +1,3 @@
-
 import { getPositions } from '@/actions/positions';
 import PositionClientPage from './client-page';
 

@@ -1,4 +1,3 @@
-
 'use server';
 
 import { createHash } from 'crypto';
@@ -9,18 +8,6 @@ import { cookies } from 'next/headers';
 import { getEmployee } from './employees';
 
 const SESSION_COOKIE_NAME = 'employee-session';
-
-// Helper to convert Firestore Timestamps to Dates in a document
-function convertTimestampsToDates(docData: any) {
-    if (!docData) return docData;
-    const data = { ...docData };
-    for (const key in data) {
-        if (data[key] instanceof Timestamp) {
-            data[key] = data[key].toDate();
-        }
-    }
-    return data;
-}
 
 export async function authenticateUser(
     { email, password }: Pick<User, 'email' | 'password'>, 
