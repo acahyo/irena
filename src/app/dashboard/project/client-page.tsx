@@ -42,11 +42,11 @@ import type { Site } from '@/lib/types';
 
 
 export default function ProjectClientPage({ initialSites }: { initialSites: Site[]}) {
-  const [sites, setSites] = useState<Site[]>(initialSites);
+  const [sites, setSites] = useState<Site[]>(initialSites || []);
   const { toast } = useToast();
 
   useEffect(() => {
-    setSites(initialSites);
+    setSites(initialSites || []);
   }, [initialSites]);
 
   const handleDelete = async (id: string) => {
