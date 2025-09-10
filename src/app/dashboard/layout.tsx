@@ -1,9 +1,11 @@
+
 import { redirect } from "next/navigation";
 import DashboardClientLayout from "./layout-client";
 import { getSettings } from "@/actions/settings";
 import { getUsers } from "@/actions/users";
 import { getRoles } from "@/actions/roles";
 import type { User, Role } from "@/lib/types";
+import { seedDatabase } from "@/lib/seed-data";
 
 
 export default async function DashboardLayout({
@@ -11,6 +13,8 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  await seedDatabase();
+
   const settings = await getSettings();
   // NOTE: This is a placeholder for a real authentication system.
   // In a real app, you would get the logged-in user from a session.
