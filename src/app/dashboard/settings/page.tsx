@@ -70,6 +70,7 @@ const allMenus = [
   { id: 'department', label: 'Departemen' },
   { id: 'position', label: 'Jabatan & Gaji' },
   { id: 'project', label: 'Proyek' },
+  { id: 'finance', label: 'Keuangan' },
   { id: 'users', label: 'Users' },
   { id: 'roles', label: 'Roles' },
   { id: 'settings', label: 'Pengaturan' },

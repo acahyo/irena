@@ -151,3 +151,14 @@ export type EmployeeWithDetails = Employee & {
   positionDetails?: Position;
   totalSalary?: number;
 }
+
+export type FinanceRecord = {
+  id: string;
+  projectId: string;
+  projectName: string;
+  type: 'income' | 'expense';
+  amount: number;
+  description: string;
+  date: Date | string;
+  category?: string;
+};
