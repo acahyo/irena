@@ -4,32 +4,46 @@ import { createHash } from 'crypto';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import type { User } from '@/lib/types';
+import { users as staticUsers } from '@/lib/data';
 
 // Get all users
 export async function getUsers(): Promise<User[]> {
-  const querySnapshot = await getDocs(collection(db, 'users'));
-  const users: User[] = [];
-  querySnapshot.forEach((doc) => {
-    const data = doc.data();
-    // Ensure password is not sent to the client
-    delete data.password;
-    users.push({ id: doc.id, ...data } as User);
-  });
-  return users.sort((a, b) => a.name.localeCompare(b.name));
+  try {
+    const querySnapshot = await getDocs(collection(db, 'users'));
+    if (querySnapshot.empty) {
+      return staticUsers;
+    }
+    const users: User[] = [];
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      // Ensure password is not sent to the client
+      delete data.password;
+      users.push({ id: doc.id, ...data } as User);
+    });
+    return users.sort((a, b) => a.name.localeCompare(b.name));
+  } catch (error) {
+    console.error("Error fetching users, falling back to static data:", error);
+    return staticUsers;
+  }
 }
 
 // Get a single user by ID
 export async function getUser(id: string): Promise<User | null> {
-  const docRef = doc(db, 'users', id);
-  const docSnap = await getDoc(docRef);
+  try {
+    const docRef = doc(db, 'users', id);
+    const docSnap = await getDoc(docRef);
 
-  if (docSnap.exists()) {
-    const data = docSnap.data();
-    // Ensure password is not sent to the client
-    delete data.password;
-    return { id: docSnap.id, ...data } as User;
-  } else {
-    return null;
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      // Ensure password is not sent to the client
+      delete data.password;
+      return { id: docSnap.id, ...data } as User;
+    } else {
+      return staticUsers.find(u => u.id === id) || null;
+    }
+  } catch (error) {
+    console.error(`Error fetching user ${id}, falling back to static data:`, error);
+    return staticUsers.find(u => u.id === id) || null;
   }
 }
 

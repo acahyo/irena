@@ -3,26 +3,40 @@
 import { db } from '@/lib/firebase';
 import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
 import type { Role } from '@/lib/types';
+import { roles as staticRoles } from '@/lib/data';
 
 // Get all roles
 export async function getRoles(): Promise<Role[]> {
-  const querySnapshot = await getDocs(collection(db, 'roles'));
-  const roles: Role[] = [];
-  querySnapshot.forEach((doc) => {
-    roles.push({ id: doc.id, ...doc.data() } as Role);
-  });
-  return roles.sort((a, b) => a.name.localeCompare(b.name));
+  try {
+    const querySnapshot = await getDocs(collection(db, 'roles'));
+    if (querySnapshot.empty) {
+      return staticRoles;
+    }
+    const roles: Role[] = [];
+    querySnapshot.forEach((doc) => {
+      roles.push({ id: doc.id, ...doc.data() } as Role);
+    });
+    return roles.sort((a, b) => a.name.localeCompare(b.name));
+  } catch (error) {
+    console.error("Error fetching roles, falling back to static data:", error);
+    return staticRoles;
+  }
 }
 
 // Get a single role by ID
 export async function getRole(id: string): Promise<Role | null> {
-  const docRef = doc(db, 'roles', id);
-  const docSnap = await getDoc(docRef);
+  try {
+    const docRef = doc(db, 'roles', id);
+    const docSnap = await getDoc(docRef);
 
-  if (docSnap.exists()) {
-    return { id: docSnap.id, ...docSnap.data() } as Role;
-  } else {
-    return null;
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...docSnap.data() } as Role;
+    } else {
+      return staticRoles.find(r => r.id === id) || null;
+    }
+  } catch (error) {
+    console.error(`Error fetching role ${id}, falling back to static data:`, error);
+    return staticRoles.find(r => r.id === id) || null;
   }
 }
 

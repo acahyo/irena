@@ -5,6 +5,7 @@ import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, Timesta
 import type { Employee } from '@/lib/types';
 import { format } from 'date-fns';
 import { createHash } from 'crypto';
+import { employees as staticEmployees } from '@/lib/data';
 
 
 // Helper to convert Firestore Timestamps to Dates in a document
@@ -22,29 +23,42 @@ function convertTimestampsToDates(docData: any) {
 
 // Get all employees
 export async function getEmployees(): Promise<Employee[]> {
-  const querySnapshot = await getDocs(collection(db, 'employees'));
-  const employees: Employee[] = [];
-  querySnapshot.forEach((doc) => {
-    const data = convertTimestampsToDates(doc.data());
-    // Ensure password is not sent to the client
-    delete data.password;
-    employees.push({ id: doc.id, ...data } as Employee);
-  });
-  return employees;
+  try {
+    const querySnapshot = await getDocs(collection(db, 'employees'));
+    if (querySnapshot.empty) {
+        return staticEmployees;
+    }
+    const employees: Employee[] = [];
+    querySnapshot.forEach((doc) => {
+        const data = convertTimestampsToDates(doc.data());
+        // Ensure password is not sent to the client
+        delete data.password;
+        employees.push({ id: doc.id, ...data } as Employee);
+    });
+    return employees;
+  } catch (error) {
+      console.error("Error fetching employees, falling back to static data:", error);
+      return staticEmployees;
+  }
 }
 
 // Get a single employee by ID
 export async function getEmployee(id: string): Promise<Employee | null> {
-  const docRef = doc(db, 'employees', id);
-  const docSnap = await getDoc(docRef);
+  try {
+    const docRef = doc(db, 'employees', id);
+    const docSnap = await getDoc(docRef);
 
-  if (docSnap.exists()) {
-    const data = convertTimestampsToDates(docSnap.data());
-    // Ensure password is not sent to the client
-    delete data.password;
-    return { id: docSnap.id, ...data } as Employee;
-  } else {
-    return null;
+    if (docSnap.exists()) {
+        const data = convertTimestampsToDates(docSnap.data());
+        // Ensure password is not sent to the client
+        delete data.password;
+        return { id: docSnap.id, ...data } as Employee;
+    } else {
+        return staticEmployees.find(e => e.id === id) || null;
+    }
+  } catch (error) {
+      console.error(`Error fetching employee ${id}, falling back to static data:`, error);
+      return staticEmployees.find(e => e.id === id) || null;
   }
 }
 

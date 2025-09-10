@@ -3,6 +3,7 @@
 import { db } from '@/lib/firebase';
 import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import type { Position, Allowance } from '@/lib/types';
+import { positions as staticPositions } from '@/lib/data';
 
 // Helper to convert form data to a structured Position object
 const processFormData = (data: any) => {
@@ -40,23 +41,36 @@ const processFormData = (data: any) => {
 
 // Get all positions
 export async function getPositions(): Promise<Position[]> {
-  const querySnapshot = await getDocs(collection(db, 'positions'));
-  const positions: Position[] = [];
-  querySnapshot.forEach((doc) => {
-    positions.push({ id: doc.id, ...doc.data() } as Position);
-  });
-  return positions.sort((a, b) => a.name.localeCompare(b.name));
+  try {
+    const querySnapshot = await getDocs(collection(db, 'positions'));
+     if (querySnapshot.empty) {
+      return staticPositions;
+    }
+    const positions: Position[] = [];
+    querySnapshot.forEach((doc) => {
+      positions.push({ id: doc.id, ...doc.data() } as Position);
+    });
+    return positions.sort((a, b) => a.name.localeCompare(b.name));
+  } catch (error) {
+    console.error("Error fetching positions, falling back to static data:", error);
+    return staticPositions;
+  }
 }
 
 // Get a single position by ID
 export async function getPosition(id: string): Promise<Position | null> {
-  const docRef = doc(db, 'positions', id);
-  const docSnap = await getDoc(docRef);
+  try {
+    const docRef = doc(db, 'positions', id);
+    const docSnap = await getDoc(docRef);
 
-  if (docSnap.exists()) {
-    return { id: docSnap.id, ...docSnap.data() } as Position;
-  } else {
-    return null;
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...docSnap.data() } as Position;
+    } else {
+      return staticPositions.find(p => p.id === id) || null;
+    }
+  } catch (error) {
+    console.error(`Error fetching position ${id}, falling back to static data:`, error);
+    return staticPositions.find(p => p.id === id) || null;
   }
 }
 
