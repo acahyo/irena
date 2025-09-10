@@ -1,4 +1,4 @@
-import type { Employee, CalendarEvent, Department, Position, User, Role } from './types';
+import type { Employee, CalendarEvent, Department, Position, User, Role, Site } from './types';
 
 export const employees: Employee[] = [
   {
@@ -145,13 +145,20 @@ export const positions: Position[] = [
 ];
 
 export const users: User[] = [
-    { id: '1', name: 'Admin User', email: 'admin@staffhub.com', role: 'Administrator' },
-    { id: '2', name: 'HR Manager', email: 'hr.manager@staffhub.com', role: 'HR' },
-    { id: '3', name: 'General User', email: 'user@staffhub.com', role: 'Employee' },
+    { id: '1', name: 'Admin User', email: 'admin@irena.com', role: 'Administrator', password: 'admin' },
+    { id: '2', name: 'HR Manager', email: 'hr.manager@staffhub.com', role: 'HR', password: 'hr' },
+    { id: '3', name: 'General User', email: 'user@staffhub.com', role: 'Employee', password: 'user' },
 ];
 
 export const roles: Role[] = [
     { id: '1', name: 'Administrator', description: 'Full access to all features' },
     { id: '2', name: 'HR', description: 'Access to employee management features' },
     { id: '3', name: 'Employee', description: 'Basic access to their own profile' },
+];
+
+
+export const sites: Site[] = [
+    { id: '1', name: 'Proyek Tambang Kaltim', picId: '1', picName: 'Alice Johnson', picContact: '123-456-7890', supervisors: [{ id: '2', name: 'Bob Williams' }] },
+    { id: '2', name: 'Proyek Konstruksi Jakarta', picId: '3', picName: 'Charlie Brown', picContact: '123-456-7892', supervisors: [] },
+    { id: '3', name: 'Site Maintenance Surabaya' },
 ];

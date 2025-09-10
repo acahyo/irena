@@ -60,6 +60,10 @@ export type Department = {
 export type Site = {
     id: string;
     name: string;
+    picId?: string;
+    picName?: string;
+    picContact?: string;
+    supervisors?: { id: string, name: string }[];
 };
 
 export type User = {
@@ -68,6 +72,7 @@ export type User = {
     email: string;
     role: string;
     password?: string;
+    avatar?: string;
 };
 
 export type Role = {

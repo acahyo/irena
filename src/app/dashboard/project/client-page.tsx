@@ -35,7 +35,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { MoreHorizontal, PlusCircle, Trash2, Pencil } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash2, Pencil, User, Phone } from 'lucide-react';
 import { deleteSite, getSites } from '@/actions/sites';
 import { useToast } from '@/hooks/use-toast';
 import type { Site } from '@/lib/types';
@@ -91,14 +91,35 @@ export default function ProjectClientPage({ initialSites }: { initialSites: Site
             <TableHeader>
                 <TableRow>
                     <TableHead>Nama Proyek/Site</TableHead>
+                    <TableHead>PIC</TableHead>
+                    <TableHead>Pengawas</TableHead>
                     <TableHead className="w-[100px] text-right">Aksi</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
-              {sites.length > 0 ? (
+              {sites && sites.length > 0 ? (
                 sites.map((site) => (
                     <TableRow key={site.id}>
                         <TableCell className="font-medium">{site.name}</TableCell>
+                        <TableCell>
+                          {site.picName ? (
+                            <div className="flex flex-col">
+                                <span className="font-medium flex items-center gap-2"><User className="h-4 w-4" /> {site.picName}</span>
+                                <span className="text-muted-foreground text-xs flex items-center gap-2"><Phone className="h-3 w-3" /> {site.picContact}</span>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">N/A</span>
+                          )}
+                        </TableCell>
+                         <TableCell>
+                            {site.supervisors && site.supervisors.length > 0 ? (
+                                <ul className="list-disc list-inside">
+                                    {site.supervisors.map(s => <li key={s.id} className="text-sm">{s.name}</li>)}
+                                </ul>
+                            ) : (
+                                <span className="text-muted-foreground">N/A</span>
+                            )}
+                        </TableCell>
                         <TableCell className="text-right">
                              <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -141,7 +162,7 @@ export default function ProjectClientPage({ initialSites }: { initialSites: Site
                 ))
                ) : (
                 <TableRow>
-                    <TableCell colSpan={2} className="h-24 text-center">
+                    <TableCell colSpan={4} className="h-24 text-center">
                         Tidak ada proyek ditemukan.
                     </TableCell>
                 </TableRow>
