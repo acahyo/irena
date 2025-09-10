@@ -18,25 +18,35 @@ function convertTimestampsToDates(docData: any) {
 
 // Get all leave requests
 export async function getLeaveRequests(): Promise<LeaveRequest[]> {
-  const querySnapshot = await getDocs(collection(db, 'leaveRequests'));
-  const requests: LeaveRequest[] = [];
-  querySnapshot.forEach((doc) => {
-    const data = convertTimestampsToDates(doc.data());
-    requests.push({ id: doc.id, ...data } as LeaveRequest);
-  });
-  return requests.sort((a, b) => b.startDate.getTime() - a.startDate.getTime());
+  try {
+    const querySnapshot = await getDocs(collection(db, 'leaveRequests'));
+    const requests: LeaveRequest[] = [];
+    querySnapshot.forEach((doc) => {
+        const data = convertTimestampsToDates(doc.data());
+        requests.push({ id: doc.id, ...data } as LeaveRequest);
+    });
+    return requests.sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+  } catch (error) {
+    console.error("Error fetching leave requests, returning empty array:", error);
+    return [];
+  }
 }
 
 // Get leave requests for a specific employee
 export async function getLeaveRequestsByEmployeeId(employeeId: string): Promise<LeaveRequest[]> {
-  const q = query(collection(db, 'leaveRequests'), where('employeeId', '==', employeeId));
-  const querySnapshot = await getDocs(q);
-  const requests: LeaveRequest[] = [];
-  querySnapshot.forEach((doc) => {
-    const data = convertTimestampsToDates(doc.data());
-    requests.push({ id: doc.id, ...data } as LeaveRequest);
-  });
-  return requests.sort((a, b) => b.startDate.getTime() - a.startDate.getTime());
+  try {
+    const q = query(collection(db, 'leaveRequests'), where('employeeId', '==', employeeId));
+    const querySnapshot = await getDocs(q);
+    const requests: LeaveRequest[] = [];
+    querySnapshot.forEach((doc) => {
+        const data = convertTimestampsToDates(doc.data());
+        requests.push({ id: doc.id, ...data } as LeaveRequest);
+    });
+    return requests.sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+  } catch (error) {
+    console.error(`Error fetching leave requests for employee ${employeeId}, returning empty array:`, error);
+    return [];
+  }
 }
 
 
