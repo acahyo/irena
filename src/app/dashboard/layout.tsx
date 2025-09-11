@@ -2,9 +2,8 @@
 import { redirect } from "next/navigation";
 import DashboardClientLayout from "./layout-client";
 import { getSettings } from "@/actions/settings";
-import { getUsers } from "@/actions/users";
+import { getAdminSession } from "@/actions/auth";
 import { getRoles } from "@/actions/roles";
-import type { User, Role } from "@/lib/types";
 
 
 export default async function DashboardLayout({
@@ -13,14 +12,9 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const settings = await getSettings();
-  // NOTE: This is a placeholder for a real authentication system.
-  // In a real app, you would get the logged-in user from a session.
-  const [users, roles] = await Promise.all([getUsers(), getRoles()]);
-  const currentUser = users.find(u => u.email === 'admin@irena.com') || users.find(u => u.role?.toLowerCase().includes('admin')) || users[0];
-
+  const [currentUser, roles] = await Promise.all([getAdminSession(), getRoles()]);
+  
   if (!currentUser) {
-    // If no users exist, maybe redirect to a setup page or show an error.
-    // For now, we'll redirect to login as a fallback.
     redirect('/');
   }
 

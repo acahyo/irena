@@ -1,7 +1,7 @@
 'use client';
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useMemo } from "react";
 import {
   Avatar,
@@ -22,15 +22,12 @@ import {
 } from "@/components/ui/sidebar";
 import {
   LogOut,
-  Settings,
   CalendarCheck,
-  LayoutDashboard,
   Printer,
   ClipboardCheck,
   User,
 } from "lucide-react";
 import type { AppSettings, Employee } from "@/lib/types";
-import { useRouter } from "next/navigation";
 import { logout } from "@/actions/auth";
 
 const getNavItems = (lang: 'id' | 'en') => [
@@ -61,12 +58,13 @@ export default function PortalClientLayout({
         return item.label;
       }
     }
-    return settings.appName || 'Portal';
+    return lang === 'id' ? 'Portal Karyawan' : 'Employee Portal';
   }
   
   const handleLogout = async () => {
-      await logout();
-      router.push('/');
+      await logout('employee');
+      router.push('/login/employee');
+      router.refresh();
   }
 
   const activeLabel = getActiveLabel();

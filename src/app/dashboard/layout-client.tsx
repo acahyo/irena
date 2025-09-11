@@ -1,7 +1,7 @@
 'use client';
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useMemo } from "react";
 import {
   Avatar,
@@ -41,6 +41,7 @@ import {
   Landmark,
 } from "lucide-react";
 import type { AppSettings, User, Role, MenuOrderItem } from "@/lib/types";
+import { logout } from "@/actions/auth";
 
 
 const allNavItemsList = (lang: 'id' | 'en') => [
@@ -73,6 +74,7 @@ export default function DashboardClientLayout({
   role: Role | null;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const lang = settings.language || 'id';
   
   const allNavItemsMap = useMemo(() => {
@@ -136,6 +138,12 @@ export default function DashboardClientLayout({
         }
     }
     return settings.appName || 'Dashboard';
+  }
+
+  const handleLogout = async () => {
+      await logout('admin');
+      router.push('/');
+      router.refresh();
   }
 
   const activeLabel = getActiveLabel();
@@ -213,12 +221,10 @@ export default function DashboardClientLayout({
               </span>
             </div>
           </div>
-          <Link href="/" passHref>
-            <SidebarMenuButton tooltip={{ children: lang === 'id' ? 'Keluar' : 'Log Out' }}>
+          <SidebarMenuButton onClick={handleLogout} tooltip={{ children: lang === 'id' ? 'Keluar' : 'Log Out' }}>
               <LogOut />
               <span>{lang === 'id' ? 'Keluar' : 'Log Out'}</span>
             </SidebarMenuButton>
-          </Link>
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
