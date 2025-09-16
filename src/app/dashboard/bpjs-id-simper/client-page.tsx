@@ -48,6 +48,12 @@ export default function BpjsIdSimperClientPage({
   const stats = useMemo(() => {
     const totalEmployees = initialEmployees.length;
     
+    const employeesByProject = initialEmployees.reduce((acc, emp) => {
+        const project = emp.siteLocation || 'Tanpa Proyek';
+        acc[project] = (acc[project] || 0) + 1;
+        return acc;
+    }, {} as Record<string, number>);
+
     const bpjsStats = initialEmployees.reduce((acc, emp) => {
         const status = emp.bpjsStatus || 'not-registered';
         acc[status] = (acc[status] || 0) + 1;
@@ -70,7 +76,7 @@ export default function BpjsIdSimperClientPage({
         return acc;
     }, { 'active': 0, 'in-progress': 0, 'not-registered': 0 });
 
-    return { totalEmployees, bpjsStats, idCardStats, simperStats };
+    return { totalEmployees, employeesByProject, bpjsStats, idCardStats, simperStats };
   }, [initialEmployees]);
   
   const filteredEmployees = useMemo(() => {
@@ -277,6 +283,14 @@ export default function BpjsIdSimperClientPage({
                 </CardHeader>
                 <CardContent>
                     <div className="text-2xl font-bold">{stats.totalEmployees}</div>
+                    <div className="text-xs text-muted-foreground space-y-1 mt-2">
+                        {Object.entries(stats.employeesByProject).map(([project, count]) => (
+                            <div key={project} className="flex justify-between">
+                                <span>{project}:</span>
+                                <span>{count}</span>
+                            </div>
+                        ))}
+                    </div>
                 </CardContent>
             </Card>
             <Card>
