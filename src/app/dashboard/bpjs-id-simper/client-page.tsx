@@ -128,6 +128,26 @@ export default function BpjsIdSimperClientPage({
     });
   }
 
+  const handleSimperStatusChange = (employeeId: string, value: string) => {
+    const updateData: Partial<Employee> = { simperStatus: value as any };
+    if (value !== 'active') {
+        updateData.simperNumber = '';
+    }
+    
+    setEmployees(prev => 
+      prev.map(emp => emp.id === employeeId ? { ...emp, ...updateData } : emp)
+    );
+
+    startSavingTransition(async () => {
+        try {
+            await updateEmployee(employeeId, updateData);
+            toast({ title: 'Tersimpan!', description: `Status SIMPER telah diperbarui.` });
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Gagal menyimpan status SIMPER.' });
+        }
+    });
+  }
+
   const renderCellContent = (employee: Employee, field: 'bpjs' | 'idCard' | 'simper') => {
       switch(field) {
           case 'bpjs':
@@ -192,13 +212,26 @@ export default function BpjsIdSimperClientPage({
               );
           case 'simper':
               return (
-                   <div className="w-[200px]">
-                    <Input
-                        placeholder="Nomor SIMPER"
-                        defaultValue={employee.simperNumber}
-                        onBlur={(e) => handleSave(employee.id, 'simperNumber', e.target.value)}
-                    />
-                   </div>
+                   <div className="flex flex-col gap-2 w-[200px]">
+                    <Select
+                        value={employee.simperStatus || 'not-registered'}
+                        onValueChange={(value) => handleSimperStatusChange(employee.id, value === 'not-registered' ? '' : value)}
+                    >
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="active">Aktif</SelectItem>
+                            <SelectItem value="in-progress">Proses Pendaftaran</SelectItem>
+                            <SelectItem value="not-registered">Belum Terdaftar</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    {employee.simperStatus === 'active' && (
+                        <Input 
+                            placeholder="Nomor SIMPER"
+                            defaultValue={employee.simperNumber}
+                            onBlur={(e) => handleSave(employee.id, 'simperNumber', e.target.value)}
+                        />
+                    )}
+                 </div>
               );
           default:
               return null;

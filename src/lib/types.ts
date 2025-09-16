@@ -31,6 +31,7 @@ export type Employee = {
   simPhoto?: string;
   sioPhoto?: string;
   simperNumber?: string;
+  simperStatus?: 'active' | 'in-progress' | 'not-registered';
   idCardNumber?: string;
   idCardStatus?: 'active' | 'in-progress' | 'not-registered';
   workContractNumber?: string;
