@@ -20,16 +20,21 @@ function convertTimestampsToDates(docData: any) {
     return data;
 }
 
-// Helper to upload base64 image to Firebase Storage and get URL
-async function uploadImageAndGetURL(base64Data: string, employeeId: string, imageType: string): Promise<string> {
-    if (!base64Data || !base64Data.startsWith('data:image')) {
+// Helper to upload base64 file to Firebase Storage and get URL
+async function uploadFileAndGetURL(base64Data: string, employeeId: string, fieldName: string): Promise<string> {
+    if (!base64Data || !base64Data.startsWith('data:')) {
         // If it's already a URL (from a previous upload), just return it
         if (base64Data && (base64Data.startsWith('http') || base64Data.startsWith('https'))) {
             return base64Data;
         }
-        throw new Error('Invalid image data provided.');
+        throw new Error('Invalid file data provided.');
     }
-    const storageRef = ref(storage, `images/${employeeId}/${imageType}-${Date.now()}`);
+    
+    const mimeType = base64Data.substring(base64Data.indexOf(':') + 1, base64Data.indexOf(';'));
+    const isImage = mimeType.startsWith('image/');
+    const folder = isImage ? 'images' : 'documents';
+
+    const storageRef = ref(storage, `${folder}/${employeeId}/${fieldName}-${Date.now()}`);
     const uploadResult = await uploadString(storageRef, base64Data, 'data_url');
     const downloadURL = await getDownloadURL(uploadResult.ref);
     return downloadURL;
@@ -98,11 +103,11 @@ export async function createEmployee(employee: Partial<Employee>): Promise<strin
         throw new Error("NIK is required to create an employee.");
     }
 
-    // Handle image uploads
-    const imageFields: (keyof Employee)[] = ['avatar', 'ktpPhoto', 'simPhoto', 'sioPhoto'];
-    for (const field of imageFields) {
-        if (employeeData[field] && (employeeData[field] as string).startsWith('data:image')) {
-            employeeData[field] = await uploadImageAndGetURL(employeeData[field] as string, employeeId, field);
+    // Handle file uploads
+    const fileFields: (keyof Employee)[] = ['avatar', 'ktpPhoto', 'simPhoto', 'sioPhoto'];
+    for (const field of fileFields) {
+        if (employeeData[field] && (employeeData[field] as string).startsWith('data:')) {
+            employeeData[field] = await uploadFileAndGetURL(employeeData[field] as string, employeeId, field);
         }
     }
 
@@ -133,11 +138,11 @@ export async function updateEmployee(id: string, employee: Partial<Employee>): P
     }
   });
 
-  // Handle image uploads
-  const imageFields: (keyof Employee)[] = ['avatar', 'ktpPhoto', 'simPhoto', 'sioPhoto'];
-  for (const field of imageFields) {
-      if (employeeData[field] && (employeeData[field] as string).startsWith('data:image')) {
-          employeeData[field] = await uploadImageAndGetURL(employeeData[field] as string, id, field);
+  // Handle file uploads
+  const fileFields: (keyof Employee)[] = ['avatar', 'ktpPhoto', 'simPhoto', 'sioPhoto'];
+  for (const field of fileFields) {
+      if (employeeData[field] && (employeeData[field] as string).startsWith('data:')) {
+          employeeData[field] = await uploadFileAndGetURL(employeeData[field] as string, id, field);
       }
   }
 

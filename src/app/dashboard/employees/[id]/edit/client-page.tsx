@@ -77,18 +77,22 @@ export default function EditEmployeePageClient({ employee, departments, position
       if (file.size > 1024 * 1024) { // 1MB limit
         toast({
           variant: 'destructive',
-          title: 'File too large',
-          description: 'Image size cannot exceed 1MB.',
+          title: 'File terlalu besar',
+          description: 'Ukuran file tidak boleh melebihi 1MB.',
         });
         event.target.value = ''; // Clear the input
         return;
       }
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/x-icon'];
+      const allowedTypes = [
+        'image/jpeg', 'image/png', 'image/jpg', 'image/x-icon',
+        'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      ];
       if (!allowedTypes.includes(file.type)) {
         toast({
             variant: 'destructive',
-            title: 'Invalid File Type',
-            description: 'Please upload a valid image file (jpg, jpeg, png, ico).',
+            title: 'Tipe File Tidak Valid',
+            description: 'Silakan unggah gambar (jpg, png) atau dokumen (pdf, doc, xls).',
         });
         event.target.value = '';
         return;
@@ -216,7 +220,7 @@ export default function EditEmployeePageClient({ employee, departments, position
           id={id}
           name={id}
           type="file"
-          accept="image/png, image/jpeg, image/jpg, image/x-icon"
+          accept="image/png, image/jpeg, image/jpg, image/x-icon, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
           onChange={onChange}
           className="max-w-sm"
         />
