@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, Upload, Download, ShieldCheck, GripVertical, PlusCircle, Trash2 } from 'lucide-react';
+import { Loader2, Upload, Download, ShieldCheck, GripVertical, PlusCircle, Trash2, Database, WalletCards } from 'lucide-react';
 import { getSettings, saveSettings } from '@/actions/settings';
 import type { AppSettings, Role, MenuOrderItem } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -62,6 +62,8 @@ const hexToHslString = (hex: string | undefined): string | undefined => {
 const allMenus = [
   { id: 'dashboard', label: 'Dasbor' },
   { id: 'employees', label: 'Karyawan' },
+  { id: 'id-simper-status', label: 'Status Pengajuan ID/SIMPER' },
+  { id: 'id-simper-data', label: 'Data ID/SIMPER' },
   { id: 'leave-schedule', label: 'Jadwal Cuti' },
   { id: 'payroll', label: 'Payroll' },
   { id: 'attendance', label: 'Input Absensi' },

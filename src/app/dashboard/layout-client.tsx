@@ -39,6 +39,7 @@ import {
   ChevronDown,
   MapPin,
   Landmark,
+  Database,
 } from "lucide-react";
 import type { AppSettings, User, Role, MenuOrderItem } from "@/lib/types";
 import { logout } from "@/actions/auth";
@@ -47,6 +48,16 @@ import { logout } from "@/actions/auth";
 const allNavItemsList = (lang: 'id' | 'en') => [
   { id: 'dashboard', href: "/dashboard", icon: LayoutDashboard, label: lang === 'id' ? "Dasbor" : "Dashboard", exact: true },
   { id: 'employees', href: "/dashboard/employees", icon: Users, label: lang === 'id' ? "Karyawan" : "Employees" },
+  {
+    id: 'id-simper-group',
+    isGroup: true,
+    label: 'ID-SIMPER-SIMPER',
+    icon: WalletCards,
+    subItems: [
+        { id: 'id-simper-status', href: "/dashboard/id-simper/status", icon: ClipboardCheck, label: lang === 'id' ? "Status Pengajuan" : "Submission Status" },
+        { id: 'id-simper-data', href: "/dashboard/id-simper/data", icon: Database, label: "Data ID-SIMPER-SIMPER" },
+    ]
+  },
   { id: 'leave-schedule', href: "/dashboard/leave-schedule", icon: CalendarCheck, label: lang === 'id' ? "Jadwal Cuti" : "Leave Schedule" },
   { id: 'payroll', href: "/dashboard/payroll", icon: Wallet, label: "Payroll" },
   { id: 'attendance', href: "/dashboard/attendance", icon: ClipboardCheck, label: lang === 'id' ? "Input Absensi" : "Attendance Input" },
@@ -78,37 +89,51 @@ export default function DashboardClientLayout({
   const lang = settings.language || 'id';
   
   const allNavItemsMap = useMemo(() => {
-      const map = new Map();
-      allNavItemsList(lang).forEach(item => map.set(item.id, item));
-      return map;
+    const map = new Map();
+    allNavItemsList(lang).forEach(item => {
+        if (item.isGroup) {
+            map.set(item.id, item);
+            item.subItems.forEach(sub => map.set(sub.id, sub));
+        } else {
+            map.set(item.id, item);
+        }
+    });
+    return map;
   }, [lang]);
 
   const orderedNavItems = useMemo(() => {
     // If a menu order is saved in settings, use it. Otherwise, use the default list.
     const menuOrderSource = settings.menuOrder && settings.menuOrder.length > 0 
         ? settings.menuOrder 
-        : allNavItemsList(lang).map(item => ({ id: item.id, isGroup: false, subItems: [] }));
+        : allNavItemsList(lang).map(item => ({ id: item.id, isGroup: item.isGroup, subItems: item.isGroup ? item.subItems.map(si => si.id) : [] }));
     
-    // Ensure all menus are present, even if not in the saved order, to prevent them from disappearing.
     const allKnownIds = new Set(allNavItemsList(lang).map(i => i.id));
-    const usedIds = new Set(menuOrderSource.flatMap(item => item.isGroup ? (item.subItems || []) : [item.id]));
-    const missingItems = Array.from(allKnownIds).filter(id => !usedIds.has(id)).map(id => ({ id, isGroup: false, subItems: [] }));
+    const usedIds = new Set(menuOrderSource.flatMap(item => item.isGroup ? [item.id, ...(item.subItems || [])] : [item.id]));
+
+    const fullNavList = allNavItemsList(lang);
+
+    // This logic ensures new hardcoded items are added to the list if not in settings.menuOrder
+    const missingItems = fullNavList
+      .filter(item => !usedIds.has(item.id))
+      .map(item => ({ id: item.id, isGroup: item.isGroup, subItems: item.isGroup ? item.subItems.map(si => si.id) : [] }));
 
     const finalMenuOrder = [...menuOrderSource, ...missingItems];
 
     return finalMenuOrder.map(orderItem => {
-        if (orderItem.isGroup) {
+        const mainItem = fullNavList.find(i => i.id === orderItem.id);
+        if (!mainItem) return null;
+
+        if (mainItem.isGroup) {
+            const finalSubItems = (orderItem.subItems || [])
+                .map(subId => mainItem.subItems.find(si => si.id === subId))
+                .filter(Boolean);
+            
             return {
-                id: orderItem.id,
-                isGroup: true,
-                label: `Grup Menu`, // You might want a way to name groups
-                icon: FolderKanban,
-                subItems: (orderItem.subItems || [])
-                    .map(subId => allNavItemsMap.get(subId))
-                    .filter(Boolean),
+                ...mainItem,
+                subItems: finalSubItems,
             };
         }
-        return allNavItemsMap.get(orderItem.id);
+        return mainItem;
     }).filter(Boolean); // Filter out any undefined items
   }, [allNavItemsMap, settings.menuOrder, lang]);
   
@@ -132,7 +157,7 @@ export default function DashboardClientLayout({
 
 
   const getActiveLabel = () => {
-    for (const item of allNavItemsList(lang)) {
+    for (const item of allNavItemsList(lang).flatMap(i => i.isGroup ? i.subItems : i)) {
         if (item.href && (item.exact ? pathname === item.href : pathname.startsWith(item.href))) {
             return item.label;
         }
