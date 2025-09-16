@@ -67,6 +67,7 @@ const allMenus = [
   { id: 'attendance', label: 'Input Absensi' },
   { id: 'payslip', label: 'Cetak Slip Gaji' },
   { id: 'payslip-collective', label: 'Slip Gaji Kolektif' },
+  { id: 'bpjs-id-simper', label: 'BPJS-ID-SIMPER' },
   { id: 'department', label: 'Departemen' },
   { id: 'position', label: 'Jabatan & Gaji' },
   { id: 'project', label: 'Proyek' },

@@ -53,6 +53,7 @@ const allNavItemsList = (lang: 'id' | 'en') => [
   { id: 'attendance', href: "/dashboard/attendance", icon: ClipboardCheck, label: lang === 'id' ? "Input Absensi" : "Attendance Input" },
   { id: 'payslip', href: "/dashboard/payslip", icon: Printer, label: lang === 'id' ? "Cetak Slip Gaji" : "Print Payslip" },
   { id: 'payslip-collective', href: "/dashboard/payslip-collective", icon: Printer, label: lang === 'id' ? "Slip Gaji Kolektif" : "Collective Payslip" },
+  { id: 'bpjs-id-simper', href: "/dashboard/bpjs-id-simper", icon: Database, label: "BPJS-ID-SIMPER" },
   { id: 'department', href: "/dashboard/department", icon: Briefcase, label: lang === 'id' ? "Departemen" : "Department" },
   { id: 'position', href: "/dashboard/position", icon: WalletCards, label: lang === 'id' ? "Jabatan & Gaji" : "Position & Salary" },
   { id: 'project', href: "/dashboard/project", icon: Briefcase, label: "Proyek" },
@@ -81,9 +82,9 @@ export default function DashboardClientLayout({
   const allNavItemsMap = useMemo(() => {
     const map = new Map();
     allNavItemsList(lang).forEach(item => {
-        if (item.isGroup) {
+        if ((item as any).isGroup) {
             map.set(item.id, item);
-            item.subItems.forEach(sub => map.set(sub.id, sub));
+            (item as any).subItems.forEach((sub: any) => map.set(sub.id, sub));
         } else {
             map.set(item.id, item);
         }
@@ -95,7 +96,7 @@ export default function DashboardClientLayout({
     // If a menu order is saved in settings, use it. Otherwise, use the default list.
     const menuOrderSource = settings.menuOrder && settings.menuOrder.length > 0 
         ? settings.menuOrder 
-        : allNavItemsList(lang).map(item => ({ id: item.id, isGroup: item.isGroup, subItems: item.isGroup ? item.subItems.map(si => si.id) : [] }));
+        : allNavItemsList(lang).map(item => ({ id: item.id, isGroup: (item as any).isGroup, subItems: (item as any).isGroup ? (item as any).subItems.map((si: any) => si.id) : [] }));
     
     const allKnownIds = new Set(allNavItemsList(lang).map(i => i.id));
     const usedIds = new Set(menuOrderSource.flatMap(item => item.isGroup ? [item.id, ...(item.subItems || [])] : [item.id]));
@@ -105,7 +106,7 @@ export default function DashboardClientLayout({
     // This logic ensures new hardcoded items are added to the list if not in settings.menuOrder
     const missingItems = fullNavList
       .filter(item => !usedIds.has(item.id))
-      .map(item => ({ id: item.id, isGroup: item.isGroup, subItems: item.isGroup ? item.subItems.map(si => si.id) : [] }));
+      .map(item => ({ id: item.id, isGroup: (item as any).isGroup, subItems: (item as any).isGroup ? (item as any).subItems.map((si: any) => si.id) : [] }));
 
     const finalMenuOrder = [...menuOrderSource, ...missingItems];
 
@@ -113,9 +114,9 @@ export default function DashboardClientLayout({
         const mainItem = fullNavList.find(i => i.id === orderItem.id);
         if (!mainItem) return null;
 
-        if (mainItem.isGroup) {
+        if ((mainItem as any).isGroup) {
             const finalSubItems = (orderItem.subItems || [])
-                .map(subId => mainItem.subItems.find(si => si.id === subId))
+                .map(subId => (mainItem as any).subItems.find((si: any) => si.id === subId))
                 .filter(Boolean);
             
             return {
@@ -134,8 +135,8 @@ export default function DashboardClientLayout({
     const accessibleMenus = new Set(role.accessibleMenus || []);
     
     return orderedNavItems.map(item => {
-        if (item.isGroup) {
-            const accessibleSubItems = item.subItems.filter((sub: any) => accessibleMenus.has(sub.id));
+        if ((item as any).isGroup) {
+            const accessibleSubItems = (item as any).subItems.filter((sub: any) => accessibleMenus.has(sub.id));
             if (accessibleSubItems.length > 0) {
                 return { ...item, subItems: accessibleSubItems };
             }
@@ -147,7 +148,7 @@ export default function DashboardClientLayout({
 
 
   const getActiveLabel = () => {
-    for (const item of allNavItemsList(lang).flatMap(i => i.isGroup ? i.subItems : i)) {
+    for (const item of allNavItemsList(lang).flatMap(i => (i as any).isGroup ? (i as any).subItems : i)) {
         if (item.href && (item.exact ? pathname === item.href : pathname.startsWith(item.href))) {
             return item.label;
         }
