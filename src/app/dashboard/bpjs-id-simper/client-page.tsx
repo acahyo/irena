@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useTransition } from 'react';
 import {
   Card,
   CardContent,
@@ -9,9 +9,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Users, ShieldCheck, Contact, WalletCards, Pencil } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
+import { Pencil, Loader2 } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -22,11 +20,14 @@ import {
 } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+import { updateEmployee } from '@/actions/employees';
 import type { Employee, Site, Position } from '@/lib/types';
 
 
 export default function BpjsIdSimperClientPage({
-    employees,
+    employees: initialEmployees,
     sites,
     positions
 }: {
@@ -34,8 +35,15 @@ export default function BpjsIdSimperClientPage({
     sites: Site[],
     positions: Position[],
 }) {
+  const [employees, setEmployees] = useState(initialEmployees);
   const [projectFilter, setProjectFilter] = useState('all');
   const [positionFilter, setPositionFilter] = useState('all');
+  const [isSaving, startSavingTransition] = useTransition();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    setEmployees(initialEmployees);
+  }, [initialEmployees]);
   
   const filteredEmployees = useMemo(() => {
     return employees.filter(emp => {
@@ -45,91 +53,121 @@ export default function BpjsIdSimperClientPage({
     });
   }, [employees, projectFilter, positionFilter]);
 
+  const handleFieldChange = (employeeId: string, field: keyof Employee, value: any) => {
+    setEmployees(prev => 
+      prev.map(emp => 
+        emp.id === employeeId ? { ...emp, [field]: value } : emp
+      )
+    );
+  };
+  
+  const handleSave = (employeeId: string, field: keyof Employee, value: any) => {
+    const employee = employees.find(e => e.id === employeeId);
+    if (!employee) return;
+    
+    // Optimistically update UI
+    handleFieldChange(employeeId, field, value);
 
-  const totalEmployees = filteredEmployees.length;
-  // BPJS Stats
-  const bpjsActive = filteredEmployees.filter(e => e.bpjsStatus === 'active');
-  const bpjsActiveMiki = bpjsActive.filter(e => e.bpjsType === 'miki').length;
-  const bpjsActiveIba = bpjsActive.filter(e => e.bpjsType === 'iba').length;
-  const bpjsInactive = filteredEmployees.filter(e => e.bpjsStatus === 'inactive').length;
-  const bpjsNotRegistered = totalEmployees - bpjsActive.length - bpjsInactive;
+    startSavingTransition(async () => {
+        try {
+            await updateEmployee(employeeId, { [field]: value });
+            toast({
+                title: 'Tersimpan!',
+                description: `Data ${field} untuk ${employee.name} telah diperbarui.`,
+            });
+        } catch (error) {
+             toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: `Gagal menyimpan data untuk ${employee.name}.`,
+            });
+            // Revert on error if needed, though for simplicity we don't here.
+        }
+    });
+  };
 
-  // ID Card Stats
-  const idCardActive = filteredEmployees.filter(e => e.idCardNumber).length;
-  const idCardNotRegistered = totalEmployees - idCardActive;
+  const handleBpjsStatusChange = (employeeId: string, value: string) => {
+    const updateData: Partial<Employee> = { bpjsStatus: value as any };
+    // If status is not 'active', clear the number and type
+    if (value !== 'active') {
+        updateData.bpjsNumber = '';
+        updateData.bpjsType = undefined;
+    }
+    
+    setEmployees(prev => 
+      prev.map(emp => emp.id === employeeId ? { ...emp, ...updateData } : emp)
+    );
 
-  // SIMPER Stats
-  const simperActive = filteredEmployees.filter(e => e.simperNumber).length;
-  const simperNotRegistered = totalEmployees - simperActive;
+    startSavingTransition(async () => {
+        try {
+            await updateEmployee(employeeId, updateData);
+            toast({ title: 'Tersimpan!', description: `Status BPJS telah diperbarui.` });
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Gagal menyimpan status BPJS.' });
+        }
+    });
+  }
 
-  const StatCard = ({ title, icon, total, details }: { title: string, icon: React.ReactNode, total: number, details?: { label: string, value: number, variant?: "default" | "secondary" | "destructive" | "outline" }[] }) => (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        {icon}
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{total}</div>
-        {details && (
-          <div className="mt-2 space-y-2">
-            {details.map(detail => (
-              <div key={detail.label} className="flex items-center justify-between text-xs">
-                <p className="text-muted-foreground">{detail.label}</p>
-                <Badge variant={detail.variant || 'secondary'}>{detail.value}</Badge>
-              </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
+  const renderCellContent = (employee: Employee, field: 'bpjs' | 'idCard' | 'simper') => {
+      switch(field) {
+          case 'bpjs':
+              return (
+                 <div className="flex flex-col gap-2 w-[200px]">
+                    <Select
+                        value={employee.bpjsStatus || 'not-registered'}
+                        onValueChange={(value) => handleBpjsStatusChange(employee.id, value === 'not-registered' ? '' : value)}
+                    >
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="active">Aktif</SelectItem>
+                            <SelectItem value="inactive">Tidak Aktif</SelectItem>
+                            <SelectItem value="not-registered">Belum Terdaftar</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    {employee.bpjsStatus === 'active' && (
+                        <Input 
+                            placeholder="Nomor BPJS"
+                            defaultValue={employee.bpjsNumber}
+                            onBlur={(e) => handleSave(employee.id, 'bpjsNumber', e.target.value)}
+                        />
+                    )}
+                 </div>
+              );
+          case 'idCard':
+              return (
+                  <div className="w-[200px]">
+                    <Input
+                        placeholder="Nomor ID Card"
+                        defaultValue={employee.idCardNumber}
+                        onBlur={(e) => handleSave(employee.id, 'idCardNumber', e.target.value)}
+                    />
+                  </div>
+              );
+          case 'simper':
+              return (
+                   <div className="w-[200px]">
+                    <Input
+                        placeholder="Nomor SIMPER"
+                        defaultValue={employee.simperNumber}
+                        onBlur={(e) => handleSave(employee.id, 'simperNumber', e.target.value)}
+                    />
+                   </div>
+              );
+          default:
+              return null;
+      }
+  }
+
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="Total Karyawan"
-          icon={<Users className="h-4 w-4 text-muted-foreground" />}
-          total={totalEmployees}
-        />
-        <StatCard
-          title="Status BPJS"
-          icon={<ShieldCheck className="h-4 w-4 text-muted-foreground" />}
-          total={totalEmployees}
-          details={[
-            { label: 'Aktif (MIKI)', value: bpjsActiveMiki, variant: 'default' },
-            { label: 'Aktif (IBA)', value: bpjsActiveIba, variant: 'default' },
-            { label: 'Tidak Aktif', value: bpjsInactive, variant: 'destructive' },
-            { label: 'Belum Terdaftar', value: bpjsNotRegistered },
-          ]}
-        />
-        <StatCard
-          title="Status ID Card"
-          icon={<Contact className="h-4 w-4 text-muted-foreground" />}
-          total={totalEmployees}
-          details={[
-            { label: 'Aktif / Terdaftar', value: idCardActive, variant: 'default' },
-            { label: 'Belum Terdaftar', value: idCardNotRegistered },
-          ]}
-        />
-        <StatCard
-          title="Status SIMPER"
-          icon={<WalletCards className="h-4 w-4 text-muted-foreground" />}
-          total={totalEmployees}
-          details={[
-            { label: 'Aktif / Terdaftar', value: simperActive, variant: 'default' },
-            { label: 'Belum Terdaftar', value: simperNotRegistered },
-          ]}
-        />
-      </div>
-
        <Card>
             <CardHeader>
                 <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                     <div>
                         <CardTitle>Data Karyawan</CardTitle>
                         <CardDescription>
-                        Detail status BPJS, ID Card, dan SIMPER untuk setiap karyawan.
+                        Detail status BPJS, ID Card, dan SIMPER untuk setiap karyawan. Klik pada kolom untuk mengedit.
                         </CardDescription>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
@@ -155,6 +193,12 @@ export default function BpjsIdSimperClientPage({
                 </div>
             </CardHeader>
             <CardContent>
+                <div className="relative">
+                {isSaving && (
+                    <div className="absolute inset-0 bg-background/50 flex items-center justify-center z-10">
+                        <Loader2 className="h-6 w-6 animate-spin" />
+                    </div>
+                )}
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -181,36 +225,9 @@ export default function BpjsIdSimperClientPage({
                                     </div>
                                 </TableCell>
                                 <TableCell>{emp.siteLocation || 'N/A'}</TableCell>
-                                <TableCell>
-                                    {!emp.bpjsStatus && <Badge variant="secondary">Belum Terdaftar</Badge>}
-                                    {emp.bpjsStatus === 'active' && (
-                                        <div className="flex flex-col gap-1">
-                                            <Badge variant="default">Aktif</Badge>
-                                            <span className="text-xs text-muted-foreground">{emp.bpjsNumber || 'No. tidak ada'}</span>
-                                        </div>
-                                    )}
-                                    {emp.bpjsStatus === 'inactive' && <Badge variant="destructive">Tidak Aktif</Badge>}
-                                </TableCell>
-                                <TableCell>
-                                    {emp.idCardNumber ? (
-                                         <div className="flex flex-col gap-1">
-                                            <Badge variant="default">Aktif</Badge>
-                                            <span className="text-xs text-muted-foreground">{emp.idCardNumber}</span>
-                                        </div>
-                                    ) : (
-                                        <Badge variant="secondary">Belum Terdaftar</Badge>
-                                    )}
-                                </TableCell>
-                                <TableCell>
-                                    {emp.simperNumber ? (
-                                         <div className="flex flex-col gap-1">
-                                            <Badge variant="default">Aktif</Badge>
-                                            <span className="text-xs text-muted-foreground">{emp.simperNumber}</span>
-                                        </div>
-                                    ) : (
-                                        <Badge variant="secondary">Belum Terdaftar</Badge>
-                                    )}
-                                </TableCell>
+                                <TableCell>{renderCellContent(emp, 'bpjs')}</TableCell>
+                                <TableCell>{renderCellContent(emp, 'idCard')}</TableCell>
+                                <TableCell>{renderCellContent(emp, 'simper')}</TableCell>
                             </TableRow>
                         ))}
                         {filteredEmployees.length === 0 && (
@@ -222,9 +239,9 @@ export default function BpjsIdSimperClientPage({
                         )}
                     </TableBody>
                 </Table>
+                </div>
             </CardContent>
         </Card>
-
     </div>
   );
 }
