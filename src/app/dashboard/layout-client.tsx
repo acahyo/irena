@@ -48,16 +48,6 @@ import { logout } from "@/actions/auth";
 const allNavItemsList = (lang: 'id' | 'en') => [
   { id: 'dashboard', href: "/dashboard", icon: LayoutDashboard, label: lang === 'id' ? "Dasbor" : "Dashboard", exact: true },
   { id: 'employees', href: "/dashboard/employees", icon: Users, label: lang === 'id' ? "Karyawan" : "Employees" },
-  {
-    id: 'id-simper-group',
-    isGroup: true,
-    label: 'ID-SIMPER-SIMPER',
-    icon: WalletCards,
-    subItems: [
-        { id: 'id-simper-status', href: "/dashboard/id-simper/status", icon: ClipboardCheck, label: lang === 'id' ? "Status Pengajuan" : "Submission Status" },
-        { id: 'id-simper-data', href: "/dashboard/id-simper/data", icon: Database, label: "Data ID-SIMPER-SIMPER" },
-    ]
-  },
   { id: 'leave-schedule', href: "/dashboard/leave-schedule", icon: CalendarCheck, label: lang === 'id' ? "Jadwal Cuti" : "Leave Schedule" },
   { id: 'payroll', href: "/dashboard/payroll", icon: Wallet, label: "Payroll" },
   { id: 'attendance', href: "/dashboard/attendance", icon: ClipboardCheck, label: lang === 'id' ? "Input Absensi" : "Attendance Input" },

@@ -62,8 +62,6 @@ const hexToHslString = (hex: string | undefined): string | undefined => {
 const allMenus = [
   { id: 'dashboard', label: 'Dasbor' },
   { id: 'employees', label: 'Karyawan' },
-  { id: 'id-simper-status', label: 'Status Pengajuan ID/SIMPER' },
-  { id: 'id-simper-data', label: 'Data ID/SIMPER' },
   { id: 'leave-schedule', label: 'Jadwal Cuti' },
   { id: 'payroll', label: 'Payroll' },
   { id: 'attendance', label: 'Input Absensi' },
