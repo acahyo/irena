@@ -83,6 +83,16 @@ export default function EditEmployeePageClient({ employee, departments, position
         event.target.value = ''; // Clear the input
         return;
       }
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/x-icon'];
+      if (!allowedTypes.includes(file.type)) {
+        toast({
+            variant: 'destructive',
+            title: 'Invalid File Type',
+            description: 'Please upload a valid image file (jpg, jpeg, png, ico).',
+        });
+        event.target.value = '';
+        return;
+      }
       const reader = new FileReader();
       reader.onload = (e) => {
         setter(e.target?.result as string);
@@ -206,7 +216,7 @@ export default function EditEmployeePageClient({ employee, departments, position
           id={id}
           name={id}
           type="file"
-          accept="image/*"
+          accept="image/png, image/jpeg, image/jpg, image/x-icon"
           onChange={onChange}
           className="max-w-sm"
         />
