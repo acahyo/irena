@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Pencil, Loader2 } from 'lucide-react';
+import { Pencil, Loader2, Users, ShieldCheck, UserSquare, WalletCards } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -43,6 +43,34 @@ export default function BpjsIdSimperClientPage({
 
   useEffect(() => {
     setEmployees(initialEmployees);
+  }, [initialEmployees]);
+
+  const stats = useMemo(() => {
+    const totalEmployees = initialEmployees.length;
+    
+    const bpjsStats = initialEmployees.reduce((acc, emp) => {
+        const status = emp.bpjsStatus || 'not-registered';
+        acc[status] = (acc[status] || 0) + 1;
+        if (status === 'active') {
+            const type = emp.bpjsType || 'unknown';
+            acc.types[type] = (acc.types[type] || 0) + 1;
+        }
+        return acc;
+    }, { 'active': 0, 'inactive': 0, 'not-registered': 0, types: {} as Record<string, number> });
+
+    const idCardStats = initialEmployees.reduce((acc, emp) => {
+        const status = emp.idCardStatus || 'not-registered';
+        acc[status] = (acc[status] || 0) + 1;
+        return acc;
+    }, { 'active': 0, 'in-progress': 0, 'not-registered': 0 });
+    
+    const simperStats = initialEmployees.reduce((acc, emp) => {
+        const status = emp.simperStatus || 'not-registered';
+        acc[status] = (acc[status] || 0) + 1;
+        return acc;
+    }, { 'active': 0, 'in-progress': 0, 'not-registered': 0 });
+
+    return { totalEmployees, bpjsStats, idCardStats, simperStats };
   }, [initialEmployees]);
   
   const filteredEmployees = useMemo(() => {
@@ -241,6 +269,58 @@ export default function BpjsIdSimperClientPage({
 
   return (
     <div className="space-y-6">
+       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Karyawan</CardTitle>
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">{stats.totalEmployees}</div>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Status BPJS</CardTitle>
+                    <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent className="text-sm space-y-1">
+                    <div className="flex justify-between"><span>Aktif:</span> <Badge variant="secondary">{stats.bpjsStats.active}</Badge></div>
+                    {stats.bpjsStats.active > 0 && (
+                        <div className="pl-4 text-xs">
+                             <div className="flex justify-between"><span>- MIKI:</span> <span>{stats.bpjsStats.types.miki || 0}</span></div>
+                             <div className="flex justify-between"><span>- IBA:</span> <span>{stats.bpjsStats.types.iba || 0}</span></div>
+                             <div className="flex justify-between"><span>- Lainnya:</span> <span>{stats.bpjsStats.types.unknown || 0}</span></div>
+                        </div>
+                    )}
+                    <div className="flex justify-between"><span>Tidak Aktif:</span> <Badge variant="outline">{stats.bpjsStats.inactive}</Badge></div>
+                    <div className="flex justify-between"><span>Belum Terdaftar:</span> <Badge variant="outline">{stats.bpjsStats['not-registered']}</Badge></div>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Status ID Card</CardTitle>
+                    <UserSquare className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                 <CardContent className="text-sm space-y-1">
+                    <div className="flex justify-between"><span>Aktif:</span> <Badge variant="secondary">{stats.idCardStats.active}</Badge></div>
+                    <div className="flex justify-between"><span>Proses:</span> <Badge variant="outline">{stats.idCardStats['in-progress']}</Badge></div>
+                    <div className="flex justify-between"><span>Belum Terdaftar:</span> <Badge variant="outline">{stats.idCardStats['not-registered']}</Badge></div>
+                </CardContent>
+            </Card>
+             <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Status SIMPER</CardTitle>
+                    <WalletCards className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent className="text-sm space-y-1">
+                    <div className="flex justify-between"><span>Aktif:</span> <Badge variant="secondary">{stats.simperStats.active}</Badge></div>
+                    <div className="flex justify-between"><span>Proses:</span> <Badge variant="outline">{stats.simperStats['in-progress']}</Badge></div>
+                    <div className="flex justify-between"><span>Belum Terdaftar:</span> <Badge variant="outline">{stats.simperStats['not-registered']}</Badge></div>
+                </CardContent>
+            </Card>
+        </div>
+
        <Card>
             <CardHeader>
                 <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
