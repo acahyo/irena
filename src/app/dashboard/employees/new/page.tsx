@@ -85,6 +85,15 @@ export default function NewEmployeePage() {
   ) => {
     const file = event.target.files?.[0];
     if (file) {
+      if (file.size > 1024 * 1024) { // 1MB limit
+        toast({
+          variant: 'destructive',
+          title: 'File too large',
+          description: 'Image size cannot exceed 1MB.',
+        });
+        event.target.value = ''; // Clear the input
+        return;
+      }
       const reader = new FileReader();
       reader.onload = (e) => {
         setter(e.target?.result as string);
