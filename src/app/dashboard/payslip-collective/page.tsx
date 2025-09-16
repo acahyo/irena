@@ -6,9 +6,9 @@ import { getAttendanceByPeriod } from '@/actions/attendance';
 import type { EmployeeWithPosition, AttendanceRecord } from '@/lib/types';
 
 
-export default async function PayslipCollectivePage() {
+export default async function PayslipCollectivePage({ userSiteId }: { userSiteId?: string }) {
   const [employees, settings, positions] = await Promise.all([
-    getEmployees(),
+    getEmployees({ siteId: userSiteId }),
     getSettings(),
     getPositions()
   ]);

@@ -1,7 +1,7 @@
 'use server';
 
 import { db, storage } from '@/lib/firebase';
-import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, Timestamp, writeBatch, setDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, Timestamp, writeBatch, setDoc, query, where } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from "firebase/storage";
 import type { Employee } from '@/lib/types';
 import { format } from 'date-fns';
@@ -42,9 +42,23 @@ async function uploadFileAndGetURL(base64Data: string, employeeId: string, field
 
 
 // Get all employees
-export async function getEmployees(): Promise<Employee[]> {
+export async function getEmployees({ siteId }: { siteId?: string } = {}): Promise<Employee[]> {
   try {
-    const querySnapshot = await getDocs(collection(db, 'employees'));
+    const employeesRef = collection(db, 'employees');
+    let q = query(employeesRef);
+
+    if (siteId) {
+        const siteDoc = await getDoc(doc(db, 'sites', siteId));
+        if (siteDoc.exists()) {
+            const siteName = siteDoc.data().name;
+            q = query(employeesRef, where('siteLocation', '==', siteName));
+        } else {
+            // If siteId is provided but not found, return no employees
+            return [];
+        }
+    }
+    
+    const querySnapshot = await getDocs(q);
     if (querySnapshot.empty) {
         return [];
     }

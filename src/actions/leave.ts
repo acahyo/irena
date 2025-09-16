@@ -3,6 +3,7 @@
 import { db } from '@/lib/firebase';
 import { collection, getDocs, doc, addDoc, updateDoc, deleteDoc, Timestamp, query, where } from 'firebase/firestore';
 import type { LeaveRequest } from '@/lib/types';
+import { getEmployees } from './employees';
 
 // Helper to convert Firestore Timestamps to Dates in a document
 function convertTimestampsToDates(docData: any) {
@@ -17,9 +18,33 @@ function convertTimestampsToDates(docData: any) {
 }
 
 // Get all leave requests
-export async function getLeaveRequests(): Promise<LeaveRequest[]> {
+export async function getLeaveRequests({ siteId }: { siteId?: string } = {}): Promise<LeaveRequest[]> {
   try {
-    const querySnapshot = await getDocs(collection(db, 'leaveRequests'));
+    let q = query(collection(db, 'leaveRequests'));
+
+    if (siteId) {
+        const siteEmployees = await getEmployees({ siteId });
+        const employeeIds = siteEmployees.map(emp => emp.id);
+
+        if (employeeIds.length === 0) {
+            return []; // No employees in this site, so no leave requests
+        }
+
+        // Firestore 'in' queries are limited to 30 values.
+        // If more, we need to do multiple queries. For simplicity, we'll assume less than 30 for now.
+        // A more robust solution might fetch all and filter in-memory if employee list is large.
+        if (employeeIds.length > 30) {
+             const allRequestsSnapshot = await getDocs(q);
+             const allRequests = allRequestsSnapshot.docs.map(doc => ({ id: doc.id, ...convertTimestampsToDates(doc.data()) } as LeaveRequest));
+             const siteRequests = allRequests.filter(req => employeeIds.includes(req.employeeId));
+             return siteRequests.sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+        }
+        
+        q = query(collection(db, 'leaveRequests'), where('employeeId', 'in', employeeIds));
+    }
+
+
+    const querySnapshot = await getDocs(q);
     const requests: LeaveRequest[] = [];
     querySnapshot.forEach((doc) => {
         const data = convertTimestampsToDates(doc.data());

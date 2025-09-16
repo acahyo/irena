@@ -20,18 +20,21 @@ import { getRoles } from '@/actions/roles';
 import { createUser } from '@/actions/users';
 import { getEmployees } from '@/actions/employees';
 import { getUsers } from '@/actions/users';
-import type { Role, Employee, User } from '@/lib/types';
+import { getSites } from '@/actions/sites';
+import type { Role, Employee, User, Site } from '@/lib/types';
 
 
 export default function NewUserPage() {
     const router = useRouter();
     const { toast } = useToast();
     const [roles, setRoles] = useState<Role[]>([]);
+    const [sites, setSites] = useState<Site[]>([]);
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [pageLoading, setPageLoading] = useState(true);
     const [loading, setLoading] = useState(false);
 
     const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
+    const [selectedRole, setSelectedRole] = useState<string>('');
 
     const selectedEmployee = employees.find(emp => emp.id === selectedEmployeeId);
 
@@ -39,10 +42,11 @@ export default function NewUserPage() {
         const fetchInitialData = async () => {
             setPageLoading(true);
             try {
-                const [fetchedRoles, fetchedEmployees, existingUsers] = await Promise.all([
+                const [fetchedRoles, fetchedEmployees, existingUsers, fetchedSites] = await Promise.all([
                     getRoles(),
                     getEmployees(),
                     getUsers(),
+                    getSites(),
                 ]);
 
                 const existingUserEmails = new Set(existingUsers.map(u => u.email));
@@ -50,6 +54,7 @@ export default function NewUserPage() {
 
                 setRoles(fetchedRoles);
                 setEmployees(availableEmployees);
+                setSites(fetchedSites);
             } catch (error) {
                  toast({
                     variant: 'destructive',
@@ -79,14 +84,21 @@ export default function NewUserPage() {
         const formData = new FormData(event.currentTarget);
         const role = formData.get('role') as string;
         const password = formData.get('password') as string;
+        const siteId = formData.get('siteId') as string;
+
+        const userData: Omit<User, 'id'> = { 
+            name: selectedEmployee?.name || '', 
+            email: selectedEmployee?.email || '', 
+            role, 
+            password
+        };
+
+        if (role === 'Admin Proyek') {
+            userData.siteId = siteId;
+        }
 
         try {
-            await createUser({ 
-                name: selectedEmployee?.name || '', 
-                email: selectedEmployee?.email || '', 
-                role, 
-                password 
-            });
+            await createUser(userData);
             toast({
                 title: 'Success!',
                 description: 'New user has been added.',
@@ -151,7 +163,7 @@ export default function NewUserPage() {
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="role">Role</Label>
-                        <Select name="role" required>
+                        <Select name="role" onValueChange={setSelectedRole} required>
                             <SelectTrigger id="role">
                                 <SelectValue placeholder="Select a role" />
                             </SelectTrigger>
@@ -162,6 +174,21 @@ export default function NewUserPage() {
                             </SelectContent>
                         </Select>
                     </div>
+                    {selectedRole === 'Admin Proyek' && (
+                       <div className="space-y-2">
+                            <Label htmlFor="siteId">Proyek</Label>
+                            <Select name="siteId" required>
+                                <SelectTrigger id="siteId">
+                                    <SelectValue placeholder="Pilih Proyek" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {sites.map((site) => (
+                                        <SelectItem key={site.id} value={site.id}>{site.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )}
                 </div>
                  <div className="flex justify-end gap-2 pt-4">
                     <Button type="button" variant="outline" onClick={() => router.back()} disabled={loading}>

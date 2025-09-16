@@ -2,9 +2,9 @@ import { getFinanceRecords } from '@/actions/finance';
 import { getSites } from '@/actions/sites';
 import FinanceClientPage from './client-page';
 
-export default async function FinancePage() {
+export default async function FinancePage({ userSiteId }: { userSiteId?: string }) {
   const [initialRecords, projects] = await Promise.all([
-    getFinanceRecords(),
+    getFinanceRecords({ siteId: userSiteId }),
     getSites(),
   ]);
 

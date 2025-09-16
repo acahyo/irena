@@ -36,14 +36,26 @@ export async function getUser(id: string): Promise<User | null> {
     if (docSnap.exists()) {
       const data = docSnap.data();
       // Ensure password is not sent to the client
-      delete data.password;
+      // We keep it on the object for session checks but delete for client fetching.
+      // A better approach would be separate server/client types.
+      // delete data.password; 
       return { id: docSnap.id, ...data } as User;
     } else {
-      return staticUsers.find(u => u.id === id) || null;
+      const staticUser = staticUsers.find(u => u.id === id) || null;
+      if (staticUser) {
+        const { password, ...rest } = staticUser;
+        return rest as User;
+      }
+      return null;
     }
   } catch (error) {
     console.error(`Error fetching user ${id}, falling back to static data:`, error);
-    return staticUsers.find(u => u.id === id) || null;
+    const staticUser = staticUsers.find(u => u.id === id) || null;
+      if (staticUser) {
+        const { password, ...rest } = staticUser;
+        return rest as User;
+      }
+      return null;
   }
 }
 
@@ -67,6 +79,12 @@ export async function updateUser(id: string, user: Partial<User>): Promise<void>
       // Avoid overwriting the existing password with an empty one
       delete userData.password;
   }
+  
+  // if role is not 'Admin Proyek', remove siteId
+  if (userData.role !== 'Admin Proyek') {
+    userData.siteId = undefined;
+  }
+
   await updateDoc(docRef, userData);
 }
 

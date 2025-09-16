@@ -16,13 +16,14 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { User, Role } from '@/lib/types';
+import type { User, Role, Site } from '@/lib/types';
 import { updateUser } from '@/actions/users';
 
-export default function EditUserClientPage({ user, roles }: { user: User, roles: Role[] }) {
+export default function EditUserClientPage({ user, roles, sites }: { user: User, roles: Role[], sites: Site[] }) {
     const router = useRouter();
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
+    const [selectedRole, setSelectedRole] = useState(user.role);
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -33,10 +34,14 @@ export default function EditUserClientPage({ user, roles }: { user: User, roles:
         const email = formData.get('email') as string;
         const role = formData.get('role') as string;
         const password = formData.get('password') as string;
+        const siteId = formData.get('siteId') as string;
 
         const userData: Partial<User> = { name, email, role };
         if (password) {
             userData.password = password;
+        }
+        if (role === 'Admin Proyek') {
+            userData.siteId = siteId;
         }
 
         try {
@@ -91,7 +96,7 @@ export default function EditUserClientPage({ user, roles }: { user: User, roles:
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="role">Role</Label>
-                        <Select name="role" defaultValue={user.role} required>
+                        <Select name="role" defaultValue={user.role} onValueChange={setSelectedRole} required>
                             <SelectTrigger id="role">
                                 <SelectValue placeholder="Select a role" />
                             </SelectTrigger>
@@ -102,6 +107,22 @@ export default function EditUserClientPage({ user, roles }: { user: User, roles:
                             </SelectContent>
                         </Select>
                     </div>
+
+                    {selectedRole === 'Admin Proyek' && (
+                       <div className="space-y-2">
+                            <Label htmlFor="siteId">Proyek</Label>
+                            <Select name="siteId" defaultValue={user.siteId} required>
+                                <SelectTrigger id="siteId">
+                                    <SelectValue placeholder="Pilih Proyek" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {sites.map((site) => (
+                                        <SelectItem key={site.id} value={site.id}>{site.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )}
                 </div>
                  <div className="flex justify-end gap-2 pt-4">
                     <Button type="button" variant="outline" onClick={() => router.back()} disabled={loading}>

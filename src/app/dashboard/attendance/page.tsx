@@ -4,9 +4,9 @@ import AttendanceClientPage from './client-page';
 import { getAttendanceByPeriod } from '@/actions/attendance';
 import { getSettings } from '@/actions/settings';
 
-export default async function AttendancePage() {
+export default async function AttendancePage({ userSiteId }: { userSiteId?: string }) {
   const [employees, positions, settings] = await Promise.all([
-    getEmployees(),
+    getEmployees({ siteId: userSiteId }),
     getPositions(),
     getSettings(),
   ]);

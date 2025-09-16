@@ -19,10 +19,10 @@ import { DashboardClock } from './client-page';
 import { getSettings } from '@/actions/settings';
 
 
-async function getDashboardData() {
+async function getDashboardData({ siteId }: { siteId?: string }) {
     const [employees, leaveRequests] = await Promise.all([
-        getEmployees(),
-        getLeaveRequests()
+        getEmployees({ siteId }),
+        getLeaveRequests({ siteId })
     ]);
 
     const today = new Date();
@@ -76,9 +76,9 @@ async function getDashboardData() {
 }
 
 
-export default async function DashboardPage() {
+export default async function DashboardPage({ userSiteId }: { userSiteId?: string }) {
     const [stats, settings] = await Promise.all([
-        getDashboardData(),
+        getDashboardData({ siteId: userSiteId }),
         getSettings()
     ]);
     

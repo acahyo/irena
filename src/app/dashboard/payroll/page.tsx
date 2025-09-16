@@ -5,9 +5,9 @@ import { getAttendanceByPeriod } from '@/actions/attendance';
 import type { EmployeeWithDetails } from '@/lib/types';
 
 
-export default async function PayrollPage() {
+export default async function PayrollPage({ userSiteId }: { userSiteId?: string }) {
   const [employees, positions] = await Promise.all([
-    getEmployees(),
+    getEmployees({ siteId: userSiteId }),
     getPositions()
   ]);
 

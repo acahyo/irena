@@ -12,6 +12,7 @@ import {
   Timestamp,
   query,
   orderBy,
+  where
 } from 'firebase/firestore';
 import type { FinanceRecord } from '@/lib/types';
 
@@ -28,9 +29,14 @@ function convertTimestampsToDates(docData: any) {
 }
 
 // Get all finance records
-export async function getFinanceRecords(): Promise<FinanceRecord[]> {
+export async function getFinanceRecords({ siteId }: { siteId?: string } = {}): Promise<FinanceRecord[]> {
   try {
-    const q = query(collection(db, 'finance'), orderBy('date', 'desc'));
+    let q = query(collection(db, 'finance'), orderBy('date', 'desc'));
+
+    if (siteId) {
+        q = query(collection(db, 'finance'), where('projectId', '==', siteId), orderBy('date', 'desc'));
+    }
+    
     const querySnapshot = await getDocs(q);
     const records: FinanceRecord[] = [];
     querySnapshot.forEach((doc) => {

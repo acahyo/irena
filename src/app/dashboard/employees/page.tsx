@@ -19,10 +19,10 @@ const formatDate = (date: string | Date | undefined): string | undefined => {
 };
 
 
-export default async function EmployeeDirectoryPage() {
+export default async function EmployeeDirectoryPage({ userSiteId }: { userSiteId?: string }) {
   const [fetchedEmployees, leaveRequests] = await Promise.all([
-      getEmployees(),
-      getLeaveRequests(),
+      getEmployees({ siteId: userSiteId }),
+      getLeaveRequests({ siteId: userSiteId }),
     ]);
 
     const today = new Date();

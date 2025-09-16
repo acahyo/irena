@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getUser } from '@/actions/users';
 import { getRoles } from '@/actions/roles';
+import { getSites } from '@/actions/sites';
 import EditUserClientPage from './client-page';
 
 export default async function EditUserPage({ params }: { params: { id: string } }) {
@@ -10,7 +11,10 @@ export default async function EditUserPage({ params }: { params: { id: string } 
         notFound();
     }
     
-    const roles = await getRoles();
+    const [roles, sites] = await Promise.all([
+        getRoles(),
+        getSites()
+    ]);
 
-    return <EditUserClientPage user={user} roles={roles} />;
+    return <EditUserClientPage user={user} roles={roles} sites={sites} />;
 }
