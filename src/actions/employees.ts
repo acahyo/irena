@@ -52,7 +52,7 @@ export async function getEmployees(): Promise<Employee[]> {
     });
     return employees;
   } catch (error) {
-      console.error("Error fetching employees, falling back to static data:", error);
+      console.error("Error fetching employees, returning empty array:", error);
       return [];
   }
 }
@@ -72,7 +72,7 @@ export async function getEmployee(id: string): Promise<Employee | null> {
         return null;
     }
   } catch (error) {
-      console.error(`Error fetching employee ${id}, falling back to static data:`, error);
+      console.error(`Error fetching employee ${id}, returning null:`, error);
       return null;
   }
 }
@@ -158,20 +158,4 @@ export async function updateEmployee(id: string, employee: Partial<Employee>): P
 export async function deleteEmployee(id: string): Promise<void> {
   const docRef = doc(db, 'employees', id);
   await deleteDoc(docRef);
-}
-
-// Import multiple employees
-export async function importEmployees(employees: Partial<Employee>[]) {
-    const batch = writeBatch(db);
-    const defaultPassword = createHash('md5').update('irena@2025').digest('hex');
-    
-    employees.forEach(employee => {
-        // Use NIK for ID if available, otherwise let Firestore generate it
-        const docRef = employee.nik ? doc(db, 'employees', employee.nik) : doc(collection(db, 'employees'));
-        const { id, ...employeeData } = employee; 
-        employeeData.password = defaultPassword;
-        batch.set(docRef, employeeData);
-    });
-
-    await batch.commit();
 }

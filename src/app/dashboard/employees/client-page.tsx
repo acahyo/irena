@@ -17,7 +17,6 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle, Search, Upload, Download, Loader2 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
-import { importEmployees } from '@/actions/employees';
 
 
 export default function EmployeeDirectoryClientPage({ initialEmployees }: { initialEmployees: Employee[]}) {
@@ -68,72 +67,16 @@ export default function EmployeeDirectoryClientPage({ initialEmployees }: { init
   };
 
   const handleImportClick = () => {
-    fileInputRef.current?.click();
+    // fileInputRef.current?.click();
+    toast({
+        variant: 'destructive',
+        title: 'Feature Disabled',
+        description: 'Employee import is temporarily disabled.'
+    })
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const data = new Uint8Array(e.target?.result as ArrayBuffer);
-          const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-          const sheetName = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[sheetName];
-          const json = XLSX.utils.sheet_to_json(worksheet) as any[];
-          
-          startTransition(async () => {
-            try {
-              // Convert date objects to strings before sending to server action
-              const employeesToImport = json.map(emp => {
-                const newEmp = { ...emp };
-                if (newEmp.dateOfBirth instanceof Date) {
-                  newEmp.dateOfBirth = newEmp.dateOfBirth.toISOString();
-                }
-                if (newEmp.messEntryDate instanceof Date) {
-                  newEmp.messEntryDate = newEmp.messEntryDate.toISOString();
-                }
-                if (newEmp.contractStartDate instanceof Date) {
-                  newEmp.contractStartDate = newEmp.contractStartDate.toISOString();
-                }
-                if (newEmp.contractEndDate instanceof Date) {
-                  newEmp.contractEndDate = newEmp.contractEndDate.toISOString();
-                }
-                return newEmp;
-              }) as Partial<Employee>[];
-
-              await importEmployees(employeesToImport);
-              toast({
-                title: 'Success!',
-                description: 'Employee data has been imported successfully.',
-              });
-              router.refresh();
-            } catch (importError) {
-               toast({
-                variant: "destructive",
-                title: 'Import Error',
-                description: 'Failed to save imported data to the database.',
-              });
-            }
-          });
-
-        } catch (error) {
-          console.error("Error reading file:", error);
-           toast({
-            variant: "destructive",
-            title: 'File Read Error',
-            description: 'Failed to read the Excel file.',
-          });
-        } finally {
-            // Reset file input
-            if(fileInputRef.current) {
-                fileInputRef.current.value = '';
-            }
-        }
-      };
-      reader.readAsArrayBuffer(file);
-    }
+    // This function is kept for potential re-enablement but is not currently used.
   };
 
   return (
