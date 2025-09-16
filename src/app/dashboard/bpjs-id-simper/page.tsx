@@ -7,7 +7,9 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Users, ShieldCheck, Contact, WalletCards } from 'lucide-react';
+import { Users, ShieldCheck, Contact, WalletCards, Pencil } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export default async function BpjsIdSimperPage() {
   const employees = await getEmployees();
@@ -53,11 +55,19 @@ export default async function BpjsIdSimperPage() {
   return (
     <div className="space-y-6">
        <Card>
-            <CardHeader>
-                <CardTitle>Ringkasan BPJS, ID Card, & SIMPER</CardTitle>
-                <CardDescription>
-                Statistik keseluruhan berdasarkan data karyawan yang terdaftar.
-                </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                    <CardTitle>Ringkasan BPJS, ID Card, & SIMPER</CardTitle>
+                    <CardDescription>
+                    Statistik keseluruhan berdasarkan data karyawan yang terdaftar.
+                    </CardDescription>
+                </div>
+                <Button asChild>
+                    <Link href="/dashboard/employees">
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Kelola Data Karyawan
+                    </Link>
+                </Button>
             </CardHeader>
         </Card>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
