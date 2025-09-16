@@ -86,22 +86,6 @@ export default function BpjsIdSimperClientPage({
 
   return (
     <div className="space-y-6">
-       <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                    <CardTitle>Ringkasan BPJS, ID Card, & SIMPER</CardTitle>
-                    <CardDescription>
-                    Statistik keseluruhan berdasarkan data karyawan yang terdaftar.
-                    </CardDescription>
-                </div>
-                <Button asChild>
-                    <Link href="/dashboard/employees">
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Kelola Data Karyawan
-                    </Link>
-                </Button>
-            </CardHeader>
-        </Card>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Karyawan"
