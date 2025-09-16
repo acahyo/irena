@@ -103,7 +103,7 @@ export default function NewEmployeePage() {
         toast({
             variant: 'destructive',
             title: 'Tipe File Tidak Valid',
-            description: 'Silakan unggah gambar (jpg, png) atau dokumen (pdf, doc, xls).',
+            description: 'Silakan unggah gambar (jpg, png, ico) atau dokumen (pdf, doc, xls).',
         });
         event.target.value = '';
         return;
@@ -349,18 +349,24 @@ export default function NewEmployeePage() {
               </div>
 
               {bpjsStatus === 'active' && (
-                <div className="space-y-2 md:col-span-3">
-                    <Label htmlFor="bpjsType">Tipe BPJS</Label>
-                    <Select name="bpjsType">
-                        <SelectTrigger id="bpjsType">
-                            <SelectValue placeholder="Pilih Tipe BPJS" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="miki">BPJS MIKI (Potongan 280.000)</SelectItem>
-                            <SelectItem value="iba">BPJS IBA (Potongan 322.000)</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
+                <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
+                    <div className="space-y-2">
+                        <Label htmlFor="bpjsNumber">Nomor BPJS</Label>
+                        <Input id="bpjsNumber" name="bpjsNumber" placeholder="e.g. 0001234567890" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="bpjsType">Tipe BPJS</Label>
+                        <Select name="bpjsType">
+                            <SelectTrigger id="bpjsType">
+                                <SelectValue placeholder="Pilih Tipe BPJS" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="miki">BPJS MIKI (Potongan 280.000)</SelectItem>
+                                <SelectItem value="iba">BPJS IBA (Potongan 322.000)</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                 </div>
               )}
 
 
