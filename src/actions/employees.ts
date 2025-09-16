@@ -5,7 +5,6 @@ import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, Timesta
 import type { Employee } from '@/lib/types';
 import { format } from 'date-fns';
 import { createHash } from 'crypto';
-import { employees as staticEmployees } from '@/lib/data';
 
 
 // Helper to convert Firestore Timestamps to Dates in a document
@@ -26,7 +25,7 @@ export async function getEmployees(): Promise<Employee[]> {
   try {
     const querySnapshot = await getDocs(collection(db, 'employees'));
     if (querySnapshot.empty) {
-        return staticEmployees;
+        return [];
     }
     const employees: Employee[] = [];
     querySnapshot.forEach((doc) => {
@@ -38,7 +37,7 @@ export async function getEmployees(): Promise<Employee[]> {
     return employees;
   } catch (error) {
       console.error("Error fetching employees, falling back to static data:", error);
-      return staticEmployees;
+      return [];
   }
 }
 
@@ -54,11 +53,11 @@ export async function getEmployee(id: string): Promise<Employee | null> {
         delete data.password;
         return { id: docSnap.id, ...data } as Employee;
     } else {
-        return staticEmployees.find(e => e.id === id) || null;
+        return null;
     }
   } catch (error) {
       console.error(`Error fetching employee ${id}, falling back to static data:`, error);
-      return staticEmployees.find(e => e.id === id) || null;
+      return null;
   }
 }
 
@@ -76,21 +75,17 @@ export async function createEmployee(employee: Partial<Employee>): Promise<strin
         (employeeData as any)[field] = Number(employeeData[field]);
         }
     });
-
-    // Generate custom employee ID
-    const registrationDate = format(new Date(), 'ddMMyyyy');
-    const birthYear = employee.dateOfBirth ? format(new Date(employee.dateOfBirth), 'yyyy') : '0000';
     
-    // Get current employee count for sequential number
-    const employeesSnapshot = await getDocs(collection(db, 'employees'));
-    const sequentialNumber = (employeesSnapshot.size + 1).toString().padStart(4, '0');
-    
-    const employeeId = `IBA${registrationDate}${birthYear}${sequentialNumber}`;
+    // Use NIK as the employeeId
+    const employeeId = employee.nik;
+    if (!employeeId) {
+        throw new Error("NIK is required to create an employee.");
+    }
 
     // Set default password
     employeeData.password = createHash('md5').update('irena@2025').digest('hex');
 
-    // Use setDoc with the custom ID
+    // Use setDoc with the custom ID (NIK)
     const docRef = doc(db, 'employees', employeeId);
     await setDoc(docRef, employeeData);
 
@@ -138,8 +133,8 @@ export async function importEmployees(employees: Partial<Employee>[]) {
     const defaultPassword = createHash('md5').update('irena@2025').digest('hex');
     
     employees.forEach(employee => {
-        const docRef = doc(collection(db, 'employees'));
-        // We don't need to add an id, Firestore does it automatically
+        // Use NIK for ID if available, otherwise let Firestore generate it
+        const docRef = employee.nik ? doc(db, 'employees', employee.nik) : doc(collection(db, 'employees'));
         const { id, ...employeeData } = employee; 
         employeeData.password = defaultPassword;
         batch.set(docRef, employeeData);
