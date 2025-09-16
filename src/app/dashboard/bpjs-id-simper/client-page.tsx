@@ -73,7 +73,7 @@ export default function BpjsIdSimperClientPage({
             await updateEmployee(employeeId, { [field]: value });
             toast({
                 title: 'Tersimpan!',
-                description: `Data ${field} untuk ${employee.name} telah diperbarui.`,
+                description: `Data ${String(field)} untuk ${employee.name} telah diperbarui.`,
             });
         } catch (error) {
              toast({
@@ -112,7 +112,7 @@ export default function BpjsIdSimperClientPage({
       switch(field) {
           case 'bpjs':
               return (
-                 <div className="flex flex-col gap-2 w-[200px]">
+                 <div className="flex flex-col gap-2 w-[250px]">
                     <Select
                         value={employee.bpjsStatus || 'not-registered'}
                         onValueChange={(value) => handleBpjsStatusChange(employee.id, value === 'not-registered' ? '' : value)}
@@ -125,11 +125,25 @@ export default function BpjsIdSimperClientPage({
                         </SelectContent>
                     </Select>
                     {employee.bpjsStatus === 'active' && (
-                        <Input 
-                            placeholder="Nomor BPJS"
-                            defaultValue={employee.bpjsNumber}
-                            onBlur={(e) => handleSave(employee.id, 'bpjsNumber', e.target.value)}
-                        />
+                        <>
+                            <Select
+                                value={employee.bpjsType || ''}
+                                onValueChange={(value) => handleSave(employee.id, 'bpjsType', value)}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Pilih Tipe BPJS" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="miki">BPJS MIKI (Potongan 280.000)</SelectItem>
+                                    <SelectItem value="iba">BPJS IBA (Potongan 322.000)</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <Input 
+                                placeholder="Nomor BPJS"
+                                defaultValue={employee.bpjsNumber}
+                                onBlur={(e) => handleSave(employee.id, 'bpjsNumber', e.target.value)}
+                            />
+                        </>
                     )}
                  </div>
               );
