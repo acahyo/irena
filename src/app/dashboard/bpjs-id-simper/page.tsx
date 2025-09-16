@@ -10,6 +10,16 @@ import { Badge } from '@/components/ui/badge';
 import { Users, ShieldCheck, Contact, WalletCards, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
 
 export default async function BpjsIdSimperPage() {
   const employees = await getEmployees();
@@ -106,6 +116,85 @@ export default async function BpjsIdSimperPage() {
           ]}
         />
       </div>
+
+       <Card>
+            <CardHeader>
+                <CardTitle>Data Karyawan</CardTitle>
+                <CardDescription>
+                Detail status BPJS, ID Card, dan SIMPER untuk setiap karyawan.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Nama Karyawan</TableHead>
+                            <TableHead>Proyek</TableHead>
+                            <TableHead>BPJS</TableHead>
+                            <TableHead>ID Card</TableHead>
+                            <TableHead>SIMPER</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {employees.map(emp => (
+                            <TableRow key={emp.id}>
+                                <TableCell>
+                                     <div className="flex items-center gap-3">
+                                        <Avatar className="h-9 w-9">
+                                            <AvatarImage src={emp.avatar} alt={emp.name} />
+                                            <AvatarFallback>{emp.name.charAt(0)}</AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                            <p className="font-medium">{emp.name}</p>
+                                            <p className="text-sm text-muted-foreground">{emp.position || 'N/A'}</p>
+                                        </div>
+                                    </div>
+                                </TableCell>
+                                <TableCell>{emp.siteLocation || 'N/A'}</TableCell>
+                                <TableCell>
+                                    {!emp.bpjsStatus && <Badge variant="secondary">Belum Terdaftar</Badge>}
+                                    {emp.bpjsStatus === 'active' && (
+                                        <div className="flex flex-col gap-1">
+                                            <Badge variant="default">Aktif</Badge>
+                                            <span className="text-xs text-muted-foreground">{emp.bpjsNumber || 'No. tidak ada'}</span>
+                                        </div>
+                                    )}
+                                    {emp.bpjsStatus === 'inactive' && <Badge variant="destructive">Tidak Aktif</Badge>}
+                                </TableCell>
+                                <TableCell>
+                                    {emp.idCardNumber ? (
+                                         <div className="flex flex-col gap-1">
+                                            <Badge variant="default">Aktif</Badge>
+                                            <span className="text-xs text-muted-foreground">{emp.idCardNumber}</span>
+                                        </div>
+                                    ) : (
+                                        <Badge variant="secondary">Belum Terdaftar</Badge>
+                                    )}
+                                </TableCell>
+                                <TableCell>
+                                    {emp.simperNumber ? (
+                                         <div className="flex flex-col gap-1">
+                                            <Badge variant="default">Aktif</Badge>
+                                            <span className="text-xs text-muted-foreground">{emp.simperNumber}</span>
+                                        </div>
+                                    ) : (
+                                        <Badge variant="secondary">Belum Terdaftar</Badge>
+                                    )}
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                        {employees.length === 0 && (
+                             <TableRow>
+                                <TableCell colSpan={5} className="h-24 text-center">
+                                    Tidak ada data karyawan ditemukan.
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </CardContent>
+        </Card>
+
     </div>
   );
 }
