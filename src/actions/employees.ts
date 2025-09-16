@@ -1,7 +1,8 @@
 'use server';
 
-import { db } from '@/lib/firebase';
+import { db, storage } from '@/lib/firebase';
 import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, Timestamp, writeBatch, setDoc } from 'firebase/firestore';
+import { ref, uploadString, getDownloadURL } from "firebase/storage";
 import type { Employee } from '@/lib/types';
 import { format } from 'date-fns';
 import { createHash } from 'crypto';
@@ -17,6 +18,21 @@ function convertTimestampsToDates(docData: any) {
         }
     }
     return data;
+}
+
+// Helper to upload base64 image to Firebase Storage and get URL
+async function uploadImageAndGetURL(base64Data: string, employeeId: string, imageType: string): Promise<string> {
+    if (!base64Data || !base64Data.startsWith('data:image')) {
+        // If it's already a URL (from a previous upload), just return it
+        if (base64Data && (base64Data.startsWith('http') || base64Data.startsWith('https'))) {
+            return base64Data;
+        }
+        throw new Error('Invalid image data provided.');
+    }
+    const storageRef = ref(storage, `images/${employeeId}/${imageType}-${Date.now()}`);
+    const uploadResult = await uploadString(storageRef, base64Data, 'data_url');
+    const downloadURL = await getDownloadURL(uploadResult.ref);
+    return downloadURL;
 }
 
 
@@ -68,7 +84,7 @@ export async function createEmployee(employee: Partial<Employee>): Promise<strin
         'basicSalary', 'mealAllowance', 'transportAllowance', 'dailyWage', 'overtimeRate',
         'monthlySalary', 'otAllowance', 'locationAllowance', 'otherAllowances'
     ];
-    const employeeData = { ...employee };
+    const employeeData: Partial<Employee> = { ...employee };
 
     numericFields.forEach(field => {
         if (employeeData[field] && typeof employeeData[field] === 'string') {
@@ -80,6 +96,14 @@ export async function createEmployee(employee: Partial<Employee>): Promise<strin
     const employeeId = employee.nik;
     if (!employeeId) {
         throw new Error("NIK is required to create an employee.");
+    }
+
+    // Handle image uploads
+    const imageFields: (keyof Employee)[] = ['avatar', 'ktpPhoto', 'simPhoto', 'sioPhoto'];
+    for (const field of imageFields) {
+        if (employeeData[field] && (employeeData[field] as string).startsWith('data:image')) {
+            employeeData[field] = await uploadImageAndGetURL(employeeData[field] as string, employeeId, field);
+        }
     }
 
     // Set default password
@@ -108,6 +132,15 @@ export async function updateEmployee(id: string, employee: Partial<Employee>): P
       (employeeData as any)[field] = null; // Convert empty string to null to remove field
     }
   });
+
+  // Handle image uploads
+  const imageFields: (keyof Employee)[] = ['avatar', 'ktpPhoto', 'simPhoto', 'sioPhoto'];
+  for (const field of imageFields) {
+      if (employeeData[field] && (employeeData[field] as string).startsWith('data:image')) {
+          employeeData[field] = await uploadImageAndGetURL(employeeData[field] as string, id, field);
+      }
+  }
+
 
   // Hash password only if it's being changed (i.e., it's not empty)
   if (employeeData.password) {
