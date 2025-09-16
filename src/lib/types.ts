@@ -23,7 +23,7 @@ export type Employee = {
   maritalStatus?: 'single' | 'married' | 'divorced' | 'widowed';
   emergencyContactName?: string;
   emergencyContactNumber?: string;
-  bpjsStatus?: 'active' | 'inactive';
+  bpjsStatus?: 'active' | 'inactive' | 'not-registered';
   bpjsNumber?: string;
   bpjsType?: 'miki' | 'iba';
   employeeStatus?: 'active' | 'nonaktif' | 'resign' | 'phk';
@@ -32,6 +32,7 @@ export type Employee = {
   sioPhoto?: string;
   simperNumber?: string;
   idCardNumber?: string;
+  idCardStatus?: 'active' | 'in-progress' | 'not-registered';
   workContractNumber?: string;
   messRoomNumber?: string;
   messEntryDate?: Date | string;

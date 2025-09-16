@@ -88,7 +88,6 @@ export default function BpjsIdSimperClientPage({
 
   const handleBpjsStatusChange = (employeeId: string, value: string) => {
     const updateData: Partial<Employee> = { bpjsStatus: value as any };
-    // If status is not 'active', clear the number and type
     if (value !== 'active') {
         updateData.bpjsNumber = '';
         updateData.bpjsType = undefined;
@@ -104,6 +103,27 @@ export default function BpjsIdSimperClientPage({
             toast({ title: 'Tersimpan!', description: `Status BPJS telah diperbarui.` });
         } catch (error) {
             toast({ variant: 'destructive', title: 'Error', description: 'Gagal menyimpan status BPJS.' });
+        }
+    });
+  }
+
+  const handleIdCardStatusChange = (employeeId: string, value: string) => {
+    const updateData: Partial<Employee> = { idCardStatus: value as any };
+    // If status is not 'active', clear the number
+    if (value !== 'active') {
+        updateData.idCardNumber = '';
+    }
+    
+    setEmployees(prev => 
+      prev.map(emp => emp.id === employeeId ? { ...emp, ...updateData } : emp)
+    );
+
+    startSavingTransition(async () => {
+        try {
+            await updateEmployee(employeeId, updateData);
+            toast({ title: 'Tersimpan!', description: `Status ID Card telah diperbarui.` });
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Gagal menyimpan status ID Card.' });
         }
     });
   }
@@ -149,13 +169,26 @@ export default function BpjsIdSimperClientPage({
               );
           case 'idCard':
               return (
-                  <div className="w-[200px]">
-                    <Input
-                        placeholder="Nomor ID Card"
-                        defaultValue={employee.idCardNumber}
-                        onBlur={(e) => handleSave(employee.id, 'idCardNumber', e.target.value)}
-                    />
-                  </div>
+                  <div className="flex flex-col gap-2 w-[200px]">
+                    <Select
+                        value={employee.idCardStatus || 'not-registered'}
+                        onValueChange={(value) => handleIdCardStatusChange(employee.id, value === 'not-registered' ? '' : value)}
+                    >
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="active">Aktif</SelectItem>
+                            <SelectItem value="in-progress">Proses Pendaftaran</SelectItem>
+                            <SelectItem value="not-registered">Belum Terdaftar</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    {employee.idCardStatus === 'active' && (
+                        <Input 
+                            placeholder="Nomor ID Card"
+                            defaultValue={employee.idCardNumber}
+                            onBlur={(e) => handleSave(employee.id, 'idCardNumber', e.target.value)}
+                        />
+                    )}
+                 </div>
               );
           case 'simper':
               return (
