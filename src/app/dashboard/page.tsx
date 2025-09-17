@@ -17,6 +17,9 @@ import {
 } from '@/components/ui/table';
 import { DashboardClock } from './client-page';
 import { getSettings } from '@/actions/settings';
+import { getAdminSession } from '@/actions/auth';
+import { redirect } from 'next/navigation';
+import AdminProjectDashboard from './admin-project-dashboard';
 
 
 async function getDashboardData({ siteId }: { siteId?: string }) {
@@ -76,9 +79,19 @@ async function getDashboardData({ siteId }: { siteId?: string }) {
 }
 
 
-export default async function DashboardPage({ userSiteId }: { userSiteId?: string }) {
+export default async function DashboardPage() {
+    const user = await getAdminSession();
+    if (!user) {
+        redirect('/');
+    }
+
+    // If user is Admin Proyek, show their specific dashboard
+    if (user.role === 'Admin Proyek') {
+        return <AdminProjectDashboard user={user} />;
+    }
+
     const [stats, settings] = await Promise.all([
-        getDashboardData({ siteId: userSiteId }),
+        getDashboardData({ siteId: undefined }), // General admin sees all sites
         getSettings()
     ]);
     
