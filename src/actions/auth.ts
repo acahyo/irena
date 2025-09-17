@@ -76,7 +76,7 @@ export async function getAdminSession(): Promise<User | null> {
     const cookieStore = cookies();
     const sessionCookie = cookieStore.get(ADMIN_SESSION_COOKIE_NAME);
 
-    if (sessionCookie) {
+    if (sessionCookie?.value) {
         try {
             const sessionData = JSON.parse(sessionCookie.value);
             if (sessionData && sessionData.id) {
@@ -85,6 +85,8 @@ export async function getAdminSession(): Promise<User | null> {
             }
         } catch (error) {
             console.error("Error parsing admin session cookie:", error);
+            // In case of parsing error, treat as no session
+            return null;
         }
     }
     return null;
@@ -95,7 +97,7 @@ export async function getEmployeeSession(): Promise<Employee | null> {
     const cookieStore = cookies();
     const sessionCookie = cookieStore.get(EMPLOYEE_SESSION_COOKIE_NAME);
 
-    if (sessionCookie) {
+    if (sessionCookie?.value) {
         try {
             const sessionData = JSON.parse(sessionCookie.value);
             if (sessionData && sessionData.id) {
@@ -104,6 +106,8 @@ export async function getEmployeeSession(): Promise<Employee | null> {
             }
         } catch (error) {
             console.error("Error parsing employee session cookie:", error);
+             // In case of parsing error, treat as no session
+            return null;
         }
     }
     return null;
@@ -111,9 +115,9 @@ export async function getEmployeeSession(): Promise<Employee | null> {
 
 export async function logout(userType: 'admin' | 'employee' | 'all') {
     if (userType === 'admin' || userType === 'all') {
-        cookies().delete(ADMIN_SESSION_COOKIE_NAME);
+        cookies().set(ADMIN_SESSION_COOKIE_NAME, '', { expires: new Date(0), path: '/' });
     }
     if (userType === 'employee' || userType === 'all') {
-        cookies().delete(EMPLOYEE_SESSION_COOKIE_NAME);
+        cookies().set(EMPLOYEE_SESSION_COOKIE_NAME, '', { expires: new Date(0), path: '/' });
     }
 }
