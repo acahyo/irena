@@ -146,15 +146,18 @@ export const positions: Position[] = [
 
 export const users: User[] = [
     { id: '1', name: 'Admin User', email: 'admin@irena.com', role: 'Administrator', password: 'admin' },
-    { id: '2', name: 'Admin Proyek 1', email: 'admin.proyek@irena.com', role: 'Admin Proyek', siteId: '1', password: 'adminproyek' },
+    { id: '2', name: 'Purchasing User', email: 'purchasing@irena.com', role: 'Purchasing', password: 'purchasing' },
     { id: '3', name: 'General User', email: 'user@staffhub.com', role: 'Employee', password: 'user' },
+    { id: '4', name: 'Admin Proyek 1', email: 'admin.proyek@irena.com', role: 'Admin Proyek', siteId: '1', password: 'adminproyek' },
 ];
 
 export const roles: Role[] = [
     { id: '1', name: 'Administrator', description: 'Full access to all features' },
     { id: '2', name: 'HR', description: 'Access to employee management features' },
     { id: '3', name: 'Employee', description: 'Basic access to their own profile' },
-    { id: '4', name: 'Admin Proyek', description: 'Project-specific administrative access' },
+    { id: '4 ' name: 'Admin Proyek', description: 'Project-specific administrative access' },
+    { id: '5', name: 'Purchasing', description: 'Manages purchase requests' },
+    { id: '6', name: 'Finance', description: 'Manages finances and approves requests' },
 ];
 
 

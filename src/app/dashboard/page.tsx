@@ -20,6 +20,7 @@ import { getSettings } from '@/actions/settings';
 import { getAdminSession } from '@/actions/auth';
 import { redirect } from 'next/navigation';
 import AdminProjectDashboard from './admin-project-dashboard';
+import PurchasingDashboard from './purchasing-dashboard';
 
 
 async function getDashboardData({ siteId }: { siteId?: string }) {
@@ -88,6 +89,11 @@ export default async function DashboardPage() {
     // If user is Admin Proyek, show their specific dashboard
     if (user.role === 'Admin Proyek') {
         return <AdminProjectDashboard user={user} />;
+    }
+
+    // If user is Purchasing, show their dashboard
+    if (user.role === 'Purchasing') {
+        return <PurchasingDashboard user={user} />;
     }
 
     const [stats, settings] = await Promise.all([
