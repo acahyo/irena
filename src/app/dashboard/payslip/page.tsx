@@ -1,3 +1,4 @@
+
 import { getEmployees } from '@/actions/employees';
 import PayslipClientPage from './client-page';
 import { getSettings } from '@/actions/settings';
@@ -27,7 +28,7 @@ export default async function PayslipPage({ userSiteId }: { userSiteId?: string 
   // Convert Date objects to strings
   const attendanceRecords = attendanceRecordsData.map(record => ({
     ...record,
-    date: record.date.toString(),
+    date: record.date ? record.date.toString() : new Date().toString(),
   })) as AttendanceRecord[];
 
 

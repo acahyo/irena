@@ -1,3 +1,4 @@
+
 import { getEmployees } from '@/actions/employees';
 import { getPositions } from '@/actions/positions';
 import AttendanceClientPage from './client-page';
@@ -24,7 +25,7 @@ export default async function AttendancePage({ userSiteId }: { userSiteId?: stri
   // Convert Date objects to strings to prevent serialization errors
   const initialAttendance = initialAttendanceData.map(record => ({
     ...record,
-    date: record.date.toString(),
+    date: record.date ? record.date.toString() : new Date().toString(),
   })) as AttendanceRecord[];
 
 

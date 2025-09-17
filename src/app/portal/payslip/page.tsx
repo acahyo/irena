@@ -1,3 +1,4 @@
+
 import { getEmployeeSession } from '@/actions/auth';
 import MyPayslipClientPage from './client-page';
 import { getSettings } from '@/actions/settings';
@@ -29,7 +30,7 @@ export default async function MyPayslipPage() {
 
     // Convert Date object to string to avoid serialization error
     const initialAttendance = initialAttendanceData
-        ? { ...initialAttendanceData, date: initialAttendanceData.date.toString() }
+        ? { ...initialAttendanceData, date: initialAttendanceData.date ? initialAttendanceData.date.toString() : new Date().toString() }
         : null;
 
   const employeeWithDetails: EmployeeWithPosition = {
