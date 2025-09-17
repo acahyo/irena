@@ -25,28 +25,22 @@ const formatDate = (date: string | Date | undefined): string => {
 
 
 export default async function MyLeavePage() {
-  let session, settings, employee, initialRequestsData;
-  try {
-    [session, settings] = await Promise.all([getEmployeeSession(), getSettings()]);
+  const [session, settings] = await Promise.all([
+      getEmployeeSession(),
+      getSettings(),
+  ]);
 
-    if (!session?.id) {
-      redirect('/');
-    }
+  if (!session?.id) {
+    redirect('/');
+  }
 
-    [initialRequestsData, employee] = await Promise.all([
-      getLeaveRequestsByEmployeeId(session.id),
-      getEmployee(session.id),
-    ]);
+  const [initialRequestsData, employee] = await Promise.all([
+    getLeaveRequestsByEmployeeId(session.id),
+    getEmployee(session.id),
+  ]);
 
-    if (!employee) {
-        notFound();
-    }
-  } catch (error) {
-    console.error("Failed to fetch data for leave page:", error);
-    // Set defaults to allow the page to render without crashing
-    if (!settings) settings = { appName: 'Staff Hub' };
-    if (!employee) employee = { id: '', name: 'Guest' }; // Provide minimal employee object
-    initialRequestsData = [];
+  if (!employee) {
+      notFound();
   }
 
 

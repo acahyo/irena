@@ -9,10 +9,7 @@ import { getEmployee } from '@/actions/employees';
 
 
 export default async function MyPayslipPage() {
-  let session, settings, positions, employee, initialAttendance;
-  
-  try {
-    [session, settings, positions] = await Promise.all([
+  const [session, settings, positions] = await Promise.all([
       getEmployeeSession(),
       getSettings(),
       getPositions(),
@@ -22,22 +19,18 @@ export default async function MyPayslipPage() {
       redirect('/');
     }
 
-    employee = await getEmployee(session.id);
+    const employee = await getEmployee(session.id);
     if (!employee) {
       notFound();
     }
     
     const currentPeriod = new Date().toISOString().slice(0, 7);
-    initialAttendance = await getAttendanceByEmployeeAndPeriod(session.id, currentPeriod);
+    const initialAttendanceData = await getAttendanceByEmployeeAndPeriod(session.id, currentPeriod);
 
-  } catch (error) {
-    console.error("Failed to fetch data for payslip page:", error);
-    // Set defaults to allow page to render
-    if (!settings) settings = { appName: 'Staff Hub' };
-    if (!employee) employee = { id: '', name: 'Guest' };
-    if (!positions) positions = [];
-    initialAttendance = null;
-  }
+    // Convert Date object to string to avoid serialization error
+    const initialAttendance = initialAttendanceData
+        ? { ...initialAttendanceData, date: initialAttendanceData.date.toString() }
+        : null;
 
   const employeeWithDetails: EmployeeWithPosition = {
       ...employee,
