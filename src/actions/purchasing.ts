@@ -107,7 +107,7 @@ export async function updatePurchaseRequest(id: string, updates: Partial<Purchas
     // Ensure totalActualPrice is calculated if not already in updates
     const finalPrice = updateData.totalActualPrice ?? requestData.totalActualPrice ?? requestData.totalEstimatedPrice;
 
-    if (finalPrice > 0) {
+    if (finalPrice > 0 && requestData.projectId && requestData.projectName) {
         await createFinanceRecord({
             projectId: requestData.projectId,
             projectName: requestData.projectName,
