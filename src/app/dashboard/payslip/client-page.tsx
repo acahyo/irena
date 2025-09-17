@@ -55,7 +55,6 @@ export default function PayslipClientPage({
   const [payslipData, setPayslipData] = useState<PayslipData | null>(null);
   const [attendanceRecord, setAttendanceRecord] = useState<AttendanceRecord | null>(null);
   const [keterangan, setKeterangan] = useState('');
-  const [applyPph, setApplyPph] = useState(true);
   const { toast } = useToast();
   const [isFetchingAttendance, setIsFetchingAttendance] = useState(false);
   const [departmentFilter, setDepartmentFilter] = useState('all');
@@ -170,11 +169,10 @@ export default function PayslipClientPage({
     if (bpjsDeduction > 0) {
       deductions.bpjs = bpjsDeduction;
     }
-
-    if (applyPph) {
-      deductions.tax = totalEarnings * 0.02;
-    }
     
+    if (attendanceRecord?.potonganPph) {
+        deductions.potonganPph = attendanceRecord.potonganPph;
+    }
     if (attendanceRecord?.potonganIdCard) {
         deductions.potonganIdCard = attendanceRecord.potonganIdCard;
     }
@@ -313,10 +311,6 @@ export default function PayslipClientPage({
                         <div className="flex items-center space-x-2">
                             <Checkbox id="showSignatures" checked={payslipOptions.showSignatures} onCheckedChange={(checked) => handleOptionChange('showSignatures', !!checked)} />
                             <Label htmlFor="showSignatures" className="cursor-pointer">Tanda Tangan</Label>
-                        </div>
-                         <div className="flex items-center space-x-2">
-                            <Checkbox id="apply-pph" checked={applyPph} onCheckedChange={(checked) => setApplyPph(Boolean(checked))} />
-                            <Label htmlFor="apply-pph" className="cursor-pointer">Potongan PPH 21 (2%)</Label>
                         </div>
                     </div>
                 </CollapsibleContent>

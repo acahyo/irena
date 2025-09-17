@@ -47,7 +47,6 @@ export default function PayslipCollectiveClientPage({
   const [positionFilter, setPositionFilter] = useState('all');
   const [payslipsData, setPayslipsData] = useState<PayslipData[]>([]);
   const [keterangan, setKeterangan] = useState('');
-  const [applyPph, setApplyPph] = useState(true);
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(initialAttendance);
   const [isGenerating, startTransition] = useTransition();
   const { toast } = useToast();
@@ -173,9 +172,7 @@ export default function PayslipCollectiveClientPage({
             if (bpjsDeduction > 0) {
               deductions.bpjs = bpjsDeduction;
             }
-            if (applyPph) {
-              deductions.tax = totalEarnings * 0.02;
-            }
+            if (attendance?.potonganPph) deductions.potonganPph = attendance.potonganPph;
             if (attendance?.potonganIdCard) deductions.potonganIdCard = attendance.potonganIdCard;
             if (attendance?.potonganSimper) deductions.potonganSimper = attendance.potonganSimper;
             if (attendance?.potonganDenda) deductions.potonganDenda = attendance.potonganDenda;
@@ -305,10 +302,6 @@ export default function PayslipCollectiveClientPage({
                         <div className="flex items-center space-x-2">
                             <Checkbox id="showSignatures" checked={payslipOptions.showSignatures} onCheckedChange={(checked) => handleOptionChange('showSignatures', !!checked)} />
                             <Label htmlFor="showSignatures" className="cursor-pointer">Tanda Tangan</Label>
-                        </div>
-                         <div className="flex items-center space-x-2">
-                            <Checkbox id="apply-pph" checked={applyPph} onCheckedChange={(checked) => setApplyPph(Boolean(checked))} />
-                            <Label htmlFor="apply-pph" className="cursor-pointer">Potongan PPH 21 (2%)</Label>
                         </div>
                     </div>
                 </CollapsibleContent>

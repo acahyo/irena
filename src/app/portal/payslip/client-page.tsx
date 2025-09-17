@@ -119,8 +119,9 @@ export default function MyPayslipClientPage({
         deductions.bpjs = bpjsDeduction;
     }
 
-    deductions.tax = totalEarnings * 0.02; // PPH 21
-    
+    if (attendanceRecord?.potonganPph) {
+        deductions.potonganPph = attendanceRecord.potonganPph;
+    }
     if (attendanceRecord?.potonganIdCard) {
         deductions.potonganIdCard = attendanceRecord.potonganIdCard;
     }
