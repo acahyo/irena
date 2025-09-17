@@ -42,6 +42,7 @@ type AttendanceData = {
         potonganIdCard?: number;
         potonganSimper?: number;
         potonganDenda?: number;
+        potonganPph?: number;
         bonus?: number;
     }
 }
@@ -81,6 +82,7 @@ export default function AttendanceClientPage({
       idCardDeduction: lang === 'id' ? 'Potongan ID Card' : 'ID Card Deduction',
       simperDeduction: lang === 'id' ? 'Potongan SIMPER' : 'SIMPER Deduction',
       fineDeduction: lang === 'id' ? 'Potongan Denda' : 'Fine Deduction',
+      pphDeduction: lang === 'id' ? 'Potongan PPh' : 'PPh Deduction',
       noData: lang === 'id' ? 'Tidak ada data karyawan ditemukan untuk filter ini.' : 'No employee data found for this filter.',
       fetchError: lang === 'id' ? 'Gagal mengambil data absensi untuk periode yang dipilih.' : 'Failed to fetch attendance data for the selected period.',
       saveSuccess: lang === 'id' ? 'Absensi untuk {name} telah diperbarui.' : 'Attendance for {name} has been updated.',
@@ -119,6 +121,7 @@ export default function AttendanceClientPage({
             potonganIdCard: record.potonganIdCard,
             potonganSimper: record.potonganSimper,
             potonganDenda: record.potonganDenda,
+            potonganPph: record.potonganPph,
             bonus: record.bonus,
         };
     });
@@ -138,6 +141,7 @@ export default function AttendanceClientPage({
                 potonganIdCard: record.potonganIdCard,
                 potonganSimper: record.potonganSimper,
                 potonganDenda: record.potonganDenda,
+                potonganPph: record.potonganPph,
                 bonus: record.bonus,
             };
         });
@@ -173,7 +177,8 @@ export default function AttendanceClientPage({
       if (
         record.attendanceDays === undefined && record.overtimeHours === undefined &&
         record.potonganIdCard === undefined && record.potonganSimper === undefined &&
-        record.potonganDenda === undefined && record.bonus === undefined
+        record.potonganDenda === undefined && record.potonganPph === undefined &&
+        record.bonus === undefined
       ) {
         return;
       }
@@ -188,6 +193,7 @@ export default function AttendanceClientPage({
               potonganIdCard: record.potonganIdCard,
               potonganSimper: record.potonganSimper,
               potonganDenda: record.potonganDenda,
+              potonganPph: record.potonganPph,
               bonus: record.bonus,
           });
           toast({
@@ -214,6 +220,7 @@ export default function AttendanceClientPage({
         potonganIdCard: attendanceData[emp.id]?.potonganIdCard ?? 0,
         potonganSimper: attendanceData[emp.id]?.potonganSimper ?? 0,
         potonganDenda: attendanceData[emp.id]?.potonganDenda ?? 0,
+        potonganPph: attendanceData[emp.id]?.potonganPph ?? 0,
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
@@ -254,6 +261,7 @@ export default function AttendanceClientPage({
                 potonganIdCard: row.potonganIdCard ? Number(row.potonganIdCard) : undefined,
                 potonganSimper: row.potonganSimper ? Number(row.potonganSimper) : undefined,
                 potonganDenda: row.potonganDenda ? Number(row.potonganDenda) : undefined,
+                potonganPph: row.potonganPph ? Number(row.potonganPph) : undefined,
             }
           }).filter(record => record.employeeId); // Ensure employeeId exists
 
@@ -359,6 +367,7 @@ export default function AttendanceClientPage({
               <TableHead className="w-[180px]">{T.idCardDeduction}</TableHead>
               <TableHead className="w-[180px]">{T.simperDeduction}</TableHead>
               <TableHead className="w-[180px]">{T.fineDeduction}</TableHead>
+              <TableHead className="w-[180px]">{T.pphDeduction}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -433,11 +442,20 @@ export default function AttendanceClientPage({
                       onBlur={() => handleInputBlur(emp.id)}
                     />
                   </TableCell>
+                  <TableCell>
+                    <Input
+                      type="number"
+                      placeholder="e.g. 25000"
+                      value={attendanceData[emp.id]?.potonganPph ?? ''}
+                      onChange={(e) => handleInputChange(emp.id, 'potonganPph', e.target.value)}
+                      onBlur={() => handleInputBlur(emp.id)}
+                    />
+                  </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={8} className="h-24 text-center">
+                <TableCell colSpan={9} className="h-24 text-center">
                   {T.noData}
                 </TableCell>
               </TableRow>
