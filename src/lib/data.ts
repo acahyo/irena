@@ -146,7 +146,7 @@ export const positions: Position[] = [
 
 export const users: User[] = [
     { id: '1', name: 'Admin User', email: 'admin@irena.com', role: 'Administrator', password: 'admin' },
-    { id: '2', name: 'HR Manager', email: 'hr.manager@staffhub.com', role: 'HR', password: 'hr' },
+    { id: '2', name: 'Admin Proyek 1', email: 'admin.proyek@irena.com', role: 'Admin Proyek', siteId: '1', password: 'adminproyek' },
     { id: '3', name: 'General User', email: 'user@staffhub.com', role: 'Employee', password: 'user' },
 ];
 
