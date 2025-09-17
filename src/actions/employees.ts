@@ -97,7 +97,7 @@ export async function getEmployee(id: string): Promise<Employee | null> {
 }
 
 // Create a new employee
-export async function createEmployee(employee: Partial<Employee>): Promise<string> {
+export async function createEmployee(employee: Partial<Employee>, actorRole?: string): Promise<string> {
     // Convert numeric fields from string to number
     const numericFields: (keyof Employee)[] = [
         'basicSalary', 'mealAllowance', 'transportAllowance', 'dailyWage', 'overtimeRate',
@@ -131,6 +131,15 @@ export async function createEmployee(employee: Partial<Employee>): Promise<strin
 
     // Set default password
     employeeData.password = createHash('md5').update('irena@2025').digest('hex');
+
+    // Set employee status based on actor's role
+    if (actorRole === 'Admin Proyek') {
+        employeeData.employeeStatus = 'pending';
+    } else {
+        // Default to active if no role or other roles
+        employeeData.employeeStatus = 'active';
+    }
+
 
     // Use setDoc with the custom ID (NIK)
     const docRef = doc(db, 'employees', employeeId);

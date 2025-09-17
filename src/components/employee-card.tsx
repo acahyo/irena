@@ -9,21 +9,35 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Phone, Building, Calendar, User, FileText } from 'lucide-react';
+import { Phone, Building, Calendar, User, FileText, Clock } from 'lucide-react';
 import { Badge } from './ui/badge';
 
 interface EmployeeCardProps {
   employee: Employee;
 }
 
+const getStatusBadge = (status?: string) => {
+    switch(status) {
+        case 'active':
+            return <Badge variant="default" className="absolute top-2 right-2">Aktif</Badge>;
+        case 'pending':
+            return <Badge variant="secondary" className="absolute top-2 right-2 bg-yellow-100 text-yellow-800">Pending</Badge>;
+        case 'nonaktif':
+            return <Badge variant="outline" className="absolute top-2 right-2">Non-Aktif</Badge>;
+        case 'onLeave':
+            return <Badge variant="destructive" className="absolute top-2 right-2">Cuti</Badge>;
+        default:
+            return null;
+    }
+}
+
+
 export function EmployeeCard({ employee }: EmployeeCardProps) {
   return (
     <Link href={`/dashboard/employees/${employee.id}`}>
       <Card className="h-full flex flex-col transform-gpu transition-all duration-200 ease-in-out hover:-translate-y-1 hover:shadow-lg">
         <CardHeader className="items-center text-center">
-            {employee.onLeave && (
-              <Badge variant="destructive" className="absolute top-2 right-2">Sedang Cuti</Badge>
-            )}
+            {employee.onLeave ? getStatusBadge('onLeave') : getStatusBadge(employee.employeeStatus)}
             <Avatar className="h-24 w-24 border-2 border-primary/20">
               <AvatarImage src={employee.avatar} alt={employee.name} />
               <AvatarFallback>{employee.name ? employee.name.charAt(0) : '?'}</AvatarFallback>

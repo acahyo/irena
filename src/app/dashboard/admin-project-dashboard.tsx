@@ -4,9 +4,11 @@ import { getSite } from '@/actions/sites';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { User, Employee, PurchaseRequest } from '@/lib/types';
-import { Building, Users } from 'lucide-react';
+import { Building, Users, UserPlus } from 'lucide-react';
 import NewPurchaseRequestForm from './new-purchase-request-form';
 import ProjectPurchaseRequests from './project-purchase-requests';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 async function getProjectDashboardData(siteId?: string) {
     if (!siteId) {
@@ -64,9 +66,16 @@ export default async function AdminProjectDashboard({ user }: { user: User }) {
     return (
         <div className="space-y-6">
             <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><Building /> {data.site.name}</CardTitle>
-                    <CardDescription>Dasbor untuk Admin Proyek. PIC: {data.site.picName || 'N/A'}</CardDescription>
+                <CardHeader className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                    <div>
+                        <CardTitle className="flex items-center gap-2"><Building /> {data.site.name}</CardTitle>
+                        <CardDescription>Dasbor untuk Admin Proyek. PIC: {data.site.picName || 'N/A'}</CardDescription>
+                    </div>
+                    <Button asChild>
+                        <Link href="/dashboard/employees/register">
+                            <UserPlus className="mr-2 h-4 w-4" /> Daftarkan Karyawan Baru
+                        </Link>
+                    </Button>
                 </CardHeader>
             </Card>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

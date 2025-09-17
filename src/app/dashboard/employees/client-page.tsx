@@ -17,12 +17,14 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle, Search, Upload, Download, Loader2 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
 
 
 export default function EmployeeDirectoryClientPage({ initialEmployees }: { initialEmployees: Employee[]}) {
   const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
   const [searchTerm, setSearchTerm] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const router = useRouter();
@@ -45,9 +47,11 @@ export default function EmployeeDirectoryClientPage({ initialEmployees }: { init
         : false;
       const matchesDepartment =
         departmentFilter === 'all' || employee.department === departmentFilter;
-      return matchesSearch && matchesDepartment;
+      const matchesStatus =
+        statusFilter === 'all' || employee.employeeStatus === statusFilter;
+      return matchesSearch && matchesDepartment && matchesStatus;
     });
-  }, [searchTerm, departmentFilter, employees]);
+  }, [searchTerm, departmentFilter, statusFilter, employees]);
 
   const handleExport = () => {
     // Remove image data before exporting to prevent errors with long base64 strings
@@ -93,15 +97,29 @@ export default function EmployeeDirectoryClientPage({ initialEmployees }: { init
         </div>
         <div className="flex flex-wrap gap-2">
           <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-            <SelectTrigger className="w-full md:w-[200px]">
+            <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Filter by department" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="all">Semua Departemen</SelectItem>
               {departments.map((dept) => (
                 <SelectItem key={dept} value={dept}>
-                  {dept === 'all' ? 'All Departments' : dept}
+                  {dept}
                 </SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+           <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Status</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="nonaktif">Non-Aktif</SelectItem>
+              <SelectItem value="resign">Resign</SelectItem>
+              <SelectItem value="phk">PHK</SelectItem>
             </SelectContent>
           </Select>
           <input

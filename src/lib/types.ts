@@ -26,7 +26,7 @@ export type Employee = {
   bpjsStatus?: 'active' | 'inactive' | 'not-registered';
   bpjsNumber?: string;
   bpjsType?: 'miki' | 'iba';
-  employeeStatus?: 'active' | 'nonaktif' | 'resign' | 'phk';
+  employeeStatus?: 'active' | 'nonaktif' | 'resign' | 'phk' | 'pending';
   ktpPhoto?: string;
   simPhoto?: string;
   sioPhoto?: string;
