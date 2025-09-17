@@ -36,7 +36,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { MoreHorizontal, Trash2, SquarePen, Eye, Loader2, CheckCircle, XCircle, Bot, CircleDollarSign } from 'lucide-react';
+import { MoreHorizontal, Trash2, SquarePen, Eye, Loader2, CheckCircle, XCircle, Bot, CircleDollarSign, Download } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import type { PurchaseRequest, PurchaseRequestItem, Site } from '@/lib/types';
@@ -55,6 +55,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import * as XLSX from 'xlsx';
+
 
 const formatCurrency = (amount: number | undefined | null) => {
   if (amount === undefined || amount === null) return 'N/A';
@@ -162,6 +164,48 @@ export default function PurchasingClientPage({
     });
   };
   
+  const handleExport = () => {
+    const dataToExport = filteredRequests.map(req => ({
+      'ID Pengajuan': req.id,
+      'Tanggal': format(new Date(req.requestDate), 'yyyy-MM-dd'),
+      'Proyek': req.projectName,
+      'Pemohon': req.requesterName,
+      'Status': req.status,
+      'Total Estimasi Harga': req.totalEstimatedPrice,
+      'Total Harga Aktual': req.totalActualPrice || 0,
+      'Barang': req.items.map(item => `${item.name} (${item.quantity} ${item.unit})`).join(', '),
+      'Catatan Purchasing': req.purchasingNotes,
+      'Catatan Finance': req.financeNotes,
+      'Alasan Penolakan': req.rejectionReason,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Pengajuan Barang');
+    
+    // Set column widths
+    worksheet['!cols'] = [
+        { wch: 22 }, // ID
+        { wch: 12 }, // Tanggal
+        { wch: 25 }, // Proyek
+        { wch: 20 }, // Pemohon
+        { wch: 25 }, // Status
+        { wch: 20 }, // Total Estimasi
+        { wch: 20 }, // Total Aktual
+        { wch: 50 }, // Barang
+        { wch: 30 }, // Catatan Purchasing
+        { wch: 30 }, // Catatan Finance
+        { wch: 30 }, // Alasan Penolakan
+    ];
+
+    XLSX.writeFile(workbook, `pengajuan_barang_${new Date().toISOString().slice(0, 10)}.xlsx`);
+
+    toast({
+      title: 'Ekspor Berhasil!',
+      description: 'Data pengajuan barang telah diekspor ke file Excel.',
+    });
+  };
+
   const totalActualPrice = useMemo(() => {
     if (!editedItems) return 0;
     return editedItems.reduce((sum, item) => sum + ((item.actualPrice || 0) * item.quantity), 0);
@@ -171,14 +215,14 @@ export default function PurchasingClientPage({
     <>
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div>
               <CardTitle>Manajemen Purchasing</CardTitle>
               <CardDescription>Verifikasi dan setujui pengajuan barang dari berbagai proyek.</CardDescription>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <Select value={projectFilter} onValueChange={setProjectFilter}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Filter Proyek" />
                 </SelectTrigger>
                 <SelectContent>
@@ -187,7 +231,7 @@ export default function PurchasingClientPage({
                 </SelectContent>
               </Select>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Filter Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -200,6 +244,10 @@ export default function PurchasingClientPage({
                   <SelectItem value="Rejected">Rejected</SelectItem>
                 </SelectContent>
               </Select>
+              <Button variant="outline" onClick={handleExport}>
+                <Download className="mr-2 h-4 w-4" />
+                Ekspor Excel
+              </Button>
             </div>
           </div>
         </CardHeader>
