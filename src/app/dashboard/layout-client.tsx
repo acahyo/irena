@@ -173,7 +173,7 @@ export default function DashboardClientLayout({
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader>
-          <div className="flex items-center gap-2">
+          <Link href="/dashboard" className="flex items-center gap-2">
             <Avatar className="h-8 w-8 rounded-md">
                 {settings.logo && <AvatarImage src={settings.logo} alt={settings.appName} />}
                 <AvatarFallback className="rounded-md bg-primary text-primary-foreground">
@@ -183,7 +183,7 @@ export default function DashboardClientLayout({
             <span className="text-lg font-semibold text-sidebar-foreground">
               {settings.appName}
             </span>
-          </div>
+          </Link>
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
