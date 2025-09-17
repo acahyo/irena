@@ -155,7 +155,7 @@ export const roles: Role[] = [
     { id: '1', name: 'Administrator', description: 'Full access to all features' },
     { id: '2', name: 'HR', description: 'Access to employee management features' },
     { id: '3', name: 'Employee', description: 'Basic access to their own profile' },
-    { id: '4 ' name: 'Admin Proyek', description: 'Project-specific administrative access' },
+    { id: '4', name: 'Admin Proyek', description: 'Project-specific administrative access' },
     { id: '5', name: 'Purchasing', description: 'Manages purchase requests' },
     { id: '6', name: 'Finance', description: 'Manages finances and approves requests' },
 ];
