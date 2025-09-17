@@ -85,51 +85,37 @@ export default function DashboardClientLayout({
   
   const allNavItemsMap = useMemo(() => {
     const map = new Map();
-    allNavItemsList(lang).forEach(item => {
-        if ((item as any).isGroup) {
-            map.set(item.id, item);
-            (item as any).subItems.forEach((sub: any) => map.set(sub.id, sub));
-        } else {
-            map.set(item.id, item);
-        }
-    });
+    allNavItemsList(lang).forEach(item => map.set(item.id, item));
     return map;
   }, [lang]);
 
   const orderedNavItems = useMemo(() => {
-    // If a menu order is saved in settings, use it. Otherwise, use the default list.
-    const menuOrderSource = settings.menuOrder && settings.menuOrder.length > 0 
-        ? settings.menuOrder 
-        : allNavItemsList(lang).map(item => ({ id: item.id, isGroup: (item as any).isGroup, subItems: (item as any).isGroup ? (item as any).subItems.map((si: any) => si.id) : [] }));
-    
-    const allKnownIds = new Set(allNavItemsList(lang).map(i => i.id));
-    const usedIds = new Set(menuOrderSource.flatMap(item => item.isGroup ? [item.id, ...(item.subItems || [])] : [item.id]));
-
     const fullNavList = allNavItemsList(lang);
+    const menuOrder = settings.menuOrder || [];
+    const usedIds = new Set(menuOrder.flatMap(item => [item.id, ...(item.subItems || [])]));
+    
+    // Add any items not defined in the saved order to the end
+    const remainingItems = fullNavList.filter(item => !usedIds.has(item.id)).map(item => ({ id: item.id }));
 
-    // This logic ensures new hardcoded items are added to the list if not in settings.menuOrder
-    const missingItems = fullNavList
-      .filter(item => !usedIds.has(item.id))
-      .map(item => ({ id: item.id, isGroup: (item as any).isGroup, subItems: (item as any).isGroup ? (item as any).subItems.map((si: any) => si.id) : [] }));
+    const finalOrder = [...menuOrder, ...remainingItems];
 
-    const finalMenuOrder = [...menuOrderSource, ...missingItems];
-
-    return finalMenuOrder.map(orderItem => {
-        const mainItem = fullNavList.find(i => i.id === orderItem.id);
+    return finalOrder.map(orderItem => {
+        const mainItem = allNavItemsMap.get(orderItem.id);
         if (!mainItem) return null;
 
-        if ((mainItem as any).isGroup) {
-            const finalSubItems = (orderItem.subItems || [])
-                .map(subId => (mainItem as any).subItems.find((si: any) => si.id === subId))
+        if (orderItem.isGroup) {
+            const subItems = (orderItem.subItems || [])
+                .map(subId => allNavItemsMap.get(subId))
                 .filter(Boolean);
             
             return {
                 ...mainItem,
-                subItems: finalSubItems,
+                isGroup: true,
+                subItems: subItems,
             };
         }
         return mainItem;
-    }).filter(Boolean); // Filter out any undefined items
+    }).filter(Boolean);
   }, [allNavItemsMap, settings.menuOrder, lang]);
   
   const navItems = useMemo(() => {
@@ -152,7 +138,7 @@ export default function DashboardClientLayout({
 
 
   const getActiveLabel = () => {
-    for (const item of allNavItemsList(lang).flatMap(i => (i as any).isGroup ? (i as any).subItems : i)) {
+    for (const item of allNavItemsList(lang).flatMap(i => (i as any).subItems ? (i as any).subItems : i)) {
         if (item.href && (item.exact ? pathname === item.href : pathname.startsWith(item.href))) {
             return item.label;
         }

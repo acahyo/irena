@@ -77,6 +77,7 @@ const allMenus = [
   { id: 'users', label: 'Users' },
   { id: 'roles', label: 'Roles' },
   { id: 'settings', label: 'Pengaturan' },
+  { id: 'employee-register', label: 'Registrasi Karyawan'},
 ];
 
 
@@ -91,8 +92,7 @@ export default function SettingsPage() {
     const [permissions, setPermissions] = useState<Record<string, string[]>>({});
     const [savingPermissions, setSavingPermissions] = useState(false);
     const [menuOrder, setMenuOrder] = useState<MenuOrderItem[]>([]);
-    const [draggedItem, setDraggedItem] = useState<{item: MenuOrderItem, sourceIndex: number} | null>(null);
-    const [draggedSubItem, setDraggedSubItem] = useState<{item: string, sourceGroupIndex: number, sourceSubIndex: number} | null>(null);
+    const [draggedItem, setDraggedItem] = useState<MenuOrderItem | null>(null);
     const [employeePayslipAccess, setEmployeePayslipAccess] = useState(true);
 
 
@@ -115,9 +115,18 @@ export default function SettingsPage() {
                 setPermissions(initialPermissions);
 
                 const existingMenuOrder = settingsData.menuOrder || [];
-                const usedMenuIds = new Set(existingMenuOrder.flatMap(item => item.isGroup ? item.subItems || [] : item.id));
-                const newMenuItems = allMenus.filter(m => !usedMenuIds.has(m.id)).map(m => ({ id: m.id, isGroup: false, subItems: [] }));
-                setMenuOrder([...existingMenuOrder, ...newMenuItems]);
+                const usedMenuIds = new Set(existingMenuOrder.flatMap(item => [item.id, ...(item.subItems || [])]));
+                const newMenuItems = allMenus.filter(m => !usedMenuIds.has(m.id)).map(m => ({ id: m.id, isGroup: false, subItems: [] as string[] }));
+
+                const finalOrder = [...existingMenuOrder, ...newMenuItems];
+                // Ensure every item has isGroup and subItems properties
+                const normalizedOrder = finalOrder.map(item => ({
+                    ...item,
+                    isGroup: !!item.isGroup,
+                    subItems: item.subItems || [],
+                }));
+
+                setMenuOrder(normalizedOrder);
 
             } catch (error) {
                 toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch settings data.' });
@@ -151,18 +160,25 @@ export default function SettingsPage() {
         setMenuOrder(prev => [...prev, newGroup]);
     };
 
-    const removeGroup = (index: number) => {
-        setMenuOrder(prev => prev.filter((_, i) => i !== index));
+    const removeMenuItem = (idToRemove: string, parentGroupId?: string) => {
+        setMenuOrder(prev => {
+            const newOrder = [...prev];
+            if (parentGroupId) {
+                const groupIndex = newOrder.findIndex(item => item.id === parentGroupId);
+                if (groupIndex > -1) {
+                    newOrder[groupIndex].subItems = newOrder[groupIndex].subItems?.filter(id => id !== idToRemove);
+                }
+            } else {
+                return newOrder.filter(item => item.id !== idToRemove);
+            }
+            return newOrder;
+        });
     };
+    
+    const removeGroup = (groupId: string) => {
+        setMenuOrder(prev => prev.filter(item => item.id !== groupId));
+    }
 
-    const addMenuItem = (id: string) => {
-        const newItem: MenuOrderItem = { id, isGroup: false };
-        setMenuOrder(prev => [...prev, newItem]);
-    };
-
-    const removeMenuItem = (index: number) => {
-        setMenuOrder(prev => prev.filter((_, i) => i !== index));
-    };
 
     const handlePermissionChange = (roleId: string, menuId: string, checked: boolean) => {
         setPermissions(prev => {
@@ -225,19 +241,10 @@ export default function SettingsPage() {
         setLoading(true);
         
         try {
-            const finalMenuOrder = menuOrder.map(item => {
-                if (item.isGroup) {
-                    // For groups, we only need the subItems and the isGroup flag. The id is temporary.
-                    return { id: item.id, isGroup: true, subItems: item.subItems };
-                }
-                // For single items, we only need the id.
-                return { id: item.id };
-            });
-
             const settingsToSave: Omit<AppSettings, 'id'> = {
                 ...settings,
                 logo: logoPreview || '',
-                menuOrder: finalMenuOrder,
+                menuOrder,
                 employeePayslipAccess,
             };
 
@@ -319,6 +326,72 @@ export default function SettingsPage() {
         }
     };
 
+    // Drag and Drop handlers
+    const handleDragStart = (e: React.DragEvent<HTMLDivElement>, item: MenuOrderItem) => {
+        setDraggedItem(item);
+        e.dataTransfer.setData('application/json', JSON.stringify({ item }));
+    };
+
+    const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+    };
+
+    const handleDropOnList = (e: React.DragEvent<HTMLDivElement>, targetIndex: number) => {
+        e.preventDefault();
+        const data = e.dataTransfer.getData('application/json');
+        if (!data) return;
+
+        const { item: draggedItem, sourceIndex } = JSON.parse(data);
+
+        // Remove from original position
+        let newMenuOrder = [...menuOrder];
+        if (sourceIndex !== undefined) {
+            newMenuOrder.splice(sourceIndex, 1);
+        }
+
+        // Add to new position
+        newMenuOrder.splice(targetIndex, 0, draggedItem);
+        setMenuOrder(newMenuOrder);
+    };
+
+    const handleDropOnGroup = (e: React.DragEvent<HTMLDivElement>, groupId: string) => {
+        e.stopPropagation();
+        const data = e.dataTransfer.getData('application/json');
+        if (!data) return;
+        
+        const { item: droppedItem, sourceGroupId } = JSON.parse(data);
+
+        setMenuOrder(prev => {
+            let newOrder = [...prev];
+
+            // Remove from source (if any)
+            if (sourceGroupId) {
+                 const groupIndex = newOrder.findIndex(g => g.id === sourceGroupId);
+                 if (groupIndex > -1) {
+                     newOrder[groupIndex].subItems = (newOrder[groupIndex].subItems || []).filter(id => id !== droppedItem.id);
+                 }
+            } else {
+                newOrder = newOrder.filter(item => item.id !== droppedItem.id);
+            }
+
+            // Add to target group
+            const targetGroupIndex = newOrder.findIndex(g => g.id === groupId);
+            if (targetGroupIndex > -1 && newOrder[targetGroupIndex].isGroup) {
+                newOrder[targetGroupIndex].subItems = [...(newOrder[targetGroupIndex].subItems || []), droppedItem.id];
+            }
+            return newOrder;
+        });
+    };
+    
+    const handleDragStartSubItem = (e: React.DragEvent<HTMLDivElement>, subItemId: string, groupId: string) => {
+        e.stopPropagation();
+        const item = allMenus.find(m => m.id === subItemId);
+        if (!item) return;
+        
+        const itemToDrag = { id: item.id, label: item.label };
+        e.dataTransfer.setData('application/json', JSON.stringify({ item: itemToDrag, sourceGroupId: groupId }));
+    };
+
     const ColorInput = ({ label, id, value, onChange }: { label: string, id: string, value: string, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void }) => (
         <div className="space-y-2">
             <Label htmlFor={id}>{label}</Label>
@@ -338,51 +411,6 @@ export default function SettingsPage() {
         </div>
     );
     
-    // Drag and drop handlers
-    const handleDragStart = (e: React.DragEvent<HTMLDivElement>, item: MenuOrderItem, index: number) => {
-        setDraggedItem({ item, sourceIndex: index });
-    };
-
-    const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-        e.preventDefault();
-    };
-
-    const handleDrop = (e: React.DragEvent<HTMLDivElement>, targetIndex: number) => {
-        e.preventDefault();
-        if (!draggedItem) return;
-
-        const { sourceIndex } = draggedItem;
-        if (sourceIndex === targetIndex) return;
-
-        const newMenuOrder = [...menuOrder];
-        const [removed] = newMenuOrder.splice(sourceIndex, 1);
-        newMenuOrder.splice(targetIndex, 0, removed);
-
-        setMenuOrder(newMenuOrder);
-        setDraggedItem(null);
-    };
-
-    const handleDropOnGroup = (e: React.DragEvent<HTMLDivElement>, groupIndex: number) => {
-        e.preventDefault();
-        const draggedData = e.dataTransfer.getData("text/plain");
-        if (!draggedData) return;
-        const { type, id } = JSON.parse(draggedData);
-
-        if (type === 'available-item') {
-            setMenuOrder(prev => {
-                const newOrder = [...prev];
-                const group = newOrder[groupIndex];
-                if (group.isGroup) {
-                    group.subItems = [...(group.subItems || []), id];
-                }
-                return newOrder;
-            });
-        }
-    };
-
-    const handleDragStartAvailable = (e: React.DragEvent<HTMLDivElement>, id: string) => {
-        e.dataTransfer.setData("text/plain", JSON.stringify({ type: 'available-item', id }));
-    };
 
     if (pageLoading || !settings) {
         return (
@@ -519,15 +547,15 @@ export default function SettingsPage() {
                         <CardDescription>Seret dan lepas untuk mengatur urutan dan struktur menu di sidebar.</CardDescription>
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-4">
+                         <div className="space-y-2">
                             <h4 className="font-semibold">Menu Tersedia</h4>
-                            <div className="space-y-2 rounded-md border p-2 min-h-[200px]">
+                             <div className="space-y-2 rounded-md border p-2 min-h-[200px] bg-muted/30">
                                 {availableMenus.map(item => (
                                     <div
                                         key={item.id}
                                         draggable
-                                        onDragStart={(e) => handleDragStartAvailable(e, item.id)}
-                                        className="flex items-center gap-2 rounded-md p-2 bg-background hover:bg-muted cursor-grab"
+                                        onDragStart={(e) => handleDragStart(e, {id: item.id})}
+                                        className="flex items-center gap-2 rounded-md p-2 bg-background hover:bg-muted cursor-grab border"
                                     >
                                         <GripVertical className="h-5 w-5 text-muted-foreground" />
                                         <span>{item.label}</span>
@@ -535,50 +563,51 @@ export default function SettingsPage() {
                                 ))}
                             </div>
                         </div>
-                        <div className="space-y-4">
+                        <div className="space-y-2">
                              <h4 className="font-semibold">Struktur Sidebar</h4>
                             <div 
-                                className="space-y-2 rounded-md border p-2 min-h-[200px]"
+                                className="space-y-2 rounded-md border p-2 min-h-[200px] bg-muted/30"
                                 onDragOver={handleDragOver}
-                                onDrop={(e) => handleDrop(e, menuOrder.length)}
+                                onDrop={(e) => handleDropOnList(e, menuOrder.length)}
                             >
                                 {menuOrder.map((item, index) => (
                                     <div
                                         key={item.id}
                                         draggable
-                                        onDragStart={(e) => handleDragStart(e, item, index)}
+                                        onDragStart={(e) => { e.stopPropagation(); handleDragStart(e, item) }}
                                         onDragOver={handleDragOver}
-                                        onDrop={(e) => handleDrop(e, index)}
-                                        className="flex items-center gap-2 rounded-md p-2 bg-background hover:bg-muted cursor-grab"
+                                        onDrop={(e) => { e.stopPropagation(); handleDropOnList(e, index) }}
+                                        className="flex items-center gap-2 rounded-md p-2 bg-background hover:bg-muted cursor-grab border"
                                     >
                                         <GripVertical className="h-5 w-5 text-muted-foreground" />
                                         {item.isGroup ? (
                                             <div 
                                                 className="flex-1 p-2 border border-dashed rounded-md space-y-2"
                                                 onDragOver={handleDragOver}
-                                                onDrop={(e) => { e.stopPropagation(); handleDropOnGroup(e, index); }}
+                                                onDrop={(e) => handleDropOnGroup(e, item.id)}
                                             >
                                                 <div className="flex justify-between items-center">
                                                    <span className="text-sm font-semibold text-muted-foreground">Grup Menu</span>
-                                                    <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeGroup(index)}>
+                                                    <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeGroup(item.id)}>
                                                         <Trash2 className="h-4 w-4 text-destructive"/>
                                                     </Button>
                                                 </div>
-                                                <div className="pl-4 space-y-1">
+                                                <div className="pl-4 space-y-1 min-h-[20px]">
                                                     {(item.subItems || []).map(subId => (
-                                                         <div key={subId} className="flex items-center gap-2 rounded-md p-1 bg-muted/50">
+                                                         <div key={subId} draggable onDragStart={(e) => handleDragStartSubItem(e, subId, item.id)} className="flex items-center gap-2 rounded-md p-1 bg-muted/50 cursor-grab border">
+                                                            <GripVertical className="h-4 w-4 text-muted-foreground/50" />
                                                             <span>{allMenus.find(m => m.id === subId)?.label}</span>
+                                                             <Button type="button" variant="ghost" size="icon" className="h-5 w-5 ml-auto" onClick={() => removeMenuItem(subId, item.id)}>
+                                                                <Trash2 className="h-3 w-3 text-destructive"/>
+                                                            </Button>
                                                         </div>
                                                     ))}
-                                                     {(!item.subItems || item.subItems.length === 0) && (
-                                                        <p className="text-xs text-muted-foreground text-center py-2">Jatuhkan menu di sini</p>
-                                                     )}
                                                 </div>
                                             </div>
                                         ) : (
                                            <>
                                                 <span>{allMenus.find(m => m.id === item.id)?.label || item.id}</span>
-                                                <Button type="button" variant="ghost" size="icon" className="h-6 w-6 ml-auto" onClick={() => removeMenuItem(index)}>
+                                                <Button type="button" variant="ghost" size="icon" className="h-6 w-6 ml-auto" onClick={() => removeMenuItem(item.id)}>
                                                     <Trash2 className="h-4 w-4 text-destructive"/>
                                                 </Button>
                                            </>
