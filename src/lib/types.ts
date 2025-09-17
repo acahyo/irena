@@ -47,7 +47,6 @@ export type Employee = {
   daysActive?: number;
   leaveHistory?: LeaveRequest[];
   canGeneratePayslip?: boolean;
-  // Salary fields are now in the Position type
 };
 
 export type CalendarEvent = {
@@ -146,6 +145,30 @@ export type AttendanceRecord = {
     potonganDenda?: number;
     potonganPph?: number;
     bonus?: number;
+};
+
+export type PurchaseRequestItem = {
+    name: string;
+    quantity: number;
+    unit: string;
+    estimatedPrice?: number;
+    actualPrice?: number;
+};
+
+export type PurchaseRequest = {
+    id: string;
+    projectId: string;
+    projectName: string;
+    requesterId: string;
+    requesterName: string;
+    requestDate: Date | string;
+    items: PurchaseRequestItem[];
+    totalEstimatedPrice: number;
+    totalActualPrice?: number;
+    status: 'Pending' | 'Verified by Purchasing' | 'Processing' | 'Approved by Finance' | 'Rejected' | 'Completed';
+    purchasingNotes?: string;
+    financeNotes?: string;
+    rejectionReason?: string;
 };
 
 
