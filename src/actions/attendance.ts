@@ -4,26 +4,6 @@ import { db } from '@/lib/firebase';
 import { collection, getDocs, doc, setDoc, getDoc, query, where, writeBatch, Timestamp } from 'firebase/firestore';
 import type { AttendanceRecord } from '@/lib/types';
 
-// Get all attendance records for a specific date range
-export async function getAttendanceByDateRange(startDate: Date, endDate: Date): Promise<AttendanceRecord[]> {
-  try {
-    const q = query(
-      collection(db, 'attendance'),
-      where('date', '>=', Timestamp.fromDate(startDate)),
-      where('date', '<=', Timestamp.fromDate(endDate))
-    );
-    const querySnapshot = await getDocs(q);
-    const records: AttendanceRecord[] = [];
-    querySnapshot.forEach((doc) => {
-        records.push({ id: doc.id, ...doc.data() } as AttendanceRecord);
-    });
-    return records;
-  } catch (error) {
-      console.error(`Error fetching attendance for date range, returning empty array:`, error);
-      return [];
-  }
-}
-
 // Get all attendance records for a specific period (YYYY-MM)
 export async function getAttendanceByPeriod(period: string): Promise<AttendanceRecord[]> {
   try {
@@ -65,7 +45,8 @@ export async function saveAttendanceRecord(data: Omit<AttendanceRecord, 'id'>): 
   const { employeeId, period } = data;
   const docId = `${employeeId}_${period}`;
   const docRef = doc(db, 'attendance', docId);
-  await setDoc(docRef, { ...data, date: new Date(`${period}-01`) }, { merge: true });
+  const dateFromPeriod = new Date(period + '-01'); // Ensure date is correctly derived from period
+  await setDoc(docRef, { ...data, date: dateFromPeriod }, { merge: true });
 }
 
 // Import multiple attendance records
@@ -75,7 +56,8 @@ export async function importAttendanceRecords(records: Omit<AttendanceRecord, 'i
     records.forEach(record => {
         const docId = `${record.employeeId}_${record.period}`;
         const docRef = doc(db, 'attendance', docId);
-        batch.set(docRef, { ...record, date: new Date(`${record.period}-01`) }, { merge: true });
+        const dateFromPeriod = new Date(record.period + '-01');
+        batch.set(docRef, { ...record, date: dateFromPeriod }, { merge: true });
     });
 
     await batch.commit();
