@@ -17,7 +17,7 @@ import { Loader2, Settings2, Calendar as CalendarIcon } from 'lucide-react';
 import type { EmployeeWithPosition, AppSettings, AttendanceRecord } from '@/lib/types';
 import PayslipViewer, { type PayslipData, type PayslipOptions } from '@/components/payslip-viewer';
 import { useToast } from '@/hooks/use-toast';
-import { getAttendanceByPeriod } from '@/actions/attendance';
+import { getAttendanceByDateRange } from '@/actions/attendance';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -81,11 +81,10 @@ export default function PayslipCollectiveClientPage({
 
   useEffect(() => {
     const fetchAttendance = async () => {
-        if (!startDate) return;
-        const period = format(startDate, 'yyyy-MM');
+        if (!startDate || !endDate) return;
         startTransition(async () => {
             try {
-                const records = await getAttendanceByPeriod(period);
+                const records = await getAttendanceByDateRange(startDate, endDate);
                 setAttendanceRecords(records);
             } catch (error) {
                 toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch attendance data for the selected period.' });
@@ -93,7 +92,7 @@ export default function PayslipCollectiveClientPage({
         });
     };
     fetchAttendance();
-  }, [startDate, toast]);
+  }, [startDate, endDate, toast]);
   
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -140,7 +139,7 @@ export default function PayslipCollectiveClientPage({
             const employee = initialEmployees.find(e => e.id === employeeId);
             if (!employee || !employee.positionDetails) return;
 
-            const attendance = attendanceRecords.find(a => a.employeeId === employeeId && a.period === format(startDate, 'yyyy-MM'));
+            const attendance = attendanceRecords.find(a => a.employeeId === employeeId);
             const attendanceDays = attendance?.attendanceDays || 0;
             const overtimeHours = attendance?.overtimeHours || 0;
             const bonus = attendance?.bonus || 0;
@@ -148,10 +147,12 @@ export default function PayslipCollectiveClientPage({
 
             let earnings: Record<string, number> = {};
             if(position.salaryType === 'bulanan' || position.salaryType === 'direksi') {
-                earnings.monthlySalary = position.monthlySalary || 0;
-                position.allowances?.forEach(allowance => {
-                    earnings[allowance.name] = allowance.amount;
-                });
+                const baseSalary = position.monthlySalary || 0;
+                const totalAllowances = position.allowances?.reduce((sum, allowance) => sum + allowance.amount, 0) || 0;
+                const totalMonthlySalary = baseSalary + totalAllowances;
+                const proratedSalary = (totalMonthlySalary / 30) * attendanceDays;
+
+                earnings.proratedSalary = proratedSalary;
             } else if(position.salaryType === 'harian') {
                 earnings = {
                     dailyWage: (position.dailyWage || 0) * attendanceDays,

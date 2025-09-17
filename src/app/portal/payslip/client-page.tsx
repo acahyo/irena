@@ -15,7 +15,7 @@ import { Printer, Loader2, Calendar as CalendarIcon } from 'lucide-react';
 import type { EmployeeWithPosition, AppSettings, AttendanceRecord } from '@/lib/types';
 import PayslipViewer, { type PayslipData } from '@/components/payslip-viewer';
 import { useToast } from '@/hooks/use-toast';
-import { getAttendanceByPeriod } from '@/actions/attendance';
+import { getAttendanceByDateRange } from '@/actions/attendance';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
@@ -59,14 +59,13 @@ export default function MyPayslipClientPage({
   
   useEffect(() => {
     const fetchAttendance = async () => {
-        if (!startDate) {
+        if (!startDate || !endDate) {
             setAttendanceRecord(null);
             return;
         };
-        const period = format(startDate, 'yyyy-MM');
         setIsFetchingAttendance(true);
         try {
-            const records = await getAttendanceByPeriod(period);
+            const records = await getAttendanceByDateRange(startDate, endDate);
             const employeeRecord = records.find(r => r.employeeId === employee.id);
             setAttendanceRecord(employeeRecord || null);
         } catch (error) {
@@ -77,7 +76,7 @@ export default function MyPayslipClientPage({
         }
     };
     fetchAttendance();
-  }, [startDate, employee.id, toast]);
+  }, [startDate, endDate, employee.id, toast]);
 
   const handleGenerate = () => {
     if (!startDate || !endDate) {
@@ -97,10 +96,12 @@ export default function MyPayslipClientPage({
 
     let earnings: Record<string, number> = {};
     if(position.salaryType === 'bulanan' || position.salaryType === 'direksi') {
-        earnings.monthlySalary = position.monthlySalary || 0;
-        position.allowances?.forEach(allowance => {
-            earnings[allowance.name] = allowance.amount;
-        });
+        const baseSalary = position.monthlySalary || 0;
+        const totalAllowances = position.allowances?.reduce((sum, allowance) => sum + allowance.amount, 0) || 0;
+        const totalMonthlySalary = baseSalary + totalAllowances;
+        const proratedSalary = (totalMonthlySalary / 30) * attendanceDays;
+
+        earnings.proratedSalary = proratedSalary;
     } else if (position.salaryType === 'harian') { // harian
         earnings = {
             dailyWage: (position.dailyWage || 0) * attendanceDays,

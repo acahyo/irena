@@ -22,7 +22,7 @@ import { Printer, Loader2, Settings2, Calendar as CalendarIcon } from 'lucide-re
 import type { EmployeeWithPosition, AppSettings, Department, AttendanceRecord } from '@/lib/types';
 import PayslipViewer, { type PayslipData, type PayslipOptions } from '@/components/payslip-viewer';
 import { useToast } from '@/hooks/use-toast';
-import { getAttendanceByPeriod } from '@/actions/attendance';
+import { getAttendanceByDateRange } from '@/actions/attendance';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -100,15 +100,15 @@ export default function PayslipClientPage({
 
   useEffect(() => {
     const fetchAttendance = async () => {
-        if (!selectedEmployeeId || !startDate) {
+        if (!selectedEmployeeId || !startDate || !endDate) {
             setAttendanceRecord(null);
             return;
         };
-        const period = format(startDate, 'yyyy-MM');
         setIsFetchingAttendance(true);
         try {
-            const record = await getAttendanceByPeriod(period);
-            const employeeRecord = record.find(r => r.employeeId === selectedEmployeeId);
+            const records = await getAttendanceByDateRange(startDate, endDate);
+            // Assuming one record per employee in the range for simplicity, or aggregate them
+            const employeeRecord = records.find(r => r.employeeId === selectedEmployeeId);
             setAttendanceRecord(employeeRecord || null);
         } catch (error) {
             toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch attendance data.' });
@@ -118,7 +118,7 @@ export default function PayslipClientPage({
         }
     };
     fetchAttendance();
-  }, [selectedEmployeeId, startDate, toast]);
+  }, [selectedEmployeeId, startDate, endDate, toast]);
 
   const handleGenerate = () => {
     if (!selectedEmployeeId || !startDate || !endDate || !selectedEmployee) {
@@ -146,10 +146,12 @@ export default function PayslipClientPage({
 
     let earnings: Record<string, number> = {};
     if(position.salaryType === 'bulanan' || position.salaryType === 'direksi') {
-        earnings.monthlySalary = position.monthlySalary || 0;
-        position.allowances?.forEach(allowance => {
-            earnings[allowance.name] = allowance.amount;
-        });
+        const baseSalary = position.monthlySalary || 0;
+        const totalAllowances = position.allowances?.reduce((sum, allowance) => sum + allowance.amount, 0) || 0;
+        const totalMonthlySalary = baseSalary + totalAllowances;
+        const proratedSalary = (totalMonthlySalary / 30) * attendanceDays;
+
+        earnings.proratedSalary = proratedSalary;
     } else if (position.salaryType === 'harian') { // harian
         earnings = {
             dailyWage: (position.dailyWage || 0) * attendanceDays,

@@ -44,6 +44,7 @@ export default function Payslip({
       
       const labelsId: Record<string, string> = {
           monthlySalary: "Gaji Pokok",
+          proratedSalary: `Gaji Bulanan Prorata (${attendanceDays ?? '...'} hari)`,
           dailyWage: `Gaji Harian (${attendanceDays ?? '...'} hari)`,
           overtime: `Lembur (${overtimeHours ?? '...'} jam)`,
           tax: "Pajak (PPH 21)",
@@ -56,6 +57,7 @@ export default function Payslip({
       
       const labelsEn: Record<string, string> = {
           monthlySalary: "Basic Salary",
+          proratedSalary: `Prorated Monthly Salary (${attendanceDays ?? '...'} days)`,
           dailyWage: `Daily Wage (${attendanceDays ?? '...'} days)`,
           overtime: `Overtime (${overtimeHours ?? '...'} hours)`,
           tax: "Tax (PPH 21)",
