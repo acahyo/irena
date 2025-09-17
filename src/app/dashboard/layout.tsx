@@ -1,4 +1,5 @@
 
+import React from "react";
 import { redirect } from "next/navigation";
 import DashboardClientLayout from "./layout-client";
 import { getSettings } from "@/actions/settings";
