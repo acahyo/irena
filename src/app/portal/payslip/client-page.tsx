@@ -11,11 +11,15 @@ import {
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Printer, Loader2 } from 'lucide-react';
+import { Printer, Loader2, Calendar as CalendarIcon } from 'lucide-react';
 import type { EmployeeWithPosition, AppSettings, AttendanceRecord } from '@/lib/types';
 import PayslipViewer, { type PayslipData } from '@/components/payslip-viewer';
 import { useToast } from '@/hooks/use-toast';
-import { getAttendanceByEmployeeAndPeriod } from '@/actions/attendance';
+import { getAttendanceByPeriod } from '@/actions/attendance';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
 
 const BPJS_RATES: Record<string, number> = {
     miki: 280000,
@@ -31,7 +35,8 @@ export default function MyPayslipClientPage({
   settings: AppSettings;
   initialAttendance: AttendanceRecord | null;
 }) {
-  const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
+  const [startDate, setStartDate] = useState<Date | undefined>(startOfMonth(new Date()));
+  const [endDate, setEndDate] = useState<Date | undefined>(endOfMonth(new Date()));
   const [payslipData, setPayslipData] = useState<PayslipData | null>(null);
   const [attendanceRecord, setAttendanceRecord] = useState<AttendanceRecord | null>(initialAttendance);
   const { toast } = useToast();
@@ -48,19 +53,22 @@ export default function MyPayslipClientPage({
       noPeriod: lang === 'id' ? 'Silakan pilih periode.' : 'Please select a period.',
       noSalaryDetails: lang === 'id' ? 'Detail gaji untuk posisi Anda belum diatur.' : 'Salary details for your position are not set.',
       fetchingAttendance: lang === 'id' ? 'Mengambil data absensi...' : 'Fetching attendance...',
+      startDate: lang === 'id' ? 'Tanggal Mulai' : 'Start Date',
+      endDate: lang === 'id' ? 'Tanggal Selesai' : 'End Date',
   }), [lang]);
   
-  // Effect to fetch attendance data when period changes
   useEffect(() => {
     const fetchAttendance = async () => {
-        if (!period) {
+        if (!startDate) {
             setAttendanceRecord(null);
             return;
         };
+        const period = format(startDate, 'yyyy-MM');
         setIsFetchingAttendance(true);
         try {
-            const record = await getAttendanceByEmployeeAndPeriod(employee.id, period);
-            setAttendanceRecord(record);
+            const records = await getAttendanceByPeriod(period);
+            const employeeRecord = records.find(r => r.employeeId === employee.id);
+            setAttendanceRecord(employeeRecord || null);
         } catch (error) {
             toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch attendance data.' });
             setAttendanceRecord(null);
@@ -69,10 +77,10 @@ export default function MyPayslipClientPage({
         }
     };
     fetchAttendance();
-  }, [period, employee.id, toast]);
+  }, [startDate, employee.id, toast]);
 
   const handleGenerate = () => {
-    if (!period) {
+    if (!startDate || !endDate) {
       toast({ variant: 'destructive', title: T.error, description: T.noPeriod });
       return;
     }
@@ -130,11 +138,12 @@ export default function MyPayslipClientPage({
 
     const totalDeductions = Object.values(deductions).reduce((sum, val) => sum + val, 0);
     const netSalary = totalEarnings - totalDeductions;
+    const periodString = `${format(startDate, 'dd MMM yyyy')} - ${format(endDate, 'dd MMM yyyy')}`;
 
     setPayslipData({
       id: employee.id,
       employee: employee,
-      period,
+      period: periodString,
       earnings,
       deductions,
       totalEarnings,
@@ -146,6 +155,23 @@ export default function MyPayslipClientPage({
     });
   };
 
+  const DatePicker = ({ date, setDate, label }: { date: Date | undefined, setDate: (d: Date | undefined) => void, label: string }) => (
+    <div className="space-y-2 flex-1">
+        <Label>{label}</Label>
+        <Popover>
+            <PopoverTrigger asChild>
+                <Button
+                    variant={'outline'}
+                    className={cn('w-full justify-start text-left font-normal', !date && 'text-muted-foreground')}>
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {date ? format(date, 'PPP') : <span>Pilih tanggal</span>}
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={date} onSelect={setDate} initialFocus /></PopoverContent>
+        </Popover>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       <Card className="print:hidden">
@@ -155,15 +181,9 @@ export default function MyPayslipClientPage({
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row items-end gap-4">
-            <div className="space-y-2 w-full sm:w-auto sm:flex-1">
-              <Label htmlFor="period">{T.periodLabel}</Label>
-              <Input
-                id="period"
-                type="month"
-                value={period}
-                onChange={(e) => setPeriod(e.target.value)}
-              />
-            </div>
+            <DatePicker date={startDate} setDate={setStartDate} label={T.startDate} />
+            <DatePicker date={endDate} setDate={setEndDate} label={T.endDate} />
+
             <Button onClick={handleGenerate} disabled={isFetchingAttendance} className="w-full sm:w-auto">
                 {isFetchingAttendance ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Printer className="mr-2 h-4 w-4" />}
                 {isFetchingAttendance ? T.fetchingAttendance : T.generateButton}

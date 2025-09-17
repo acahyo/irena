@@ -38,12 +38,6 @@ export default function Payslip({
   const lang = settings.language || 'id';
   const locale = lang === 'id' ? id : enUS;
 
-  // Helper to format period
-  const formatPeriod = (period: string) => {
-      const date = new Date(`${period}-02`); // Use day 2 to avoid timezone issues
-      return format(date, 'MMMM yyyy', { locale });
-  }
-
   // Helper to format salary labels
   const formatLabel = (key: string, employee: Employee, attendanceDays?: number, overtimeHours?: number) => {
       const bpjsLabel = employee.bpjsType ? `Iuran BPJS (${employee.bpjsType.toUpperCase()})` : "Iuran BPJS";
@@ -150,7 +144,7 @@ export default function Payslip({
           </div>
           <div className="text-right">
             <h2 className="text-3xl font-bold uppercase text-primary">{T.payslipTitle}</h2>
-            <p className="text-gray-500">{T.periodLabel}: {formatPeriod(period)}</p>
+            <p className="text-gray-500">{T.periodLabel}: {period}</p>
           </div>
         </header>
         

@@ -18,11 +18,11 @@ import {
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Printer, Loader2, Settings2 } from 'lucide-react';
+import { Printer, Loader2, Settings2, Calendar as CalendarIcon } from 'lucide-react';
 import type { EmployeeWithPosition, AppSettings, Department, AttendanceRecord } from '@/lib/types';
 import PayslipViewer, { type PayslipData, type PayslipOptions } from '@/components/payslip-viewer';
 import { useToast } from '@/hooks/use-toast';
-import { getAttendanceByEmployeeAndPeriod } from '@/actions/attendance';
+import { getAttendanceByPeriod } from '@/actions/attendance';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -30,6 +30,10 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
 
 
 const BPJS_RATES: Record<string, number> = {
@@ -49,7 +53,8 @@ export default function PayslipClientPage({
   departments: Department[];
 }) {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
-  const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
+  const [startDate, setStartDate] = useState<Date | undefined>(startOfMonth(new Date()));
+  const [endDate, setEndDate] = useState<Date | undefined>(endOfMonth(new Date()));
   const [payslipData, setPayslipData] = useState<PayslipData | null>(null);
   const [attendanceRecord, setAttendanceRecord] = useState<AttendanceRecord | null>(null);
   const [keterangan, setKeterangan] = useState('');
@@ -86,7 +91,6 @@ export default function PayslipClientPage({
     return initialEmployees.find((e) => e.id === selectedEmployeeId) || null;
   }, [selectedEmployeeId, initialEmployees]);
   
-  // When filter changes, if the selected employee is no longer in the filtered list, reset it.
   useEffect(() => {
     if (selectedEmployeeId && !filteredEmployees.find(e => e.id === selectedEmployeeId)) {
         setSelectedEmployeeId(null);
@@ -94,24 +98,18 @@ export default function PayslipClientPage({
     }
   }, [filteredEmployees, selectedEmployeeId]);
 
-  // Effect to fetch attendance data when employee or period changes
   useEffect(() => {
     const fetchAttendance = async () => {
-        if (!selectedEmployeeId || !period) {
+        if (!selectedEmployeeId || !startDate) {
             setAttendanceRecord(null);
             return;
         };
+        const period = format(startDate, 'yyyy-MM');
         setIsFetchingAttendance(true);
         try {
-            // First, check initial attendance data passed from server
-            const initialRecord = initialAttendance.find(rec => rec.employeeId === selectedEmployeeId && rec.period === period);
-            if (initialRecord) {
-                setAttendanceRecord(initialRecord);
-            } else {
-                // If not found (e.g., period changed), fetch from db
-                const record = await getAttendanceByEmployeeAndPeriod(selectedEmployeeId, period);
-                setAttendanceRecord(record);
-            }
+            const record = await getAttendanceByPeriod(period);
+            const employeeRecord = record.find(r => r.employeeId === selectedEmployeeId);
+            setAttendanceRecord(employeeRecord || null);
         } catch (error) {
             toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch attendance data.' });
             setAttendanceRecord(null);
@@ -120,10 +118,10 @@ export default function PayslipClientPage({
         }
     };
     fetchAttendance();
-  }, [selectedEmployeeId, period, toast, initialAttendance]);
+  }, [selectedEmployeeId, startDate, toast]);
 
   const handleGenerate = () => {
-    if (!selectedEmployeeId || !period || !selectedEmployee) {
+    if (!selectedEmployeeId || !startDate || !endDate || !selectedEmployee) {
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -163,7 +161,6 @@ export default function PayslipClientPage({
         earnings.bonus = bonus;
     }
 
-
     const totalEarnings = Object.values(earnings).reduce((sum, val) => sum + val, 0);
     
     const deductions: Record<string, number> = {};
@@ -175,7 +172,6 @@ export default function PayslipClientPage({
     if (bpjsDeduction > 0) {
       deductions.bpjs = bpjsDeduction;
     }
-
 
     if (applyPph) {
       deductions.tax = totalEarnings * 0.02;
@@ -193,11 +189,13 @@ export default function PayslipClientPage({
 
     const totalDeductions = Object.values(deductions).reduce((sum, val) => sum + val, 0);
     const netSalary = totalEarnings - totalDeductions;
+    
+    const periodString = `${format(startDate, 'dd MMM yyyy')} - ${format(endDate, 'dd MMM yyyy')}`;
 
     setPayslipData({
       id: selectedEmployee.id,
       employee: selectedEmployee,
-      period,
+      period: periodString,
       earnings,
       deductions,
       totalEarnings,
@@ -210,6 +208,23 @@ export default function PayslipClientPage({
       options: payslipOptions,
     });
   };
+  
+    const DatePicker = ({ date, setDate, label }: { date: Date | undefined, setDate: (d: Date | undefined) => void, label: string }) => (
+        <div className="space-y-2">
+            <Label>{label}</Label>
+            <Popover>
+                <PopoverTrigger asChild>
+                    <Button
+                        variant={'outline'}
+                        className={cn('w-full justify-start text-left font-normal', !date && 'text-muted-foreground')}>
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {date ? format(date, 'PPP') : <span>Pilih tanggal</span>}
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={date} onSelect={setDate} initialFocus /></PopoverContent>
+            </Popover>
+        </div>
+    );
 
   return (
     <div className="space-y-6">
@@ -221,7 +236,7 @@ export default function PayslipClientPage({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
              <div className="space-y-2">
                 <Label htmlFor="department">Departemen</Label>
                 <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
@@ -254,16 +269,11 @@ export default function PayslipClientPage({
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="period">Periode</Label>
-              <Input
-                id="period"
-                type="month"
-                value={period}
-                onChange={(e) => setPeriod(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
+             <div className="grid grid-cols-2 gap-4">
+                 <DatePicker date={startDate} setDate={setStartDate} label="Tanggal Mulai" />
+                 <DatePicker date={endDate} setDate={setEndDate} label="Tanggal Selesai" />
+             </div>
+             <div className="space-y-2">
               <Label htmlFor="attendance">Jumlah Kehadiran (hari)</Label>
               <Input
                 id="attendance"

@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Settings2 } from 'lucide-react';
+import { Loader2, Settings2, Calendar as CalendarIcon } from 'lucide-react';
 import type { EmployeeWithPosition, AppSettings, AttendanceRecord } from '@/lib/types';
 import PayslipViewer, { type PayslipData, type PayslipOptions } from '@/components/payslip-viewer';
 import { useToast } from '@/hooks/use-toast';
@@ -25,6 +25,10 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
 
 const BPJS_RATES: Record<string, number> = {
     miki: 280000,
@@ -41,7 +45,8 @@ export default function PayslipCollectiveClientPage({
   initialAttendance: AttendanceRecord[];
 }) {
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<Set<string>>(new Set());
-  const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
+  const [startDate, setStartDate] = useState<Date | undefined>(startOfMonth(new Date()));
+  const [endDate, setEndDate] = useState<Date | undefined>(endOfMonth(new Date()));
   const [positionFilter, setPositionFilter] = useState('all');
   const [payslipsData, setPayslipsData] = useState<PayslipData[]>([]);
   const [keterangan, setKeterangan] = useState('');
@@ -62,7 +67,7 @@ export default function PayslipCollectiveClientPage({
   const positions = useMemo(() => {
     const allPositions = initialEmployees
       .map((emp) => emp.position)
-      .filter(Boolean); // Filter out undefined/null positions
+      .filter(Boolean);
     return ['all', ...Array.from(new Set(allPositions as string[]))];
   }, [initialEmployees]);
 
@@ -75,8 +80,9 @@ export default function PayslipCollectiveClientPage({
   }, [initialEmployees, positionFilter]);
 
   useEffect(() => {
-    // Fetch new attendance data when period changes
     const fetchAttendance = async () => {
+        if (!startDate) return;
+        const period = format(startDate, 'yyyy-MM');
         startTransition(async () => {
             try {
                 const records = await getAttendanceByPeriod(period);
@@ -87,7 +93,7 @@ export default function PayslipCollectiveClientPage({
         });
     };
     fetchAttendance();
-  }, [period, toast]);
+  }, [startDate, toast]);
   
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -117,14 +123,24 @@ export default function PayslipCollectiveClientPage({
       });
       return;
     }
+    if (!startDate || !endDate) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Please select a valid date range.',
+      });
+      return;
+    }
 
     startTransition(() => {
         const generatedPayslips: PayslipData[] = [];
+        const periodString = `${format(startDate, 'dd MMM yyyy')} - ${format(endDate, 'dd MMM yyyy')}`;
+
         selectedEmployeeIds.forEach(employeeId => {
             const employee = initialEmployees.find(e => e.id === employeeId);
             if (!employee || !employee.positionDetails) return;
 
-            const attendance = attendanceRecords.find(a => a.employeeId === employeeId && a.period === period);
+            const attendance = attendanceRecords.find(a => a.employeeId === employeeId && a.period === format(startDate, 'yyyy-MM'));
             const attendanceDays = attendance?.attendanceDays || 0;
             const overtimeHours = attendance?.overtimeHours || 0;
             const bonus = attendance?.bonus || 0;
@@ -142,7 +158,7 @@ export default function PayslipCollectiveClientPage({
                     overtime: (position.overtimeRate || 0) * overtimeHours, 
                 }
             } else {
-                return; // Skip if no salary type
+                return;
             }
             
             if (bonus > 0) {
@@ -150,9 +166,7 @@ export default function PayslipCollectiveClientPage({
             }
 
             const totalEarnings = Object.values(earnings).reduce((sum, val) => sum + val, 0);
-
             const deductions: Record<string, number> = {};
-
             let bpjsDeduction = 0;
             if (employee.bpjsStatus === 'active' && employee.bpjsType && BPJS_RATES[employee.bpjsType]) {
                 bpjsDeduction = BPJS_RATES[employee.bpjsType];
@@ -160,28 +174,19 @@ export default function PayslipCollectiveClientPage({
             if (bpjsDeduction > 0) {
               deductions.bpjs = bpjsDeduction;
             }
-
             if (applyPph) {
               deductions.tax = totalEarnings * 0.02;
             }
-            
-            if (attendance?.potonganIdCard) {
-                deductions.potonganIdCard = attendance.potonganIdCard;
-            }
-            if (attendance?.potonganSimper) {
-                deductions.potonganSimper = attendance.potonganSimper;
-            }
-            if (attendance?.potonganDenda) {
-                deductions.potonganDenda = attendance.potonganDenda;
-            }
-
+            if (attendance?.potonganIdCard) deductions.potonganIdCard = attendance.potonganIdCard;
+            if (attendance?.potonganSimper) deductions.potonganSimper = attendance.potonganSimper;
+            if (attendance?.potonganDenda) deductions.potonganDenda = attendance.potonganDenda;
             const totalDeductions = Object.values(deductions).reduce((sum, val) => sum + val, 0);
             const netSalary = totalEarnings - totalDeductions;
             
             generatedPayslips.push({
                 id: employee.id,
                 employee,
-                period,
+                period: periodString,
                 earnings,
                 deductions,
                 totalEarnings,
@@ -202,6 +207,23 @@ export default function PayslipCollectiveClientPage({
         setPayslipsData(generatedPayslips);
     });
   };
+  
+    const DatePicker = ({ date, setDate, label }: { date: Date | undefined, setDate: (d: Date | undefined) => void, label: string }) => (
+        <div className="space-y-2">
+            <Label>{label}</Label>
+            <Popover>
+                <PopoverTrigger asChild>
+                    <Button
+                        variant={'outline'}
+                        className={cn('w-full justify-start text-left font-normal', !date && 'text-muted-foreground')}>
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {date ? format(date, 'PPP') : <span>Pilih tanggal</span>}
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={date} onSelect={setDate} initialFocus /></PopoverContent>
+            </Popover>
+        </div>
+    );
 
   return (
     <div className="space-y-6">
@@ -214,16 +236,10 @@ export default function PayslipCollectiveClientPage({
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-             <div className="space-y-2">
-              <Label htmlFor="period">Periode</Label>
-              <Input
-                id="period"
-                type="month"
-                value={period}
-                onChange={(e) => setPeriod(e.target.value)}
-                disabled={isGenerating}
-              />
-            </div>
+             <div className="grid grid-cols-2 gap-4">
+                 <DatePicker date={startDate} setDate={setStartDate} label="Tanggal Mulai" />
+                 <DatePicker date={endDate} setDate={setEndDate} label="Tanggal Selesai" />
+             </div>
             <div className="space-y-2">
                 <Label htmlFor="position-filter">Jabatan</Label>
                 <Select value={positionFilter} onValueChange={setPositionFilter} disabled={isGenerating}>
