@@ -103,13 +103,17 @@ export async function createEmployee(employee: Partial<Employee>): Promise<strin
         'basicSalary', 'mealAllowance', 'transportAllowance', 'dailyWage', 'overtimeRate',
         'monthlySalary', 'otAllowance', 'locationAllowance', 'otherAllowances'
     ];
-    const employeeData: Partial<Employee> = { ...employee };
+    const employeeData: { [key: string]: any } = { ...employee };
 
     numericFields.forEach(field => {
         if (employeeData[field] && typeof employeeData[field] === 'string') {
-        (employeeData as any)[field] = Number(employeeData[field]);
+            employeeData[field] = Number(employeeData[field]);
         }
     });
+
+    // Handle boolean for canGeneratePayslip
+    employeeData.canGeneratePayslip = employee.canGeneratePayslip === true || (employee as any).canGeneratePayslip === 'on';
+
     
     // Use NIK as the employeeId
     const employeeId = employee.nik;
@@ -142,7 +146,7 @@ export async function updateEmployee(id: string, employee: Partial<Employee>): P
     'basicSalary', 'mealAllowance', 'transportAllowance', 'dailyWage', 'overtimeRate',
     'monthlySalary', 'otAllowance', 'locationAllowance', 'otherAllowances'
   ];
-  const employeeData = { ...employee };
+  const employeeData: { [key: string]: any } = { ...employee };
 
   numericFields.forEach(field => {
     if (employeeData[field] && typeof employeeData[field] === 'string') {
@@ -151,6 +155,12 @@ export async function updateEmployee(id: string, employee: Partial<Employee>): P
       (employeeData as any)[field] = null; // Convert empty string to null to remove field
     }
   });
+
+  // Handle boolean for canGeneratePayslip
+   if (employee.hasOwnProperty('canGeneratePayslip')) {
+        employeeData.canGeneratePayslip = employee.canGeneratePayslip === true || (employee as any).canGeneratePayslip === 'on';
+   }
+
 
   // Handle file uploads
   const fileFields: (keyof Employee)[] = ['avatar', 'ktpPhoto', 'simPhoto', 'sioPhoto'];

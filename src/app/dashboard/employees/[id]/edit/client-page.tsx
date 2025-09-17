@@ -35,6 +35,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import type { Employee, Department, Position, Site } from '@/lib/types';
 import { updateEmployee } from '@/actions/employees';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 
 const parseDate = (date: string | Date | undefined): Date | undefined => {
   if (!date) return undefined;
@@ -59,6 +60,7 @@ export default function EditEmployeePageClient({ employee, departments, position
     setMessEntryDate(parseDate(employee.messEntryDate));
     setContractStartDate(parseDate(employee.contractStartDate));
     setContractEndDate(parseDate(employee.contractEndDate));
+    setCanGeneratePayslip(employee.canGeneratePayslip ?? true);
   }, [employee]);
 
   const [photoPreview, setPhotoPreview] = useState<string | null>(employee.avatar || null);
@@ -66,6 +68,7 @@ export default function EditEmployeePageClient({ employee, departments, position
   const [simPreview, setSimPreview] = useState<string | null>(employee.simPhoto || null);
   const [sioPreview, setSioPreview] = useState<string | null>(employee.sioPhoto || null);
   const [bpjsStatus, setBpjsStatus] = useState<string | undefined>(employee.bpjsStatus);
+  const [canGeneratePayslip, setCanGeneratePayslip] = useState(true);
 
 
   const handleFileChange = (
@@ -131,6 +134,7 @@ export default function EditEmployeePageClient({ employee, departments, position
         ktpPhoto: ktpPreview,
         simPhoto: simPreview,
         sioPhoto: sioPreview,
+        canGeneratePayslip: (data.canGeneratePayslip === 'on'),
     } as Partial<Employee>;
     
     try {
@@ -460,6 +464,21 @@ export default function EditEmployeePageClient({ employee, departments, position
                     <SelectItem value="phk">PHK</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+               <div className="space-y-2 flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm md:col-span-3">
+                <div className="space-y-0.5">
+                    <Label htmlFor="canGeneratePayslip">Izinkan Cetak Slip Gaji</Label>
+                    <CardDescription>
+                        Jika dinonaktifkan, slip gaji untuk karyawan ini tidak dapat dibuat.
+                    </CardDescription>
+                </div>
+                <Switch
+                    id="canGeneratePayslip"
+                    name="canGeneratePayslip"
+                    checked={canGeneratePayslip}
+                    onCheckedChange={setCanGeneratePayslip}
+                />
               </div>
 
             </div>

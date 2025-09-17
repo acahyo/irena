@@ -74,10 +74,11 @@ export default function PayslipClientPage({
   };
 
   const filteredEmployees = useMemo(() => {
+    let employees = initialEmployees.filter(emp => emp.canGeneratePayslip !== false);
     if (departmentFilter === 'all') {
-        return initialEmployees;
+        return employees;
     }
-    return initialEmployees.filter(emp => emp.department === departmentFilter);
+    return employees.filter(emp => emp.department === departmentFilter);
   }, [initialEmployees, departmentFilter]);
 
   const selectedEmployee = useMemo(() => {

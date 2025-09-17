@@ -46,6 +46,7 @@ export type Employee = {
   onLeave?: boolean;
   daysActive?: number;
   leaveHistory?: LeaveRequest[];
+  canGeneratePayslip?: boolean;
   // Salary fields are now in the Position type
 };
 

@@ -38,6 +38,7 @@ import { getPositions } from '@/actions/positions';
 import { getSites } from '@/actions/sites';
 import type { Employee, Department, Position, Site } from '@/lib/types';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 
 export default function NewEmployeePage() {
   const router = useRouter();
@@ -55,6 +56,7 @@ export default function NewEmployeePage() {
   const [simPreview, setSimPreview] = useState<string | null>(null);
   const [sioPreview, setSioPreview] = useState<string | null>(null);
   const [bpjsStatus, setBpjsStatus] = useState<string | undefined>();
+  const [canGeneratePayslip, setCanGeneratePayslip] = useState(true);
 
 
   useEffect(() => {
@@ -142,6 +144,7 @@ export default function NewEmployeePage() {
         ktpPhoto: ktpPreview,
         simPhoto: simPreview,
         sioPhoto: sioPreview,
+        canGeneratePayslip: (data.canGeneratePayslip === 'on'),
     } as Partial<Employee>;
     
     try {
@@ -464,6 +467,21 @@ export default function NewEmployeePage() {
                     <SelectItem value="phk">PHK</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-2 flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm md:col-span-3">
+                <div className="space-y-0.5">
+                    <Label htmlFor="canGeneratePayslip">Izinkan Cetak Slip Gaji</Label>
+                    <CardDescription>
+                        Jika dinonaktifkan, slip gaji untuk karyawan ini tidak dapat dibuat.
+                    </CardDescription>
+                </div>
+                <Switch
+                    id="canGeneratePayslip"
+                    name="canGeneratePayslip"
+                    checked={canGeneratePayslip}
+                    onCheckedChange={setCanGeneratePayslip}
+                />
               </div>
 
             </div>

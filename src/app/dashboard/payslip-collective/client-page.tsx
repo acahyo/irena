@@ -67,10 +67,11 @@ export default function PayslipCollectiveClientPage({
   }, [initialEmployees]);
 
   const filteredEmployees = useMemo(() => {
+    let employees = initialEmployees.filter(emp => emp.canGeneratePayslip !== false);
     if (positionFilter === 'all') {
-      return initialEmployees;
+      return employees;
     }
-    return initialEmployees.filter((emp) => emp.position === positionFilter);
+    return employees.filter((emp) => emp.position === positionFilter);
   }, [initialEmployees, positionFilter]);
 
   useEffect(() => {
