@@ -22,7 +22,13 @@ export default async function PayslipPage({ userSiteId }: { userSiteId?: string 
   
   // Also pre-fetch attendance for the current month
   const currentPeriod = new Date().toISOString().slice(0, 7);
-  const attendanceRecords = await getAttendanceByPeriod(currentPeriod);
+  const attendanceRecordsData = await getAttendanceByPeriod(currentPeriod);
+  
+  // Convert Date objects to strings
+  const attendanceRecords = attendanceRecordsData.map(record => ({
+    ...record,
+    date: record.date.toString(),
+  })) as AttendanceRecord[];
 
 
   return (
