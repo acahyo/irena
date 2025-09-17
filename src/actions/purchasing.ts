@@ -38,18 +38,19 @@ function convertTimestampsToDates(docData: any) {
 // Get all purchase requests, optionally filtered by site
 export async function getPurchaseRequests({ siteId }: { siteId?: string } = {}): Promise<PurchaseRequest[]> {
   try {
-    let q = query(collection(db, 'purchaseRequests'), orderBy('requestDate', 'desc'));
-
-    if (siteId) {
-        q = query(collection(db, 'purchaseRequests'), where('projectId', '==', siteId), orderBy('requestDate', 'desc'));
-    }
-
+    const q = query(collection(db, 'purchaseRequests'), orderBy('requestDate', 'desc'));
+    
     const querySnapshot = await getDocs(q);
     const requests: PurchaseRequest[] = [];
     querySnapshot.forEach((doc) => {
         const data = convertTimestampsToDates(doc.data());
         requests.push({ id: doc.id, ...data } as PurchaseRequest);
     });
+
+    if (siteId) {
+        return requests.filter(req => req.projectId === siteId);
+    }
+    
     return requests;
   } catch (error) {
     console.error("Error fetching purchase requests:", error);
