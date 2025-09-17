@@ -130,6 +130,7 @@ export type AppSettings = {
   accentColor?: string;
   language?: 'id' | 'en';
   menuOrder?: MenuOrderItem[];
+  employeePayslipAccess?: boolean;
 }
 
 export type AttendanceRecord = {

@@ -30,12 +30,20 @@ import {
 import type { AppSettings, Employee } from "@/lib/types";
 import { logout } from "@/actions/auth";
 
-const getNavItems = (lang: 'id' | 'en') => [
-  { id: 'profile', href: "/portal", icon: User, label: lang === 'id' ? "Profil Saya" : "My Profile", exact: true },
-  { id: 'attendance', href: "/portal/attendance", icon: ClipboardCheck, label: lang === 'id' ? "Kehadiran Saya" : "My Attendance" },
-  { id: 'leave', href: "/portal/leave", icon: CalendarCheck, label: lang === 'id' ? "Cuti Saya" : "My Leave" },
-  { id: 'payslip', href: "/portal/payslip", icon: Printer, label: lang === 'id' ? "Slip Gaji Saya" : "My Payslip" },
-];
+const getNavItems = (lang: 'id' | 'en', settings: AppSettings) => {
+  const allItems = [
+    { id: 'profile', href: "/portal", icon: User, label: lang === 'id' ? "Profil Saya" : "My Profile", exact: true },
+    { id: 'attendance', href: "/portal/attendance", icon: ClipboardCheck, label: lang === 'id' ? "Kehadiran Saya" : "My Attendance" },
+    { id: 'leave', href: "/portal/leave", icon: CalendarCheck, label: lang === 'id' ? "Cuti Saya" : "My Leave" },
+    { id: 'payslip', href: "/portal/payslip", icon: Printer, label: lang === 'id' ? "Slip Gaji Saya" : "My Payslip" },
+  ];
+
+  if (settings.employeePayslipAccess === false) {
+    return allItems.filter(item => item.id !== 'payslip');
+  }
+  
+  return allItems;
+};
 
 export default function PortalClientLayout({
   children,
@@ -50,7 +58,7 @@ export default function PortalClientLayout({
   const router = useRouter();
   const lang = settings.language || 'id';
   
-  const navItems = useMemo(() => getNavItems(lang), [lang]);
+  const navItems = useMemo(() => getNavItems(lang, settings), [lang, settings]);
 
   const getActiveLabel = () => {
     for (const item of navItems) {

@@ -11,9 +11,7 @@ export async function getSettings(): Promise<AppSettings> {
   const settingsCollection = collection(db, 'settings');
   const querySnapshot = await getDocs(settingsCollection);
   
-  if (querySnapshot.empty) {
-    // Default settings if none exist
-    return {
+  const defaultSettings: AppSettings = {
       appName: 'Staff Hub',
       appDescription: 'An application for employee management.',
       logo: 'https://drive.google.com/file/d/1ggYVy0-UgoXuQvB96yIdDQm8M4pr7iZt/view?usp=sharing',
@@ -21,25 +19,24 @@ export async function getSettings(): Promise<AppSettings> {
       backgroundColor: '#D2E9E6',
       accentColor: '#877795',
       language: 'id',
-    };
+      employeePayslipAccess: true,
+  };
+  
+  if (querySnapshot.empty) {
+    // Default settings if none exist
+    return defaultSettings;
   }
   
   const settingsDoc = querySnapshot.docs.find(doc => doc.id === SETTINGS_ID);
   
   if (settingsDoc) {
-    return { id: settingsDoc.id, ...settingsDoc.data() } as AppSettings;
+    const data = settingsDoc.data();
+    // Return saved settings, falling back to defaults for any missing properties
+    return { ...defaultSettings, id: settingsDoc.id, ...data } as AppSettings;
   }
   
   // Fallback to default if 'app-settings' doc doesn't exist for some reason
-  return {
-      appName: 'Staff Hub',
-      appDescription: 'An application for employee management.',
-      logo: 'https://drive.google.com/file/d/1ggYVy0-UgoXuQvB96yIdDQm8M4pr7iZt/view?usp=sharing',
-      primaryColor: '#136F63',
-      backgroundColor: '#D2E9E6',
-      accentColor: '#877795',
-      language: 'id',
-  };
+  return defaultSettings;
 }
 
 // Save application settings

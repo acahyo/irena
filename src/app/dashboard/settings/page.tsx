@@ -28,6 +28,7 @@ import { getRoles, updateRolePermissions } from '@/actions/roles';
 import { getUsers } from '@/actions/users';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 
 
 // Helper to convert hex to HSL string
@@ -91,6 +92,7 @@ export default function SettingsPage() {
     const [menuOrder, setMenuOrder] = useState<MenuOrderItem[]>([]);
     const [draggedItem, setDraggedItem] = useState<{item: MenuOrderItem, sourceIndex: number} | null>(null);
     const [draggedSubItem, setDraggedSubItem] = useState<{item: string, sourceGroupIndex: number, sourceSubIndex: number} | null>(null);
+    const [employeePayslipAccess, setEmployeePayslipAccess] = useState(true);
 
 
     useEffect(() => {
@@ -102,6 +104,7 @@ export default function SettingsPage() {
                 const { logo, id, ...rest } = settingsData;
                 setSettings(rest);
                 setLogoPreview(logo);
+                setEmployeePayslipAccess(settingsData.employeePayslipAccess ?? true);
                 
                 setRoles(rolesData);
                 const initialPermissions: Record<string, string[]> = {};
@@ -234,6 +237,7 @@ export default function SettingsPage() {
                 ...settings,
                 logo: logoPreview || '',
                 menuOrder: finalMenuOrder,
+                employeePayslipAccess,
             };
 
             await saveSettings(settingsToSave);
@@ -480,6 +484,29 @@ export default function SettingsPage() {
                                <ColorInput label={lang === 'id' ? 'Warna Primer' : 'Primary Color'} id="primaryColor" value={settings.primaryColor || '#136F63'} onChange={handleInputChange} />
                                <ColorInput label={lang === 'id' ? 'Warna Latar' : 'Background Color'} id="backgroundColor" value={settings.backgroundColor || '#D2E9E6'} onChange={handleInputChange} />
                                <ColorInput label={lang === 'id' ? 'Warna Aksen' : 'Accent Color'} id="accentColor" value={settings.accentColor || '#877795'} onChange={handleInputChange} />
+                            </CardContent>
+                        </Card>
+                        
+                         <Card>
+                            <CardHeader>
+                                <CardTitle>{lang === 'id' ? 'Pengaturan Portal Karyawan' : 'Employee Portal Settings'}</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex items-center justify-between rounded-lg border p-4">
+                                  <div className="space-y-0.5">
+                                    <Label htmlFor="employee-payslip-access" className="text-base">
+                                      {lang === 'id' ? 'Akses Slip Gaji Karyawan' : 'Employee Payslip Access'}
+                                    </Label>
+                                    <CardDescription>
+                                      {lang === 'id' ? 'Jika dinonaktifkan, karyawan tidak akan melihat menu "Slip Gaji Saya" di portal mereka.' : 'If disabled, employees will not see the "My Payslip" menu in their portal.'}
+                                    </CardDescription>
+                                  </div>
+                                  <Switch
+                                    id="employee-payslip-access"
+                                    checked={employeePayslipAccess}
+                                    onCheckedChange={setEmployeePayslipAccess}
+                                  />
+                                </div>
                             </CardContent>
                         </Card>
                     </CardContent>
