@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, Upload, Download, ShieldCheck, GripVertical, PlusCircle, Trash2, Database, WalletCards, ShoppingCart } from 'lucide-react';
+import { Loader2, Upload, Download, ShieldCheck, GripVertical, PlusCircle, Trash2, Database, WalletCards, ShoppingCart, UserCheck } from 'lucide-react';
 import { getSettings, saveSettings } from '@/actions/settings';
 import type { AppSettings, Role, MenuOrderItem } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -63,6 +63,8 @@ const hexToHslString = (hex: string | undefined): string | undefined => {
 const allMenus = [
   { id: 'dashboard', label: 'Dasbor' },
   { id: 'employees', label: 'Karyawan' },
+  { id: 'employee-register', label: 'Registrasi Karyawan'},
+  { id: 'employee-review', label: 'Tinjau Registrasi', icon: UserCheck },
   { id: 'leave-schedule', label: 'Jadwal Cuti' },
   { id: 'payroll', label: 'Payroll' },
   { id: 'attendance', label: 'Input Absensi' },
@@ -77,7 +79,6 @@ const allMenus = [
   { id: 'users', label: 'Users' },
   { id: 'roles', label: 'Roles' },
   { id: 'settings', label: 'Pengaturan' },
-  { id: 'employee-register', label: 'Registrasi Karyawan'},
 ];
 
 
