@@ -80,9 +80,11 @@ export async function updateUser(id: string, user: Partial<User>): Promise<void>
       delete userData.password;
   }
   
-  // if role is not 'Admin Proyek', remove siteId
   if (userData.role !== 'Admin Proyek') {
-    userData.siteId = undefined;
+    (userData as any).siteId = null;
+  }
+  if (userData.role !== 'Admin Absensi') {
+    (userData as any).positionName = null;
   }
 
   await updateDoc(docRef, userData);

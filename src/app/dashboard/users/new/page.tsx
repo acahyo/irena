@@ -21,7 +21,8 @@ import { createUser } from '@/actions/users';
 import { getEmployees } from '@/actions/employees';
 import { getUsers } from '@/actions/users';
 import { getSites } from '@/actions/sites';
-import type { Role, Employee, User, Site } from '@/lib/types';
+import { getPositions } from '@/actions/positions';
+import type { Role, Employee, User, Site, Position } from '@/lib/types';
 
 
 export default function NewUserPage() {
@@ -29,6 +30,7 @@ export default function NewUserPage() {
     const { toast } = useToast();
     const [roles, setRoles] = useState<Role[]>([]);
     const [sites, setSites] = useState<Site[]>([]);
+    const [positions, setPositions] = useState<Position[]>([]);
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [pageLoading, setPageLoading] = useState(true);
     const [loading, setLoading] = useState(false);
@@ -42,11 +44,12 @@ export default function NewUserPage() {
         const fetchInitialData = async () => {
             setPageLoading(true);
             try {
-                const [fetchedRoles, fetchedEmployees, existingUsers, fetchedSites] = await Promise.all([
+                const [fetchedRoles, fetchedEmployees, existingUsers, fetchedSites, fetchedPositions] = await Promise.all([
                     getRoles(),
                     getEmployees(),
                     getUsers(),
                     getSites(),
+                    getPositions(),
                 ]);
 
                 const existingUserEmails = new Set(existingUsers.map(u => u.email));
@@ -55,6 +58,7 @@ export default function NewUserPage() {
                 setRoles(fetchedRoles);
                 setEmployees(availableEmployees);
                 setSites(fetchedSites);
+                setPositions(fetchedPositions);
             } catch (error) {
                  toast({
                     variant: 'destructive',
@@ -85,16 +89,20 @@ export default function NewUserPage() {
         const role = formData.get('role') as string;
         const password = formData.get('password') as string;
         const siteId = formData.get('siteId') as string;
+        const positionName = formData.get('positionName') as string;
 
         const userData: Omit<User, 'id'> = { 
             name: selectedEmployee?.name || '', 
             email: selectedEmployee?.email || '', 
             role, 
-            password
+            password,
         };
 
         if (role === 'Admin Proyek') {
             userData.siteId = siteId;
+        }
+        if (role === 'Admin Absensi') {
+            userData.positionName = positionName;
         }
 
         try {
@@ -184,6 +192,21 @@ export default function NewUserPage() {
                                 <SelectContent>
                                     {sites.map((site) => (
                                         <SelectItem key={site.id} value={site.id}>{site.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )}
+                     {selectedRole === 'Admin Absensi' && (
+                       <div className="space-y-2">
+                            <Label htmlFor="positionName">Jabatan</Label>
+                            <Select name="positionName" required>
+                                <SelectTrigger id="positionName">
+                                    <SelectValue placeholder="Pilih Jabatan" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {positions.map((pos) => (
+                                        <SelectItem key={pos.id} value={pos.name}>{pos.name}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>

@@ -158,6 +158,7 @@ export const roles: Role[] = [
     { id: '4', name: 'Admin Proyek', description: 'Project-specific administrative access' },
     { id: '5', name: 'Purchasing', description: 'Manages purchase requests' },
     { id: '6', name: 'Finance', description: 'Manages finances and approves requests' },
+    { id: '7', name: 'Admin Absensi', description: 'Manages attendance for a specific position' },
 ];
 
 

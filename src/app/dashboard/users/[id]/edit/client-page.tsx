@@ -16,10 +16,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { User, Role, Site } from '@/lib/types';
+import type { User, Role, Site, Position } from '@/lib/types';
 import { updateUser } from '@/actions/users';
 
-export default function EditUserClientPage({ user, roles, sites }: { user: User, roles: Role[], sites: Site[] }) {
+export default function EditUserClientPage({ user, roles, sites, positions }: { user: User, roles: Role[], sites: Site[], positions: Position[] }) {
     const router = useRouter();
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
@@ -35,6 +35,7 @@ export default function EditUserClientPage({ user, roles, sites }: { user: User,
         const role = formData.get('role') as string;
         const password = formData.get('password') as string;
         const siteId = formData.get('siteId') as string;
+        const positionName = formData.get('positionName') as string;
 
         const userData: Partial<User> = { name, email, role };
         if (password) {
@@ -43,6 +44,10 @@ export default function EditUserClientPage({ user, roles, sites }: { user: User,
         if (role === 'Admin Proyek') {
             userData.siteId = siteId;
         }
+        if (role === 'Admin Absensi') {
+            userData.positionName = positionName;
+        }
+
 
         try {
             await updateUser(user.id, userData);
@@ -118,6 +123,21 @@ export default function EditUserClientPage({ user, roles, sites }: { user: User,
                                 <SelectContent>
                                     {sites.map((site) => (
                                         <SelectItem key={site.id} value={site.id}>{site.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )}
+                    {selectedRole === 'Admin Absensi' && (
+                       <div className="space-y-2">
+                            <Label htmlFor="positionName">Jabatan</Label>
+                            <Select name="positionName" defaultValue={user.positionName} required>
+                                <SelectTrigger id="positionName">
+                                    <SelectValue placeholder="Pilih Jabatan" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {positions.map((pos) => (
+                                        <SelectItem key={pos.id} value={pos.name}>{pos.name}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>

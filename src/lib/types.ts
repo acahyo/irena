@@ -77,7 +77,8 @@ export type User = {
     role: string;
     password?: string;
     avatar?: string;
-    siteId?: string; // Added for project admin role
+    siteId?: string;
+    positionName?: string;
 };
 
 export type Role = {
