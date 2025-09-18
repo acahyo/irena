@@ -18,9 +18,9 @@ export default async function AttendancePage({ userSiteId }: { userSiteId?: stri
       return { ...emp, positionDetails };
   });
 
-  // We can fetch initial attendance for the current month, but client will refetch on period change
+  // Fetch initial attendance for the current month, filtering by site if applicable
   const currentPeriod = new Date().toISOString().slice(0, 7);
-  const initialAttendanceData = await getAttendanceByPeriod(currentPeriod);
+  const initialAttendanceData = await getAttendanceByPeriod(currentPeriod, { siteId: userSiteId });
   
   // Convert Date objects to strings to prevent serialization errors
   const initialAttendance = initialAttendanceData.map(record => ({

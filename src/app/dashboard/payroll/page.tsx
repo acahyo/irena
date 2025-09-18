@@ -11,9 +11,9 @@ export default async function PayrollPage({ userSiteId }: { userSiteId?: string 
     getPositions()
   ]);
 
-  // We can fetch initial attendance for the current month to calculate salary for daily workers
+  // Fetch attendance for the current month to calculate salary for daily workers
   const currentPeriod = new Date().toISOString().slice(0, 7);
-  const initialAttendance = await getAttendanceByPeriod(currentPeriod);
+  const initialAttendance = await getAttendanceByPeriod(currentPeriod, { siteId: userSiteId });
   
   const employeesWithDetails: EmployeeWithDetails[] = employees.map(emp => {
       const positionDetails = positions.find(p => p.name === emp.position);

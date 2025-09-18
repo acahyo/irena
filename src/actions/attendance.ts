@@ -3,16 +3,24 @@
 import { db } from '@/lib/firebase';
 import { collection, getDocs, doc, setDoc, getDoc, query, where, writeBatch, Timestamp } from 'firebase/firestore';
 import type { AttendanceRecord } from '@/lib/types';
+import { getEmployees } from './employees';
 
-// Get all attendance records for a specific period (YYYY-MM)
-export async function getAttendanceByPeriod(period: string): Promise<AttendanceRecord[]> {
+// Get all attendance records for a specific period (YYYY-MM), optionally filtered by siteId
+export async function getAttendanceByPeriod(period: string, { siteId }: { siteId?: string } = {}): Promise<AttendanceRecord[]> {
   try {
-    const q = query(collection(db, 'attendance'), where('period', '==', period));
+    let q = query(collection(db, 'attendance'), where('period', '==', period));
     const querySnapshot = await getDocs(q);
     const records: AttendanceRecord[] = [];
     querySnapshot.forEach((doc) => {
         records.push({ id: doc.id, ...doc.data() } as AttendanceRecord);
     });
+
+    if (siteId) {
+        const siteEmployees = await getEmployees({ siteId });
+        const employeeIds = new Set(siteEmployees.map(emp => emp.id));
+        return records.filter(record => employeeIds.has(record.employeeId));
+    }
+    
     return records;
   } catch (error) {
       console.error(`Error fetching attendance for period ${period}, returning empty array:`, error);

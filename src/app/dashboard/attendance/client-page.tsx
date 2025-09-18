@@ -273,7 +273,7 @@ export default function AttendanceClientPage({
                 description: T.importSuccess,
               });
               // Refetch data for the current period to update the view
-              await handlePeriodChange(period);
+              router.refresh();
             } catch (importError) {
                toast({
                 variant: "destructive",

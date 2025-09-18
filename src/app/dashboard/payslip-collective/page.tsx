@@ -21,7 +21,7 @@ export default async function PayslipCollectivePage({ userSiteId }: { userSiteId
   // We can pre-fetch attendance for the current month, 
   // but the client will fetch again if the period changes.
   const currentPeriod = new Date().toISOString().slice(0, 7);
-  const attendanceRecords = await getAttendanceByPeriod(currentPeriod);
+  const attendanceRecords = await getAttendanceByPeriod(currentPeriod, { siteId: userSiteId });
 
 
   return (
