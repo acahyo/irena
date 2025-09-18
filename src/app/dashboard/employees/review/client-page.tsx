@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Card,
@@ -23,7 +23,7 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, UserCheck, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { updateEmployee, deleteEmployee } from '@/actions/employees';
-import type { Employee } from '@/lib/types';
+import type { Employee, Site } from '@/lib/types';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,12 +36,22 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import Link from 'next/link';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 
-export default function ReviewEmployeesClientPage({ pendingEmployees }: { pendingEmployees: Employee[] }) {
+export default function ReviewEmployeesClientPage({ pendingEmployees, sites }: { pendingEmployees: Employee[], sites: Site[] }) {
   const [employees, setEmployees] = useState(pendingEmployees);
   const [loading, setLoading] = useState<string | null>(null);
+  const [projectFilter, setProjectFilter] = useState('all');
   const router = useRouter();
   const { toast } = useToast();
+
+  const filteredEmployees = useMemo(() => {
+    if (projectFilter === 'all') {
+      return employees;
+    }
+    return employees.filter(emp => emp.siteLocation === projectFilter);
+  }, [employees, projectFilter]);
+
 
   const handleApprove = async (employeeId: string) => {
     setLoading(employeeId);
@@ -87,10 +97,27 @@ export default function ReviewEmployeesClientPage({ pendingEmployees }: { pendin
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Tinjau Registrasi Karyawan</CardTitle>
-        <CardDescription>
-          Setujui atau tolak pendaftaran karyawan baru yang diinput oleh Admin Proyek.
-        </CardDescription>
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+          <div>
+            <CardTitle>Tinjau Registrasi Karyawan</CardTitle>
+            <CardDescription>
+              Setujui atau tolak pendaftaran karyawan baru yang diinput oleh Admin Proyek.
+            </CardDescription>
+          </div>
+          <div className="flex items-center gap-2">
+            <Select value={projectFilter} onValueChange={setProjectFilter}>
+              <SelectTrigger className="w-full md:w-[220px]">
+                <SelectValue placeholder="Filter Berdasarkan Proyek" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua Proyek</SelectItem>
+                {sites.map(site => (
+                  <SelectItem key={site.id} value={site.name}>{site.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         <Table>
@@ -104,8 +131,8 @@ export default function ReviewEmployeesClientPage({ pendingEmployees }: { pendin
             </TableRow>
           </TableHeader>
           <TableBody>
-            {employees.length > 0 ? (
-              employees.map((emp) => (
+            {filteredEmployees.length > 0 ? (
+              filteredEmployees.map((emp) => (
                 <TableRow key={emp.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
@@ -153,7 +180,7 @@ export default function ReviewEmployeesClientPage({ pendingEmployees }: { pendin
             ) : (
               <TableRow>
                 <TableCell colSpan={5} className="h-24 text-center">
-                  Tidak ada registrasi karyawan yang menunggu persetujuan.
+                  Tidak ada registrasi karyawan yang menunggu persetujuan untuk filter ini.
                 </TableCell>
               </TableRow>
             )}
