@@ -404,6 +404,20 @@ export default function RegisterEmployeeClientPage({ user }: { user: User }) {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="shift">Shift</Label>
+                <Select name="shift">
+                  <SelectTrigger id="shift">
+                    <SelectValue placeholder="Select Shift" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Regular">Regular</SelectItem>
+                    <SelectItem value="Shift A">Shift A</SelectItem>
+                    <SelectItem value="Shift B">Shift B</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="messRoomNumber">Nomor Kamar/Mes</Label>
                 <Input id="messRoomNumber" name="messRoomNumber" placeholder="e.g. A-101" />
               </div>

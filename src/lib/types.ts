@@ -41,6 +41,7 @@ export type Employee = {
   contractStartDate?: Date | string;
   contractEndDate?: Date | string;
   position?: string;
+  shift?: 'Regular' | 'Shift A' | 'Shift B';
   siteLocation?: string;
   password?: string;
   onLeave?: boolean;

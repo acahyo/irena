@@ -15,7 +15,7 @@ import {
     CardDescription
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Building2, Calendar, FileText, Heart, Home, Landmark, Mail, MapPin, Pencil, Phone, ShieldCheck, Trash2, User, UserCheck, UserSquare, Users, Briefcase, CalendarCheck, VenetianMask, WalletCards, Star, DollarSign } from 'lucide-react';
+import { ArrowLeft, Building2, Calendar, FileText, Heart, Home, Landmark, Mail, MapPin, Pencil, Phone, ShieldCheck, Trash2, User, UserCheck, UserSquare, Users, Briefcase, CalendarCheck, VenetianMask, WalletCards, Star, DollarSign, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { EmployeeWithPosition, LeaveRequest } from '@/lib/types';
 import {
@@ -243,9 +243,10 @@ export default function EmployeeProfileClientPage({ employee, isPortalView = fal
                 <CardTitle className="flex items-center gap-2"><Building2 className="h-5 w-5" /> Employment Details</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <DetailItem icon={<User className="h-5 w-5"/>} label="Position" value={employee.position} />
+                <DetailItem icon={<Briefcase className="h-5 w-5"/>} label="Position" value={employee.position} />
                 <DetailItem icon={<Users className="h-5 w-5"/>} label="Department" value={employee.department} />
                 <DetailItem icon={<MapPin className="h-5 w-5"/>} label="Site Location" value={employee.siteLocation} />
+                <DetailItem icon={<Clock className="h-5 w-5"/>} label="Shift" value={employee.shift} />
                 <DetailItem icon={<FileText className="h-5 w-5"/>} label="ID Card Number" value={employee.idCardNumber} />
                 <DetailItem icon={<FileText className="h-5 w-5"/>} label="Work Contract Number" value={employee.workContractNumber} />
                 <DetailItem icon={<FileText className="h-5 w-5"/>} label="Simper Number" value={employee.simperNumber} />
