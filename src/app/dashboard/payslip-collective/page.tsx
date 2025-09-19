@@ -21,14 +21,19 @@ export default async function PayslipCollectivePage({ userSiteId }: { userSiteId
   // We can pre-fetch attendance for the current month, 
   // but the client will fetch again if the period changes.
   const currentPeriod = new Date().toISOString().slice(0, 7);
-  const attendanceRecords = await getAttendanceByPeriod(currentPeriod, { siteId: userSiteId });
-
+  const attendanceRecordsData = await getAttendanceByPeriod(currentPeriod, { siteId: userSiteId });
+  
+  // Convert Date objects to strings to prevent serialization errors
+  const initialAttendance = attendanceRecordsData.map(record => ({
+    ...record,
+    date: record.date ? record.date.toString() : new Date().toString(),
+  })) as AttendanceRecord[];
 
   return (
     <PayslipCollectiveClientPage
       initialEmployees={employeesWithDetails}
       settings={settings}
-      initialAttendance={attendanceRecords}
+      initialAttendance={initialAttendance}
     />
   );
 }
