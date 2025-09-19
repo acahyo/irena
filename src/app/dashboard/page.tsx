@@ -21,6 +21,7 @@ import { getAdminSession } from '@/actions/auth';
 import { redirect } from 'next/navigation';
 import AdminProjectDashboard from './admin-project-dashboard';
 import PurchasingDashboard from './purchasing-dashboard';
+import AttendanceAdminDashboard from './attendance-admin-dashboard';
 
 
 async function getDashboardData({ siteId }: { siteId?: string }) {
@@ -94,6 +95,11 @@ export default async function DashboardPage() {
     // If user is Purchasing, show their dashboard
     if (user.role === 'Purchasing') {
         return <PurchasingDashboard user={user} />;
+    }
+    
+    // If user is Admin Absensi, show their dashboard
+    if (user.role === 'Admin Absensi') {
+        return <AttendanceAdminDashboard user={user} />;
     }
 
     const [stats, settings] = await Promise.all([
