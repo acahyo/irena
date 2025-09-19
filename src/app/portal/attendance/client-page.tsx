@@ -22,22 +22,24 @@ import { useToast } from '@/hooks/use-toast';
 import { getAttendanceByPeriod } from '@/actions/attendance';
 import type { AttendanceRecord, AppSettings, Employee } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
+import { getEmployeeSession } from '@/actions/auth';
+import { getSettings } from '@/actions/settings';
+import { getEmployee } from '@/actions/employees';
+import { useRouter } from 'next/navigation';
 
-export default function MyAttendanceClientPage({
-  employee,
-  initialAttendance,
-  settings,
-}: {
-  employee: Employee;
-  initialAttendance: AttendanceRecord[];
-  settings: AppSettings;
-}) {
+
+export default function MyAttendanceClientPage() {
+  const [employee, setEmployee] = useState<Employee | null>(null);
+  const [settings, setSettings] = useState<AppSettings | null>(null);
   const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
-  const [attendanceData, setAttendanceData] = useState<AttendanceRecord[]>(initialAttendance);
+  const [attendanceData, setAttendanceData] = useState<AttendanceRecord[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
   const { toast } = useToast();
+  const router = useRouter();
 
-  const lang = settings.language || 'id';
+
+  const lang = settings?.language || 'id';
 
   const T = useMemo(() => ({
       title: lang === 'id' ? 'Data Kehadiran Saya' : 'My Attendance Data',
@@ -52,9 +54,41 @@ export default function MyAttendanceClientPage({
       noData: lang === 'id' ? 'Tidak ada data absensi ditemukan untuk periode ini.' : 'No attendance data found for this period.',
       fetchError: lang === 'id' ? 'Gagal mengambil data absensi.' : 'Failed to fetch attendance data.',
       error: lang === 'id' ? 'Error' : 'Error',
+      pageError: lang === 'id' ? 'Gagal memuat data halaman.' : 'Failed to load page data.',
   }), [lang]);
   
+   useEffect(() => {
+    const fetchInitialData = async () => {
+      setPageLoading(true);
+      try {
+        const [session, appSettings] = await Promise.all([getEmployeeSession(), getSettings()]);
+        if (!session?.id) {
+          router.push('/login/employee');
+          return;
+        }
+
+        const emp = await getEmployee(session.id);
+        if (!emp) {
+          router.push('/login/employee');
+          return;
+        }
+
+        setEmployee(emp);
+        setSettings(appSettings);
+      } catch (err) {
+        console.error("Failed to fetch initial data for attendance page:", err);
+        toast({ variant: 'destructive', title: T.error, description: T.pageError });
+      } finally {
+        setPageLoading(false);
+      }
+    };
+
+    fetchInitialData();
+  }, [router, T.error, T.pageError, toast]);
+
+
   useEffect(() => {
+    if (!employee) return;
     const fetchAttendance = async () => {
         setIsLoading(true);
         try {
@@ -72,8 +106,15 @@ export default function MyAttendanceClientPage({
         }
     };
     fetchAttendance();
-  }, [period, employee.id, T.error, T.fetchError, toast]);
-
+  }, [period, employee, T.error, T.fetchError, toast]);
+  
+  if (pageLoading || !settings) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <Card>
