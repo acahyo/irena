@@ -61,14 +61,16 @@ export async function getPurchaseRequests({ siteId }: { siteId?: string } = {}):
 // Get purchase requests for a specific employee (requester)
 export async function getPurchaseRequestsByEmployee(employeeId: string): Promise<PurchaseRequest[]> {
   try {
-    const q = query(collection(db, 'purchaseRequests'), where('requesterId', '==', employeeId), orderBy('requestDate', 'desc'));
+    // Removed orderBy from the query to avoid needing a composite index
+    const q = query(collection(db, 'purchaseRequests'), where('requesterId', '==', employeeId));
     const querySnapshot = await getDocs(q);
     const requests: PurchaseRequest[] = [];
     querySnapshot.forEach((doc) => {
         const data = convertTimestampsToDates(doc.data());
         requests.push({ id: doc.id, ...data } as PurchaseRequest);
     });
-    return requests;
+    // Sort the results in the application code
+    return requests.sort((a, b) => new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime());
   } catch (error) {
     console.error(`Error fetching requests for employee ${employeeId}:`, error);
     return [];
