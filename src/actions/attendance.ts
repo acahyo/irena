@@ -5,6 +5,18 @@ import { collection, getDocs, doc, setDoc, getDoc, query, where, writeBatch, Tim
 import type { AttendanceRecord } from '@/lib/types';
 import { getEmployees } from './employees';
 
+// Helper to convert Firestore Timestamps to Dates in a document
+function convertTimestampsToDates(docData: any) {
+    if (!docData) return docData;
+    const data = { ...docData };
+    for (const key in data) {
+        if (data[key] instanceof Timestamp) {
+            data[key] = data[key].toDate().toISOString();
+        }
+    }
+    return data;
+}
+
 // Get all attendance records for a specific period (YYYY-MM), optionally filtered by siteId
 export async function getAttendanceByPeriod(period: string, { siteId }: { siteId?: string } = {}): Promise<AttendanceRecord[]> {
   try {
@@ -12,7 +24,8 @@ export async function getAttendanceByPeriod(period: string, { siteId }: { siteId
     const querySnapshot = await getDocs(q);
     const records: AttendanceRecord[] = [];
     querySnapshot.forEach((doc) => {
-        records.push({ id: doc.id, ...doc.data() } as AttendanceRecord);
+        const data = convertTimestampsToDates(doc.data());
+        records.push({ id: doc.id, ...data } as AttendanceRecord);
     });
 
     if (siteId) {
@@ -37,7 +50,8 @@ export async function getAttendanceByEmployeeAndPeriod(employeeId: string, perio
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-            return { id: docSnap.id, ...docSnap.data() } as AttendanceRecord;
+            const data = convertTimestampsToDates(docSnap.data());
+            return { id: docSnap.id, ...data } as AttendanceRecord;
         } else {
             return null;
         }

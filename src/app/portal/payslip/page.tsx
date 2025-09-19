@@ -27,12 +27,7 @@ export default async function MyPayslipPage() {
     }
     
     const currentPeriod = new Date().toISOString().slice(0, 7);
-    const initialAttendanceData = await getAttendanceByEmployeeAndPeriod(session.id, currentPeriod);
-
-    // Convert Date object to string to avoid serialization error
-    const initialAttendance = initialAttendanceData
-        ? { ...initialAttendanceData, date: initialAttendanceData.date ? initialAttendanceData.date.toString() : new Date().toString() }
-        : null;
+    const initialAttendance = await getAttendanceByEmployeeAndPeriod(session.id, currentPeriod);
 
   const employeeWithDetails: EmployeeWithPosition = {
       ...employee,

@@ -27,13 +27,7 @@ export default async function AttendancePage({ userSiteId }: { userSiteId?: stri
 
   // Fetch initial attendance for the current month, filtering by site if applicable
   const currentPeriod = new Date().toISOString().slice(0, 7);
-  const initialAttendanceData = await getAttendanceByPeriod(currentPeriod, { siteId: userSiteId });
-  
-  // Convert Date objects to strings to prevent serialization errors
-  const initialAttendance = initialAttendanceData.map(record => ({
-    ...record,
-    date: record.date ? record.date.toString() : new Date().toString(),
-  })) as AttendanceRecord[];
+  const initialAttendance = await getAttendanceByPeriod(currentPeriod, { siteId: userSiteId });
 
 
   return (
