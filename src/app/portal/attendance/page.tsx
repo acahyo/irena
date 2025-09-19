@@ -57,11 +57,14 @@ export default function MyAttendancePage() {
         
         const employeeAttendance = allAttendance
             .filter(rec => rec.employeeId === session.id)
-            .map(rec => ({...rec, date: rec.date.toString()})); // Convert date to string
+            .map(rec => ({
+              ...rec,
+              date: rec.date ? new Date(rec.date).toISOString() : new Date().toISOString(),
+            }));
 
         setEmployee(emp);
         setSettings(appSettings);
-        setInitialAttendance(employeeAttendance as unknown as AttendanceRecord[]);
+        setInitialAttendance(employeeAttendance as AttendanceRecord[]);
       } catch (err) {
         console.error("Failed to fetch initial data for attendance page:", err);
         setError("Failed to load page data.");
