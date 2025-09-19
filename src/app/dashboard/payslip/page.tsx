@@ -6,17 +6,24 @@ import { getPositions } from '@/actions/positions';
 import { getAttendanceByPeriod } from '@/actions/attendance';
 import type { EmployeeWithPosition, AttendanceRecord } from '@/lib/types';
 import { getDepartments } from '@/actions/departments';
+import { getAdminSession } from '@/actions/auth';
 
 
 export default async function PayslipPage({ userSiteId }: { userSiteId?: string }) {
-  const [employees, settings, positions, departments] = await Promise.all([
+  const [employees, settings, positions, departments, user] = await Promise.all([
     getEmployees({ siteId: userSiteId }),
     getSettings(),
     getPositions(),
-    getDepartments()
+    getDepartments(),
+    getAdminSession()
   ]);
 
-  const employeesWithDetails: EmployeeWithPosition[] = employees.map(emp => {
+  // Filter employees based on position if user is Admin Absensi
+  const filteredEmployeesForPage = user?.role === 'Admin Absensi' && user.positionName 
+    ? employees.filter(emp => emp.position === user.positionName)
+    : employees;
+
+  const employeesWithDetails: EmployeeWithPosition[] = filteredEmployeesForPage.map(emp => {
       const positionDetails = positions.find(p => p.name === emp.position);
       return { ...emp, positionDetails };
   });
