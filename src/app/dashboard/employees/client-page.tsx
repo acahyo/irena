@@ -91,8 +91,16 @@ export default function EmployeeDirectoryClientPage({ initialEmployees }: { init
             const json = XLSX.utils.sheet_to_json(worksheet) as any[];
 
             for (const row of json) {
-                // Assuming column names in Excel match the Employee type keys
-                await createEmployee(row as Partial<Employee>);
+                // Convert date objects to strings before sending to server action
+                const processedRow = { ...row };
+                const dateFields: (keyof Employee)[] = ['dateOfBirth', 'messEntryDate', 'contractStartDate', 'contractEndDate'];
+                dateFields.forEach(field => {
+                    if (processedRow[field] instanceof Date) {
+                        processedRow[field] = (processedRow[field] as Date).toISOString();
+                    }
+                });
+
+                await createEmployee(processedRow as Partial<Employee>);
             }
             
             toast({
