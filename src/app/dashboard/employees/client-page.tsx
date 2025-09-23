@@ -18,6 +18,7 @@ import { PlusCircle, Search, Upload, Download, Loader2 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { createEmployee } from '@/actions/employees';
 
 
 export default function EmployeeDirectoryClientPage({ initialEmployees }: { initialEmployees: Employee[]}) {
@@ -71,16 +72,56 @@ export default function EmployeeDirectoryClientPage({ initialEmployees }: { init
   };
 
   const handleImportClick = () => {
-    // fileInputRef.current?.click();
-    toast({
-        variant: 'destructive',
-        title: 'Feature Disabled',
-        description: 'Employee import is temporarily disabled.'
-    })
+    fileInputRef.current?.click();
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    // This function is kept for potential re-enablement but is not currently used.
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    startTransition(async () => {
+      try {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          try {
+            const data = new Uint8Array(e.target?.result as ArrayBuffer);
+            const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const json = XLSX.utils.sheet_to_json(worksheet) as any[];
+
+            for (const row of json) {
+                // Assuming column names in Excel match the Employee type keys
+                await createEmployee(row as Partial<Employee>);
+            }
+            
+            toast({
+                title: 'Import Successful',
+                description: `${json.length} employee records have been imported.`,
+            });
+            router.refresh(); // Refresh the page to show new employees
+
+          } catch (readError) {
+             toast({
+                variant: 'destructive',
+                title: 'File Read Error',
+                description: 'Failed to read or process the Excel file.',
+            });
+          } finally {
+             if(fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      } catch (error) {
+        toast({
+            variant: 'destructive',
+            title: 'Import Error',
+            description: 'An unexpected error occurred during file processing.',
+        });
+      }
+    });
   };
 
   return (
