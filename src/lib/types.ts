@@ -49,6 +49,8 @@ export type Employee = {
   leaveHistory?: LeaveRequest[];
   canGeneratePayslip?: boolean;
   koperasiLimit?: number;
+  koperasiLimitStartDate?: Date | string;
+  koperasiLimitEndDate?: Date | string;
 };
 
 export type CalendarEvent = {
@@ -140,7 +142,7 @@ export type AttendanceRecord = {
     employeeId: string;
     employeeName: string;
     period: string; // YYYY-MM
-    date: Date | string; // For date range queries
+    date: string; // For date range queries
     attendanceDays?: number;
     overtimeHours?: number;
     potonganIdCard?: number;

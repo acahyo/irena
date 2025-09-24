@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useTransition } from 'react';
+import { format } from 'date-fns';
 import {
   Card,
   CardContent,
@@ -18,11 +19,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Calendar as CalendarIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Employee } from '@/lib/types';
 import { updateEmployee } from '@/actions/employees';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
 
 
 const formatCurrency = (amount: number | undefined | null) => {
@@ -33,6 +37,11 @@ const formatCurrency = (amount: number | undefined | null) => {
     minimumFractionDigits: 0,
   }).format(amount);
 };
+
+const formatDate = (date: Date | string | undefined) => {
+    if (!date) return 'Not set';
+    return format(new Date(date), 'PPP');
+}
 
 
 export default function KoperasiLimitClientPage({ initialEmployees }: { initialEmployees: Employee[] }) {
@@ -47,10 +56,10 @@ export default function KoperasiLimitClientPage({ initialEmployees }: { initialE
     );
   }, [employees, searchTerm]);
   
-  const handleLimitChange = (employeeId: string, value: string) => {
+  const handleValueChange = (employeeId: string, field: keyof Employee, value: string | number | Date | undefined) => {
     setEmployees(prev =>
       prev.map(emp =>
-        emp.id === employeeId ? { ...emp, koperasiLimit: Number(value) } : emp
+        emp.id === employeeId ? { ...emp, [field]: value } : emp
       )
     );
   };
@@ -61,10 +70,14 @@ export default function KoperasiLimitClientPage({ initialEmployees }: { initialE
 
     startTransition(async () => {
       try {
-        await updateEmployee(employeeId, { koperasiLimit: employee.koperasiLimit });
+        await updateEmployee(employeeId, { 
+            koperasiLimit: employee.koperasiLimit,
+            koperasiLimitStartDate: employee.koperasiLimitStartDate,
+            koperasiLimitEndDate: employee.koperasiLimitEndDate,
+        });
         toast({
           title: 'Sukses!',
-          description: `Limit koperasi untuk ${employee.name} telah diperbarui.`,
+          description: `Data limit koperasi untuk ${employee.name} telah diperbarui.`,
         });
       } catch (error) {
         toast({
@@ -76,6 +89,19 @@ export default function KoperasiLimitClientPage({ initialEmployees }: { initialE
     });
   };
 
+  const DatePicker = ({ date, setDate }: { date: Date | string | undefined, setDate: (date: Date | undefined) => void }) => (
+    <Popover>
+        <PopoverTrigger asChild>
+            <Button variant={'outline'} className={cn('w-full justify-start text-left font-normal h-9', !date && 'text-muted-foreground')}>
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {date ? format(new Date(date), 'PPP') : <span>Pilih tanggal</span>}
+            </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={date ? new Date(date) : undefined} onSelect={setDate} initialFocus /></PopoverContent>
+    </Popover>
+  );
+
+
   return (
     <Card>
       <CardHeader>
@@ -83,7 +109,7 @@ export default function KoperasiLimitClientPage({ initialEmployees }: { initialE
           <div>
             <CardTitle>Limit Belanja Koperasi</CardTitle>
             <CardDescription>
-              Atur batas maksimal belanja bulanan untuk setiap karyawan di koperasi.
+              Atur batas maksimal belanja bulanan dan periode berlakunya untuk setiap karyawan di koperasi.
             </CardDescription>
           </div>
           <Input
@@ -100,8 +126,10 @@ export default function KoperasiLimitClientPage({ initialEmployees }: { initialE
             <TableRow>
               <TableHead>Nama Karyawan</TableHead>
               <TableHead>Jabatan</TableHead>
-              <TableHead>Limit Saat Ini</TableHead>
-              <TableHead className="w-[300px]">Atur Limit Baru</TableHead>
+              <TableHead>Limit (Rp)</TableHead>
+              <TableHead>Tanggal Mulai</TableHead>
+              <TableHead>Tanggal Selesai</TableHead>
+              <TableHead className="w-[150px]">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -118,26 +146,31 @@ export default function KoperasiLimitClientPage({ initialEmployees }: { initialE
                     </div>
                   </TableCell>
                   <TableCell>{emp.position || 'N/A'}</TableCell>
-                  <TableCell>{formatCurrency(emp.koperasiLimit)}</TableCell>
+                   <TableCell className="w-[200px]">
+                     <Input
+                        type="number"
+                        placeholder="e.g. 500000"
+                        value={emp.koperasiLimit || ''}
+                        onChange={(e) => handleValueChange(emp.id, 'koperasiLimit', e.target.value)}
+                      />
+                  </TableCell>
+                  <TableCell className="w-[200px]">
+                      <DatePicker date={emp.koperasiLimitStartDate} setDate={(date) => handleValueChange(emp.id, 'koperasiLimitStartDate', date)} />
+                  </TableCell>
+                  <TableCell className="w-[200px]">
+                      <DatePicker date={emp.koperasiLimitEndDate} setDate={(date) => handleValueChange(emp.id, 'koperasiLimitEndDate', date)} />
+                  </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                        <Input
-                            type="number"
-                            placeholder="e.g. 500000"
-                            value={emp.koperasiLimit || ''}
-                            onChange={(e) => handleLimitChange(emp.id, e.target.value)}
-                        />
-                        <Button onClick={() => handleSaveLimit(emp.id)} size="sm" disabled={isPending}>
-                            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Simpan
-                        </Button>
-                    </div>
+                    <Button onClick={() => handleSaveLimit(emp.id)} size="sm" disabled={isPending}>
+                        {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Simpan
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={4} className="h-24 text-center">
+                <TableCell colSpan={6} className="h-24 text-center">
                   Tidak ada karyawan ditemukan.
                 </TableCell>
               </TableRow>
