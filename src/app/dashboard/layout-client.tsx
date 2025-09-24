@@ -43,6 +43,7 @@ import {
   ShoppingCart,
   UserPlus,
   UserCheck as UserCheckIcon,
+  Store,
 } from "lucide-react";
 import type { AppSettings, User, Role, MenuOrderItem } from "@/lib/types";
 import { logout } from "@/actions/auth";
@@ -59,11 +60,13 @@ const allNavItemsList = (lang: 'id' | 'en') => [
   { id: 'payslip', href: "/dashboard/payslip", icon: Printer, label: lang === 'id' ? "Cetak Slip Gaji" : "Print Payslip" },
   { id: 'payslip-collective', href: "/dashboard/payslip-collective", icon: Printer, label: lang === 'id' ? "Slip Gaji Kolektif" : "Collective Payslip" },
   { id: 'purchasing', href: "/dashboard/purchasing", icon: ShoppingCart, label: "Purchasing" },
+  { id: 'purchasing-items', href: "/dashboard/purchasing/items", icon: Store, label: "Barang Koperasi" },
   { id: 'bpjs-id-simper', href: "/dashboard/bpjs-id-simper", icon: Database, label: "BPJS-ID-SIMPER" },
   { id: 'department', href: "/dashboard/department", icon: Briefcase, label: lang === 'id' ? "Departemen" : "Department" },
   { id: 'position', href: "/dashboard/position", icon: WalletCards, label: lang === 'id' ? "Jabatan & Gaji" : "Position & Salary" },
   { id: 'project', href: "/dashboard/project", icon: Briefcase, label: "Proyek" },
   { id: 'finance', href: "/dashboard/finance", icon: Landmark, label: lang === 'id' ? "Keuangan" : "Finance" },
+  { id: 'koperasi-limit', href: "/dashboard/finance/koperasi-limit", icon: Wallet, label: "Limit Koperasi" },
   { id: 'users', href: "/dashboard/users", icon: UsersRound, label: "Users" },
   { id: 'roles', href: "/dashboard/roles", icon: ShieldCheck, label: "Roles" },
   { id: 'settings', href: "/dashboard/settings", icon: Settings, label: lang === 'id' ? "Pengaturan" : "Settings" },

@@ -48,6 +48,7 @@ export type Employee = {
   daysActive?: number;
   leaveHistory?: LeaveRequest[];
   canGeneratePayslip?: boolean;
+  koperasiLimit?: number;
 };
 
 export type CalendarEvent = {
@@ -194,4 +195,29 @@ export type FinanceRecord = {
   description: string;
   date: Date | string;
   category?: string;
+};
+
+export type KoperasiItem = {
+  id: string;
+  name: string;
+  price: number;
+  stock: number;
+  imageUrl?: string;
+};
+
+export type KoperasiOrderItem = {
+  itemId: string;
+  name: string;
+  price: number;
+  quantity: number;
+};
+
+export type KoperasiOrder = {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  orderDate: Date | string;
+  items: KoperasiOrderItem[];
+  totalPrice: number;
+  status: 'Pending' | 'Completed' | 'Rejected';
 };

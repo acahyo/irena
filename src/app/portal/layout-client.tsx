@@ -27,6 +27,7 @@ import {
   ClipboardCheck,
   User,
   ShoppingCart,
+  Store,
 } from "lucide-react";
 import type { AppSettings, Employee } from "@/lib/types";
 import { logout } from "@/actions/auth";
@@ -38,6 +39,7 @@ const getNavItems = (lang: 'id' | 'en', settings: AppSettings) => {
     { id: 'leave', href: "/portal/leave", icon: CalendarCheck, label: lang === 'id' ? "Cuti Saya" : "My Leave" },
     { id: 'payslip', href: "/portal/payslip", icon: Printer, label: lang === 'id' ? "Slip Gaji Saya" : "My Payslip" },
     { id: 'purchasing', href: "/portal/purchasing", icon: ShoppingCart, label: lang === 'id' ? "Pengajuan Barang" : "Purchase Request" },
+    { id: 'koperasi', href: "/portal/koperasi", icon: Store, label: lang === 'id' ? "Koperasi Saya" : "My Cooperative" },
   ];
 
   if (settings.employeePayslipAccess === false) {
