@@ -36,6 +36,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -177,7 +178,7 @@ export default function KoperasiItemsClientPage({ initialItems }: { initialItems
                 </TableRow>
               ))}
               {items.length === 0 && (
-                <TableRow><TableCell colSpan={4} className="h-24 text-center">Belum ada barang ditambahkan.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={4} className="h-24 text-center">Belum ada barang yang ditambahkan.</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
