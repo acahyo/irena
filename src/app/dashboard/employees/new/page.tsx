@@ -391,6 +391,7 @@ export default function NewEmployeePage() {
                                     name="accountHolderName" 
                                     placeholder="e.g. John Doe"
                                     value={accountType === 'pribadi' ? employeeName : undefined}
+                                    defaultValue={accountType === 'keluarga' ? '' : undefined}
                                     readOnly={accountType === 'pribadi'}
                                 />
                             </div>

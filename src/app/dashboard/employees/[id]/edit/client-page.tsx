@@ -389,9 +389,9 @@ export default function EditEmployeePageClient({ employee, departments, position
                                     id="accountHolderName" 
                                     name="accountHolderName" 
                                     placeholder="e.g. John Doe"
-                                    defaultValue={accountType === 'pribadi' ? employeeName : employee.accountHolderName}
+                                    value={accountType === 'pribadi' ? employeeName : undefined}
+                                    defaultValue={accountType === 'keluarga' ? employee.accountHolderName : undefined}
                                     readOnly={accountType === 'pribadi'}
-                                    key={accountType === 'pribadi' ? employeeName : 'editable'} // Force re-render
                                 />
                             </div>
                         </div>
