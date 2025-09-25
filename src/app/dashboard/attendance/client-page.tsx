@@ -78,6 +78,7 @@ export default function AttendanceClientPage({
       position: lang === 'id' ? 'Jabatan' : 'Position',
       attendance: lang === 'id' ? 'Kehadiran' : 'Attendance',
       overtime: lang === 'id' ? 'Lembur' : 'Overtime',
+      totalOvertime: lang === 'id' ? 'Total Lembur' : 'Total Overtime',
       bonus: lang === 'id' ? 'Bonus' : 'Bonus',
       idCardDeduction: lang === 'id' ? 'Potongan ID Card' : 'ID Card Deduction',
       simperDeduction: lang === 'id' ? 'Potongan SIMPER' : 'SIMPER Deduction',
@@ -320,6 +321,7 @@ export default function AttendanceClientPage({
               <TableHead className="min-w-[200px]">{T.employee}</TableHead>
               <TableHead>{T.attendance}</TableHead>
               <TableHead>{T.overtime}</TableHead>
+              <TableHead>{T.totalOvertime}</TableHead>
               <TableHead className="w-[180px]">{T.bonus}</TableHead>
               <TableHead className="w-[180px]">{T.idCardDeduction}</TableHead>
               <TableHead className="w-[180px]">{T.simperDeduction}</TableHead>
@@ -330,6 +332,7 @@ export default function AttendanceClientPage({
           <TableBody>
             {filteredEmployees.length > 0 ? (
               filteredEmployees.map((emp) => {
+                const totalOvertime = Object.values(attendanceData[emp.id]?.overtimeByPosition || {}).reduce((sum, hours) => sum + (hours || 0), 0);
                 return (
                 <TableRow key={emp.id} className="align-top">
                   <TableCell>
@@ -391,6 +394,9 @@ export default function AttendanceClientPage({
                         )}
                     </div>
                   </TableCell>
+                  <TableCell>
+                    <div className="font-semibold text-center mt-2">{totalOvertime} jam</div>
+                  </TableCell>
                    <TableCell>
                     <Input
                       type="number"
@@ -440,7 +446,7 @@ export default function AttendanceClientPage({
               )})
             ) : (
               <TableRow>
-                <TableCell colSpan={8} className="h-24 text-center">
+                <TableCell colSpan={9} className="h-24 text-center">
                   {T.noData}
                 </TableCell>
               </TableRow>
