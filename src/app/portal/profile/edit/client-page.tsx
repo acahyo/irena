@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -25,12 +25,75 @@ import { useToast } from '@/hooks/use-toast';
 import type { Employee } from '@/lib/types';
 import { updateEmployee } from '@/actions/employees';
 import { Textarea } from '@/components/ui/textarea';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
+
+const FileInput = ({
+    id,
+    label,
+    preview,
+    onChange,
+    required = false,
+  }: {
+    id: string;
+    label: string;
+    preview: string | null;
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    required?: boolean;
+  }) => (
+     <div className="space-y-2">
+      <Label htmlFor={id}>{label}{required && <span className="text-destructive">*</span>}</Label>
+      <div className="flex items-center gap-4">
+        <Avatar className="h-24 w-24 rounded-md">
+          <AvatarImage src={preview || undefined} alt={label} className="object-contain" />
+          <AvatarFallback className="rounded-md">
+            <Upload className="h-8 w-8 text-muted-foreground" />
+          </AvatarFallback>
+        </Avatar>
+        <Input
+          id={id}
+          name={id}
+          type="file"
+          accept="image/png, image/jpeg, image/jpg, image/x-icon, application/pdf"
+          onChange={onChange}
+          className="max-w-sm"
+          required={required && !preview}
+        />
+      </div>
+    </div>
+);
 
 
 export default function EditMyProfileClientPage({ employee }: { employee: Employee }) {
   const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [accountType, setAccountType] = useState(employee.accountType);
+  const [accountHolderName, setAccountHolderName] = useState(employee.accountHolderName);
+  const [kkPreview, setKkPreview] = useState<string | null>(employee.kartuKeluargaPhoto || null);
+  const [bankBookPreview, setBankBookPreview] = useState<string | null>(employee.bankBookPhoto || null);
+  
+  useEffect(() => {
+    if (accountType === 'pribadi') {
+        setAccountHolderName(employee.name);
+    }
+  }, [accountType, employee.name]);
+  
+  const handleFileChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    setter: React.Dispatch<React.SetStateAction<string | null>>
+  ) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => setter(e.target?.result as string);
+      reader.readAsDataURL(file);
+    } else {
+      setter(null);
+    }
+  };
+
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -39,8 +102,14 @@ export default function EditMyProfileClientPage({ employee }: { employee: Employ
     const formData = new FormData(event.currentTarget);
     const data = Object.fromEntries(formData.entries());
 
+    delete data.kartuKeluargaPhoto;
+    delete data.bankBookPhoto;
+
     const employeeData: Partial<Employee> = {
         ...data,
+        accountHolderName,
+        kartuKeluargaPhoto: kkPreview,
+        bankBookPhoto: bankBookPreview,
     } as Partial<Employee>;
 
     // Handle empty password
@@ -132,19 +201,49 @@ export default function EditMyProfileClientPage({ employee }: { employee: Employ
                 
                 <Card>
                     <CardHeader><CardTitle>Bank Details</CardTitle></CardHeader>
-                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                     <CardContent className="space-y-6">
                         <div className="space-y-2">
-                            <Label htmlFor="bankName">Bank Name</Label>
-                            <Input id="bankName" name="bankName" placeholder="e.g. Bank Central Asia" defaultValue={employee.bankName} />
+                            <Label>Jenis Rekening</Label>
+                             <RadioGroup name="accountType" className="flex gap-4" value={accountType} onValueChange={(value) => setAccountType(value as any)}>
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="pribadi" id="acc-pribadi" />
+                                    <Label htmlFor="acc-pribadi">Pribadi</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="keluarga" id="acc-keluarga" />
+                                    <Label htmlFor="acc-keluarga">Keluarga</Label>
+                                </div>
+                            </RadioGroup>
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="accountNumber">Account Number</Label>
-                            <Input id="accountNumber" name="accountNumber" placeholder="e.g. 1234567890" defaultValue={employee.accountNumber} />
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <Label htmlFor="bankName">Bank Name</Label>
+                                <Input id="bankName" name="bankName" placeholder="e.g. Bank Central Asia" defaultValue={employee.bankName} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="accountNumber">Account Number</Label>
+                                <Input id="accountNumber" name="accountNumber" placeholder="e.g. 1234567890" defaultValue={employee.accountNumber} />
+                            </div>
+                            <div className="space-y-2 md:col-span-2">
+                                <Label htmlFor="accountHolderName">Account Holder Name</Label>
+                                <Input 
+                                    id="accountHolderName" 
+                                    name="accountHolderName" 
+                                    value={accountHolderName}
+                                    onValueChange={(e: any) => setAccountHolderName(e.target.value)}
+                                    readOnly={accountType === 'pribadi'}
+                                />
+                            </div>
                         </div>
-                        <div className="space-y-2 md:col-span-2">
-                            <Label htmlFor="accountHolderName">Account Holder Name</Label>
-                            <Input id="accountHolderName" name="accountHolderName" placeholder="e.g. John Doe" defaultValue={employee.accountHolderName} />
-                        </div>
+
+                        {accountType === 'keluarga' && (
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
+                                <FileInput id="kartuKeluargaPhoto" label="Foto Kartu Keluarga" preview={kkPreview} onChange={(e) => handleFileChange(e, setKkPreview)} required={true} />
+                                <FileInput id="bankBookPhoto" label="Foto Halaman Depan Buku Rekening" preview={bankBookPreview} onChange={(e) => handleFileChange(e, setBankBookPreview)} required={true} />
+                            </div>
+                        )}
+
                     </CardContent>
                 </Card>
 

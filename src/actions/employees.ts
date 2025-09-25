@@ -127,6 +127,11 @@ export async function createEmployee(employee: Partial<Employee>, actorRole?: st
     } else {
       employeeData.positions = employee.positions || [];
     }
+
+    // If accountType is pribadi, set accountHolderName to employee name
+    if (employeeData.accountType === 'pribadi') {
+        employeeData.accountHolderName = employeeData.name;
+    }
     
     // Handle file uploads
     const fileFields: (keyof Employee)[] = ['avatar', 'ktpPhoto', 'simPhoto', 'sioPhoto', 'kartuKeluargaPhoto', 'bankBookPhoto'];
@@ -183,6 +188,14 @@ export async function updateEmployee(id: string, employee: Partial<Employee>): P
    if (employee.hasOwnProperty('canGeneratePayslip')) {
         employeeData.canGeneratePayslip = employee.canGeneratePayslip === true || (employee as any).canGeneratePayslip === 'on';
    }
+
+  // If accountType is pribadi, set accountHolderName to employee name
+  if (employeeData.accountType === 'pribadi') {
+        const originalEmployeeDoc = await getDoc(doc(db, 'employees', id));
+        if(originalEmployeeDoc.exists()) {
+            employeeData.accountHolderName = originalEmployeeDoc.data().name;
+        }
+  }
 
 
   // Handle file uploads
