@@ -43,14 +43,11 @@ export default function MyAttendanceClientPage() {
 
   const T = useMemo(() => ({
       title: lang === 'id' ? 'Data Kehadiran Saya' : 'My Attendance Data',
-      description: lang === 'id' ? 'Lihat riwayat kehadiran, lembur, dan potongan Anda per periode.' : 'View your attendance, overtime, and deduction history per period.',
+      description: lang === 'id' ? 'Lihat riwayat kehadiran dan lembur Anda per periode.' : 'View your attendance and overtime history per period.',
       period: lang === 'id' ? 'Periode' : 'Period',
+      position: lang === 'id' ? 'Jabatan' : 'Position',
       attendanceDays: lang === 'id' ? 'Kehadiran (hari)' : 'Attendance (days)',
       overtimeHours: lang === 'id' ? 'Jam Lembur' : 'Overtime Hours',
-      bonus: lang === 'id' ? 'Bonus' : 'Bonus',
-      idCardDeduction: lang === 'id' ? 'Potongan ID Card' : 'ID Card Deduction',
-      simperDeduction: lang === 'id' ? 'Potongan SIMPER' : 'SIMPER Deduction',
-      fineDeduction: lang === 'id' ? 'Potongan Denda' : 'Fine Deduction',
       noData: lang === 'id' ? 'Tidak ada data absensi ditemukan untuk periode ini.' : 'No attendance data found for this period.',
       fetchError: lang === 'id' ? 'Gagal mengambil data absensi.' : 'Failed to fetch attendance data.',
       error: lang === 'id' ? 'Error' : 'Error',
@@ -107,6 +104,32 @@ export default function MyAttendanceClientPage() {
     };
     fetchAttendance();
   }, [period, employee, T.error, T.fetchError, toast]);
+
+  const flattenedAttendance = useMemo(() => {
+    const flatData: { period: string, position: string, attendance: number, overtime: number }[] = [];
+    attendanceData.forEach(record => {
+      const positions = new Set([
+          ...Object.keys(record.attendanceByPosition || {}), 
+          ...Object.keys(record.overtimeByPosition || {})
+      ]);
+      
+      if (positions.size === 0) {
+        // Handle case where there's a record but no per-position data (e.g., only bonus/deductions)
+        // We can choose to show a row with 0 attendance/overtime or hide it.
+        // Let's hide it to keep the table clean, as the user only asked for these columns.
+      } else {
+        positions.forEach(pos => {
+            flatData.push({
+                period: record.period,
+                position: pos,
+                attendance: record.attendanceByPosition?.[pos] || 0,
+                overtime: record.overtimeByPosition?.[pos] || 0
+            });
+        });
+      }
+    });
+    return flatData;
+  }, [attendanceData]);
   
   if (pageLoading || !settings) {
     return (
@@ -145,30 +168,24 @@ export default function MyAttendanceClientPage() {
           <TableHeader>
             <TableRow>
               <TableHead>{T.period}</TableHead>
+              <TableHead>{T.position}</TableHead>
               <TableHead>{T.attendanceDays}</TableHead>
               <TableHead>{T.overtimeHours}</TableHead>
-              <TableHead>{T.bonus}</TableHead>
-              <TableHead>{T.idCardDeduction}</TableHead>
-              <TableHead>{T.simperDeduction}</TableHead>
-              <TableHead>{T.fineDeduction}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {attendanceData.length > 0 ? (
-              attendanceData.map((record) => (
-                <TableRow key={record.id}>
-                  <TableCell><Badge variant="outline">{record.period}</Badge></TableCell>
-                  <TableCell>{record.attendanceDays ?? 0}</TableCell>
-                  <TableCell>{record.overtimeHours ?? 0}</TableCell>
-                  <TableCell>{record.bonus ?? 0}</TableCell>
-                  <TableCell>{record.potonganIdCard ?? 0}</TableCell>
-                  <TableCell>{record.potonganSimper ?? 0}</TableCell>
-                  <TableCell>{record.potonganDenda ?? 0}</TableCell>
+            {flattenedAttendance.length > 0 ? (
+              flattenedAttendance.map((item, index) => (
+                <TableRow key={`${item.period}-${item.position}-${index}`}>
+                  <TableCell><Badge variant="outline">{item.period}</Badge></TableCell>
+                  <TableCell>{item.position}</TableCell>
+                  <TableCell>{item.attendance}</TableCell>
+                  <TableCell>{item.overtime}</TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center">
+                <TableCell colSpan={4} className="h-24 text-center">
                   {T.noData}
                 </TableCell>
               </TableRow>
