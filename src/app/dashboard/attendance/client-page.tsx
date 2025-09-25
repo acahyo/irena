@@ -21,7 +21,7 @@ import { Label } from '@/components/ui/label';
 import { Loader2, Download, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getAttendanceByPeriod, saveAttendanceRecord, importAttendanceRecords } from '@/actions/attendance';
-import type { EmployeeWithPosition, AttendanceRecord, AppSettings } from '@/lib/types';
+import type { EmployeeWithPosition, AttendanceRecord, AppSettings, Position } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -100,7 +100,7 @@ export default function AttendanceClientPage({
 
 
   const positions = useMemo(() => {
-    const allPositions = employees.map((emp) => emp.position).filter(Boolean);
+    const allPositions = employees.flatMap((emp) => emp.positions || []).filter(Boolean);
     return ['all', ...Array.from(new Set(allPositions as string[]))];
   }, [employees]);
 
@@ -108,7 +108,7 @@ export default function AttendanceClientPage({
     if (positionFilter === 'all') {
       return employees;
     }
-    return employees.filter((emp) => emp.position === positionFilter);
+    return employees.filter((emp) => emp.positions?.includes(positionFilter));
   }, [employees, positionFilter]);
 
   useEffect(() => {
@@ -249,7 +249,7 @@ export default function AttendanceClientPage({
           const worksheet = workbook.Sheets[sheetName];
           const json = XLSX.utils.sheet_to_json(worksheet) as any[];
           
-          const recordsToImport: Omit<AttendanceRecord, 'id'>[] = json.map(row => {
+          const recordsToImport: Omit<AttendanceRecord, 'id' | 'date'>[] = json.map(row => {
             const employee = employees.find(emp => emp.id === row.employeeId);
             return {
                 employeeId: row.employeeId,
@@ -372,7 +372,9 @@ export default function AttendanceClientPage({
           </TableHeader>
           <TableBody>
             {filteredEmployees.length > 0 ? (
-              filteredEmployees.map((emp) => (
+              filteredEmployees.map((emp) => {
+                const isDaily = emp.positionDetails?.some(p => p.salaryType === 'harian');
+                return (
                 <TableRow key={emp.id}>
                   <TableCell>
                       <div className="flex items-center gap-3">
@@ -383,7 +385,15 @@ export default function AttendanceClientPage({
                           <div className="font-medium">{emp.name}</div>
                       </div>
                   </TableCell>
-                  <TableCell>{emp.position || 'N/A'}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-1">
+                        {(emp.positions && emp.positions.length > 0) ? (
+                          emp.positions.map(pos => <Badge key={pos} variant="secondary">{pos}</Badge>)
+                        ) : (
+                          <span className="text-muted-foreground text-xs">N/A</span>
+                        )}
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <Input
                       type="number"
@@ -394,7 +404,7 @@ export default function AttendanceClientPage({
                     />
                   </TableCell>
                   <TableCell>
-                    {emp.positionDetails?.salaryType === 'harian' ? (
+                    {isDaily ? (
                         <Input
                           type="number"
                           placeholder="e.g. 10"
@@ -452,7 +462,7 @@ export default function AttendanceClientPage({
                     />
                   </TableCell>
                 </TableRow>
-              ))
+              )})
             ) : (
               <TableRow>
                 <TableCell colSpan={9} className="h-24 text-center">

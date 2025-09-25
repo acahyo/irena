@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, Settings2 } from 'lucide-react';
-import type { EmployeeWithPosition, AppSettings, AttendanceRecord } from '@/lib/types';
+import type { EmployeeWithPosition, AppSettings, AttendanceRecord, Position } from '@/lib/types';
 import PayslipViewer, { type PayslipData, type PayslipOptions } from '@/components/payslip-viewer';
 import { useToast } from '@/hooks/use-toast';
 import { getAttendanceByPeriod } from '@/actions/attendance';
@@ -62,7 +62,7 @@ export default function PayslipCollectiveClientPage({
 
   const positions = useMemo(() => {
     const allPositions = initialEmployees
-      .map((emp) => emp.position)
+      .flatMap((emp) => emp.positions || [])
       .filter(Boolean);
     return ['all', ...Array.from(new Set(allPositions as string[]))];
   }, [initialEmployees]);
@@ -72,7 +72,7 @@ export default function PayslipCollectiveClientPage({
     if (positionFilter === 'all') {
       return employees;
     }
-    return employees.filter((emp) => emp.position === positionFilter);
+    return employees.filter((emp) => emp.positions?.includes(positionFilter));
   }, [initialEmployees, positionFilter]);
 
   useEffect(() => {
@@ -134,36 +134,40 @@ export default function PayslipCollectiveClientPage({
 
         selectedEmployeeIds.forEach(employeeId => {
             const employee = initialEmployees.find(e => e.id === employeeId);
-            if (!employee || !employee.positionDetails) return;
+            if (!employee || !employee.positionDetails || employee.positionDetails.length === 0) return;
 
             const attendance = attendanceRecords.find(a => a.employeeId === employeeId);
             const attendanceDays = attendance?.attendanceDays || 0;
             const overtimeHours = attendance?.overtimeHours || 0;
             const bonus = attendance?.bonus || 0;
-            const position = employee.positionDetails;
+            
+            let totalEarnings = 0;
+            const earnings: Record<string, number> = {};
 
-            let earnings: Record<string, number> = {};
-            if(position.salaryType === 'bulanan' || position.salaryType === 'direksi') {
-                const baseSalary = position.monthlySalary || 0;
-                const totalAllowances = position.allowances?.reduce((sum, allowance) => sum + allowance.amount, 0) || 0;
-                const totalMonthlySalary = baseSalary + totalAllowances;
-                const proratedSalary = (totalMonthlySalary / 30) * attendanceDays;
-
-                earnings.proratedSalary = proratedSalary;
-            } else if(position.salaryType === 'harian') {
-                earnings = {
-                    dailyWage: (position.dailyWage || 0) * attendanceDays,
-                    overtime: (position.overtimeRate || 0) * overtimeHours, 
+            employee.positionDetails!.forEach(position => {
+                if(position.salaryType === 'bulanan' || position.salaryType === 'direksi') {
+                    const baseSalary = position.monthlySalary || 0;
+                    const totalAllowances = position.allowances?.reduce((sum, allowance) => sum + allowance.amount, 0) || 0;
+                    const totalMonthlySalary = baseSalary + totalAllowances;
+                    // For multiple positions, we might not want to prorate based on a single attendance record.
+                    // Assuming monthly salary is given if they have a monthly position.
+                    // A clearer business logic might be needed. For now, let's just add it.
+                    earnings[position.name] = totalMonthlySalary;
+                    totalEarnings += totalMonthlySalary;
+                } else if(position.salaryType === 'harian') {
+                    const dailyIncome = (position.dailyWage || 0) * attendanceDays;
+                    const overtimeIncome = (position.overtimeRate || 0) * overtimeHours;
+                    earnings[`dailyWage-${position.name}`] = dailyIncome;
+                    earnings[`overtime-${position.name}`] = overtimeIncome;
+                    totalEarnings += dailyIncome + overtimeIncome;
                 }
-            } else {
-                return;
-            }
+            });
             
             if (bonus > 0) {
                 earnings.bonus = bonus;
+                totalEarnings += bonus;
             }
 
-            const totalEarnings = Object.values(earnings).reduce((sum, val) => sum + val, 0);
             const deductions: Record<string, number> = {};
             let bpjsDeduction = 0;
             if (employee.bpjsStatus === 'active' && employee.bpjsType && BPJS_RATES[employee.bpjsType]) {
@@ -179,6 +183,10 @@ export default function PayslipCollectiveClientPage({
             const totalDeductions = Object.values(deductions).reduce((sum, val) => sum + val, 0);
             const netSalary = totalEarnings - totalDeductions;
             
+            // For the payslip, we just pass one main position, maybe the first one.
+            // This is a simplification.
+            const mainPosition = employee.positionDetails![0];
+
             generatedPayslips.push({
                 id: employee.id,
                 employee,
@@ -188,7 +196,7 @@ export default function PayslipCollectiveClientPage({
                 totalEarnings,
                 totalDeductions,
                 netSalary,
-                position,
+                position: mainPosition,
                 attendanceDays,
                 overtimeHours,
                 keterangan: keterangan,

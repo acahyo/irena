@@ -27,12 +27,17 @@ export default async function MyPayslipPage() {
     }
     
     const currentPeriod = new Date().toISOString().slice(0, 7);
-    const initialAttendance = await getAttendanceByEmployeeAndPeriod(session.id, currentPeriod);
+    const initialAttendanceData = await getAttendanceByEmployeeAndPeriod(session.id, currentPeriod);
+    const initialAttendance = initialAttendanceData ? { ...initialAttendanceData, date: initialAttendanceData.date.toString() } : null;
 
-  const employeeWithDetails: EmployeeWithPosition = {
+    const positionDetails: Position[] = (employee.positions || [])
+        .map(posName => positions.find(p => p.name === posName))
+        .filter((p): p is Position => !!p);
+
+    const employeeWithDetails: EmployeeWithPosition = {
       ...employee,
-      positionDetails: (positions || []).find(p => p.name === employee.position),
-  };
+      positionDetails: positionDetails,
+    };
   
   return (
     <MyPayslipClientPage
