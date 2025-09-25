@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef, useTransition } from 'react';
@@ -76,8 +77,8 @@ export default function AttendanceClientPage({
       export: lang === 'id' ? 'Ekspor' : 'Export',
       employee: lang === 'id' ? 'Karyawan' : 'Employee',
       position: lang === 'id' ? 'Jabatan' : 'Position',
-      attendance: lang === 'id' ? 'Kehadiran' : 'Attendance',
-      overtime: lang === 'id' ? 'Lembur' : 'Overtime',
+      attendance: lang === 'id' ? 'Kehadiran (Harian)' : 'Attendance (Daily)',
+      overtime: lang === 'id' ? 'Lembur (Harian)' : 'Overtime (Daily)',
       totalOvertime: lang === 'id' ? 'Total Lembur' : 'Total Overtime',
       bonus: lang === 'id' ? 'Bonus' : 'Bonus',
       idCardDeduction: lang === 'id' ? 'Potongan ID Card' : 'ID Card Deduction',
@@ -333,6 +334,10 @@ export default function AttendanceClientPage({
             {filteredEmployees.length > 0 ? (
               filteredEmployees.map((emp) => {
                 const totalOvertime = Object.values(attendanceData[emp.id]?.overtimeByPosition || {}).reduce((sum, hours) => sum + (hours || 0), 0);
+                
+                const dailyPositions = emp.positionDetails?.filter(p => p.salaryType === 'harian') || [];
+                const hasDailyPositions = dailyPositions.length > 0;
+                
                 return (
                 <TableRow key={emp.id} className="align-top">
                   <TableCell>
@@ -345,54 +350,48 @@ export default function AttendanceClientPage({
                       </div>
                   </TableCell>
                   <TableCell>
-                    <div className="space-y-2">
-                    {(emp.positions && emp.positions.length > 0) ? (
-                        emp.positions.map(posName => {
-                           return (
-                                <div key={posName} className="space-y-1">
-                                    <Label htmlFor={`${emp.id}-${posName}-attendance`} className="text-xs font-normal">{posName} (hari)</Label>
-                                    <Input
-                                        id={`${emp.id}-${posName}-attendance`}
-                                        type="number"
-                                        placeholder="e.g. 22"
-                                        value={attendanceData[emp.id]?.attendanceByPosition?.[posName] ?? ''}
-                                        onChange={(e) => handlePerPositionInputChange(emp.id, posName, 'attendanceByPosition', e.target.value)}
-                                        onBlur={() => handleInputBlur(emp.id)}
-                                        className="h-8"
-                                    />
-                                </div>
-                            )
-                        })
+                    {hasDailyPositions ? (
+                      <div className="space-y-2">
+                        {dailyPositions.map(posDetail => (
+                          <div key={posDetail.id} className="space-y-1">
+                            <Label htmlFor={`${emp.id}-${posDetail.name}-attendance`} className="text-xs font-normal">{posDetail.name} (hari)</Label>
+                            <Input
+                              id={`${emp.id}-${posDetail.name}-attendance`}
+                              type="number"
+                              placeholder="e.g. 22"
+                              value={attendanceData[emp.id]?.attendanceByPosition?.[posDetail.name] ?? ''}
+                              onChange={(e) => handlePerPositionInputChange(emp.id, posDetail.name, 'attendanceByPosition', e.target.value)}
+                              onBlur={() => handleInputBlur(emp.id)}
+                              className="h-8"
+                            />
+                          </div>
+                        ))}
+                      </div>
                     ) : (
-                        <p className="text-muted-foreground text-xs text-center">-</p>
+                      <p className="text-muted-foreground text-xs text-center">-</p>
                     )}
-                    </div>
                   </TableCell>
                   <TableCell>
-                     <div className="space-y-2">
-                        {(emp.positionDetails && emp.positionDetails.length > 0) ? (
-                            emp.positionDetails.map(posDetail => {
-                                const isDaily = posDetail.salaryType === 'harian';
-                                if (!isDaily) return null;
-                                return (
-                                    <div key={posDetail.id} className="space-y-1">
-                                        <Label htmlFor={`${emp.id}-${posDetail.name}-overtime`} className="text-xs font-normal">{posDetail.name} (jam)</Label>
-                                        <Input
-                                            id={`${emp.id}-${posDetail.name}-overtime`}
-                                            type="number"
-                                            placeholder="e.g. 10"
-                                            value={attendanceData[emp.id]?.overtimeByPosition?.[posDetail.name] ?? ''}
-                                            onChange={(e) => handlePerPositionInputChange(emp.id, posDetail.name, 'overtimeByPosition', e.target.value)}
-                                            onBlur={() => handleInputBlur(emp.id)}
-                                            className="h-8"
-                                        />
-                                    </div>
-                                )
-                            }).filter(Boolean).length === 0 ? <p className="text-muted-foreground text-xs text-center">-</p> : null
-                        ) : (
-                            <p className="text-muted-foreground text-xs text-center">-</p>
-                        )}
-                    </div>
+                    {hasDailyPositions ? (
+                      <div className="space-y-2">
+                        {dailyPositions.map(posDetail => (
+                          <div key={posDetail.id} className="space-y-1">
+                            <Label htmlFor={`${emp.id}-${posDetail.name}-overtime`} className="text-xs font-normal">{posDetail.name} (jam)</Label>
+                            <Input
+                              id={`${emp.id}-${posDetail.name}-overtime`}
+                              type="number"
+                              placeholder="e.g. 10"
+                              value={attendanceData[emp.id]?.overtimeByPosition?.[posDetail.name] ?? ''}
+                              onChange={(e) => handlePerPositionInputChange(emp.id, posDetail.name, 'overtimeByPosition', e.target.value)}
+                              onBlur={() => handleInputBlur(emp.id)}
+                              className="h-8"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground text-xs text-center">-</p>
+                    )}
                   </TableCell>
                   <TableCell>
                     <div className="font-semibold text-center mt-2">{totalOvertime} jam</div>
