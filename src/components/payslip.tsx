@@ -1,3 +1,5 @@
+'use client';
+
 import type { Employee, AppSettings, Position } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format } from 'date-fns';
@@ -45,7 +47,7 @@ export default function Payslip({
       const labelsId: Record<string, string> = {
           monthlySalary: "Gaji Pokok",
           proratedSalary: `Gaji Bulanan Prorata (${attendanceDays ?? '...'} hari)`,
-          dailyWage: `Gaji Harian (${attendanceDays ?? '...'} hari)`,
+          dailyWage: `Upah Harian (${attendanceDays ?? '...'} hari)`,
           overtime: `Lembur (${overtimeHours ?? '...'} jam)`,
           potonganPph: "Pajak (PPH 21)",
           bpjs: bpjsLabel,
@@ -67,6 +69,16 @@ export default function Payslip({
           potonganDenda: "Fine/Advance Deduction",
           bonus: "Bonus",
       };
+      
+      if (key.startsWith('dailyWage-')) {
+          const positionName = key.replace('dailyWage-', '');
+          return lang === 'id' ? `Upah Harian - ${positionName}` : `Daily Wage - ${positionName}`;
+      }
+      if (key.startsWith('overtime-')) {
+          const positionName = key.replace('overtime-', '');
+          return lang === 'id' ? `Lembur - ${positionName}` : `Overtime - ${positionName}`;
+      }
+
 
       const labels = lang === 'id' ? labelsId : labelsEn;
       return labels[key] || key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1').trim();
@@ -158,7 +170,7 @@ export default function Payslip({
                 <div className="grid grid-cols-2 gap-4">
                       <DetailRow label={T.name} value={employee.name} />
                       <DetailRow label={T.nik} value={employee.nik} />
-                      <DetailRow label={T.position} value={employee.position} />
+                      <DetailRow label={T.position} value={employee.positions?.join(', ')} />
                       <DetailRow label={T.department} value={employee.department} />
                       <DetailRow label={T.site} value={employee.siteLocation} />
                       <DetailRow label={T.status} value={employee.employeeStatus} />

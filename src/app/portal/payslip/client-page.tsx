@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Printer, Loader2 } from 'lucide-react';
-import type { EmployeeWithPosition, AppSettings, AttendanceRecord } from '@/lib/types';
+import type { EmployeeWithPosition, AppSettings, AttendanceRecord, Position } from '@/lib/types';
 import PayslipViewer, { type PayslipData } from '@/components/payslip-viewer';
 import { useToast } from '@/hooks/use-toast';
 import { getAttendanceByEmployeeAndPeriod } from '@/actions/attendance';
@@ -78,36 +78,49 @@ export default function MyPayslipClientPage({
       return;
     }
     
-    const position = employee.positionDetails;
-    if (!position || !position.salaryType) {
+    if (!employee.positionDetails || employee.positionDetails.length === 0) {
         toast({ variant: 'destructive', title: T.error, description: T.noSalaryDetails });
         return;
     }
+    const position = employee.positionDetails[0];
     
-    const attendanceDays = attendanceRecord?.attendanceDays || 0;
-    const overtimeHours = attendanceRecord?.overtimeHours || 0;
+    const attendanceDays = attendanceRecord?.attendanceByPosition ? Object.values(attendanceRecord.attendanceByPosition).reduce((a, b) => a + b, 0) : 0;
+    const overtimeHours = attendanceRecord?.overtimeByPosition ? Object.values(attendanceRecord.overtimeByPosition).reduce((a, b) => a + b, 0) : 0;
     const bonus = attendanceRecord?.bonus || 0;
 
     let earnings: Record<string, number> = {};
-    if(position.salaryType === 'bulanan' || position.salaryType === 'direksi') {
-        const baseSalary = position.monthlySalary || 0;
-        const totalAllowances = position.allowances?.reduce((sum, allowance) => sum + allowance.amount, 0) || 0;
-        const totalMonthlySalary = baseSalary + totalAllowances;
-        const proratedSalary = (totalMonthlySalary / 30) * attendanceDays;
+    let totalEarnings = 0;
+    
+    employee.positionDetails.forEach(pos => {
+      if (pos.salaryType === 'bulanan' || pos.salaryType === 'direksi') {
+          const baseSalary = pos.monthlySalary || 0;
+          const totalAllowances = pos.allowances?.reduce((sum, allowance) => sum + allowance.amount, 0) || 0;
+          const monthlyIncome = baseSalary + totalAllowances;
+          // For simplicity in portal, we just show one line for monthly salary
+          earnings['monthlySalary'] = (earnings['monthlySalary'] || 0) + monthlyIncome;
+          totalEarnings += monthlyIncome;
+      } else if (pos.salaryType === 'harian') {
+          const attendanceForPos = attendanceRecord?.attendanceByPosition?.[pos.name] || 0;
+          const overtimeForPos = attendanceRecord?.overtimeByPosition?.[pos.name] || 0;
+          const dailyIncome = (pos.dailyWage || 0) * attendanceForPos;
+          const overtimeIncome = (pos.overtimeRate || 0) * overtimeForPos;
+          
+          if (!earnings['dailyWage']) earnings['dailyWage'] = 0;
+          earnings['dailyWage'] += dailyIncome;
 
-        earnings.proratedSalary = proratedSalary;
-    } else if (position.salaryType === 'harian') { // harian
-        earnings = {
-            dailyWage: (position.dailyWage || 0) * attendanceDays,
-            overtime: (position.overtimeRate || 0) * overtimeHours, 
-        }
-    }
+          if (overtimeIncome > 0) {
+            if (!earnings['overtime']) earnings['overtime'] = 0;
+            earnings['overtime'] += overtimeIncome;
+          }
+          totalEarnings += dailyIncome + overtimeIncome;
+      }
+    });
+
     
     if (bonus > 0) {
         earnings.bonus = bonus;
+        totalEarnings += bonus;
     }
-
-    const totalEarnings = Object.values(earnings).reduce((sum, val) => sum + val, 0);
     
     const deductions: Record<string, number> = {};
     
@@ -116,7 +129,7 @@ export default function MyPayslipClientPage({
         bpjsDeduction = BPJS_RATES[employee.bpjsType];
     }
     if (bpjsDeduction > 0) {
-        deductions.bpjs = bpjsDeduction;
+      deductions.bpjs = bpjsDeduction;
     }
 
     if (attendanceRecord?.potonganPph) {
