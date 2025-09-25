@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
-import { ArrowLeft, Calendar as CalendarIcon, Upload, Loader2, WalletCards } from 'lucide-react';
+import { ArrowLeft, Calendar as CalendarIcon, Upload, Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -36,6 +36,8 @@ import type { Employee, Department, Position, Site } from '@/lib/types';
 import { updateEmployee } from '@/actions/employees';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
+
 
 const parseDate = (date: string | Date | undefined): Date | undefined => {
   if (!date) return undefined;
@@ -61,6 +63,7 @@ export default function EditEmployeePageClient({ employee, departments, position
     setContractStartDate(parseDate(employee.contractStartDate));
     setContractEndDate(parseDate(employee.contractEndDate));
     setCanGeneratePayslip(employee.canGeneratePayslip ?? true);
+    setSelectedPositions(employee.positions || []);
   }, [employee]);
 
   const [photoPreview, setPhotoPreview] = useState<string | null>(employee.avatar || null);
@@ -69,6 +72,19 @@ export default function EditEmployeePageClient({ employee, departments, position
   const [sioPreview, setSioPreview] = useState<string | null>(employee.sioPhoto || null);
   const [bpjsStatus, setBpjsStatus] = useState<string | undefined>(employee.bpjsStatus);
   const [canGeneratePayslip, setCanGeneratePayslip] = useState(true);
+  const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
+  const [positionToAdd, setPositionToAdd] = useState('');
+
+  const addPosition = () => {
+    if (positionToAdd && !selectedPositions.includes(positionToAdd)) {
+        setSelectedPositions([...selectedPositions, positionToAdd]);
+        setPositionToAdd('');
+    }
+  };
+
+  const removePosition = (positionToRemove: string) => {
+      setSelectedPositions(selectedPositions.filter(p => p !== positionToRemove));
+  };
 
 
   const handleFileChange = (
@@ -123,6 +139,7 @@ export default function EditEmployeePageClient({ employee, departments, position
     delete data.ktpPhoto;
     delete data.simPhoto;
     delete data.sioPhoto;
+    delete data.positionToAdd; // remove temporary field
 
     const employeeData: Partial<Employee> = {
         ...data,
@@ -135,6 +152,7 @@ export default function EditEmployeePageClient({ employee, departments, position
         simPhoto: simPreview,
         sioPhoto: sioPreview,
         canGeneratePayslip: (data.canGeneratePayslip === 'on'),
+        positions: selectedPositions,
     } as Partial<Employee>;
     
     try {
@@ -388,19 +406,37 @@ export default function EditEmployeePageClient({ employee, departments, position
                 <Label htmlFor="simperNumber">Nomor Simper</Label>
                 <Input id="simperNumber" name="simperNumber" placeholder="e.g. 12345" defaultValue={employee.simperNumber} />
               </div>
-               <div className="space-y-2">
-                <Label htmlFor="position">Jabatan</Label>
-                 <Select name="position" defaultValue={employee.position}>
-                  <SelectTrigger id="position">
-                    <SelectValue placeholder="Select position" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {positions.map((pos) => (
-                      <SelectItem key={pos.id} value={pos.name}>{pos.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              
+              <div className="space-y-4 md:col-span-3">
+                    <Label>Jabatan</Label>
+                    <div className="flex items-center gap-2">
+                         <Select value={positionToAdd} onValueChange={setPositionToAdd}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Pilih jabatan untuk ditambahkan" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {positions.filter(p => !selectedPositions.includes(p.name)).map((pos) => (
+                                    <SelectItem key={pos.id} value={pos.name}>{pos.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Button type="button" onClick={addPosition} disabled={!positionToAdd}><PlusCircle className="mr-2 h-4 w-4" /> Tambah</Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2 p-2 border rounded-md min-h-[40px]">
+                        {selectedPositions.map(pos => (
+                            <Badge key={pos} variant="secondary" className="flex items-center gap-2">
+                                {pos}
+                                <button type="button" onClick={() => removePosition(pos)} className="ml-1 rounded-full hover:bg-destructive/20 p-0.5">
+                                    <Trash2 className="h-3 w-3 text-destructive" />
+                                </button>
+                            </Badge>
+                        ))}
+                        {selectedPositions.length === 0 && <p className="text-sm text-muted-foreground">Belum ada jabatan dipilih.</p>}
+                    </div>
+                    {/* Hidden input to pass array to form data */}
+                    <input type="hidden" name="positions" value={selectedPositions.join(',')} />
               </div>
+
 
               <div className="space-y-2">
                 <Label htmlFor="shift">Shift</Label>

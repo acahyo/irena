@@ -17,7 +17,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Building2, Calendar, FileText, Heart, Home, Landmark, Mail, MapPin, Pencil, Phone, ShieldCheck, Trash2, User, UserCheck, UserSquare, Users, Briefcase, CalendarCheck, VenetianMask, WalletCards, Star, DollarSign, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import type { EmployeeWithPosition, LeaveRequest } from '@/lib/types';
+import type { EmployeeWithPosition, LeaveRequest, Position } from '@/lib/types';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -152,8 +152,14 @@ export default function EmployeeProfileClientPage({ employee, isPortalView = fal
           </Avatar>
           <div className="flex-1">
             <h2 className="text-3xl font-bold">{employee.name}</h2>
-            <p className="text-lg text-muted-foreground">{employee.role}</p>
-            <p className="text-sm text-muted-foreground">{employee.department} - {employee.siteLocation}</p>
+            <div className="flex flex-wrap gap-2 mt-1">
+                {(employee.positions && employee.positions.length > 0) ? (
+                    employee.positions.map(pos => <Badge key={pos} variant="secondary">{pos}</Badge>)
+                ) : (
+                    <p className="text-lg text-muted-foreground">No Position</p>
+                )}
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">{employee.department} - {employee.siteLocation}</p>
           </div>
            <div className="flex gap-2">
             {isPortalView ? (
@@ -243,7 +249,6 @@ export default function EmployeeProfileClientPage({ employee, isPortalView = fal
                 <CardTitle className="flex items-center gap-2"><Building2 className="h-5 w-5" /> Employment Details</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <DetailItem icon={<Briefcase className="h-5 w-5"/>} label="Position" value={employee.position} />
                 <DetailItem icon={<Users className="h-5 w-5"/>} label="Department" value={employee.department} />
                 <DetailItem icon={<MapPin className="h-5 w-5"/>} label="Site Location" value={employee.siteLocation} />
                 <DetailItem icon={<Clock className="h-5 w-5"/>} label="Shift" value={employee.shift} />
@@ -315,24 +320,27 @@ export default function EmployeeProfileClientPage({ employee, isPortalView = fal
         <Card className="lg:col-span-3">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><WalletCards /> Salary Details</CardTitle>
-                <CardDescription>Tipe Gaji: <Badge variant="outline" className="capitalize">{employee.positionDetails?.salaryType || 'Belum Diatur'}</Badge></CardDescription>
             </CardHeader>
-            <CardContent>
-                 {employee.positionDetails?.salaryType === 'harian' && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                       <DetailItem icon={<DollarSign className="h-5 w-5"/>} label="Upah per Hari" value={employee.positionDetails?.dailyWage} currency />
-                       <DetailItem icon={<Star className="h-5 w-5"/>} label="Lembur per Jam" value={employee.positionDetails?.overtimeRate} currency />
+            <CardContent className="space-y-4">
+                 {(employee.positionDetails && employee.positionDetails.length > 0) ? employee.positionDetails.map((pos: Position, idx: number) => (
+                    <div key={idx} className="border-b pb-4 mb-4 last:border-b-0 last:pb-0 last:mb-0">
+                         <CardDescription className="font-semibold mb-2">Gaji untuk Jabatan: <Badge variant="outline" className="capitalize">{pos.name}</Badge></CardDescription>
+                         {pos.salaryType === 'harian' && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                               <DetailItem icon={<DollarSign className="h-5 w-5"/>} label="Upah per Hari" value={pos.dailyWage} currency />
+                               <DetailItem icon={<Star className="h-5 w-5"/>} label="Lembur per Jam" value={pos.overtimeRate} currency />
+                            </div>
+                         )}
+                         {(pos.salaryType === 'bulanan' || pos.salaryType === 'direksi') && (
+                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                               <DetailItem icon={<DollarSign className="h-5 w-5"/>} label="Gaji Pokok Bulanan" value={pos.monthlySalary} currency />
+                               {pos.allowances?.map((allowance, index) => (
+                                   <DetailItem key={index} icon={<Star className="h-5 w-5"/>} label={allowance.name} value={allowance.amount} currency />
+                               ))}
+                            </div>
+                         )}
                     </div>
-                 )}
-                 {(employee.positionDetails?.salaryType === 'bulanan' || employee.positionDetails?.salaryType === 'direksi') && (
-                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                       <DetailItem icon={<DollarSign className="h-5 w-5"/>} label="Gaji Pokok Bulanan" value={employee.positionDetails?.monthlySalary} currency />
-                       {employee.positionDetails.allowances?.map((allowance, index) => (
-                           <DetailItem key={index} icon={<Star className="h-5 w-5"/>} label={allowance.name} value={allowance.amount} currency />
-                       ))}
-                    </div>
-                 )}
-                 {!employee.positionDetails?.salaryType && (
+                 )) : (
                     <p className="text-muted-foreground text-center py-4">Detail gaji belum diatur untuk jabatan karyawan ini.</p>
                  )}
             </CardContent>

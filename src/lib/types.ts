@@ -40,7 +40,7 @@ export type Employee = {
   workEquipment?: string;
   contractStartDate?: Date | string;
   contractEndDate?: Date | string;
-  position?: string;
+  positions?: string[]; // Changed from position: string
   shift?: 'Regular' | 'Shift A' | 'Shift B';
   siteLocation?: string;
   password?: string;
@@ -179,12 +179,12 @@ export type PurchaseRequest = {
 
 // Composite type for pages that need employee data with full position details
 export type EmployeeWithPosition = Employee & {
-  positionDetails?: Position;
+  positionDetails?: Position[]; // Changed from Position
 }
 
 // Composite type for payroll page
 export type EmployeeWithDetails = Employee & {
-  positionDetails?: Position;
+  positionDetails?: Position[]; // Changed from Position
   totalSalary?: number;
 }
 

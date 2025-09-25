@@ -120,7 +120,14 @@ export async function createEmployee(employee: Partial<Employee>, actorRole?: st
     if (!employeeId) {
         throw new Error("NIK is required to create an employee.");
     }
-
+    
+    // Handle positions
+    if (typeof employee.positions === 'string') {
+      employeeData.positions = (employee.positions as string).split(',').map(p => p.trim());
+    } else {
+      employeeData.positions = employee.positions || [];
+    }
+    
     // Handle file uploads
     const fileFields: (keyof Employee)[] = ['avatar', 'ktpPhoto', 'simPhoto', 'sioPhoto'];
     for (const field of fileFields) {
@@ -164,7 +171,14 @@ export async function updateEmployee(id: string, employee: Partial<Employee>): P
       (employeeData as any)[field] = null; // Convert empty string to null to remove field
     }
   });
-
+  
+  // Handle positions
+  if (typeof employee.positions === 'string') {
+    employeeData.positions = (employee.positions as string).split(',').map(p => p.trim());
+  } else if (Array.isArray(employee.positions)) {
+    employeeData.positions = employee.positions;
+  }
+  
   // Handle boolean for canGeneratePayslip
    if (employee.hasOwnProperty('canGeneratePayslip')) {
         employeeData.canGeneratePayslip = employee.canGeneratePayslip === true || (employee as any).canGeneratePayslip === 'on';

@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Phone, Building, Calendar, User, FileText, Clock } from 'lucide-react';
+import { Phone, Building, Calendar, User, FileText, Clock, Briefcase } from 'lucide-react';
 import { Badge } from './ui/badge';
 
 interface EmployeeCardProps {
@@ -33,6 +33,10 @@ const getStatusBadge = (status?: string) => {
 
 
 export function EmployeeCard({ employee }: EmployeeCardProps) {
+  const displayPosition = employee.positions && employee.positions.length > 0
+    ? employee.positions.join(', ')
+    : 'No position';
+    
   return (
     <Link href={`/dashboard/employees/${employee.id}`}>
       <Card className="h-full flex flex-col transform-gpu transition-all duration-200 ease-in-out hover:-translate-y-1 hover:shadow-lg">
@@ -44,7 +48,7 @@ export function EmployeeCard({ employee }: EmployeeCardProps) {
             </Avatar>
             <div className="w-full truncate pt-4">
               <CardTitle className="truncate">{employee.name || 'No Name'}</CardTitle>
-              <CardDescription className="truncate">{employee.position || 'No position'}</CardDescription>
+              <CardDescription className="truncate">{displayPosition}</CardDescription>
               <CardDescription className="truncate text-xs pt-1">{employee.idCardNumber || 'No ID Card'}</CardDescription>
             </div>
         </CardHeader>
