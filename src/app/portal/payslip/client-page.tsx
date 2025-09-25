@@ -96,23 +96,23 @@ export default function MyPayslipClientPage({
           const baseSalary = pos.monthlySalary || 0;
           const totalAllowances = pos.allowances?.reduce((sum, allowance) => sum + allowance.amount, 0) || 0;
           const monthlyIncome = baseSalary + totalAllowances;
-          // For simplicity in portal, we just show one line for monthly salary
-          earnings['monthlySalary'] = (earnings['monthlySalary'] || 0) + monthlyIncome;
+          earnings[pos.name] = monthlyIncome;
           totalEarnings += monthlyIncome;
       } else if (pos.salaryType === 'harian') {
           const attendanceForPos = attendanceRecord?.attendanceByPosition?.[pos.name] || 0;
           const overtimeForPos = attendanceRecord?.overtimeByPosition?.[pos.name] || 0;
-          const dailyIncome = (pos.dailyWage || 0) * attendanceForPos;
-          const overtimeIncome = (pos.overtimeRate || 0) * overtimeForPos;
           
-          if (!earnings['dailyWage']) earnings['dailyWage'] = 0;
-          earnings['dailyWage'] += dailyIncome;
-
-          if (overtimeIncome > 0) {
-            if (!earnings['overtime']) earnings['overtime'] = 0;
-            earnings['overtime'] += overtimeIncome;
+          if (attendanceForPos > 0) {
+              const dailyIncome = (pos.dailyWage || 0) * attendanceForPos;
+              earnings[`dailyWage-${pos.name}`] = dailyIncome;
+              totalEarnings += dailyIncome;
           }
-          totalEarnings += dailyIncome + overtimeIncome;
+
+          if (overtimeForPos > 0) {
+              const overtimeIncome = (pos.overtimeRate || 0) * overtimeForPos;
+              earnings[`overtime-${pos.name}`] = overtimeIncome;
+              totalEarnings += overtimeIncome;
+          }
       }
     });
 

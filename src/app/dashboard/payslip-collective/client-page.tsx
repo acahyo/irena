@@ -154,17 +154,18 @@ export default function PayslipCollectiveClientPage({
                 } else if(position.salaryType === 'harian') {
                     const attendanceForPos = attendance?.attendanceByPosition?.[position.name] || 0;
                     const overtimeForPos = attendance?.overtimeByPosition?.[position.name] || 0;
-                    const dailyIncome = (position.dailyWage || 0) * attendanceForPos;
-                    const overtimeIncome = (position.overtimeRate || 0) * overtimeForPos;
                     
-                    if (!earnings['dailyWage']) earnings['dailyWage'] = 0;
-                    earnings['dailyWage'] += dailyIncome;
-                    
-                    if (overtimeIncome > 0) {
-                      if (!earnings['overtime']) earnings['overtime'] = 0;
-                      earnings['overtime'] += overtimeIncome;
+                    if (attendanceForPos > 0) {
+                      const dailyIncome = (position.dailyWage || 0) * attendanceForPos;
+                      earnings[`dailyWage-${position.name}`] = dailyIncome;
+                      totalEarnings += dailyIncome;
                     }
-                    totalEarnings += dailyIncome + overtimeIncome;
+                    
+                    if (overtimeForPos > 0) {
+                      const overtimeIncome = (position.overtimeRate || 0) * overtimeForPos;
+                      earnings[`overtime-${position.name}`] = overtimeIncome;
+                      totalEarnings += overtimeIncome;
+                    }
                 }
             });
             
