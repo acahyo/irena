@@ -21,7 +21,7 @@ import { Label } from '@/components/ui/label';
 import { Loader2, Download, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getAttendanceByPeriod, saveAttendanceRecord, importAttendanceRecords } from '@/actions/attendance';
-import type { EmployeeWithPosition, AttendanceRecord, AppSettings, Position } from '@/lib/types';
+import type { EmployeeWithPosition, AttendanceRecord, AppSettings } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -37,8 +37,8 @@ import { useRouter } from 'next/navigation';
 
 type AttendanceData = {
     [employeeId: string]: {
-        attendanceDays?: number;
-        overtimeHours?: number;
+        attendanceByPosition?: Record<string, number>;
+        overtimeByPosition?: Record<string, number>;
         potonganIdCard?: number;
         potonganSimper?: number;
         potonganDenda?: number;
@@ -76,8 +76,8 @@ export default function AttendanceClientPage({
       export: lang === 'id' ? 'Ekspor' : 'Export',
       employee: lang === 'id' ? 'Karyawan' : 'Employee',
       position: lang === 'id' ? 'Jabatan' : 'Position',
-      attendanceDays: lang === 'id' ? 'Kehadiran (hari)' : 'Attendance (days)',
-      overtimeHours: lang === 'id' ? 'Jam Lembur' : 'Overtime Hours',
+      attendance: lang === 'id' ? 'Kehadiran' : 'Attendance',
+      overtime: lang === 'id' ? 'Lembur' : 'Overtime',
       bonus: lang === 'id' ? 'Bonus' : 'Bonus',
       idCardDeduction: lang === 'id' ? 'Potongan ID Card' : 'ID Card Deduction',
       simperDeduction: lang === 'id' ? 'Potongan SIMPER' : 'SIMPER Deduction',
@@ -116,8 +116,8 @@ export default function AttendanceClientPage({
     const initialData: AttendanceData = {};
     initialAttendance.forEach(record => {
         initialData[record.employeeId] = {
-            attendanceDays: record.attendanceDays,
-            overtimeHours: record.overtimeHours,
+            attendanceByPosition: record.attendanceByPosition,
+            overtimeByPosition: record.overtimeByPosition,
             potonganIdCard: record.potonganIdCard,
             potonganSimper: record.potonganSimper,
             potonganDenda: record.potonganDenda,
@@ -136,8 +136,8 @@ export default function AttendanceClientPage({
         const newData: AttendanceData = {};
         records.forEach(record => {
             newData[record.employeeId] = {
-                attendanceDays: record.attendanceDays,
-                overtimeHours: record.overtimeHours,
+                attendanceByPosition: record.attendanceByPosition,
+                overtimeByPosition: record.overtimeByPosition,
                 potonganIdCard: record.potonganIdCard,
                 potonganSimper: record.potonganSimper,
                 potonganDenda: record.potonganDenda,
@@ -167,19 +167,45 @@ export default function AttendanceClientPage({
           }
       }));
   };
+  
+  const handlePerPositionInputChange = (
+    employeeId: string,
+    positionName: string,
+    field: 'attendanceByPosition' | 'overtimeByPosition',
+    value: string
+  ) => {
+      const numericValue = value === '' ? undefined : Number(value);
+      setAttendanceData(prev => {
+          const employeeData = prev[employeeId] || {};
+          const positionData = employeeData[field] || {};
+          return {
+              ...prev,
+              [employeeId]: {
+                  ...employeeData,
+                  [field]: {
+                      ...positionData,
+                      [positionName]: numericValue
+                  }
+              }
+          };
+      });
+  };
 
   const handleInputBlur = async (employeeId: string) => {
       const employee = employees.find(e => e.id === employeeId);
       const record = attendanceData[employeeId];
       if (!employee || !record) return;
+      
+      const hasPerPositionData =
+        (record.attendanceByPosition && Object.values(record.attendanceByPosition).some(v => v !== undefined)) ||
+        (record.overtimeByPosition && Object.values(record.overtimeByPosition).some(v => v !== undefined));
 
-      // Only save if there's actual data to save
-      if (
-        record.attendanceDays === undefined && record.overtimeHours === undefined &&
-        record.potonganIdCard === undefined && record.potonganSimper === undefined &&
-        record.potonganDenda === undefined && record.potonganPph === undefined &&
-        record.bonus === undefined
-      ) {
+      const hasOtherData =
+        record.potonganIdCard !== undefined || record.potonganSimper !== undefined ||
+        record.potonganDenda !== undefined || record.potonganPph !== undefined ||
+        record.bonus !== undefined;
+
+      if (!hasPerPositionData && !hasOtherData) {
         return;
       }
 
@@ -188,8 +214,8 @@ export default function AttendanceClientPage({
               employeeId: employee.id,
               employeeName: employee.name,
               period: period,
-              attendanceDays: record.attendanceDays,
-              overtimeHours: record.overtimeHours,
+              attendanceByPosition: record.attendanceByPosition,
+              overtimeByPosition: record.overtimeByPosition,
               potonganIdCard: record.potonganIdCard,
               potonganSimper: record.potonganSimper,
               potonganDenda: record.potonganDenda,
@@ -210,94 +236,26 @@ export default function AttendanceClientPage({
   };
 
   const handleExport = () => {
-    const dataToExport = filteredEmployees.map(emp => ({
-        employeeId: emp.id,
-        employeeName: emp.name,
-        period: period,
-        attendanceDays: attendanceData[emp.id]?.attendanceDays ?? 0,
-        overtimeHours: attendanceData[emp.id]?.overtimeHours ?? 0,
-        bonus: attendanceData[emp.id]?.bonus ?? 0,
-        potonganIdCard: attendanceData[emp.id]?.potonganIdCard ?? 0,
-        potonganSimper: attendanceData[emp.id]?.potonganSimper ?? 0,
-        potonganDenda: attendanceData[emp.id]?.potonganDenda ?? 0,
-        potonganPph: attendanceData[emp.id]?.potonganPph ?? 0,
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Attendance");
-    XLSX.writeFile(workbook, `absensi_${period}.xlsx`);
+    // This export format will be complex with multiple positions.
+    // For now, let's just show a simple toast message.
     toast({
-      title: T.success,
-      description: T.exportSuccess,
+        title: 'Info',
+        description: 'Export with multiple positions is a complex feature and will be implemented later.',
     });
   };
 
   const handleImportClick = () => {
+    // This import format will be complex with multiple positions.
+    // For now, let's just show a simple toast message.
     fileInputRef.current?.click();
+     toast({
+        title: 'Info',
+        description: 'Import with multiple positions is a complex feature and will be implemented later.',
+    });
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const data = new Uint8Array(e.target?.result as ArrayBuffer);
-          const workbook = XLSX.read(data, { type: 'array' });
-          const sheetName = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[sheetName];
-          const json = XLSX.utils.sheet_to_json(worksheet) as any[];
-          
-          const recordsToImport: Omit<AttendanceRecord, 'id' | 'date'>[] = json.map(row => {
-            const employee = employees.find(emp => emp.id === row.employeeId);
-            return {
-                employeeId: row.employeeId,
-                employeeName: employee?.name || 'Unknown Employee',
-                period: row.period || period,
-                attendanceDays: row.attendanceDays ? Number(row.attendanceDays) : undefined,
-                overtimeHours: row.overtimeHours ? Number(row.overtimeHours) : undefined,
-                bonus: row.bonus ? Number(row.bonus) : undefined,
-                potonganIdCard: row.potonganIdCard ? Number(row.potonganIdCard) : undefined,
-                potonganSimper: row.potonganSimper ? Number(row.potonganSimper) : undefined,
-                potonganDenda: row.potonganDenda ? Number(row.potonganDenda) : undefined,
-                potonganPph: row.potonganPph ? Number(row.potonganPph) : undefined,
-            }
-          }).filter(record => record.employeeId); // Ensure employeeId exists
-
-          startImportTransition(async () => {
-            try {
-              await importAttendanceRecords(recordsToImport);
-              toast({
-                title: T.success,
-                description: T.importSuccess,
-              });
-              // Refetch data for the current period to update the view
-              router.refresh();
-            } catch (importError) {
-               toast({
-                variant: "destructive",
-                title: T.importErrorTitle,
-                description: T.importError,
-              });
-            }
-          });
-
-        } catch (error) {
-          console.error("Error reading file:", error);
-           toast({
-            variant: "destructive",
-            title: T.fileReadError,
-            description: T.fileReadError,
-          });
-        } finally {
-            if(fileInputRef.current) {
-                fileInputRef.current.value = '';
-            }
-        }
-      };
-      reader.readAsArrayBuffer(file);
-    }
+    // Placeholder for now
   };
 
 
@@ -337,13 +295,13 @@ export default function AttendanceClientPage({
                 onChange={handleFileChange}
                 className="hidden"
                 accept=".xlsx, .xls"
-                disabled={isImporting}
+                disabled={true}
               />
-            <Button variant="outline" onClick={handleImportClick} disabled={isImporting}>
+            <Button variant="outline" onClick={handleImportClick} disabled={true}>
               {isImporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
               {T.import}
             </Button>
-            <Button variant="outline" onClick={handleExport}>
+            <Button variant="outline" onClick={handleExport} disabled={true}>
               <Download className="mr-2 h-4 w-4" />
               {T.export}
             </Button>
@@ -359,10 +317,9 @@ export default function AttendanceClientPage({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{T.employee}</TableHead>
-              <TableHead>{T.position}</TableHead>
-              <TableHead className="w-[180px]">{T.attendanceDays}</TableHead>
-              <TableHead className="w-[180px]">{T.overtimeHours}</TableHead>
+              <TableHead className="min-w-[200px]">{T.employee}</TableHead>
+              <TableHead>{T.attendance}</TableHead>
+              <TableHead>{T.overtime}</TableHead>
               <TableHead className="w-[180px]">{T.bonus}</TableHead>
               <TableHead className="w-[180px]">{T.idCardDeduction}</TableHead>
               <TableHead className="w-[180px]">{T.simperDeduction}</TableHead>
@@ -373,9 +330,8 @@ export default function AttendanceClientPage({
           <TableBody>
             {filteredEmployees.length > 0 ? (
               filteredEmployees.map((emp) => {
-                const isDaily = emp.positionDetails?.some(p => p.salaryType === 'harian');
                 return (
-                <TableRow key={emp.id}>
+                <TableRow key={emp.id} className="align-top">
                   <TableCell>
                       <div className="flex items-center gap-3">
                           <Avatar className="h-9 w-9">
@@ -386,35 +342,54 @@ export default function AttendanceClientPage({
                       </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex flex-col gap-1">
-                        {(emp.positions && emp.positions.length > 0) ? (
-                          emp.positions.map(pos => <Badge key={pos} variant="secondary">{pos}</Badge>)
-                        ) : (
-                          <span className="text-muted-foreground text-xs">N/A</span>
-                        )}
+                    <div className="space-y-2">
+                    {(emp.positions && emp.positions.length > 0) ? (
+                        emp.positions.map(posName => {
+                           return (
+                                <div key={posName} className="space-y-1">
+                                    <Label htmlFor={`${emp.id}-${posName}-attendance`} className="text-xs font-normal">{posName} (hari)</Label>
+                                    <Input
+                                        id={`${emp.id}-${posName}-attendance`}
+                                        type="number"
+                                        placeholder="e.g. 22"
+                                        value={attendanceData[emp.id]?.attendanceByPosition?.[posName] ?? ''}
+                                        onChange={(e) => handlePerPositionInputChange(emp.id, posName, 'attendanceByPosition', e.target.value)}
+                                        onBlur={() => handleInputBlur(emp.id)}
+                                        className="h-8"
+                                    />
+                                </div>
+                            )
+                        })
+                    ) : (
+                        <p className="text-muted-foreground text-xs text-center">-</p>
+                    )}
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Input
-                      type="number"
-                      placeholder="e.g. 22"
-                      value={attendanceData[emp.id]?.attendanceDays ?? ''}
-                      onChange={(e) => handleInputChange(emp.id, 'attendanceDays', e.target.value)}
-                      onBlur={() => handleInputBlur(emp.id)}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    {isDaily ? (
-                        <Input
-                          type="number"
-                          placeholder="e.g. 10"
-                          value={attendanceData[emp.id]?.overtimeHours ?? ''}
-                          onChange={(e) => handleInputChange(emp.id, 'overtimeHours', e.target.value)}
-                          onBlur={() => handleInputBlur(emp.id)}
-                        />
-                    ) : (
-                        <p className="text-sm text-muted-foreground text-center">-</p>
-                    )}
+                     <div className="space-y-2">
+                        {(emp.positionDetails && emp.positionDetails.length > 0) ? (
+                            emp.positionDetails.map(posDetail => {
+                                const isDaily = posDetail.salaryType === 'harian';
+                                if (!isDaily) return null;
+                                return (
+                                    <div key={posDetail.id} className="space-y-1">
+                                        <Label htmlFor={`${emp.id}-${posDetail.name}-overtime`} className="text-xs font-normal">{posDetail.name} (jam)</Label>
+                                        <Input
+                                            id={`${emp.id}-${posDetail.name}-overtime`}
+                                            type="number"
+                                            placeholder="e.g. 10"
+                                            value={attendanceData[emp.id]?.overtimeByPosition?.[posDetail.name] ?? ''}
+                                            onChange={(e) => handlePerPositionInputChange(emp.id, posDetail.name, 'overtimeByPosition', e.target.value)}
+                                            onBlur={() => handleInputBlur(emp.id)}
+                                            className="h-8"
+                                        />
+                                    </div>
+                                )
+                            }).filter(Boolean).length === 0 ? <p className="text-muted-foreground text-xs text-center">-</p> : null
+                        ) : (
+                            <p className="text-muted-foreground text-xs text-center">-</p>
+                        )}
+                    </div>
                   </TableCell>
                    <TableCell>
                     <Input
@@ -465,7 +440,7 @@ export default function AttendanceClientPage({
               )})
             ) : (
               <TableRow>
-                <TableCell colSpan={9} className="h-24 text-center">
+                <TableCell colSpan={8} className="h-24 text-center">
                   {T.noData}
                 </TableCell>
               </TableRow>

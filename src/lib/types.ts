@@ -143,8 +143,8 @@ export type AttendanceRecord = {
     employeeName: string;
     period: string; // YYYY-MM
     date: string; // For date range queries
-    attendanceDays?: number;
-    overtimeHours?: number;
+    attendanceByPosition?: Record<string, number>; // e.g. { 'Operator': 20, 'Welder': 5 }
+    overtimeByPosition?: Record<string, number>;
     potonganIdCard?: number;
     potonganSimper?: number;
     potonganDenda?: number;
