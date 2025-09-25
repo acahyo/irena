@@ -231,7 +231,7 @@ export default function EditMyProfileClientPage({ employee }: { employee: Employ
                                     id="accountHolderName" 
                                     name="accountHolderName" 
                                     value={accountHolderName}
-                                    onValueChange={(e: any) => setAccountHolderName(e.target.value)}
+                                    onChange={(e: any) => setAccountHolderName(e.target.value)}
                                     readOnly={accountType === 'pribadi'}
                                 />
                             </div>
