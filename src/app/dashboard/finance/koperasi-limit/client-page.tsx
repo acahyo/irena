@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useTransition } from 'react';
+import { useState, useMemo, useTransition, useEffect } from 'react';
 import { format } from 'date-fns';
 import {
   Card,
@@ -89,17 +89,33 @@ export default function KoperasiLimitClientPage({ initialEmployees }: { initialE
     });
   };
 
-  const DatePicker = ({ date, setDate }: { date: Date | string | undefined, setDate: (date: Date | undefined) => void }) => (
-    <Popover>
-        <PopoverTrigger asChild>
-            <Button variant={'outline'} className={cn('w-full justify-start text-left font-normal h-9', !date && 'text-muted-foreground')}>
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {date ? format(new Date(date), 'PPP') : <span>Pilih tanggal</span>}
-            </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={date ? new Date(date) : undefined} onSelect={setDate} initialFocus /></PopoverContent>
-    </Popover>
-  );
+  const DatePicker = ({ date: initialDateProp, setDate }: { date: Date | string | undefined, setDate: (date: Date | undefined) => void }) => {
+    const [date, setInternalDate] = useState<Date | undefined>();
+
+    useEffect(() => {
+        // Set initial date on the client to avoid hydration mismatch
+        if (initialDateProp) {
+            setInternalDate(new Date(initialDateProp));
+        }
+    }, [initialDateProp]);
+
+    const handleDateSelect = (selectedDate: Date | undefined) => {
+        setInternalDate(selectedDate);
+        setDate(selectedDate);
+    }
+    
+    return (
+        <Popover>
+            <PopoverTrigger asChild>
+                <Button variant={'outline'} className={cn('w-full justify-start text-left font-normal h-9', !date && 'text-muted-foreground')}>
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {date ? format(new Date(date), 'PPP') : <span>Pilih tanggal</span>}
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={date ? new Date(date) : undefined} onSelect={handleDateSelect} initialFocus /></PopoverContent>
+        </Popover>
+    );
+  };
 
 
   return (
