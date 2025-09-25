@@ -93,7 +93,8 @@ export async function deleteKoperasiItem(id: string): Promise<void> {
 export async function getKoperasiOrders({ employeeId }: { employeeId?: string } = {}): Promise<KoperasiOrder[]> {
     let q = query(collection(db, 'koperasiOrders'), orderBy('orderDate', 'desc'));
     if (employeeId) {
-        q = query(collection(db, 'koperasiOrders'), where('employeeId', '==', employeeId), orderBy('orderDate', 'desc'));
+        // Remove orderBy from query to avoid composite index requirement
+        q = query(collection(db, 'koperasiOrders'), where('employeeId', '==', employeeId));
     }
     
     const querySnapshot = await getDocs(q);
@@ -101,7 +102,9 @@ export async function getKoperasiOrders({ employeeId }: { employeeId?: string } 
     querySnapshot.forEach((doc) => {
         orders.push({ id: doc.id, ...convertTimestampsToDates(doc.data()) } as KoperasiOrder);
     });
-    return orders;
+
+    // Sort in application code
+    return orders.sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime());
 }
 
 export async function createKoperasiOrder(order: Omit<KoperasiOrder, 'id' | 'orderDate' | 'status'>): Promise<string> {
