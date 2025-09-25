@@ -30,6 +30,8 @@ export type Employee = {
   ktpPhoto?: string;
   simPhoto?: string;
   sioPhoto?: string;
+  kartuKeluargaPhoto?: string;
+  npwpNumber?: string;
   simperNumber?: string;
   simperStatus?: 'active' | 'in-progress' | 'not-registered';
   idCardNumber?: string;

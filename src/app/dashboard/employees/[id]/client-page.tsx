@@ -213,6 +213,7 @@ export default function EmployeeProfileClientPage({ employee, isPortalView = fal
             </CardHeader>
             <CardContent className="space-y-4">
                 <DetailItem icon={<UserSquare className="h-5 w-5"/>} label="NIK" value={employee.nik} />
+                <DetailItem icon={<FileText className="h-5 w-5"/>} label="Nomor NPWP" value={employee.npwpNumber} />
                 <DetailItem icon={<MapPin className="h-5 w-5"/>} label="Place of Birth" value={employee.placeOfBirth} />
                 <DetailItem icon={<Calendar className="h-5 w-5"/>} label="Date of Birth" value={employee.dateOfBirth} />
                 <DetailItem icon={<VenetianMask className="h-5 w-5"/>} label="Gender" value={employee.gender} />
@@ -390,10 +391,11 @@ export default function EmployeeProfileClientPage({ employee, isPortalView = fal
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5"/> Documents</CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <PhotoItem label="KTP Photo" src={employee.ktpPhoto} hint="ID card" />
                 <PhotoItem label="SIM Photo" src={employee.simPhoto} hint="drivers license" />
                 <PhotoItem label="SIO Photo" src={employee.sioPhoto} hint="license" />
+                <PhotoItem label="Kartu Keluarga Photo" src={employee.kartuKeluargaPhoto} hint="family card" />
             </CardContent>
         </Card>
 

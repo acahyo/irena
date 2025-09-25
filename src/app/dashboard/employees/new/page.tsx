@@ -56,6 +56,7 @@ export default function NewEmployeePage() {
   const [ktpPreview, setKtpPreview] = useState<string | null>(null);
   const [simPreview, setSimPreview] = useState<string | null>(null);
   const [sioPreview, setSioPreview] = useState<string | null>(null);
+  const [kkPreview, setKkPreview] = useState<string | null>(null);
   const [bpjsStatus, setBpjsStatus] = useState<string | undefined>();
   const [canGeneratePayslip, setCanGeneratePayslip] = useState(true);
   const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
@@ -148,6 +149,7 @@ export default function NewEmployeePage() {
     delete data.ktpPhoto;
     delete data.simPhoto;
     delete data.sioPhoto;
+    delete data.kartuKeluargaPhoto;
     delete data.positionToAdd; // remove temporary field
 
 
@@ -161,6 +163,7 @@ export default function NewEmployeePage() {
         ktpPhoto: ktpPreview,
         simPhoto: simPreview,
         sioPhoto: sioPreview,
+        kartuKeluargaPhoto: kkPreview,
         canGeneratePayslip: (data.canGeneratePayslip === 'on'),
         positions: selectedPositions,
     } as Partial<Employee>;
@@ -285,6 +288,10 @@ export default function NewEmployeePage() {
                 <Label htmlFor="name">Nama Lengkap</Label>
                 <Input id="name" name="name" placeholder="e.g. John Doe" required />
               </div>
+               <div className="space-y-2">
+                <Label htmlFor="npwpNumber">Nomor NPWP (Opsional)</Label>
+                <Input id="npwpNumber" name="npwpNumber" placeholder="e.g. 99.999.999.9-999.999" />
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="placeOfBirth">Tempat Lahir</Label>
                 <Input id="placeOfBirth" name="placeOfBirth" placeholder="e.g. Jakarta" required />
@@ -391,10 +398,11 @@ export default function NewEmployeePage() {
               )}
 
 
-              <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-8">
+              <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-8">
                 <FileInput id="ktpPhoto" label="Foto KTP" preview={ktpPreview} onChange={(e) => handleFileChange(e, setKtpPreview)} />
                 <FileInput id="simPhoto" label="Foto SIM" preview={simPreview} onChange={(e) => handleFileChange(e, setSimPreview)} />
                 <FileInput id="sioPhoto" label="Foto SIO" preview={sioPreview} onChange={(e) => handleFileChange(e, setSioPreview)} />
+                <FileInput id="kartuKeluargaPhoto" label="Foto Kartu Keluarga" preview={kkPreview} onChange={(e) => handleFileChange(e, setKkPreview)} />
               </div>
 
               <div className="space-y-2">

@@ -70,6 +70,7 @@ export default function EditEmployeePageClient({ employee, departments, position
   const [ktpPreview, setKtpPreview] = useState<string | null>(employee.ktpPhoto || null);
   const [simPreview, setSimPreview] = useState<string | null>(employee.simPhoto || null);
   const [sioPreview, setSioPreview] = useState<string | null>(employee.sioPhoto || null);
+  const [kkPreview, setKkPreview] = useState<string | null>(employee.kartuKeluargaPhoto || null);
   const [bpjsStatus, setBpjsStatus] = useState<string | undefined>(employee.bpjsStatus);
   const [canGeneratePayslip, setCanGeneratePayslip] = useState(true);
   const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
@@ -139,6 +140,7 @@ export default function EditEmployeePageClient({ employee, departments, position
     delete data.ktpPhoto;
     delete data.simPhoto;
     delete data.sioPhoto;
+    delete data.kartuKeluargaPhoto;
     delete data.positionToAdd; // remove temporary field
 
     const employeeData: Partial<Employee> = {
@@ -151,6 +153,7 @@ export default function EditEmployeePageClient({ employee, departments, position
         ktpPhoto: ktpPreview,
         simPhoto: simPreview,
         sioPhoto: sioPreview,
+        kartuKeluargaPhoto: kkPreview,
         canGeneratePayslip: (data.canGeneratePayslip === 'on'),
         positions: selectedPositions,
     } as Partial<Employee>;
@@ -283,6 +286,10 @@ export default function EditEmployeePageClient({ employee, departments, position
                 <Input id="name" name="name" placeholder="e.g. John Doe" required defaultValue={employee.name} />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="npwpNumber">Nomor NPWP (Opsional)</Label>
+                <Input id="npwpNumber" name="npwpNumber" placeholder="e.g. 99.999.999.9-999.999" defaultValue={employee.npwpNumber} />
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="placeOfBirth">Tempat Lahir</Label>
                 <Input id="placeOfBirth" name="placeOfBirth" placeholder="e.g. Jakarta" required defaultValue={employee.placeOfBirth} />
               </div>
@@ -388,10 +395,11 @@ export default function EditEmployeePageClient({ employee, departments, position
                  </div>
               )}
 
-              <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-8">
+              <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-8">
                 <FileInput id="ktpPhoto" label="Foto KTP" preview={ktpPreview} onChange={(e) => handleFileChange(e, setKtpPreview)} />
                 <FileInput id="simPhoto" label="Foto SIM" preview={simPreview} onChange={(e) => handleFileChange(e, setSimPreview)} />
                 <FileInput id="sioPhoto" label="Foto SIO" preview={sioPreview} onChange={(e) => handleFileChange(e, setSioPreview)} />
+                <FileInput id="kartuKeluargaPhoto" label="Foto Kartu Keluarga" preview={kkPreview} onChange={(e) => handleFileChange(e, setKkPreview)} />
               </div>
 
               <div className="space-y-2">
