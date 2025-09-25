@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { Employee, AppSettings, Position } from '@/lib/types';
@@ -41,11 +42,10 @@ export default function Payslip({
   const locale = lang === 'id' ? id : enUS;
 
   // Helper to format salary labels
-  const formatLabel = (key: string, employee: Employee) => {
+  const formatLabel = (key: string) => {
       const bpjsLabel = employee.bpjsType ? `Iuran BPJS (${employee.bpjsType.toUpperCase()})` : "Iuran BPJS";
       
       const labelsId: Record<string, string> = {
-          monthlySalary: "Gaji Pokok",
           potonganPph: "Pajak (PPH 21)",
           bpjs: bpjsLabel,
           potonganIdCard: "Potongan ID Card",
@@ -55,7 +55,6 @@ export default function Payslip({
       };
       
       const labelsEn: Record<string, string> = {
-          monthlySalary: "Basic Salary",
           potonganPph: "Tax (PPH 21)",
           bpjs: `BPJS Contribution (${employee.bpjsType?.toUpperCase() || ''})`,
           potonganIdCard: "ID Card Deduction",
@@ -66,18 +65,18 @@ export default function Payslip({
       
       if (key.startsWith('dailyWage-')) {
           const positionName = key.replace('dailyWage-', '');
-          const attendanceForPos = data.employee.positionDetails?.find(p => p.name === positionName) ? data.attendanceDays || '...' : '...';
-          return lang === 'id' ? `Upah Harian - ${positionName} (${attendanceForPos} hari)` : `Daily Wage - ${positionName} (${attendanceForPos} days)`;
+          const attendanceForPos = data.attendanceDays || '...';
+          return lang === 'id' ? `Upah Harian - ${positionName}` : `Daily Wage - ${positionName}`;
       }
       if (key.startsWith('overtime-')) {
           const positionName = key.replace('overtime-', '');
-          const overtimeForPos = data.employee.positionDetails?.find(p => p.name === positionName) ? data.overtimeHours || '...' : '...';
-          return lang === 'id' ? `Lembur - ${positionName} (${overtimeForPos} jam)` : `Overtime - ${positionName} (${overtimeForPos} hours)`;
+           const overtimeForPos = data.overtimeHours || '...';
+          return lang === 'id' ? `Lembur - ${positionName}` : `Overtime - ${positionName}`;
       }
 
 
       const labels = lang === 'id' ? labelsId : labelsEn;
-      return labels[key] || key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1').trim();
+      return labels[key] || key.replace(/([A-Z])/g, ' $1').trim();
   }
 
   const T = {
@@ -194,7 +193,7 @@ export default function Payslip({
             <h3 className="text-lg font-semibold text-gray-700 pb-2 border-b">{T.earnings}</h3>
             <div className="divide-y">
               {Object.entries(earnings).map(([key, value]) => (
-                  <SalaryRow key={key} label={formatLabel(key, employee)} value={value} />
+                  <SalaryRow key={key} label={formatLabel(key)} value={value} />
               ))}
             </div>
           </div>
@@ -202,7 +201,7 @@ export default function Payslip({
             <h3 className="text-lg font-semibold text-gray-700 pb-2 border-b">{T.deductions}</h3>
             <div className="divide-y">
               {Object.keys(deductions).length > 0 ? Object.entries(deductions).map(([key, value]) => (
-                <SalaryRow key={key} label={formatLabel(key, employee)} value={value} />
+                <SalaryRow key={key} label={formatLabel(key)} value={value} />
               )) : <p className="text-gray-500 text-sm py-2">{T.noDeductions}</p>}
             </div>
           </div>
