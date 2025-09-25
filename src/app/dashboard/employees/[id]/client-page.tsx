@@ -239,6 +239,7 @@ export default function EmployeeProfileClientPage({ employee, isPortalView = fal
                 <CardTitle className="flex items-center gap-2"><Landmark className="h-5 w-5" /> Bank Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+                <DetailItem icon={<Briefcase className="h-5 w-5"/>} label="Tipe Akun" value={employee.accountType} />
                 <DetailItem icon={<Landmark className="h-5 w-5"/>} label="Bank Name" value={employee.bankName} />
                 <DetailItem icon={<User className="h-5 w-5"/>} label="Account Holder" value={employee.accountHolderName} />
                 <DetailItem icon={<FileText className="h-5 w-5"/>} label="Account Number" value={employee.accountNumber} />
@@ -396,6 +397,7 @@ export default function EmployeeProfileClientPage({ employee, isPortalView = fal
                 <PhotoItem label="SIM Photo" src={employee.simPhoto} hint="drivers license" />
                 <PhotoItem label="SIO Photo" src={employee.sioPhoto} hint="license" />
                 <PhotoItem label="Kartu Keluarga Photo" src={employee.kartuKeluargaPhoto} hint="family card" />
+                <PhotoItem label="Buku Rekening" src={employee.bankBookPhoto} hint="bank book" />
             </CardContent>
         </Card>
 

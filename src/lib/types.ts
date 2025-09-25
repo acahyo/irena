@@ -17,9 +17,11 @@ export type Employee = {
   dateOfBirth?: Date | string;
   gender?: 'Laki-laki' | 'Perempuan';
   address?: string;
+  accountType?: 'pribadi' | 'keluarga';
   accountNumber?: string;
   bankName?: string;
   accountHolderName?: string;
+  bankBookPhoto?: string;
   maritalStatus?: 'single' | 'married' | 'divorced' | 'widowed';
   emergencyContactName?: string;
   emergencyContactNumber?: string;

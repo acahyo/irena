@@ -55,6 +55,7 @@ export default function EditEmployeePageClient({ employee, departments, position
   const [messEntryDate, setMessEntryDate] = useState<Date | undefined>();
   const [contractStartDate, setContractStartDate] = useState<Date | undefined>();
   const [contractEndDate, setContractEndDate] = useState<Date | undefined>();
+  const [employeeName, setEmployeeName] = useState(employee.name || '');
 
   // Initialize date states on the client to avoid hydration mismatch
   useEffect(() => {
@@ -64,6 +65,7 @@ export default function EditEmployeePageClient({ employee, departments, position
     setContractEndDate(parseDate(employee.contractEndDate));
     setCanGeneratePayslip(employee.canGeneratePayslip ?? true);
     setSelectedPositions(employee.positions || []);
+    setAccountType(employee.accountType);
   }, [employee]);
 
   const [photoPreview, setPhotoPreview] = useState<string | null>(employee.avatar || null);
@@ -71,10 +73,12 @@ export default function EditEmployeePageClient({ employee, departments, position
   const [simPreview, setSimPreview] = useState<string | null>(employee.simPhoto || null);
   const [sioPreview, setSioPreview] = useState<string | null>(employee.sioPhoto || null);
   const [kkPreview, setKkPreview] = useState<string | null>(employee.kartuKeluargaPhoto || null);
+  const [bankBookPreview, setBankBookPreview] = useState<string | null>(employee.bankBookPhoto || null);
   const [bpjsStatus, setBpjsStatus] = useState<string | undefined>(employee.bpjsStatus);
   const [canGeneratePayslip, setCanGeneratePayslip] = useState(true);
   const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
   const [positionToAdd, setPositionToAdd] = useState('');
+  const [accountType, setAccountType] = useState<'pribadi' | 'keluarga' | undefined>();
 
   const addPosition = () => {
     if (positionToAdd && !selectedPositions.includes(positionToAdd)) {
@@ -135,13 +139,13 @@ export default function EditEmployeePageClient({ employee, departments, position
     const formData = new FormData(event.currentTarget);
     const data = Object.fromEntries(formData.entries());
 
-    // Remove file inputs from data object as we handle them separately
     delete data.photo;
     delete data.ktpPhoto;
     delete data.simPhoto;
     delete data.sioPhoto;
     delete data.kartuKeluargaPhoto;
-    delete data.positionToAdd; // remove temporary field
+    delete data.bankBookPhoto;
+    delete data.positionToAdd;
 
     const employeeData: Partial<Employee> = {
         ...data,
@@ -154,6 +158,7 @@ export default function EditEmployeePageClient({ employee, departments, position
         simPhoto: simPreview,
         sioPhoto: sioPreview,
         kartuKeluargaPhoto: kkPreview,
+        bankBookPhoto: bankBookPreview,
         canGeneratePayslip: (data.canGeneratePayslip === 'on'),
         positions: selectedPositions,
     } as Partial<Employee>;
@@ -226,14 +231,16 @@ export default function EditEmployeePageClient({ employee, departments, position
     label,
     preview,
     onChange,
+    required = false,
   }: {
     id: string;
     label: string;
     preview: string | null;
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    required?: boolean;
   }) => (
      <div className="space-y-2">
-      <Label>{label}</Label>
+      <Label htmlFor={id}>{label}{required && <span className="text-destructive">*</span>}</Label>
       <div className="flex items-center gap-4">
         <Avatar className="h-24 w-24 rounded-md">
           <AvatarImage src={preview || undefined} alt={label} className="object-contain" />
@@ -248,6 +255,7 @@ export default function EditEmployeePageClient({ employee, departments, position
           accept="image/png, image/jpeg, image/jpg, image/x-icon, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
           onChange={onChange}
           className="max-w-sm"
+          required={required && !preview}
         />
       </div>
     </div>
@@ -283,7 +291,7 @@ export default function EditEmployeePageClient({ employee, departments, position
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="name">Nama Lengkap</Label>
-                <Input id="name" name="name" placeholder="e.g. John Doe" required defaultValue={employee.name} />
+                <Input id="name" name="name" placeholder="e.g. John Doe" required value={employeeName} onChange={(e) => setEmployeeName(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="npwpNumber">Nomor NPWP (Opsional)</Label>
@@ -347,18 +355,56 @@ export default function EditEmployeePageClient({ employee, departments, position
                 <Input id="emergencyContactNumber" name="emergencyContactNumber" placeholder="e.g. 08123456789" defaultValue={employee.emergencyContactNumber} />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="bankName">Nama Bank</Label>
-                <Input id="bankName" name="bankName" placeholder="e.g. Bank Central Asia" defaultValue={employee.bankName} />
+              <div className="md:col-span-3">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Detail Bank</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <div className="space-y-2">
+                            <Label>Jenis Rekening</Label>
+                            <RadioGroup name="accountType" className="flex gap-4" value={accountType} onValueChange={(value) => setAccountType(value as any)}>
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="pribadi" id="acc-pribadi" />
+                                    <Label htmlFor="acc-pribadi">Pribadi</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="keluarga" id="acc-keluarga" />
+                                    <Label htmlFor="acc-keluarga">Keluarga</Label>
+                                </div>
+                            </RadioGroup>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <Label htmlFor="bankName">Nama Bank</Label>
+                                <Input id="bankName" name="bankName" placeholder="e.g. Bank Central Asia" defaultValue={employee.bankName} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="accountNumber">Nomor Rekening</Label>
+                                <Input id="accountNumber" name="accountNumber" placeholder="e.g. 1234567890" defaultValue={employee.accountNumber} />
+                            </div>
+                             <div className="space-y-2">
+                                <Label htmlFor="accountHolderName">Nama Pemilik Rekening</Label>
+                                <Input 
+                                    id="accountHolderName" 
+                                    name="accountHolderName" 
+                                    placeholder="e.g. John Doe"
+                                    defaultValue={accountType === 'pribadi' ? employeeName : employee.accountHolderName}
+                                    readOnly={accountType === 'pribadi'}
+                                    key={accountType === 'pribadi' ? employeeName : 'editable'} // Force re-render
+                                />
+                            </div>
+                        </div>
+                        {accountType === 'keluarga' && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
+                                <FileInput id="kartuKeluargaPhoto" label="Foto Kartu Keluarga" preview={kkPreview} onChange={(e) => handleFileChange(e, setKkPreview)} required={true} />
+                                <FileInput id="bankBookPhoto" label="Foto Halaman Depan Buku Rekening" preview={bankBookPreview} onChange={(e) => handleFileChange(e, setBankBookPreview)} required={true} />
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="accountNumber">Nomor Rekening</Label>
-                <Input id="accountNumber" name="accountNumber" placeholder="e.g. 1234567890" defaultValue={employee.accountNumber} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="accountHolderName">Nama Rekening</Label>
-                <Input id="accountHolderName" name="accountHolderName" placeholder="e.g. John Doe" defaultValue={employee.accountHolderName} />
-              </div>
+
 
               <div className="space-y-2 md:col-span-3">
                 <Label>Status BPJS</Label>
@@ -395,11 +441,10 @@ export default function EditEmployeePageClient({ employee, departments, position
                  </div>
               )}
 
-              <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-8">
+              <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
                 <FileInput id="ktpPhoto" label="Foto KTP" preview={ktpPreview} onChange={(e) => handleFileChange(e, setKtpPreview)} />
                 <FileInput id="simPhoto" label="Foto SIM" preview={simPreview} onChange={(e) => handleFileChange(e, setSimPreview)} />
                 <FileInput id="sioPhoto" label="Foto SIO" preview={sioPreview} onChange={(e) => handleFileChange(e, setSioPreview)} />
-                <FileInput id="kartuKeluargaPhoto" label="Foto Kartu Keluarga" preview={kkPreview} onChange={(e) => handleFileChange(e, setKkPreview)} />
               </div>
 
               <div className="space-y-2">

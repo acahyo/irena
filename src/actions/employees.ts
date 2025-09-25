@@ -129,7 +129,7 @@ export async function createEmployee(employee: Partial<Employee>, actorRole?: st
     }
     
     // Handle file uploads
-    const fileFields: (keyof Employee)[] = ['avatar', 'ktpPhoto', 'simPhoto', 'sioPhoto', 'kartuKeluargaPhoto'];
+    const fileFields: (keyof Employee)[] = ['avatar', 'ktpPhoto', 'simPhoto', 'sioPhoto', 'kartuKeluargaPhoto', 'bankBookPhoto'];
     for (const field of fileFields) {
         if (employeeData[field] && (employeeData[field] as string).startsWith('data:')) {
             employeeData[field] = await uploadFileAndGetURL(employeeData[field] as string, employeeId, field);
@@ -186,7 +186,7 @@ export async function updateEmployee(id: string, employee: Partial<Employee>): P
 
 
   // Handle file uploads
-  const fileFields: (keyof Employee)[] = ['avatar', 'ktpPhoto', 'simPhoto', 'sioPhoto', 'kartuKeluargaPhoto'];
+  const fileFields: (keyof Employee)[] = ['avatar', 'ktpPhoto', 'simPhoto', 'sioPhoto', 'kartuKeluargaPhoto', 'bankBookPhoto'];
   for (const field of fileFields) {
       if (employeeData[field] && (employeeData[field] as string).startsWith('data:')) {
           employeeData[field] = await uploadFileAndGetURL(employeeData[field] as string, id, field);

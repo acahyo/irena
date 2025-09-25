@@ -57,10 +57,13 @@ export default function NewEmployeePage() {
   const [simPreview, setSimPreview] = useState<string | null>(null);
   const [sioPreview, setSioPreview] = useState<string | null>(null);
   const [kkPreview, setKkPreview] = useState<string | null>(null);
+  const [bankBookPreview, setBankBookPreview] = useState<string | null>(null);
   const [bpjsStatus, setBpjsStatus] = useState<string | undefined>();
   const [canGeneratePayslip, setCanGeneratePayslip] = useState(true);
   const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
   const [positionToAdd, setPositionToAdd] = useState('');
+  const [accountType, setAccountType] = useState<'pribadi' | 'keluarga' | undefined>();
+  const [employeeName, setEmployeeName] = useState('');
 
 
   useEffect(() => {
@@ -144,12 +147,12 @@ export default function NewEmployeePage() {
     const formData = new FormData(event.currentTarget);
     const data = Object.fromEntries(formData.entries());
     
-    // Remove file inputs from data object as we handle them separately
     delete data.photo;
     delete data.ktpPhoto;
     delete data.simPhoto;
     delete data.sioPhoto;
     delete data.kartuKeluargaPhoto;
+    delete data.bankBookPhoto;
     delete data.positionToAdd; // remove temporary field
 
 
@@ -164,6 +167,7 @@ export default function NewEmployeePage() {
         simPhoto: simPreview,
         sioPhoto: sioPreview,
         kartuKeluargaPhoto: kkPreview,
+        bankBookPhoto: bankBookPreview,
         canGeneratePayslip: (data.canGeneratePayslip === 'on'),
         positions: selectedPositions,
     } as Partial<Employee>;
@@ -229,14 +233,16 @@ export default function NewEmployeePage() {
     label,
     preview,
     onChange,
+    required = false,
   }: {
     id: string;
     label: string;
     preview: string | null;
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    required?: boolean;
   }) => (
      <div className="space-y-2">
-      <Label>{label}</Label>
+      <Label htmlFor={id}>{label}{required && <span className="text-destructive">*</span>}</Label>
       <div className="flex items-center gap-4">
         <Avatar className="h-24 w-24 rounded-md">
           <AvatarImage src={preview || undefined} alt={label} className="object-contain" />
@@ -251,6 +257,7 @@ export default function NewEmployeePage() {
           accept="image/png, image/jpeg, image/jpg, image/x-icon, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
           onChange={onChange}
           className="max-w-sm"
+          required={required}
         />
       </div>
     </div>
@@ -286,7 +293,7 @@ export default function NewEmployeePage() {
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="name">Nama Lengkap</Label>
-                <Input id="name" name="name" placeholder="e.g. John Doe" required />
+                <Input id="name" name="name" placeholder="e.g. John Doe" required value={employeeName} onChange={(e) => setEmployeeName(e.target.value)} />
               </div>
                <div className="space-y-2">
                 <Label htmlFor="npwpNumber">Nomor NPWP (Opsional)</Label>
@@ -349,18 +356,55 @@ export default function NewEmployeePage() {
                 <Input id="emergencyContactNumber" name="emergencyContactNumber" placeholder="e.g. 08123456789" />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="bankName">Nama Bank</Label>
-                <Input id="bankName" name="bankName" placeholder="e.g. Bank Central Asia" />
+             <div className="md:col-span-3">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Detail Bank</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <div className="space-y-2">
+                            <Label>Jenis Rekening</Label>
+                            <RadioGroup name="accountType" className="flex gap-4" onValueChange={(value) => setAccountType(value as any)}>
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="pribadi" id="acc-pribadi" />
+                                    <Label htmlFor="acc-pribadi">Pribadi</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="keluarga" id="acc-keluarga" />
+                                    <Label htmlFor="acc-keluarga">Keluarga</Label>
+                                </div>
+                            </RadioGroup>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <Label htmlFor="bankName">Nama Bank</Label>
+                                <Input id="bankName" name="bankName" placeholder="e.g. Bank Central Asia" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="accountNumber">Nomor Rekening</Label>
+                                <Input id="accountNumber" name="accountNumber" placeholder="e.g. 1234567890" />
+                            </div>
+                             <div className="space-y-2">
+                                <Label htmlFor="accountHolderName">Nama Pemilik Rekening</Label>
+                                <Input 
+                                    id="accountHolderName" 
+                                    name="accountHolderName" 
+                                    placeholder="e.g. John Doe"
+                                    value={accountType === 'pribadi' ? employeeName : undefined}
+                                    readOnly={accountType === 'pribadi'}
+                                />
+                            </div>
+                        </div>
+                        {accountType === 'keluarga' && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
+                                <FileInput id="kartuKeluargaPhoto" label="Foto Kartu Keluarga" preview={kkPreview} onChange={(e) => handleFileChange(e, setKkPreview)} required={true} />
+                                <FileInput id="bankBookPhoto" label="Foto Halaman Depan Buku Rekening" preview={bankBookPreview} onChange={(e) => handleFileChange(e, setBankBookPreview)} required={true} />
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="accountNumber">Nomor Rekening</Label>
-                <Input id="accountNumber" name="accountNumber" placeholder="e.g. 1234567890" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="accountHolderName">Nama Rekening</Label>
-                <Input id="accountHolderName" name="accountHolderName" placeholder="e.g. John Doe" />
-              </div>
+
 
               <div className="space-y-2 md:col-span-3">
                 <Label>Status BPJS</Label>
@@ -398,11 +442,10 @@ export default function NewEmployeePage() {
               )}
 
 
-              <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-8">
+              <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-8">
                 <FileInput id="ktpPhoto" label="Foto KTP" preview={ktpPreview} onChange={(e) => handleFileChange(e, setKtpPreview)} />
                 <FileInput id="simPhoto" label="Foto SIM" preview={simPreview} onChange={(e) => handleFileChange(e, setSimPreview)} />
                 <FileInput id="sioPhoto" label="Foto SIO" preview={sioPreview} onChange={(e) => handleFileChange(e, setSioPreview)} />
-                <FileInput id="kartuKeluargaPhoto" label="Foto Kartu Keluarga" preview={kkPreview} onChange={(e) => handleFileChange(e, setKkPreview)} />
               </div>
 
               <div className="space-y-2">
