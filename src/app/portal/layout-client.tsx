@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from "next/link";
@@ -26,19 +27,19 @@ import {
   Printer,
   ClipboardCheck,
   User,
-  ShoppingCart,
   Store,
 } from "lucide-react";
 import type { AppSettings, Employee } from "@/lib/types";
 import { logout } from "@/actions/auth";
+import { cn } from "@/lib/utils";
 
 const getNavItems = (lang: 'id' | 'en', settings: AppSettings) => {
   const allItems = [
-    { id: 'profile', href: "/portal", icon: User, label: lang === 'id' ? "Profil Saya" : "My Profile", exact: true },
-    { id: 'attendance', href: "/portal/attendance", icon: ClipboardCheck, label: lang === 'id' ? "Kehadiran Saya" : "My Attendance" },
-    { id: 'leave', href: "/portal/leave", icon: CalendarCheck, label: lang === 'id' ? "Cuti Saya" : "My Leave" },
-    { id: 'payslip', href: "/portal/payslip", icon: Printer, label: lang === 'id' ? "Slip Gaji Saya" : "My Payslip" },
-    { id: 'koperasi', href: "/portal/koperasi", icon: Store, label: lang === 'id' ? "Koperasi Saya" : "My Cooperative" },
+    { id: 'profile', href: "/portal", icon: User, label: lang === 'id' ? "Profil" : "Profile", exact: true },
+    { id: 'attendance', href: "/portal/attendance", icon: ClipboardCheck, label: lang === 'id' ? "Absensi" : "Attendance" },
+    { id: 'leave', href: "/portal/leave", icon: CalendarCheck, label: lang === 'id' ? "Cuti" : "Leave" },
+    { id: 'koperasi', href: "/portal/koperasi", icon: Store, label: lang === 'id' ? "Koperasi" : "Co-op" },
+    { id: 'payslip', href: "/portal/payslip", icon: Printer, label: lang === 'id' ? "Gaji" : "Payslip" },
   ];
 
   if (settings.employeePayslipAccess === false) {
@@ -47,6 +48,17 @@ const getNavItems = (lang: 'id' | 'en', settings: AppSettings) => {
   
   return allItems;
 };
+
+const BottomNavItem = ({ href, icon: Icon, label, isActive }: { href: string; icon: React.ElementType; label: string; isActive: boolean }) => (
+  <Link href={href} className={cn(
+    "flex flex-col items-center justify-center gap-1 w-full h-full p-2 transition-colors duration-200",
+    isActive ? "text-primary" : "text-muted-foreground hover:text-primary"
+  )}>
+    <Icon className="h-6 w-6" />
+    <span className="text-xs font-medium">{label}</span>
+  </Link>
+);
+
 
 export default function PortalClientLayout({
   children,
@@ -82,6 +94,7 @@ export default function PortalClientLayout({
 
   return (
     <SidebarProvider>
+      {/* --- Desktop Sidebar --- */}
       <Sidebar>
         <SidebarHeader>
           <Link href="/portal" className="flex items-center gap-2">
@@ -136,17 +149,40 @@ export default function PortalClientLayout({
           
         </SidebarFooter>
       </Sidebar>
+
       <SidebarInset>
-        <header className="flex h-14 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm md:px-6">
-          <SidebarTrigger className="flex md:hidden" />
-          <div className="flex-1">
-             <h1 className="text-lg font-semibold">
+        <header className="flex h-14 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sticky top-0 z-10 md:relative">
+          <div className="flex items-center gap-2">
+            <Avatar className="h-8 w-8 rounded-full md:hidden">
+              <AvatarImage src={employee.avatar} alt={employee.name} />
+              <AvatarFallback>{employee.name.charAt(0)}</AvatarFallback>
+            </Avatar>
+            <h1 className="text-lg font-semibold">
                 {activeLabel}
             </h1>
           </div>
+          <div className="flex-1" />
+           <Button onClick={handleLogout} variant="ghost" size="icon" className="md:hidden">
+            <LogOut className="h-5 w-5" />
+           </Button>
         </header>
-        <main className="flex-1 p-4 md:p-6">{children}</main>
+        <main className="flex-1 p-4 md:p-6 pb-24 md:pb-6">{children}</main>
       </SidebarInset>
+
+      {/* --- Mobile Bottom Navigation --- */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-background border-t border-border shadow-t-lg z-50">
+        <div className="flex justify-around items-center h-full">
+          {navItems.map(item => (
+            <BottomNavItem
+              key={item.id}
+              href={item.href}
+              icon={item.icon}
+              label={item.label}
+              isActive={item.exact ? pathname === item.href : pathname.startsWith(item.href)}
+            />
+          ))}
+        </div>
+      </div>
     </SidebarProvider>
   );
 }
