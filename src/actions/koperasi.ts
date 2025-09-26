@@ -39,7 +39,7 @@ async function uploadFileAndGetURL(base64Data: string, itemId: string): Promise<
         throw new Error('Invalid file data provided.');
     }
     
-    const storageRef = ref(storage, `koperasi-items/${itemId}-${Date.now()}`);
+    const storageRef = ref(storage, `koperasi/${itemId}-${Date.now()}`);
     const uploadResult = await uploadString(storageRef, base64Data, 'data_url');
     return await getDownloadURL(uploadResult.ref);
 }
@@ -62,7 +62,7 @@ export async function createKoperasiItem(item: Omit<KoperasiItem, 'id'>): Promis
     const docRef = await addDoc(collection(db, 'koperasiItems'), { name: 'pending', price: 0, stock: 0 });
     
     if (itemData.imageUrl && itemData.imageUrl.startsWith('data:')) {
-        itemData.imageUrl = await uploadFileAndGetURL(itemData.imageUrl, docRef.id);
+        itemData.imageUrl = await uploadFileAndGetURL(itemData.imageUrl, `item-${docRef.id}`);
     }
     
     await updateDoc(docRef, itemData);
@@ -75,7 +75,7 @@ export async function updateKoperasiItem(id: string, item: Partial<KoperasiItem>
   if(itemData.stock) itemData.stock = Number(itemData.stock);
 
   if (itemData.imageUrl && itemData.imageUrl.startsWith('data:')) {
-      itemData.imageUrl = await uploadFileAndGetURL(itemData.imageUrl, id);
+      itemData.imageUrl = await uploadFileAndGetURL(itemData.imageUrl, `item-${id}`);
   }
 
   const docRef = doc(db, 'koperasiItems', id);
@@ -93,8 +93,7 @@ export async function deleteKoperasiItem(id: string): Promise<void> {
 export async function getKoperasiOrders({ employeeId }: { employeeId?: string } = {}): Promise<KoperasiOrder[]> {
     let q = query(collection(db, 'koperasiOrders'), orderBy('orderDate', 'desc'));
     if (employeeId) {
-        // Remove orderBy from query to avoid composite index requirement
-        q = query(collection(db, 'koperasiOrders'), where('employeeId', '==', employeeId));
+        q = query(collection(db, 'koperasiOrders'), where('employeeId', '==', employeeId), orderBy('orderDate', 'desc'));
     }
     
     const querySnapshot = await getDocs(q);
@@ -103,8 +102,7 @@ export async function getKoperasiOrders({ employeeId }: { employeeId?: string } 
         orders.push({ id: doc.id, ...convertTimestampsToDates(doc.data()) } as KoperasiOrder);
     });
 
-    // Sort in application code
-    return orders.sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime());
+    return orders;
 }
 
 export async function createKoperasiOrder(order: Omit<KoperasiOrder, 'id' | 'orderDate' | 'status'>): Promise<string> {
@@ -135,4 +133,20 @@ export async function createKoperasiOrder(order: Omit<KoperasiOrder, 'id' | 'ord
 
   await batch.commit();
   return orderRef.id;
+}
+
+
+export async function updateKoperasiOrder(id: string, updates: Partial<KoperasiOrder>): Promise<void> {
+    const orderRef = doc(db, 'koperasiOrders', id);
+    const updateData: any = { ...updates };
+    
+    if (updateData.pickupInfo && updateData.pickupInfo.date) {
+        updateData.pickupInfo.date = new Date(updateData.pickupInfo.date);
+    }
+    
+    if (updateData.completionPhotoUrl && updateData.completionPhotoUrl.startsWith('data:')) {
+        updateData.completionPhotoUrl = await uploadFileAndGetURL(updateData.completionPhotoUrl, `order-completion-${id}`);
+    }
+
+    await updateDoc(orderRef, updateData);
 }

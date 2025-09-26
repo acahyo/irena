@@ -72,6 +72,7 @@ const allMenus = [
   { id: 'payslip-collective', label: 'Slip Gaji Kolektif' },
   { id: 'purchasing', label: 'Purchasing' },
   { id: 'purchasing-items', label: 'Barang Koperasi' },
+  { id: 'koperasi-orders', label: 'Pesanan Koperasi' },
   { id: 'bpjs-id-simper', label: 'BPJS-ID-SIMPER' },
   { id: 'department', label: 'Departemen' },
   { id: 'position', label: 'Jabatan & Gaji' },

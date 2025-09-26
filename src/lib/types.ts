@@ -225,5 +225,12 @@ export type KoperasiOrder = {
   orderDate: Date | string;
   items: KoperasiOrderItem[];
   totalPrice: number;
-  status: 'Pending' | 'Completed' | 'Rejected';
+  status: 'Pending' | 'Approved' | 'Ready for Pickup' | 'Completed' | 'Rejected';
+  pickupInfo?: {
+      day: string;
+      date: Date | string;
+      location: string;
+  };
+  completionPhotoUrl?: string;
+  rejectionReason?: string;
 };
