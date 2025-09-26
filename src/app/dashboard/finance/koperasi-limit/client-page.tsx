@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useTransition, useEffect } from 'react';
@@ -137,10 +138,11 @@ export default function KoperasiLimitClientPage({ initialEmployees }: { initialE
         </div>
       </CardHeader>
       <CardContent>
-        <Table>
+        <div className="overflow-x-auto">
+        <Table className="min-w-max">
           <TableHeader>
             <TableRow>
-              <TableHead>Nama Karyawan</TableHead>
+              <TableHead className="min-w-[250px]">Nama Karyawan</TableHead>
               <TableHead>Jabatan</TableHead>
               <TableHead>Limit (Rp)</TableHead>
               <TableHead>Tanggal Mulai</TableHead>
@@ -193,7 +195,10 @@ export default function KoperasiLimitClientPage({ initialEmployees }: { initialE
             )}
           </TableBody>
         </Table>
+        </div>
       </CardContent>
     </Card>
   );
 }
+
+    

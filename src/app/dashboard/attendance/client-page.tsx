@@ -76,7 +76,6 @@ export default function AttendanceClientPage({
       import: lang === 'id' ? 'Impor' : 'Import',
       export: lang === 'id' ? 'Ekspor' : 'Export',
       employee: lang === 'id' ? 'Karyawan' : 'Employee',
-      position: lang === 'id' ? 'Jabatan' : 'Position',
       attendance: lang === 'id' ? 'Kehadiran (Harian)' : 'Attendance (Daily)',
       overtime: lang === 'id' ? 'Lembur (Harian)' : 'Overtime (Daily)',
       totalOvertime: lang === 'id' ? 'Total Lembur' : 'Total Overtime',
@@ -289,7 +288,7 @@ export default function AttendanceClientPage({
               type="month"
               value={period}
               onChange={(e) => handlePeriodChange(e.target.value)}
-              className="w-full md:w-[150px]"
+              className="w-full md:w-auto"
             />
              <input
                 type="file"
@@ -311,23 +310,24 @@ export default function AttendanceClientPage({
         </div>
       </CardHeader>
       <CardContent>
+        <div className="overflow-x-auto">
         {isLoading ? (
             <div className="flex justify-center items-center h-64">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
         ) : (
-        <Table>
+        <Table className="min-w-max">
           <TableHeader>
             <TableRow>
-              <TableHead className="min-w-[200px]">{T.employee}</TableHead>
+              <TableHead className="sticky left-0 bg-card min-w-[250px]">{T.employee}</TableHead>
               <TableHead>{T.attendance}</TableHead>
               <TableHead>{T.overtime}</TableHead>
               <TableHead>{T.totalOvertime}</TableHead>
-              <TableHead className="w-[180px]">{T.bonus}</TableHead>
-              <TableHead className="w-[180px]">{T.idCardDeduction}</TableHead>
-              <TableHead className="w-[180px]">{T.simperDeduction}</TableHead>
-              <TableHead className="w-[180px]">{T.fineDeduction}</TableHead>
-              <TableHead className="w-[180px]">{T.pphDeduction}</TableHead>
+              <TableHead className="min-w-[150px]">{T.bonus}</TableHead>
+              <TableHead className="min-w-[150px]">{T.idCardDeduction}</TableHead>
+              <TableHead className="min-w-[150px]">{T.simperDeduction}</TableHead>
+              <TableHead className="min-w-[150px]">{T.fineDeduction}</TableHead>
+              <TableHead className="min-w-[150px]">{T.pphDeduction}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -340,13 +340,13 @@ export default function AttendanceClientPage({
                 
                 return (
                 <TableRow key={emp.id} className="align-top">
-                  <TableCell>
+                  <TableCell className="sticky left-0 bg-card font-medium">
                       <div className="flex items-center gap-3">
                           <Avatar className="h-9 w-9">
                             <AvatarImage src={emp.avatar} alt={emp.name} />
                             <AvatarFallback>{emp.name.charAt(0)}</AvatarFallback>
                           </Avatar>
-                          <div className="font-medium">{emp.name}</div>
+                          <div>{emp.name}</div>
                       </div>
                   </TableCell>
                   <TableCell>
@@ -362,7 +362,7 @@ export default function AttendanceClientPage({
                               value={attendanceData[emp.id]?.attendanceByPosition?.[posDetail.name] ?? ''}
                               onChange={(e) => handlePerPositionInputChange(emp.id, posDetail.name, 'attendanceByPosition', e.target.value)}
                               onBlur={() => handleInputBlur(emp.id)}
-                              className="h-8"
+                              className="h-8 w-24"
                             />
                           </div>
                         ))}
@@ -384,7 +384,7 @@ export default function AttendanceClientPage({
                               value={attendanceData[emp.id]?.overtimeByPosition?.[posDetail.name] ?? ''}
                               onChange={(e) => handlePerPositionInputChange(emp.id, posDetail.name, 'overtimeByPosition', e.target.value)}
                               onBlur={() => handleInputBlur(emp.id)}
-                              className="h-8"
+                              className="h-8 w-24"
                             />
                           </div>
                         ))}
@@ -453,7 +453,10 @@ export default function AttendanceClientPage({
           </TableBody>
         </Table>
         )}
+        </div>
       </CardContent>
     </Card>
   );
 }
+
+    

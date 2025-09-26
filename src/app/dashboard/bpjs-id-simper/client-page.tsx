@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect, useTransition } from 'react';
@@ -186,7 +187,7 @@ export default function BpjsIdSimperClientPage({
       switch(field) {
           case 'bpjs':
               return (
-                 <div className="flex flex-col gap-2 w-[250px]">
+                 <div className="flex flex-col gap-2 w-full md:w-[250px]">
                     <Select
                         value={employee.bpjsStatus || 'not-registered'}
                         onValueChange={(value) => handleBpjsStatusChange(employee.id, value === 'not-registered' ? '' : value)}
@@ -223,7 +224,7 @@ export default function BpjsIdSimperClientPage({
               );
           case 'idCard':
               return (
-                  <div className="flex flex-col gap-2 w-[200px]">
+                  <div className="flex flex-col gap-2 w-full md:w-[200px]">
                     <Select
                         value={employee.idCardStatus || 'not-registered'}
                         onValueChange={(value) => handleIdCardStatusChange(employee.id, value === 'not-registered' ? '' : value)}
@@ -246,7 +247,7 @@ export default function BpjsIdSimperClientPage({
               );
           case 'simper':
               return (
-                   <div className="flex flex-col gap-2 w-[200px]">
+                   <div className="flex flex-col gap-2 w-full md:w-[200px]">
                     <Select
                         value={employee.simperStatus || 'not-registered'}
                         onValueChange={(value) => handleSimperStatusChange(employee.id, value === 'not-registered' ? '' : value)}
@@ -367,16 +368,16 @@ export default function BpjsIdSimperClientPage({
                 </div>
             </CardHeader>
             <CardContent>
-                <div className="relative">
+                <div className="relative overflow-x-auto">
                 {isSaving && (
                     <div className="absolute inset-0 bg-background/50 flex items-center justify-center z-10">
                         <Loader2 className="h-6 w-6 animate-spin" />
                     </div>
                 )}
-                <Table>
+                <Table className="min-w-max">
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Nama Karyawan</TableHead>
+                            <TableHead className="sticky left-0 bg-card min-w-[250px]">Nama Karyawan</TableHead>
                             <TableHead>Proyek</TableHead>
                             <TableHead>BPJS</TableHead>
                             <TableHead>ID Card</TableHead>
@@ -386,14 +387,14 @@ export default function BpjsIdSimperClientPage({
                     <TableBody>
                         {filteredEmployees.map(emp => (
                             <TableRow key={emp.id}>
-                                <TableCell>
+                                <TableCell className="sticky left-0 bg-card font-medium">
                                      <div className="flex items-center gap-3">
                                         <Avatar className="h-9 w-9">
                                             <AvatarImage src={emp.avatar} alt={emp.name} />
                                             <AvatarFallback>{emp.name.charAt(0)}</AvatarFallback>
                                         </Avatar>
                                         <div>
-                                            <p className="font-medium">{emp.name}</p>
+                                            <p>{emp.name}</p>
                                             <p className="text-sm text-muted-foreground">{emp.position || 'N/A'}</p>
                                         </div>
                                     </div>
@@ -419,3 +420,5 @@ export default function BpjsIdSimperClientPage({
     </div>
   );
 }
+
+    
