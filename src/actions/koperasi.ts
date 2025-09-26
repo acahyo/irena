@@ -19,13 +19,20 @@ import { ref, uploadString, getDownloadURL, deleteObject } from "firebase/storag
 import type { KoperasiItem, KoperasiOrder } from '@/lib/types';
 
 // Helper to convert Firestore Timestamps
-function convertTimestampsToDates(docData: any) {
-    if (!docData) return docData;
-    const data = { ...docData };
-    for (const key in data) {
-        if (data[key] instanceof Timestamp) {
-            data[key] = data[key].toDate();
+function convertTimestampsToDates(data: any): any {
+    if (!data) return data;
+    if (Array.isArray(data)) {
+        return data.map(item => convertTimestampsToDates(item));
+    }
+    if (typeof data === 'object' && data !== null) {
+        if (data instanceof Timestamp) {
+            return data.toDate();
         }
+        const newData: { [key: string]: any } = {};
+        for (const key in data) {
+            newData[key] = convertTimestampsToDates(data[key]);
+        }
+        return newData;
     }
     return data;
 }
@@ -95,7 +102,7 @@ export async function getKoperasiOrders({ employeeId }: { employeeId?: string } 
     if (employeeId) {
         q = query(collection(db, 'koperasiOrders'), where('employeeId', '==', employeeId));
     } else {
-        q = query(collection(db, 'koperasiOrders'), orderBy('orderDate', 'desc'));
+        q = query(collection(db, 'koperasiOrders'));
     }
     
     const querySnapshot = await getDocs(q);
