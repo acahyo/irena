@@ -1,7 +1,9 @@
+
 import { getEmployees } from '@/actions/employees';
 import KoperasiLimitClientPage from './client-page';
 import { getAdminSession } from '@/actions/auth';
 import { redirect } from 'next/navigation';
+import { getPositions } from '@/actions/positions';
 
 
 export default async function KoperasiLimitPage() {
@@ -10,6 +12,10 @@ export default async function KoperasiLimitPage() {
         redirect('/dashboard');
     }
 
-    const employees = await getEmployees();
-    return <KoperasiLimitClientPage initialEmployees={employees} />;
+    const [employees, positions] = await Promise.all([
+        getEmployees(),
+        getPositions()
+    ]);
+    
+    return <KoperasiLimitClientPage initialEmployees={employees} positions={positions} />;
 }

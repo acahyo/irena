@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useTransition, useEffect } from 'react';
@@ -22,12 +23,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { Loader2, Calendar as CalendarIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import type { Employee } from '@/lib/types';
+import type { Employee, Position } from '@/lib/types';
 import { updateEmployee } from '@/actions/employees';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
 const formatCurrency = (amount: number | undefined | null) => {
@@ -45,17 +47,19 @@ const formatDate = (date: Date | string | undefined) => {
 }
 
 
-export default function KoperasiLimitClientPage({ initialEmployees }: { initialEmployees: Employee[] }) {
+export default function KoperasiLimitClientPage({ initialEmployees, positions }: { initialEmployees: Employee[], positions: Position[] }) {
   const [employees, setEmployees] = useState(initialEmployees);
   const [searchTerm, setSearchTerm] = useState('');
+  const [positionFilter, setPositionFilter] = useState('all');
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
 
   const filteredEmployees = useMemo(() => {
     return employees.filter(emp =>
-      emp.name.toLowerCase().includes(searchTerm.toLowerCase())
+      emp.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      (positionFilter === 'all' || emp.positions?.includes(positionFilter))
     );
-  }, [employees, searchTerm]);
+  }, [employees, searchTerm, positionFilter]);
   
   const handleValueChange = (employeeId: string, field: keyof Employee, value: string | number | Date | undefined) => {
     setEmployees(prev =>
@@ -129,12 +133,23 @@ export default function KoperasiLimitClientPage({ initialEmployees }: { initialE
               Atur batas maksimal belanja bulanan dan periode berlakunya untuk setiap karyawan di koperasi.
             </CardDescription>
           </div>
-          <Input
-            placeholder="Cari karyawan..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-sm"
-          />
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Input
+              placeholder="Cari karyawan..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="max-w-sm"
+            />
+            <Select value={positionFilter} onValueChange={setPositionFilter}>
+                <SelectTrigger className="w-full sm:w-[200px]">
+                    <SelectValue placeholder="Filter by Position" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">Semua Jabatan</SelectItem>
+                    {positions.map(p => <SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>)}
+                </SelectContent>
+            </Select>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -163,7 +178,7 @@ export default function KoperasiLimitClientPage({ initialEmployees }: { initialE
                         <div className="font-medium">{emp.name}</div>
                     </div>
                   </TableCell>
-                  <TableCell>{emp.position || 'N/A'}</TableCell>
+                  <TableCell>{emp.positions?.join(', ') || 'N/A'}</TableCell>
                    <TableCell className="w-[200px]">
                      <Input
                         type="number"
@@ -200,5 +215,3 @@ export default function KoperasiLimitClientPage({ initialEmployees }: { initialE
     </Card>
   );
 }
-
-    
