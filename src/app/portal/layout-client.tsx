@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from "next/link";
@@ -32,6 +31,7 @@ import {
 import type { AppSettings, Employee } from "@/lib/types";
 import { logout } from "@/actions/auth";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 const getNavItems = (lang: 'id' | 'en', settings: AppSettings) => {
   const allItems = [
