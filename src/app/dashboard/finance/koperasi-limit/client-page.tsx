@@ -23,7 +23,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Loader2, Calendar as CalendarIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import type { Employee, Position } from '@/lib/types';
+import type { Employee, Position, Site } from '@/lib/types';
 import { updateEmployee } from '@/actions/employees';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
@@ -47,19 +47,21 @@ const formatDate = (date: Date | string | undefined) => {
 }
 
 
-export default function KoperasiLimitClientPage({ initialEmployees, positions }: { initialEmployees: Employee[], positions: Position[] }) {
+export default function KoperasiLimitClientPage({ initialEmployees, positions, sites }: { initialEmployees: Employee[], positions: Position[], sites: Site[] }) {
   const [employees, setEmployees] = useState(initialEmployees);
   const [searchTerm, setSearchTerm] = useState('');
   const [positionFilter, setPositionFilter] = useState('all');
+  const [projectFilter, setProjectFilter] = useState('all');
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
 
   const filteredEmployees = useMemo(() => {
     return employees.filter(emp =>
       emp.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (positionFilter === 'all' || emp.positions?.includes(positionFilter))
+      (positionFilter === 'all' || emp.positions?.includes(positionFilter)) &&
+      (projectFilter === 'all' || emp.siteLocation === projectFilter)
     );
-  }, [employees, searchTerm, positionFilter]);
+  }, [employees, searchTerm, positionFilter, projectFilter]);
   
   const handleValueChange = (employeeId: string, field: keyof Employee, value: string | number | Date | undefined) => {
     setEmployees(prev =>
@@ -140,6 +142,15 @@ export default function KoperasiLimitClientPage({ initialEmployees, positions }:
               onChange={(e) => setSearchTerm(e.target.value)}
               className="max-w-sm"
             />
+            <Select value={projectFilter} onValueChange={setProjectFilter}>
+                <SelectTrigger className="w-full sm:w-[200px]">
+                    <SelectValue placeholder="Filter by Project" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">Semua Proyek</SelectItem>
+                    {sites.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}
+                </SelectContent>
+            </Select>
             <Select value={positionFilter} onValueChange={setPositionFilter}>
                 <SelectTrigger className="w-full sm:w-[200px]">
                     <SelectValue placeholder="Filter by Position" />
