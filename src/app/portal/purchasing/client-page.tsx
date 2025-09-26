@@ -46,7 +46,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, Trash2, Loader2 } from 'lucide-react';
+import { PlusCircle, Trash2, Loader2, Eye } from 'lucide-react';
 
 const getStatusVariant = (status: string) => {
   switch (status) {
@@ -78,10 +78,18 @@ export default function MyPurchasingClientPage({
   employee: Employee;
   site: Site;
 }) {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isNewRequestDialogOpen, setIsNewRequestDialogOpen] = useState(false);
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<PurchaseRequest | null>(null);
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  
+  const handleViewDetails = (request: PurchaseRequest) => {
+    setSelectedRequest(request);
+    setIsDetailDialogOpen(true);
+  };
+
 
   const NewRequestForm = () => {
     const [items, setItems] = useState<Partial<PurchaseRequestItem>[]>([{ name: '', quantity: 1, unit: '' }]);
@@ -116,7 +124,7 @@ export default function MyPurchasingClientPage({
           };
           await createPurchaseRequest(requestData);
           toast({ title: 'Sukses!', description: 'Pengajuan barang berhasil dikirim.' });
-          setIsDialogOpen(false);
+          setIsNewRequestDialogOpen(false);
           router.push('/portal/purchasing');
           router.refresh();
         } catch (error) {
@@ -158,7 +166,7 @@ export default function MyPurchasingClientPage({
             <PlusCircle className="mr-2 h-4 w-4" /> Tambah Barang
         </Button>
         <DialogFooter>
-            <DialogClose asChild><Button type="button" variant="outline">Batal</Button></DialogClose>
+            <Button type="button" variant="outline" onClick={() => setIsNewRequestDialogOpen(false)}>Batal</Button>
             <Button type="submit" disabled={isPending}>
                 {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Kirim Pengajuan
             </Button>
@@ -182,74 +190,78 @@ export default function MyPurchasingClientPage({
 
   return (
     <>
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Riwayat Pengajuan Barang Saya</CardTitle>
-                <CardDescription>Proyek: {site.name}</CardDescription>
-              </div>
-              <DialogTrigger asChild>
-                <Button><PlusCircle className="mr-2 h-4 w-4" /> Buat Pengajuan Baru</Button>
-              </DialogTrigger>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Riwayat Pengajuan Barang Saya</CardTitle>
+              <CardDescription>Proyek: {site.name}</CardDescription>
             </div>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Tanggal</TableHead>
-                  <TableHead>Total Estimasi</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="w-[100px] text-right">Aksi</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {initialRequests.length > 0 ? (
-                  initialRequests.map((req) => (
-                    <TableRow key={req.id}>
-                      <TableCell>{format(new Date(req.requestDate), 'PPP')}</TableCell>
-                      <TableCell>{formatCurrency(req.totalEstimatedPrice)}</TableCell>
-                      <TableCell><Badge variant={getStatusVariant(req.status)}>{req.status}</Badge></TableCell>
-                      <TableCell className="text-right">
-                          {req.status === 'Pending' && (
-                             <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="ghost" size="icon" disabled={isPending} className="text-destructive">
-                                      <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                        <AlertDialogTitle>Batalkan Pengajuan?</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                        Aksi ini tidak dapat dibatalkan. Pengajuan Anda akan dihapus.
-                                        </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                        <AlertDialogCancel>Tidak</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => handleDelete(req.id)}>
-                                            Ya, Batalkan
-                                        </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialog>
-                          )}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={4} className="h-24 text-center">
-                      Belum ada riwayat pengajuan.
+            <Button onClick={() => setIsNewRequestDialogOpen(true)}>
+              <PlusCircle className="mr-2 h-4 w-4" /> Buat Pengajuan Baru
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Tanggal</TableHead>
+                <TableHead>Total Estimasi</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="w-[100px] text-right">Aksi</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {initialRequests.length > 0 ? (
+                initialRequests.map((req) => (
+                  <TableRow key={req.id}>
+                    <TableCell>{format(new Date(req.requestDate), 'PPP')}</TableCell>
+                    <TableCell>{formatCurrency(req.totalEstimatedPrice)}</TableCell>
+                    <TableCell><Badge variant={getStatusVariant(req.status)}>{req.status}</Badge></TableCell>
+                    <TableCell className="text-right">
+                        <Button variant="ghost" size="icon" onClick={() => handleViewDetails(req)}>
+                            <Eye className="h-4 w-4" />
+                        </Button>
+                        {req.status === 'Pending' && (
+                           <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" disabled={isPending} className="text-destructive">
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                      <AlertDialogTitle>Batalkan Pengajuan?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                      Aksi ini tidak dapat dibatalkan. Pengajuan Anda akan dihapus.
+                                      </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                      <AlertDialogCancel>Tidak</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => handleDelete(req.id)}>
+                                          Ya, Batalkan
+                                      </AlertDialogAction>
+                                  </AlertDialogFooter>
+                              </AlertDialogContent>
+                          </AlertDialog>
+                        )}
                     </TableCell>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={4} className="h-24 text-center">
+                    Belum ada riwayat pengajuan.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+      
+      <Dialog open={isNewRequestDialogOpen} onOpenChange={setIsNewRequestDialogOpen}>
         <DialogContent className="max-w-4xl">
           <DialogHeader>
             <DialogTitle>Formulir Pengajuan Barang Baru</DialogTitle>
@@ -257,6 +269,70 @@ export default function MyPurchasingClientPage({
           </DialogHeader>
           <NewRequestForm />
         </DialogContent>
+      </Dialog>
+
+      <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
+        {selectedRequest && (
+            <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle>Detail Pengajuan #{selectedRequest.id.substring(0, 6)}</DialogTitle>
+                    <DialogDescription>
+                        Status: <Badge variant={getStatusVariant(selectedRequest.status)}>{selectedRequest.status}</Badge>
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
+                    <div>
+                        <h4 className="font-semibold mb-2">Item</h4>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Barang</TableHead>
+                                    <TableHead>Jumlah</TableHead>
+                                    <TableHead className="text-right">Estimasi</TableHead>
+                                    <TableHead className="text-right">Aktual</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {selectedRequest.items.map((item, index) => (
+                                    <TableRow key={index}>
+                                        <TableCell>{item.name}</TableCell>
+                                        <TableCell>{item.quantity} {item.unit}</TableCell>
+                                        <TableCell className="text-right">{formatCurrency(item.estimatedPrice)}</TableCell>
+                                        <TableCell className="text-right">{formatCurrency(item.actualPrice)}</TableCell>
+                                    </TableRow>
+                                ))}
+                                <TableRow className="font-bold">
+                                    <TableCell colSpan={2}>Total</TableCell>
+                                    <TableCell className="text-right">{formatCurrency(selectedRequest.totalEstimatedPrice)}</TableCell>
+                                    <TableCell className="text-right">{formatCurrency(selectedRequest.totalActualPrice)}</TableCell>
+                                </TableRow>
+                            </TableBody>
+                        </Table>
+                    </div>
+                    {selectedRequest.purchasingNotes && (
+                        <div>
+                            <h4 className="font-semibold">Catatan Purchasing</h4>
+                            <p className="text-sm text-muted-foreground p-2 border rounded-md">{selectedRequest.purchasingNotes}</p>
+                        </div>
+                    )}
+                    {selectedRequest.financeNotes && (
+                        <div>
+                            <h4 className="font-semibold">Catatan Finance</h4>
+                            <p className="text-sm text-muted-foreground p-2 border rounded-md">{selectedRequest.financeNotes}</p>
+                        </div>
+                    )}
+                    {selectedRequest.rejectionReason && (
+                         <div>
+                            <h4 className="font-semibold text-destructive">Alasan Penolakan</h4>
+                            <p className="text-sm text-destructive p-2 border border-destructive/50 bg-destructive/10 rounded-md">{selectedRequest.rejectionReason}</p>
+                        </div>
+                    )}
+                </div>
+                <DialogFooter>
+                    <Button onClick={() => setIsDetailDialogOpen(false)}>Tutup</Button>
+                </DialogFooter>
+            </DialogContent>
+        )}
       </Dialog>
     </>
   );
