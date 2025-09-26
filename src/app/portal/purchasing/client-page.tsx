@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useTransition } from 'react';
@@ -194,7 +195,7 @@ export default function MyPurchasingClientPage({
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Riwayat Pengajuan Barang Saya</CardTitle>
+              <CardTitle>Riwayat Pesanan</CardTitle>
               <CardDescription>Proyek: {site.name}</CardDescription>
             </div>
             <Button onClick={() => setIsNewRequestDialogOpen(true)}>
@@ -207,7 +208,7 @@ export default function MyPurchasingClientPage({
             <TableHeader>
               <TableRow>
                 <TableHead>Tanggal</TableHead>
-                <TableHead>Total Estimasi</TableHead>
+                <TableHead>Total</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="w-[100px] text-right">Aksi</TableHead>
               </TableRow>
