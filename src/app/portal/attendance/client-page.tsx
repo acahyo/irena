@@ -42,16 +42,16 @@ export default function MyAttendanceClientPage() {
   const lang = settings?.language || 'id';
 
   const T = useMemo(() => ({
-      title: lang === 'id' ? 'Data Kehadiran Saya' : 'My Attendance Data',
-      description: lang === 'id' ? 'Lihat riwayat kehadiran dan lembur Anda per periode.' : 'View your attendance and overtime history per period.',
-      period: lang === 'id' ? 'Periode' : 'Period',
-      position: lang === 'id' ? 'Jabatan' : 'Position',
-      attendanceDays: lang === 'id' ? 'Kehadiran (hari)' : 'Attendance (days)',
-      overtimeHours: lang === 'id' ? 'Jam Lembur' : 'Overtime Hours',
-      noData: lang === 'id' ? 'Tidak ada data absensi ditemukan untuk periode ini.' : 'No attendance data found for this period.',
-      fetchError: lang === 'id' ? 'Gagal mengambil data absensi.' : 'Failed to fetch attendance data.',
+      title: lang === 'id' ? 'Data Kehadiran Saya' : 'Data Kehadiran Saya',
+      description: lang === 'id' ? 'Lihat riwayat kehadiran dan lembur Anda per periode.' : 'Lihat riwayat kehadiran dan lembur Anda per periode.',
+      period: lang === 'id' ? 'Periode' : 'Periode',
+      position: lang === 'id' ? 'Jabatan' : 'Jabatan',
+      attendanceDays: lang === 'id' ? 'Kehadiran (hari)' : 'Kehadiran (hari)',
+      overtimeHours: lang === 'id' ? 'Jam Lembur' : 'Jam Lembur',
+      noData: lang === 'id' ? 'Tidak ada data absensi ditemukan untuk periode ini.' : 'Tidak ada data absensi ditemukan untuk periode ini.',
+      fetchError: lang === 'id' ? 'Gagal mengambil data absensi.' : 'Gagal mengambil data absensi.',
       error: lang === 'id' ? 'Error' : 'Error',
-      pageError: lang === 'id' ? 'Gagal memuat data halaman.' : 'Failed to load page data.',
+      pageError: lang === 'id' ? 'Gagal memuat data halaman.' : 'Gagal memuat data halaman.',
   }), [lang]);
   
    useEffect(() => {

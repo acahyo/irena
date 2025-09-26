@@ -42,14 +42,14 @@ export default function MyPayslipClientPage({
   const lang = settings.language || 'id';
 
   const T = useMemo(() => ({
-      title: lang === 'id' ? 'Unduh Slip Gaji' : 'Download Payslip',
-      description: lang === 'id' ? 'Pilih periode untuk membuat dan mengunduh slip gaji Anda.' : 'Select a period to generate and download your payslip.',
-      periodLabel: lang === 'id' ? 'Periode' : 'Period',
-      generateButton: lang === 'id' ? 'Buat Slip Gaji' : 'Generate Payslip',
+      title: lang === 'id' ? 'Unduh Slip Gaji' : 'Unduh Slip Gaji',
+      description: lang === 'id' ? 'Pilih periode untuk membuat dan mengunduh slip gaji Anda.' : 'Pilih periode untuk membuat dan mengunduh slip gaji Anda.',
+      periodLabel: lang === 'id' ? 'Periode' : 'Periode',
+      generateButton: lang === 'id' ? 'Buat Slip Gaji' : 'Buat Slip Gaji',
       error: lang === 'id' ? 'Error' : 'Error',
-      noPeriod: lang === 'id' ? 'Silakan pilih periode.' : 'Please select a period.',
-      noSalaryDetails: lang === 'id' ? 'Detail gaji untuk posisi Anda belum diatur.' : 'Salary details for your position are not set.',
-      fetchingAttendance: lang === 'id' ? 'Mengambil data absensi...' : 'Fetching attendance...',
+      noPeriod: lang === 'id' ? 'Silakan pilih periode.' : 'Silakan pilih periode.',
+      noSalaryDetails: lang === 'id' ? 'Detail gaji untuk posisi Anda belum diatur.' : 'Detail gaji untuk posisi Anda belum diatur.',
+      fetchingAttendance: lang === 'id' ? 'Mengambil data absensi...' : 'Mengambil data absensi...',
   }), [lang]);
   
   useEffect(() => {

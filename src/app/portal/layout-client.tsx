@@ -36,9 +36,9 @@ import { Button } from "@/components/ui/button";
 const getNavItems = (lang: 'id' | 'en', settings: AppSettings) => {
   const allItems = [
     { id: 'profile', href: "/portal", icon: User, label: lang === 'id' ? "Profil" : "Profile", exact: true },
-    { id: 'attendance', href: "/portal/attendance", icon: ClipboardCheck, label: lang === 'id' ? "Absensi" : "Attendance" },
-    { id: 'leave', href: "/portal/leave", icon: CalendarCheck, label: lang === 'id' ? "Cuti" : "Leave" },
-    { id: 'koperasi', href: "/portal/koperasi", icon: Store, label: lang === 'id' ? "Koperasi" : "Co-op" },
+    { id: 'attendance', href: "/portal/attendance", icon: ClipboardCheck, label: lang === 'id' ? "Absensi" : "Kehadiran" },
+    { id: 'leave', href: "/portal/leave", icon: CalendarCheck, label: lang === 'id' ? "Cuti" : "Cuti" },
+    { id: 'koperasi', href: "/portal/koperasi", icon: Store, label: lang === 'id' ? "Koperasi" : "Koperasi" },
     { id: 'payslip', href: "/portal/payslip", icon: Printer, label: lang === 'id' ? "Gaji" : "Payslip" },
   ];
 
