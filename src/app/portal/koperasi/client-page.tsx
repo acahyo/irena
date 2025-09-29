@@ -83,7 +83,7 @@ export default function KoperasiClientPage({ employee, initialItems, initialOrde
     const currentYear = new Date().getFullYear();
     const spentThisMonth = initialOrders
       .filter(order => {
-        const orderDate = new Date(order.orderDate);
+        const orderDate = new Date(order.orderDate as string);
         return (
           order.status !== 'Rejected' &&
           orderDate.getMonth() === currentMonth &&
@@ -215,7 +215,7 @@ export default function KoperasiClientPage({ employee, initialItems, initialOrde
                     <TableBody>
                         {initialOrders.map(order => (
                             <TableRow key={order.id}>
-                                <TableCell>{format(new Date(order.orderDate), 'dd/MM/yy')}</TableCell>
+                                <TableCell>{format(new Date(order.orderDate as string), 'dd/MM/yy')}</TableCell>
                                 <TableCell>{formatCurrency(order.totalPrice)}</TableCell>
                                 <TableCell><Badge variant={getStatusVariant(order.status)}>{order.status}</Badge></TableCell>
                                  <TableCell className="text-right">
@@ -263,7 +263,7 @@ export default function KoperasiClientPage({ employee, initialItems, initialOrde
                                 <h4 className="font-semibold">Info Pengambilan</h4>
                                 <div className="text-sm text-muted-foreground p-3 border rounded-md mt-2 space-y-1">
                                     <div><strong>Hari:</strong> {selectedOrder.pickupInfo.day}</div>
-                                    <div><strong>Tanggal:</strong> {format(new Date(selectedOrder.pickupInfo.date), 'PPP')}</div>
+                                    <div><strong>Tanggal:</strong> {format(new Date(selectedOrder.pickupInfo.date as string), 'PPP')}</div>
                                     <div><strong>Lokasi:</strong> {selectedOrder.pickupInfo.location}</div>
                                 </div>
                             </div>
