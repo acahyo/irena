@@ -101,8 +101,8 @@ export default function MyPayslipClientPage({
     }
     const position = employee.positionDetails[0];
     
-    const attendanceDays = attendanceRecord?.attendanceByPosition ? Object.values(attendanceRecord.attendanceByPosition).reduce((a, b) => a + b, 0) : 0;
-    const overtimeHours = attendanceRecord?.overtimeByPosition ? Object.values(attendanceRecord.overtimeByPosition).reduce((a, b) => a + b, 0) : 0;
+    const attendanceDays = attendanceRecord?.attendanceByPosition ? Object.values(attendanceRecord.attendanceByPosition).reduce((a, b) => a + (b || 0), 0) : 0;
+    const overtimeHours = attendanceRecord?.overtimeByPosition ? Object.values(attendanceRecord.overtimeByPosition).reduce((a, b) => a + (b || 0), 0) : 0;
     const bonus = attendanceRecord?.bonus || 0;
 
     let earnings: Record<string, number> = {};
@@ -112,7 +112,7 @@ export default function MyPayslipClientPage({
       if (pos.salaryType === 'bulanan' || pos.salaryType === 'direksi') {
           const baseSalary = pos.monthlySalary || 0;
           if(pos.salaryType === 'bulanan') {
-            const dailyRate = baseSalary / 26;
+            const dailyRate = baseSalary / 30;
             const calculatedSalary = dailyRate * attendanceDays;
             earnings[`Gaji Pokok - ${pos.name}`] = calculatedSalary;
             totalEarnings += calculatedSalary;
@@ -177,7 +177,7 @@ export default function MyPayslipClientPage({
         deductions.potonganKoperasi = totalKoperasiSpending;
     }
 
-    const totalDeductions = Object.values(deductions).reduce((sum, val) => sum + val, 0);
+    const totalDeductions = Object.values(deductions).reduce((sum, val) => sum + (val || 0), 0);
     const netSalary = totalEarnings - totalDeductions;
     const periodDate = parse(period, 'yyyy-MM', new Date());
     const periodString = format(periodDate, 'MMMM yyyy', { locale: id });

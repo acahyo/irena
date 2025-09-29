@@ -5,7 +5,7 @@ import { getPositions } from '@/actions/positions';
 import PayrollClientPage from './client-page';
 import { getAttendanceByPeriod } from '@/actions/attendance';
 import { getKoperasiOrders } from '@/actions/koperasi';
-import type { EmployeeWithDetails, Position } from '@/lib/types';
+import type { EmployeeWithDetails, Position, PayrollRecord } from '@/lib/types';
 import {
   Card,
   CardContent,
@@ -46,19 +46,19 @@ export default async function PayrollPage({ userSiteId }: { userSiteId?: string 
         .filter((p): p is Position => !!p);
         
       const attendance = attendanceRecords.find(a => a.employeeId === emp.id);
+      const attendanceDays = attendance?.attendanceByPosition ? Object.values(attendance.attendanceByPosition).reduce((a, b) => a + (b || 0), 0) : 0;
 
       const earnings: Record<string, number> = {};
       let totalEarnings = 0;
 
       positionDetails.forEach(pos => {
           if (pos.salaryType === 'bulanan' || pos.salaryType === 'direksi') {
-              const attendanceForPos = attendance?.attendanceByPosition ? Object.values(attendance.attendanceByPosition).reduce((a, b) => a + b, 0) : 0;
               const baseSalary = pos.monthlySalary || 0;
               
               if(pos.salaryType === 'bulanan') {
-                // Monthly salary based on attendance, assuming 26 work days
-                const dailyRate = baseSalary / 26;
-                const calculatedSalary = dailyRate * attendanceForPos;
+                // Monthly salary based on attendance, assuming 30 work days
+                const dailyRate = baseSalary / 30;
+                const calculatedSalary = dailyRate * attendanceDays;
                 earnings[`Gaji Pokok - ${pos.name}`] = calculatedSalary;
                 totalEarnings += calculatedSalary;
               } else { // Direksi gets full salary
@@ -117,7 +117,7 @@ export default async function PayrollPage({ userSiteId }: { userSiteId?: string 
           deductions.potonganKoperasi = koperasiSpending;
       }
 
-      const totalDeductions = Object.values(deductions).reduce((sum, val) => sum + val, 0);
+      const totalDeductions = Object.values(deductions).reduce((sum, val) => sum + (val || 0), 0);
       const netSalary = totalEarnings - totalDeductions;
 
       return { 
@@ -127,7 +127,8 @@ export default async function PayrollPage({ userSiteId }: { userSiteId?: string 
           totalEarnings,
           totalDeductions,
           earnings,
-          deductions
+          deductions,
+          keterangan: '',
       };
   });
 

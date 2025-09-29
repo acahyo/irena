@@ -159,8 +159,8 @@ export default function PayslipClientPage({
     // Use the first position as the primary one for display purposes, but calculate earnings from all.
     const primaryPosition = selectedEmployee.positionDetails[0]; 
 
-    const attendanceDays = attendanceRecord?.attendanceByPosition ? Object.values(attendanceRecord.attendanceByPosition).reduce((a, b) => a + b, 0) : 0;
-    const overtimeHours = attendanceRecord?.overtimeByPosition ? Object.values(attendanceRecord.overtimeByPosition).reduce((a, b) => a + b, 0) : 0;
+    const attendanceDays = attendanceRecord?.attendanceByPosition ? Object.values(attendanceRecord.attendanceByPosition).reduce((a, b) => a + (b || 0), 0) : 0;
+    const overtimeHours = attendanceRecord?.overtimeByPosition ? Object.values(attendanceRecord.overtimeByPosition).reduce((a, b) => a + (b || 0), 0) : 0;
     const bonus = attendanceRecord?.bonus || 0;
 
     let earnings: Record<string, number> = {};
@@ -171,7 +171,7 @@ export default function PayslipClientPage({
           const baseSalary = pos.monthlySalary || 0;
 
           if (pos.salaryType === 'bulanan') {
-            const dailyRate = baseSalary / 26;
+            const dailyRate = baseSalary / 30;
             const calculatedSalary = dailyRate * attendanceDays;
             earnings[`Gaji Pokok - ${pos.name}`] = calculatedSalary;
             totalEarnings += calculatedSalary;
@@ -236,7 +236,7 @@ export default function PayslipClientPage({
         deductions.potonganKoperasi = totalKoperasiSpending;
     }
 
-    const totalDeductions = Object.values(deductions).reduce((sum, val) => sum + val, 0);
+    const totalDeductions = Object.values(deductions).reduce((sum, val) => sum + (val || 0), 0);
     const netSalary = totalEarnings - totalDeductions;
     
     const periodDate = parse(period, 'yyyy-MM', new Date());
@@ -346,7 +346,7 @@ export default function PayslipClientPage({
               <Input
                 id="attendance"
                 type="number"
-                value={attendanceRecord?.attendanceByPosition ? Object.values(attendanceRecord.attendanceByPosition).reduce((a, b) => a + b, 0) : ''}
+                value={attendanceRecord?.attendanceByPosition ? Object.values(attendanceRecord.attendanceByPosition).reduce((a, b) => a + (b || 0), 0) : ''}
                 disabled
                 placeholder="e.g. 22"
               />
@@ -357,7 +357,7 @@ export default function PayslipClientPage({
                 <Input
                   id="overtime"
                   type="number"
-                  value={attendanceRecord?.overtimeByPosition ? Object.values(attendanceRecord.overtimeByPosition).reduce((a, b) => a + b, 0) : ''}
+                  value={attendanceRecord?.overtimeByPosition ? Object.values(attendanceRecord.overtimeByPosition).reduce((a, b) => a + (b || 0), 0) : ''}
                   disabled
                   placeholder="e.g. 10"
                 />
