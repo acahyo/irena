@@ -21,15 +21,16 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
-import { Loader2, Calendar as CalendarIcon } from 'lucide-react';
+import { Loader2, Calendar as CalendarIcon, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Employee, Position, Site } from '@/lib/types';
-import { updateEmployee } from '@/actions/employees';
+import { updateEmployee, updateKoperasiLimitPeriode } from '@/actions/employees';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 
 const formatCurrency = (amount: number | undefined | null) => {
@@ -54,6 +55,10 @@ export default function KoperasiLimitClientPage({ initialEmployees, positions, s
   const [projectFilter, setProjectFilter] = useState('all');
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+  
+  const [collectiveStartDate, setCollectiveStartDate] = useState<Date | undefined>();
+  const [collectiveEndDate, setCollectiveEndDate] = useState<Date | undefined>();
+
 
   const filteredEmployees = useMemo(() => {
     return employees.filter(emp =>
@@ -79,12 +84,10 @@ export default function KoperasiLimitClientPage({ initialEmployees, positions, s
       try {
         await updateEmployee(employeeId, { 
             koperasiLimit: employee.koperasiLimit,
-            koperasiLimitStartDate: employee.koperasiLimitStartDate,
-            koperasiLimitEndDate: employee.koperasiLimitEndDate,
         });
         toast({
           title: 'Sukses!',
-          description: `Data limit koperasi untuk ${employee.name} telah diperbarui.`,
+          description: `Limit koperasi untuk ${employee.name} telah diperbarui.`,
         });
       } catch (error) {
         toast({
@@ -95,31 +98,48 @@ export default function KoperasiLimitClientPage({ initialEmployees, positions, s
       }
     });
   };
-
-  const DatePicker = ({ date: initialDateProp, setDate }: { date: Date | string | undefined, setDate: (date: Date | undefined) => void }) => {
-    const [date, setInternalDate] = useState<Date | undefined>();
-
-    useEffect(() => {
-        // Set initial date on the client to avoid hydration mismatch
-        if (initialDateProp) {
-            setInternalDate(new Date(initialDateProp));
-        }
-    }, [initialDateProp]);
-
-    const handleDateSelect = (selectedDate: Date | undefined) => {
-        setInternalDate(selectedDate);
-        setDate(selectedDate);
+  
+  const handleApplyCollectivePeriod = () => {
+    if (!collectiveStartDate || !collectiveEndDate) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Silakan pilih tanggal mulai dan selesai.' });
+        return;
+    }
+    if (filteredEmployees.length === 0) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Tidak ada karyawan yang cocok dengan filter untuk diterapkan.' });
+        return;
     }
     
+    startTransition(async () => {
+        const employeeIds = filteredEmployees.map(e => e.id);
+        try {
+            await updateKoperasiLimitPeriode(employeeIds, collectiveStartDate, collectiveEndDate);
+            
+            // Optimistically update UI
+            setEmployees(prev =>
+                prev.map(emp =>
+                    employeeIds.includes(emp.id)
+                        ? { ...emp, koperasiLimitStartDate: collectiveStartDate, koperasiLimitEndDate: collectiveEndDate }
+                        : emp
+                )
+            );
+            
+            toast({ title: 'Sukses!', description: 'Periode limit telah diterapkan pada karyawan yang difilter.' });
+        } catch (error) {
+             toast({ variant: 'destructive', title: 'Error', description: 'Gagal menerapkan periode kolektif.' });
+        }
+    });
+  };
+
+  const DatePicker = ({ date, setDate }: { date: Date | undefined, setDate: (date: Date | undefined) => void }) => {
     return (
         <Popover>
             <PopoverTrigger asChild>
                 <Button variant={'outline'} className={cn('w-full justify-start text-left font-normal h-9', !date && 'text-muted-foreground')}>
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(new Date(date), 'PPP') : <span>Pilih tanggal</span>}
+                    {date ? format(date, 'PPP') : <span>Pilih tanggal</span>}
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={date ? new Date(date) : undefined} onSelect={handleDateSelect} initialFocus /></PopoverContent>
+            <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={date} onSelect={setDate} initialFocus /></PopoverContent>
         </Popover>
     );
   };
@@ -164,6 +184,24 @@ export default function KoperasiLimitClientPage({ initialEmployees, positions, s
         </div>
       </CardHeader>
       <CardContent>
+        <Card className="mb-6 bg-muted/50">
+            <CardHeader><CardTitle className="text-lg">Pengaturan Periode Kolektif</CardTitle></CardHeader>
+            <CardContent className="flex flex-col md:flex-row items-end gap-4">
+                <div className="space-y-2 flex-1">
+                    <Label>Tanggal Mulai Kolektif</Label>
+                    <DatePicker date={collectiveStartDate} setDate={setCollectiveStartDate} />
+                </div>
+                <div className="space-y-2 flex-1">
+                    <Label>Tanggal Selesai Kolektif</Label>
+                    <DatePicker date={collectiveEndDate} setDate={setCollectiveEndDate} />
+                </div>
+                <Button onClick={handleApplyCollectivePeriod} disabled={isPending}>
+                    {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    <Check className="mr-2 h-4 w-4" /> Terapkan ke Semua ({filteredEmployees.length})
+                </Button>
+            </CardContent>
+        </Card>
+
         <div className="overflow-x-auto">
         <Table className="min-w-max">
           <TableHeader>
@@ -199,15 +237,15 @@ export default function KoperasiLimitClientPage({ initialEmployees, positions, s
                       />
                   </TableCell>
                   <TableCell className="w-[200px]">
-                      <DatePicker date={emp.koperasiLimitStartDate} setDate={(date) => handleValueChange(emp.id, 'koperasiLimitStartDate', date)} />
+                      {formatDate(emp.koperasiLimitStartDate)}
                   </TableCell>
                   <TableCell className="w-[200px]">
-                      <DatePicker date={emp.koperasiLimitEndDate} setDate={(date) => handleValueChange(emp.id, 'koperasiLimitEndDate', date)} />
+                      {formatDate(emp.koperasiLimitEndDate)}
                   </TableCell>
                   <TableCell>
                     <Button onClick={() => handleSaveLimit(emp.id)} size="sm" disabled={isPending}>
                         {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Simpan
+                        Simpan Limit
                     </Button>
                   </TableCell>
                 </TableRow>

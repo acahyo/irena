@@ -1,3 +1,4 @@
+
 'use server';
 
 import { db, storage } from '@/lib/firebase';
@@ -223,4 +224,23 @@ export async function updateEmployee(id: string, employee: Partial<Employee>): P
 export async function deleteEmployee(id: string): Promise<void> {
   const docRef = doc(db, 'employees', id);
   await deleteDoc(docRef);
+}
+
+// Update Koperasi Limit Periode for multiple employees
+export async function updateKoperasiLimitPeriode(
+  employeeIds: string[],
+  startDate: Date | string,
+  endDate: Date | string
+): Promise<void> {
+  const batch = writeBatch(db);
+
+  employeeIds.forEach(employeeId => {
+    const docRef = doc(db, 'employees', employeeId);
+    batch.update(docRef, {
+      koperasiLimitStartDate: new Date(startDate),
+      koperasiLimitEndDate: new Date(endDate),
+    });
+  });
+
+  await batch.commit();
 }
