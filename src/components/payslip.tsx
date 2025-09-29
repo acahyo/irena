@@ -51,6 +51,7 @@ export default function Payslip({
           potonganIdCard: "Potongan ID Card",
           potonganSimper: "Potongan SIMPER",
           potonganDenda: "Potongan Denda/Panjar",
+          potonganKoperasi: "Potongan Koperasi",
           bonus: "Bonus",
       };
       
@@ -60,6 +61,7 @@ export default function Payslip({
           potonganIdCard: "ID Card Deduction",
           potonganSimper: "SIMPER Deduction",
           potonganDenda: "Fine/Advance Deduction",
+          potonganKoperasi: "Cooperative Deduction",
           bonus: "Bonus",
       };
       
@@ -114,15 +116,15 @@ export default function Payslip({
 
   const DetailRow = ({ label, value }: { label: string; value: string | undefined | number }) => (
     <div>
-      <p className="text-sm text-gray-500">{label}</p>
-      <p className="font-medium">{value || '-'}</p>
+      <div className="text-sm text-gray-500">{label}</div>
+      <div className="font-medium">{value || '-'}</div>
     </div>
   );
   
   const SalaryRow = ({ label, value }: { label: string; value: number }) => (
      <div className="flex justify-between py-2">
-        <p>{label}</p>
-        <p>{formatCurrency(value)}</p>
+        <div>{label}</div>
+        <div>{formatCurrency(value)}</div>
       </div>
   )
 
@@ -148,12 +150,12 @@ export default function Payslip({
             </Avatar>
             <div>
               <h1 className="text-2xl font-bold text-gray-800">{settings.appName}</h1>
-              <p className="text-gray-500">{settings.appDescription}</p>
+              <div className="text-gray-500">{settings.appDescription}</div>
             </div>
           </div>
           <div className="text-right">
             <h2 className="text-3xl font-bold uppercase text-primary">{T.payslipTitle}</h2>
-            <p className="text-gray-500">{T.periodLabel}: {period}</p>
+            <div className="text-gray-500">{T.periodLabel}: {period}</div>
           </div>
         </header>
         
@@ -202,45 +204,45 @@ export default function Payslip({
             <div className="divide-y">
               {Object.keys(deductions).length > 0 ? Object.entries(deductions).map(([key, value]) => (
                 <SalaryRow key={key} label={formatLabel(key)} value={value} />
-              )) : <p className="text-gray-500 text-sm py-2">{T.noDeductions}</p>}
+              )) : <div className="text-gray-500 text-sm py-2">{T.noDeductions}</div>}
             </div>
           </div>
         </section>
         
         <section className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
           <div className="flex justify-between font-bold text-lg py-2 bg-gray-100 px-4 rounded">
-              <p>{T.totalEarnings}</p>
-              <p>{formatCurrency(totalEarnings)}</p>
+              <div>{T.totalEarnings}</div>
+              <div>{formatCurrency(totalEarnings)}</div>
           </div>
           <div className="flex justify-between font-bold text-lg py-2 bg-gray-100 px-4 rounded">
-              <p>{T.totalDeductions}</p>
-              <p>{formatCurrency(totalDeductions)}</p>
+              <div>{T.totalDeductions}</div>
+              <div>{formatCurrency(totalDeductions)}</div>
           </div>
         </section>
 
         <section className="mt-8 bg-primary text-primary-foreground p-6 rounded-lg text-center">
           <h3 className="text-xl uppercase tracking-wider">{T.netPay}</h3>
-          <p className="text-4xl font-bold mt-2">{formatCurrency(netSalary)}</p>
+          <div className="text-4xl font-bold mt-2">{formatCurrency(netSalary)}</div>
         </section>
 
         {keterangan && (
             <section className="mt-8">
                 <h3 className="text-lg font-semibold text-gray-700">{T.notes}</h3>
-                <p className="text-sm text-gray-600 whitespace-pre-wrap">{keterangan}</p>
+                <div className="text-sm text-gray-600 whitespace-pre-wrap">{keterangan}</div>
             </section>
         )}
         
         {options.showSignatures && (
            <section className="grid grid-cols-2 gap-8 mt-12 pt-8">
                 <div className="text-center">
-                    <p className="mb-16">{T.receivedBy}</p>
-                    <p className="font-bold border-t pt-2">{employee.name}</p>
-                    <p className="text-sm text-gray-500">{T.employee}</p>
+                    <div className="mb-16">{T.receivedBy}</div>
+                    <div className="font-bold border-t pt-2">{employee.name}</div>
+                    <div className="text-sm text-gray-500">{T.employee}</div>
                 </div>
                  <div className="text-center">
-                    <p className="mb-16">{T.approvedBy}</p>
-                    <p className="font-bold border-t pt-2">(___________________)</p>
-                    <p className="text-sm text-gray-500">{T.manager}</p>
+                    <div className="mb-16">{T.approvedBy}</div>
+                    <div className="font-bold border-t pt-2">(___________________)</div>
+                    <div className="text-sm text-gray-500">{T.manager}</div>
                 </div>
             </section>
         )}
@@ -248,7 +250,7 @@ export default function Payslip({
 
         <footer className="mt-12 text-center text-xs text-gray-400">
           <div className="whitespace-pre-wrap">{T.footer}</div>
-          <p>{settings.appName} &copy; {new Date().getFullYear()}</p>
+          <div>{settings.appName} &copy; {new Date().getFullYear()}</div>
         </footer>
       </div>
     </div>

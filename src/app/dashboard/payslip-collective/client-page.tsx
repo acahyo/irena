@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect, useTransition } from 'react';
@@ -14,10 +15,11 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, Settings2 } from 'lucide-react';
-import type { EmployeeWithPosition, AppSettings, AttendanceRecord, Position } from '@/lib/types';
+import type { EmployeeWithPosition, AppSettings, AttendanceRecord, Position, KoperasiOrder } from '@/lib/types';
 import PayslipViewer, { type PayslipData, type PayslipOptions } from '@/components/payslip-viewer';
 import { useToast } from '@/hooks/use-toast';
 import { getAttendanceByPeriod } from '@/actions/attendance';
+import { getKoperasiOrders } from '@/actions/koperasi';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -25,7 +27,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { format, parse } from 'date-fns';
+import { format, parse, getMonth, getYear } from 'date-fns';
 import { id } from 'date-fns/locale';
 
 const BPJS_RATES: Record<string, number> = {
@@ -36,18 +38,17 @@ const BPJS_RATES: Record<string, number> = {
 export default function PayslipCollectiveClientPage({
   initialEmployees,
   settings,
-  initialAttendance,
 }: {
   initialEmployees: EmployeeWithPosition[];
   settings: AppSettings;
-  initialAttendance: AttendanceRecord[];
 }) {
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<Set<string>>(new Set());
   const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7));
   const [positionFilter, setPositionFilter] = useState('all');
   const [payslipsData, setPayslipsData] = useState<PayslipData[]>([]);
   const [keterangan, setKeterangan] = useState('');
-  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(initialAttendance);
+  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
+  const [koperasiOrders, setKoperasiOrders] = useState<KoperasiOrder[]>([]);
   const [isGenerating, startTransition] = useTransition();
   const { toast } = useToast();
   const [payslipOptions, setPayslipOptions] = useState<PayslipOptions>({
@@ -76,18 +77,32 @@ export default function PayslipCollectiveClientPage({
   }, [initialEmployees, positionFilter]);
 
   useEffect(() => {
-    const fetchAttendance = async () => {
+    const fetchPeriodData = async () => {
         if (!period) return;
         startTransition(async () => {
             try {
-                const records = await getAttendanceByPeriod(period);
-                setAttendanceRecords(records);
+                const [attendanceData, koperasiData] = await Promise.all([
+                  getAttendanceByPeriod(period),
+                  getKoperasiOrders({})
+                ]);
+                setAttendanceRecords(attendanceData);
+                
+                const periodDate = parse(period, 'yyyy-MM', new Date());
+                const periodMonth = getMonth(periodDate);
+                const periodYear = getYear(periodDate);
+
+                const relevantOrders = koperasiData.filter(order => {
+                  const orderDate = new Date(order.orderDate);
+                  return getMonth(orderDate) === periodMonth && getYear(orderDate) === periodYear && order.status !== 'Rejected';
+                });
+                setKoperasiOrders(relevantOrders);
+
             } catch (error) {
-                toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch attendance data for the selected period.' });
+                toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch data for the selected period.' });
             }
         });
     };
-    fetchAttendance();
+    fetchPeriodData();
   }, [period, toast]);
   
   const handleSelectAll = (checked: boolean) => {
@@ -186,6 +201,15 @@ export default function PayslipCollectiveClientPage({
             if (attendance?.potonganIdCard) deductions.potonganIdCard = attendance.potonganIdCard;
             if (attendance?.potonganSimper) deductions.potonganSimper = attendance.potonganSimper;
             if (attendance?.potonganDenda) deductions.potonganDenda = attendance.potonganDenda;
+            
+            const totalKoperasiSpending = koperasiOrders
+                .filter(order => order.employeeId === employeeId)
+                .reduce((sum, order) => sum + order.totalPrice, 0);
+
+            if (totalKoperasiSpending > 0) {
+                deductions.potonganKoperasi = totalKoperasiSpending;
+            }
+
             const totalDeductions = Object.values(deductions).reduce((sum, val) => sum + val, 0);
             const netSalary = totalEarnings - totalDeductions;
             

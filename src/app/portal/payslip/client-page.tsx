@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -12,11 +13,12 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Printer, Loader2 } from 'lucide-react';
-import type { EmployeeWithPosition, AppSettings, AttendanceRecord, Position } from '@/lib/types';
+import type { EmployeeWithPosition, AppSettings, AttendanceRecord, Position, KoperasiOrder } from '@/lib/types';
 import PayslipViewer, { type PayslipData } from '@/components/payslip-viewer';
 import { useToast } from '@/hooks/use-toast';
 import { getAttendanceByEmployeeAndPeriod } from '@/actions/attendance';
-import { format, parse } from 'date-fns';
+import { getKoperasiOrders } from '@/actions/koperasi';
+import { format, parse, getMonth, getYear } from 'date-fns';
 import { id } from 'date-fns/locale';
 
 const BPJS_RATES: Record<string, number> = {
@@ -27,17 +29,16 @@ const BPJS_RATES: Record<string, number> = {
 export default function MyPayslipClientPage({
   employee,
   settings,
-  initialAttendance,
 }: {
   employee: EmployeeWithPosition;
   settings: AppSettings;
-  initialAttendance: AttendanceRecord | null;
 }) {
   const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7));
   const [payslipData, setPayslipData] = useState<PayslipData | null>(null);
-  const [attendanceRecord, setAttendanceRecord] = useState<AttendanceRecord | null>(initialAttendance);
+  const [attendanceRecord, setAttendanceRecord] = useState<AttendanceRecord | null>(null);
+  const [koperasiOrders, setKoperasiOrders] = useState<KoperasiOrder[]>([]);
   const { toast } = useToast();
-  const [isFetchingAttendance, setIsFetchingAttendance] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
 
   const lang = settings.language || 'id';
 
@@ -49,27 +50,42 @@ export default function MyPayslipClientPage({
       error: lang === 'id' ? 'Error' : 'Error',
       noPeriod: lang === 'id' ? 'Silakan pilih periode.' : 'Silakan pilih periode.',
       noSalaryDetails: lang === 'id' ? 'Detail gaji untuk posisi Anda belum diatur.' : 'Detail gaji untuk posisi Anda belum diatur.',
-      fetchingAttendance: lang === 'id' ? 'Mengambil data absensi...' : 'Mengambil data absensi...',
+      fetchingAttendance: lang === 'id' ? 'Mengambil data...' : 'Fetching data...',
   }), [lang]);
   
   useEffect(() => {
-    const fetchAttendance = async () => {
+    const fetchData = async () => {
         if (!period) {
             setAttendanceRecord(null);
             return;
         };
-        setIsFetchingAttendance(true);
+        setIsFetching(true);
         try {
-            const employeeRecord = await getAttendanceByEmployeeAndPeriod(employee.id, period);
+            const [employeeRecord, allKoperasiOrders] = await Promise.all([
+                getAttendanceByEmployeeAndPeriod(employee.id, period),
+                getKoperasiOrders({ employeeId: employee.id })
+            ]);
+
             setAttendanceRecord(employeeRecord || null);
+            
+            const periodDate = parse(period, 'yyyy-MM', new Date());
+            const periodMonth = getMonth(periodDate);
+            const periodYear = getYear(periodDate);
+            
+            const employeeOrders = allKoperasiOrders.filter(order => {
+                const orderDate = new Date(order.orderDate);
+                return getMonth(orderDate) === periodMonth && getYear(orderDate) === periodYear && order.status !== 'Rejected';
+            });
+            setKoperasiOrders(employeeOrders);
+
         } catch (error) {
             toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch attendance data.' });
             setAttendanceRecord(null);
         } finally {
-            setIsFetchingAttendance(false);
+            setIsFetching(false);
         }
     };
-    fetchAttendance();
+    fetchData();
   }, [period, employee.id, toast]);
 
   const handleGenerate = () => {
@@ -144,6 +160,11 @@ export default function MyPayslipClientPage({
     if (attendanceRecord?.potonganDenda) {
         deductions.potonganDenda = attendanceRecord.potonganDenda;
     }
+    
+    const totalKoperasiSpending = koperasiOrders.reduce((sum, order) => sum + order.totalPrice, 0);
+    if (totalKoperasiSpending > 0) {
+        deductions.potonganKoperasi = totalKoperasiSpending;
+    }
 
     const totalDeductions = Object.values(deductions).reduce((sum, val) => sum + val, 0);
     const netSalary = totalEarnings - totalDeductions;
@@ -184,9 +205,9 @@ export default function MyPayslipClientPage({
                 className="w-full sm:w-auto"
                 />
             </div>
-            <Button onClick={handleGenerate} disabled={isFetchingAttendance} className="w-full sm:w-auto">
-                {isFetchingAttendance ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Printer className="mr-2 h-4 w-4" />}
-                {isFetchingAttendance ? T.fetchingAttendance : T.generateButton}
+            <Button onClick={handleGenerate} disabled={isFetching} className="w-full sm:w-auto">
+                {isFetching ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Printer className="mr-2 h-4 w-4" />}
+                {isFetching ? T.fetchingAttendance : T.generateButton}
             </Button>
           </div>
         </CardContent>

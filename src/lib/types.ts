@@ -153,6 +153,7 @@ export type AttendanceRecord = {
     potonganSimper?: number;
     potonganDenda?: number;
     potonganPph?: number;
+    potonganKoperasi?: number;
     bonus?: number;
 };
 

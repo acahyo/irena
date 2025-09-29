@@ -4,8 +4,7 @@ import { getEmployeeSession } from '@/actions/auth';
 import MyPayslipClientPage from './client-page';
 import { getSettings } from '@/actions/settings';
 import { getPositions } from '@/actions/positions';
-import { getAttendanceByEmployeeAndPeriod } from '@/actions/attendance';
-import type { EmployeeWithPosition, Position, AppSettings, Employee, AttendanceRecord } from '@/lib/types';
+import type { EmployeeWithPosition, Position, AppSettings, Employee } from '@/lib/types';
 import { notFound, redirect } from 'next/navigation';
 import { getEmployee } from '@/actions/employees';
 
@@ -26,10 +25,6 @@ export default async function MyPayslipPage() {
       notFound();
     }
     
-    const currentPeriod = new Date().toISOString().slice(0, 7);
-    const initialAttendanceData = await getAttendanceByEmployeeAndPeriod(session.id, currentPeriod);
-    const initialAttendance = initialAttendanceData ? { ...initialAttendanceData, date: initialAttendanceData.date.toString() } : null;
-
     const positionDetails: Position[] = (employee.positions || [])
         .map(posName => positions.find(p => p.name === posName))
         .filter((p): p is Position => !!p);
@@ -43,7 +38,6 @@ export default async function MyPayslipPage() {
     <MyPayslipClientPage
       employee={employeeWithDetails}
       settings={settings as AppSettings}
-      initialAttendance={initialAttendance as AttendanceRecord | null}
     />
   );
 }
