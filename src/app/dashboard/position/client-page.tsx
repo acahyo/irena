@@ -41,6 +41,15 @@ import { useToast } from '@/hooks/use-toast';
 import type { Position } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 
+const formatCurrency = (amount: number | undefined | null) => {
+  if (amount === undefined || amount === null) return 'N/A';
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+  }).format(amount);
+};
+
 
 export default function PositionClientPage({ initialPositions }: { initialPositions: Position[]}) {
   const [positions, setPositions] = useState<Position[]>(initialPositions);
@@ -93,6 +102,8 @@ export default function PositionClientPage({ initialPositions }: { initialPositi
                 <TableRow>
                     <TableHead>Nama Jabatan</TableHead>
                     <TableHead>Tipe Gaji</TableHead>
+                    <TableHead>Gaji Pokok / Upah Harian</TableHead>
+                    <TableHead>Lembur per Jam</TableHead>
                     <TableHead className="w-[100px] text-right">Aksi</TableHead>
                 </TableRow>
             </TableHeader>
@@ -108,6 +119,13 @@ export default function PositionClientPage({ initialPositions }: { initialPositi
                                 <span className="text-muted-foreground">Not Set</span>
                             )}
                         </TableCell>
+                        <TableCell>
+                            {pos.salaryType === 'harian' 
+                                ? formatCurrency(pos.dailyWage)
+                                : formatCurrency(pos.monthlySalary)
+                            }
+                        </TableCell>
+                        <TableCell>{formatCurrency(pos.overtimeRate)}</TableCell>
                         <TableCell className="text-right">
                              <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -150,7 +168,7 @@ export default function PositionClientPage({ initialPositions }: { initialPositi
                 ))
                ) : (
                 <TableRow>
-                    <TableCell colSpan={3} className="h-24 text-center">
+                    <TableCell colSpan={5} className="h-24 text-center">
                         Tidak ada jabatan ditemukan.
                     </TableCell>
                 </TableRow>
