@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/collapsible"
 import { format, parse, getMonth, getYear } from 'date-fns';
 import { id } from 'date-fns/locale';
+import { savePayrollRecord } from '@/actions/payroll';
 
 const BPJS_RATES: Record<string, number> = {
     miki: 280000,
@@ -142,14 +143,15 @@ export default function PayslipCollectiveClientPage({
       return;
     }
 
-    startTransition(() => {
+    startTransition(async () => {
         const generatedPayslips: PayslipData[] = [];
         const periodDate = parse(period, 'yyyy-MM', new Date());
         const periodString = format(periodDate, 'MMMM yyyy', { locale: id });
+        let savedCount = 0;
 
-        selectedEmployeeIds.forEach(employeeId => {
+        for (const employeeId of selectedEmployeeIds) {
             const employee = initialEmployees.find(e => e.id === employeeId);
-            if (!employee || !employee.positionDetails || employee.positionDetails.length === 0) return;
+            if (!employee || !employee.positionDetails || employee.positionDetails.length === 0) continue;
 
             const attendance = attendanceRecords.find(a => a.employeeId === employeeId);
             const attendanceDays = attendance?.attendanceByPosition ? Object.values(attendance.attendanceByPosition).reduce((a, b) => a + b, 0) : 0;
@@ -214,10 +216,9 @@ export default function PayslipCollectiveClientPage({
             const netSalary = totalEarnings - totalDeductions;
             
             const mainPosition = employee.positionDetails![0];
-
-            generatedPayslips.push({
+            
+            const payslipRecord: Omit<PayslipData, 'employee'> = {
                 id: employee.id,
-                employee,
                 period: periodString,
                 earnings,
                 deductions,
@@ -229,12 +230,35 @@ export default function PayslipCollectiveClientPage({
                 overtimeHours,
                 keterangan: keterangan,
                 options: payslipOptions,
-            });
-        });
+            };
+
+            generatedPayslips.push({ ...payslipRecord, employee });
+
+            // Save to history
+            try {
+                await savePayrollRecord({
+                    ...payslipRecord,
+                    period: period,
+                    employeeId: employee.id,
+                    employeeName: employee.name,
+                    bankName: employee.bankName,
+                    accountNumber: employee.accountNumber,
+                });
+                savedCount++;
+            } catch (err) {
+                 // Log error but continue
+                console.error(`Failed to save payroll record for ${employee.name}`, err);
+            }
+        }
 
         if (generatedPayslips.length !== selectedEmployeeIds.size) {
             toast({ variant: 'destructive', title: 'Warning', description: 'Some payslips could not be generated due to missing salary details.' });
         }
+        
+        toast({
+            title: 'Success!',
+            description: `${generatedPayslips.length} payslips generated and ${savedCount} history records saved.`,
+        });
 
         setPayslipsData(generatedPayslips);
     });

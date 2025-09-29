@@ -235,3 +235,19 @@ export type KoperasiOrder = {
   completionPhotoUrl?: string;
   rejectionReason?: string;
 };
+
+export type PayrollRecord = {
+    id: string;
+    employeeId: string;
+    employeeName: string;
+    period: string; // YYYY-MM
+    generationDate: Date | string;
+    earnings: Record<string, number>;
+    deductions: Record<string, number>;
+    totalEarnings: number;
+    totalDeductions: number;
+    netSalary: number;
+    bankName?: string;
+    accountNumber?: string;
+    keterangan?: string;
+}

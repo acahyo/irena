@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/collapsible"
 import { format, parse, getMonth, getYear } from 'date-fns';
 import { id } from 'date-fns/locale';
+import { savePayrollRecord } from '@/actions/payroll';
 
 
 const BPJS_RATES: Record<string, number> = {
@@ -135,7 +136,7 @@ export default function PayslipClientPage({
     fetchData();
   }, [selectedEmployeeId, period, toast]);
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     if (!selectedEmployeeId || !period || !selectedEmployee) {
       toast({
         variant: 'destructive',
@@ -232,7 +233,7 @@ export default function PayslipClientPage({
     const periodDate = parse(period, 'yyyy-MM', new Date());
     const periodString = format(periodDate, 'MMMM yyyy', { locale: id });
 
-    setPayslipData({
+    const currentPayslipData: PayslipData = {
       id: selectedEmployee.id,
       employee: selectedEmployee,
       period: periodString,
@@ -246,7 +247,37 @@ export default function PayslipClientPage({
       overtimeHours: overtimeHours,
       keterangan: keterangan,
       options: payslipOptions,
-    });
+    };
+    
+    setPayslipData(currentPayslipData);
+    
+    // Save to history
+    try {
+        await savePayrollRecord({
+            employeeId: selectedEmployee.id,
+            employeeName: selectedEmployee.name,
+            period: period,
+            generationDate: new Date(),
+            earnings,
+            deductions,
+            totalEarnings,
+            totalDeductions,
+            netSalary,
+            bankName: selectedEmployee.bankName,
+            accountNumber: selectedEmployee.accountNumber,
+            keterangan: keterangan,
+        });
+        toast({
+            title: 'Success',
+            description: 'Payslip generated and history record saved.',
+        });
+    } catch(err) {
+        toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'Failed to save payroll history record.',
+        });
+    }
   };
 
   return (
