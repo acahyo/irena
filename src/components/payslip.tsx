@@ -247,7 +247,7 @@ export default function Payslip({
 
 
         <footer className="mt-12 text-center text-xs text-gray-400">
-          <p>{T.footer}</p>
+          <div className="whitespace-pre-wrap">{T.footer}</div>
           <p>{settings.appName} &copy; {new Date().getFullYear()}</p>
         </footer>
       </div>

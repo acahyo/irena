@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useTransition } from 'react';
@@ -261,9 +262,9 @@ export default function KoperasiClientPage({ employee, initialItems, initialOrde
                             <div>
                                 <h4 className="font-semibold">Info Pengambilan</h4>
                                 <div className="text-sm text-muted-foreground p-3 border rounded-md mt-2 space-y-1">
-                                    <p><strong>Hari:</strong> {selectedOrder.pickupInfo.day}</p>
-                                    <p><strong>Tanggal:</strong> {format(new Date(selectedOrder.pickupInfo.date), 'PPP')}</p>
-                                    <p><strong>Lokasi:</strong> {selectedOrder.pickupInfo.location}</p>
+                                    <div><strong>Hari:</strong> {selectedOrder.pickupInfo.day}</div>
+                                    <div><strong>Tanggal:</strong> {format(new Date(selectedOrder.pickupInfo.date), 'PPP')}</div>
+                                    <div><strong>Lokasi:</strong> {selectedOrder.pickupInfo.location}</div>
                                 </div>
                             </div>
                         )}
@@ -280,9 +281,9 @@ export default function KoperasiClientPage({ employee, initialItems, initialOrde
                         {selectedOrder.status === 'Rejected' && selectedOrder.rejectionReason && (
                             <div>
                                 <h4 className="font-semibold text-destructive">Alasan Penolakan</h4>
-                                <p className="text-sm text-destructive p-3 border border-destructive/50 bg-destructive/10 rounded-md mt-2">
+                                <div className="text-sm text-destructive p-3 border border-destructive/50 bg-destructive/10 rounded-md mt-2">
                                     {selectedOrder.rejectionReason}
-                                </p>
+                                </div>
                             </div>
                         )}
                     </div>
