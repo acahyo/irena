@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useTransition } from 'react';
 import {
   Card,
   CardContent,
@@ -24,10 +24,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Download } from 'lucide-react';
+import { Download, Loader2, Save } from 'lucide-react';
 import type { EmployeeWithDetails } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import * as XLSX from 'xlsx';
+import { savePayrollHistoryBatch } from '@/actions/payroll';
 
 const formatCurrency = (amount: number | undefined | null) => {
     if (amount === undefined || amount === null) return 'N/A';
@@ -38,9 +39,10 @@ const formatCurrency = (amount: number | undefined | null) => {
     }).format(amount);
 };
 
-export default function PayrollClientPage({ employees }: { employees: EmployeeWithDetails[] }) {
+export default function PayrollClientPage({ employees, period }: { employees: EmployeeWithDetails[], period: string }) {
   const { toast } = useToast();
   const [bankFilter, setBankFilter] = useState('all');
+  const [isSaving, startSaving] = useTransition();
 
   const banks = useMemo(() => {
     const allBanks = employees.map((emp) => emp.bankName).filter(Boolean);
@@ -79,6 +81,35 @@ export default function PayrollClientPage({ employees }: { employees: EmployeeWi
     });
   };
 
+  const handleVerifyAndSave = () => {
+      if (filteredEmployees.length === 0) {
+          toast({ variant: 'destructive', title: 'Tidak ada data', description: 'Tidak ada data karyawan untuk disimpan.' });
+          return;
+      }
+      
+      startSaving(async () => {
+          const recordsToSave = filteredEmployees.map(emp => ({
+              employeeId: emp.id,
+              employeeName: emp.name,
+              period,
+              earnings: emp.earnings,
+              deductions: emp.deductions,
+              totalEarnings: emp.totalEarnings,
+              totalDeductions: emp.totalDeductions,
+              netSalary: emp.netSalary,
+              bankName: emp.bankName,
+              accountNumber: emp.accountNumber,
+          }));
+
+          const result = await savePayrollHistoryBatch(recordsToSave);
+          if (result.success) {
+              toast({ title: 'Sukses!', description: `${result.count} data riwayat payroll telah disimpan.` });
+          } else {
+              toast({ variant: 'destructive', title: 'Error', description: 'Gagal menyimpan riwayat payroll.' });
+          }
+      });
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -105,6 +136,10 @@ export default function PayrollClientPage({ employees }: { employees: EmployeeWi
                  <Button variant="outline" onClick={handleExport}>
                     <Download className="mr-2 h-4 w-4" />
                     Export
+                </Button>
+                <Button onClick={handleVerifyAndSave} disabled={isSaving}>
+                  {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                  Verifikasi &amp; Simpan
                 </Button>
            </div>
         </div>

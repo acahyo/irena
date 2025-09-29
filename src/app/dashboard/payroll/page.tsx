@@ -47,39 +47,51 @@ export default async function PayrollPage({ userSiteId }: { userSiteId?: string 
         
       const attendance = attendanceRecords.find(a => a.employeeId === emp.id);
 
+      const earnings: Record<string, number> = {};
       let totalEarnings = 0;
 
       positionDetails.forEach(pos => {
           if (pos.salaryType === 'bulanan' || pos.salaryType === 'direksi') {
               const baseSalary = pos.monthlySalary || 0;
-              const allowancesTotal = pos.allowances?.reduce((sum, allowance) => sum + allowance.amount, 0) || 0;
-              totalEarnings += baseSalary + allowancesTotal;
+              earnings[`Gaji Pokok - ${pos.name}`] = baseSalary;
+              totalEarnings += baseSalary;
+              
+              pos.allowances?.forEach(allowance => {
+                  earnings[`${allowance.name} - ${pos.name}`] = allowance.amount;
+                  totalEarnings += allowance.amount;
+              });
+
           } else if (pos.salaryType === 'harian') {
               const attendanceForPos = attendance?.attendanceByPosition?.[pos.name] || 0;
               const overtimeForPos = attendance?.overtimeByPosition?.[pos.name] || 0;
               
               if (attendanceForPos > 0) {
-                  totalEarnings += (pos.dailyWage || 0) * attendanceForPos;
+                  const dailyIncome = (pos.dailyWage || 0) * attendanceForPos;
+                  earnings[`dailyWage-${pos.name}`] = dailyIncome;
+                  totalEarnings += dailyIncome;
               }
               
               if (overtimeForPos > 0) {
-                  totalEarnings += (pos.overtimeRate || 0) * overtimeForPos;
+                  const overtimeIncome = (pos.overtimeRate || 0) * overtimeForPos;
+                  earnings[`overtime-${pos.name}`] = overtimeIncome;
+                  totalEarnings += overtimeIncome;
               }
           }
       });
       
       if(attendance?.bonus) {
+          earnings.bonus = attendance.bonus;
           totalEarnings += attendance.bonus;
       }
 
-      let totalDeductions = 0;
+      const deductions: Record<string, number> = {};
       if (emp.bpjsStatus === 'active' && emp.bpjsType && BPJS_RATES[emp.bpjsType]) {
-        totalDeductions += BPJS_RATES[emp.bpjsType];
+        deductions.bpjs = BPJS_RATES[emp.bpjsType];
       }
-      if (attendance?.potonganPph) totalDeductions += attendance.potonganPph;
-      if (attendance?.potonganIdCard) totalDeductions += attendance.potonganIdCard;
-      if (attendance?.potonganSimper) totalDeductions += attendance.potonganSimper;
-      if (attendance?.potonganDenda) totalDeductions += attendance.potonganDenda;
+      if (attendance?.potonganPph) deductions.potonganPph = attendance.potonganPph;
+      if (attendance?.potonganIdCard) deductions.potonganIdCard = attendance.potonganIdCard;
+      if (attendance?.potonganSimper) deductions.potonganSimper = attendance.potonganSimper;
+      if (attendance?.potonganDenda) deductions.potonganDenda = attendance.potonganDenda;
       
       const koperasiSpending = allKoperasiOrders
         .filter(order => {
@@ -92,15 +104,20 @@ export default async function PayrollPage({ userSiteId }: { userSiteId?: string 
         .reduce((sum, order) => sum + order.totalPrice, 0);
 
       if (koperasiSpending > 0) {
-          totalDeductions += koperasiSpending;
+          deductions.potonganKoperasi = koperasiSpending;
       }
-      
+
+      const totalDeductions = Object.values(deductions).reduce((sum, val) => sum + val, 0);
       const netSalary = totalEarnings - totalDeductions;
 
       return { 
           ...emp, 
           positionDetails,
-          netSalary
+          netSalary,
+          totalEarnings,
+          totalDeductions,
+          earnings,
+          deductions
       };
   });
 
@@ -127,6 +144,7 @@ export default async function PayrollPage({ userSiteId }: { userSiteId?: string 
 
         <PayrollClientPage
             employees={employeesWithDetails}
+            period={currentPeriod}
         />
     </div>
   );

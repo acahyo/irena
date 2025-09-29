@@ -190,7 +190,11 @@ export type EmployeeWithPosition = Employee & {
 // Composite type for payroll page
 export type EmployeeWithDetails = Employee & {
   positionDetails?: Position[]; // Changed from Position
-  netSalary?: number;
+  netSalary: number;
+  totalEarnings: number;
+  totalDeductions: number;
+  earnings: Record<string, number>;
+  deductions: Record<string, number>;
 }
 
 export type FinanceRecord = {

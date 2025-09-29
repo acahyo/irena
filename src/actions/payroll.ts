@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/lib/firebase';
-import { collection, addDoc, getDocs, query, where, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where, Timestamp, writeBatch, doc } from 'firebase/firestore';
 import type { PayrollRecord } from '@/lib/types';
 
 // Helper to convert Timestamps
@@ -26,6 +26,33 @@ export async function savePayrollRecord(record: Omit<PayrollRecord, 'id'>): Prom
     const docRef = await addDoc(collection(db, 'payrollHistory'), recordData);
     return docRef.id;
 }
+
+// Save a batch of payroll records
+export async function savePayrollHistoryBatch(records: Omit<PayrollRecord, 'id'>[]): Promise<{ success: boolean, count: number }> {
+    if (!records || records.length === 0) {
+        return { success: false, count: 0 };
+    }
+
+    const batch = writeBatch(db);
+    
+    records.forEach(record => {
+        const docRef = doc(collection(db, 'payrollHistory'));
+        const recordData = {
+            ...record,
+            generationDate: new Date(),
+        };
+        batch.set(docRef, recordData);
+    });
+
+    try {
+        await batch.commit();
+        return { success: true, count: records.length };
+    } catch (error) {
+        console.error("Error saving payroll history batch:", error);
+        return { success: false, count: 0 };
+    }
+}
+
 
 // Get all payroll records for a specific period (YYYY-MM)
 export async function getPayrollHistoryByPeriod(period: string): Promise<PayrollRecord[]> {
