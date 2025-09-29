@@ -59,7 +59,7 @@ export default function PayrollClientPage({ employees }: { employees: EmployeeWi
         'Nama Karyawan': emp.name,
         'Nomor Rekening': emp.accountNumber,
         'Bank': emp.bankName,
-        'Total Gaji': emp.totalSalary,
+        'Gaji Bersih': emp.netSalary,
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
@@ -70,7 +70,7 @@ export default function PayrollClientPage({ employees }: { employees: EmployeeWi
         { wch: 25 }, // Nama Karyawan
         { wch: 20 }, // Nomor Rekening
         { wch: 20 }, // Bank
-        { wch: 20 }, // Total Gaji
+        { wch: 20 }, // Gaji Bersih
     ];
     XLSX.writeFile(workbook, `payroll_summary_${bankFilter}.xlsx`);
     toast({
@@ -84,9 +84,9 @@ export default function PayrollClientPage({ employees }: { employees: EmployeeWi
       <CardHeader>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <CardTitle>Payroll Summary</CardTitle>
+            <CardTitle>Ringkasan Transfer Gaji</CardTitle>
             <CardDescription>
-              View a summary of employee payroll data.
+              Ringkasan gaji bersih karyawan yang siap ditransfer.
             </CardDescription>
           </div>
            <div className="flex flex-wrap items-center gap-2">
@@ -116,7 +116,7 @@ export default function PayrollClientPage({ employees }: { employees: EmployeeWi
               <TableHead>Nama Karyawan</TableHead>
               <TableHead>Bank</TableHead>
               <TableHead>Nomor Rekening</TableHead>
-              <TableHead className="text-right">Total Gaji</TableHead>
+              <TableHead className="text-right">Gaji Bersih (Net Salary)</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -126,7 +126,7 @@ export default function PayrollClientPage({ employees }: { employees: EmployeeWi
                   <TableCell className="font-medium">{emp.name}</TableCell>
                   <TableCell>{emp.bankName || 'N/A'}</TableCell>
                   <TableCell>{emp.accountNumber || 'N/A'}</TableCell>
-                  <TableCell className="text-right font-semibold">{formatCurrency(emp.totalSalary)}</TableCell>
+                  <TableCell className="text-right font-semibold">{formatCurrency(emp.netSalary)}</TableCell>
                 </TableRow>
               ))
             ) : (
