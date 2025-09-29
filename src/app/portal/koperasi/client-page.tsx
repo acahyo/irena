@@ -9,16 +9,27 @@ import type { Employee, KoperasiItem, KoperasiOrder, KoperasiOrderItem } from '@
 import { createKoperasiOrder } from '@/actions/koperasi';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Loader2, Minus, Plus, ShoppingCart, Trash2, Package } from 'lucide-react';
+import { Loader2, Minus, Plus, ShoppingCart, Trash2, Package, Eye } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
+
 
 const formatCurrency = (amount: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
 
 const getStatusVariant = (status: string) => {
   switch (status) {
     case 'Pending': return 'secondary';
+    case 'Approved': return 'default';
+    case 'Ready for Pickup': return 'default';
     case 'Completed': return 'default';
     case 'Rejected': return 'destructive';
     default: return 'outline';
@@ -30,6 +41,9 @@ export default function KoperasiClientPage({ employee, initialItems, initialOrde
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const router = useRouter();
+  const [selectedOrder, setSelectedOrder] = useState<KoperasiOrder | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+
 
   const handleAddToCart = (itemId: string, quantity: number) => {
     const newCart = new Map(cart);
@@ -196,20 +210,88 @@ export default function KoperasiClientPage({ employee, initialItems, initialOrde
             <CardHeader><CardTitle>Riwayat Pesanan</CardTitle></CardHeader>
             <CardContent>
                 <Table>
-                    <TableHeader><TableRow><TableHead>Tanggal</TableHead><TableHead>Total</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
+                    <TableHeader><TableRow><TableHead>Tanggal</TableHead><TableHead>Total</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Aksi</TableHead></TableRow></TableHeader>
                     <TableBody>
                         {initialOrders.map(order => (
                             <TableRow key={order.id}>
                                 <TableCell>{format(new Date(order.orderDate), 'dd/MM/yy')}</TableCell>
                                 <TableCell>{formatCurrency(order.totalPrice)}</TableCell>
                                 <TableCell><Badge variant={getStatusVariant(order.status)}>{order.status}</Badge></TableCell>
+                                 <TableCell className="text-right">
+                                    <Button variant="ghost" size="icon" onClick={() => { setSelectedOrder(order); setIsDetailOpen(true); }}>
+                                        <Eye className="h-4 w-4" />
+                                    </Button>
+                                </TableCell>
                             </TableRow>
                         ))}
-                        {initialOrders.length === 0 && <TableRow><TableCell colSpan={3} className="text-center h-24">Tidak ada riwayat pesanan.</TableCell></TableRow>}
+                        {initialOrders.length === 0 && <TableRow><TableCell colSpan={4} className="text-center h-24">Tidak ada riwayat pesanan.</TableCell></TableRow>}
                     </TableBody>
                 </Table>
             </CardContent>
         </Card>
+
+         <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+            {selectedOrder && (
+                <DialogContent className="max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle>Detail Pesanan #{selectedOrder.id.substring(0, 6)}</DialogTitle>
+                        <DialogDescription>
+                            Status: <Badge variant={getStatusVariant(selectedOrder.status)}>{selectedOrder.status}</Badge>
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
+                        <div>
+                            <h4 className="font-semibold mb-2">Item</h4>
+                             <ul className="space-y-2">
+                                {selectedOrder.items.map(item => (
+                                    <li key={item.itemId} className="flex justify-between text-sm">
+                                        <span>{item.name} (x{item.quantity})</span>
+                                        <span>{formatCurrency(item.price * item.quantity)}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                            <hr className="my-2"/>
+                            <div className="flex justify-between font-bold">
+                                <span>Total</span>
+                                <span>{formatCurrency(selectedOrder.totalPrice)}</span>
+                            </div>
+                        </div>
+                       
+                        {selectedOrder.status === 'Ready for Pickup' && selectedOrder.pickupInfo && (
+                            <div>
+                                <h4 className="font-semibold">Info Pengambilan</h4>
+                                <div className="text-sm text-muted-foreground p-3 border rounded-md mt-2 space-y-1">
+                                    <p><strong>Hari:</strong> {selectedOrder.pickupInfo.day}</p>
+                                    <p><strong>Tanggal:</strong> {format(new Date(selectedOrder.pickupInfo.date), 'PPP')}</p>
+                                    <p><strong>Lokasi:</strong> {selectedOrder.pickupInfo.location}</p>
+                                </div>
+                            </div>
+                        )}
+                        
+                        {selectedOrder.status === 'Completed' && selectedOrder.completionPhotoUrl && (
+                            <div>
+                                <h4 className="font-semibold">Dokumentasi Pengambilan</h4>
+                                <div className="mt-2 border rounded-md p-2">
+                                    <Image src={selectedOrder.completionPhotoUrl} alt="Foto Pengambilan" width={400} height={300} className="rounded-md w-full h-auto object-cover" />
+                                </div>
+                            </div>
+                        )}
+
+                        {selectedOrder.status === 'Rejected' && selectedOrder.rejectionReason && (
+                            <div>
+                                <h4 className="font-semibold text-destructive">Alasan Penolakan</h4>
+                                <p className="text-sm text-destructive p-3 border border-destructive/50 bg-destructive/10 rounded-md mt-2">
+                                    {selectedOrder.rejectionReason}
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                    <DialogFooter>
+                        <Button onClick={() => setIsDetailOpen(false)}>Tutup</Button>
+                    </DialogFooter>
+                </DialogContent>
+            )}
+        </Dialog>
       </div>
     </div>
   );
