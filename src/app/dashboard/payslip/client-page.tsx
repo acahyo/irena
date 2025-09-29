@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -168,8 +169,16 @@ export default function PayslipClientPage({
     selectedEmployee.positionDetails.forEach(pos => {
       if (pos.salaryType === 'bulanan' || pos.salaryType === 'direksi') {
           const baseSalary = pos.monthlySalary || 0;
-          earnings[`Gaji Pokok - ${pos.name}`] = baseSalary;
-          totalEarnings += baseSalary;
+
+          if (pos.salaryType === 'bulanan') {
+            const dailyRate = baseSalary / 26;
+            const calculatedSalary = dailyRate * attendanceDays;
+            earnings[`Gaji Pokok - ${pos.name}`] = calculatedSalary;
+            totalEarnings += calculatedSalary;
+          } else { // Direksi gets full salary
+            earnings[`Gaji Pokok - ${pos.name}`] = baseSalary;
+            totalEarnings += baseSalary;
+          }
 
           pos.allowances?.forEach(allowance => {
               earnings[`${allowance.name} - ${pos.name}`] = allowance.amount;

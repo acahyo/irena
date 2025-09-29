@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect, useTransition } from 'react';
@@ -164,10 +165,21 @@ export default function PayslipCollectiveClientPage({
             employee.positionDetails!.forEach(position => {
                 if (position.salaryType === 'bulanan' || position.salaryType === 'direksi') {
                     const baseSalary = position.monthlySalary || 0;
-                    const totalAllowances = position.allowances?.reduce((sum, allowance) => sum + allowance.amount, 0) || 0;
-                    const monthlyIncome = baseSalary + totalAllowances;
-                    earnings[position.name] = monthlyIncome;
-                    totalEarnings += monthlyIncome;
+
+                    if (position.salaryType === 'bulanan') {
+                        const dailyRate = baseSalary / 26;
+                        const calculatedSalary = dailyRate * attendanceDays;
+                        earnings[`Gaji Pokok - ${position.name}`] = calculatedSalary;
+                        totalEarnings += calculatedSalary;
+                    } else { // Direksi
+                        earnings[position.name] = baseSalary;
+                        totalEarnings += baseSalary;
+                    }
+
+                    position.allowances?.forEach(allowance => {
+                        earnings[allowance.name] = allowance.amount;
+                        totalEarnings += allowance.amount;
+                    });
                 } else if(position.salaryType === 'harian') {
                     const attendanceForPos = attendance?.attendanceByPosition?.[position.name] || 0;
                     const overtimeForPos = attendance?.overtimeByPosition?.[position.name] || 0;

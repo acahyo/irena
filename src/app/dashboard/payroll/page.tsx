@@ -52,9 +52,19 @@ export default async function PayrollPage({ userSiteId }: { userSiteId?: string 
 
       positionDetails.forEach(pos => {
           if (pos.salaryType === 'bulanan' || pos.salaryType === 'direksi') {
+              const attendanceForPos = attendance?.attendanceByPosition ? Object.values(attendance.attendanceByPosition).reduce((a, b) => a + b, 0) : 0;
               const baseSalary = pos.monthlySalary || 0;
-              earnings[`Gaji Pokok - ${pos.name}`] = baseSalary;
-              totalEarnings += baseSalary;
+              
+              if(pos.salaryType === 'bulanan') {
+                // Monthly salary based on attendance, assuming 26 work days
+                const dailyRate = baseSalary / 26;
+                const calculatedSalary = dailyRate * attendanceForPos;
+                earnings[`Gaji Pokok - ${pos.name}`] = calculatedSalary;
+                totalEarnings += calculatedSalary;
+              } else { // Direksi gets full salary
+                earnings[`Gaji Pokok - ${pos.name}`] = baseSalary;
+                totalEarnings += baseSalary;
+              }
               
               pos.allowances?.forEach(allowance => {
                   earnings[`${allowance.name} - ${pos.name}`] = allowance.amount;
