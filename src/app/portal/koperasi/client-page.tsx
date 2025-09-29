@@ -53,24 +53,40 @@ export default function KoperasiClientPage({ employee, initialItems, initialOrde
     setCart(newCart);
   }
 
-  const { cartItems, totalCartPrice } = useMemo(() => {
+  const { cartItems, totalCartPrice, totalSpentThisMonth } = useMemo(() => {
     const items: (KoperasiItem & { quantity: number })[] = [];
-    let total = 0;
+    let cartTotal = 0;
     for (const [itemId, quantity] of cart.entries()) {
       const item = initialItems.find(i => i.id === itemId);
       if (item) {
         items.push({ ...item, quantity });
-        total += item.price * quantity;
+        cartTotal += item.price * quantity;
       }
     }
-    return { cartItems: items, totalCartPrice: total };
-  }, [cart, initialItems]);
+    
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    const spentThisMonth = initialOrders
+      .filter(order => {
+        const orderDate = new Date(order.orderDate);
+        return (
+          order.status !== 'Rejected' &&
+          orderDate.getMonth() === currentMonth &&
+          orderDate.getFullYear() === currentYear
+        );
+      })
+      .reduce((sum, order) => sum + order.totalPrice, 0);
+
+    return { cartItems: items, totalCartPrice: cartTotal, totalSpentThisMonth: spentThisMonth };
+  }, [cart, initialItems, initialOrders]);
   
-  const remainingLimit = (employee.koperasiLimit || 0) - totalCartPrice;
+  const remainingLimit = (employee.koperasiLimit || 0) - totalSpentThisMonth - totalCartPrice;
 
   const handleSubmitOrder = () => {
-      if (totalCartPrice > (employee.koperasiLimit || 0)) {
-          toast({ variant: 'destructive', title: 'Error', description: 'Total belanja melebihi limit Anda.' });
+      const availableLimit = (employee.koperasiLimit || 0) - totalSpentThisMonth;
+
+      if (totalCartPrice > availableLimit) {
+          toast({ variant: 'destructive', title: 'Error', description: `Total belanja melebihi sisa limit Anda bulan ini (${formatCurrency(availableLimit)}).` });
           return;
       }
       if (cartItems.length === 0) {
@@ -165,6 +181,7 @@ export default function KoperasiClientPage({ employee, initialItems, initialOrde
              {cartItems.length > 0 && <hr />}
              <div className="space-y-2 text-sm">
                 <div className="flex justify-between font-medium"><span>Total Belanja:</span> <span>{formatCurrency(totalCartPrice)}</span></div>
+                 <div className="flex justify-between"><span>Terpakai Bulan Ini:</span> <span>{formatCurrency(totalSpentThisMonth)}</span></div>
                 <div className="flex justify-between"><span>Limit Anda:</span> <span>{formatCurrency(employee.koperasiLimit)}</span></div>
                 <div className={`flex justify-between font-bold ${remainingLimit < 0 ? 'text-destructive' : ''}`}><span>Sisa Limit:</span> <span>{formatCurrency(remainingLimit)}</span></div>
              </div>

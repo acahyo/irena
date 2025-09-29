@@ -121,7 +121,7 @@ export default function EditMyProfileClientPage({ employee }: { employee: Employ
         await updateEmployee(employee.id, employeeData);
         toast({
             title: 'Success!',
-            description: 'Your profile has been updated.',
+            description: 'Profil Anda telah diperbarui.',
         });
         router.push(`/portal`);
         router.refresh();
@@ -130,7 +130,7 @@ export default function EditMyProfileClientPage({ employee }: { employee: Employ
         toast({
             variant: 'destructive',
             title: 'Error',
-            description: 'Failed to update your profile.',
+            description: 'Gagal memperbarui profil Anda.',
         });
     } finally {
         setLoading(false);
@@ -142,15 +142,15 @@ export default function EditMyProfileClientPage({ employee }: { employee: Employ
       <Button asChild variant="outline" size="sm">
         <Link href="/portal">
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to My Profile
+          Kembali ke Profile
         </Link>
       </Button>
 
       <Card>
         <CardHeader>
-          <CardTitle>Edit My Profile</CardTitle>
+          <CardTitle>Edit Profile</CardTitle>
           <CardDescription>
-            Update your personal and contact information below.
+          Perbarui informasi pribadi dan kontak Anda di bawah ini.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -158,27 +158,27 @@ export default function EditMyProfileClientPage({ employee }: { employee: Employ
             <div className="space-y-6">
                 
                 <Card>
-                    <CardHeader><CardTitle>Personal Details</CardTitle></CardHeader>
+                    <CardHeader><CardTitle>Detail Pribadi</CardTitle></CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                            <Label htmlFor="address">Address</Label>
+                            <Label htmlFor="address">Alamat</Label>
                             <Textarea id="address" name="address" placeholder="e.g. 123 Main St, Anytown" defaultValue={employee.address} />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="phone">Phone Number</Label>
+                            <Label htmlFor="phone">Nomor Handphone / Whatsapp</Label>
                             <Input id="phone" name="phone" type="tel" placeholder="e.g. 08123456789" defaultValue={employee.phone} />
                         </div>
                          <div className="space-y-2">
-                            <Label htmlFor="maritalStatus">Marital Status</Label>
+                            <Label htmlFor="maritalStatus">Status Pernikahan</Label>
                             <Select name="maritalStatus" defaultValue={employee.maritalStatus}>
                             <SelectTrigger id="maritalStatus">
                                 <SelectValue placeholder="Select status" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="single">Single</SelectItem>
-                                <SelectItem value="married">Married</SelectItem>
-                                <SelectItem value="divorced">Divorced</SelectItem>
-                                <SelectItem value="widowed">Widowed</SelectItem>
+                                <SelectItem value="married">Menikah</SelectItem>
+                                <SelectItem value="divorced">Bercerai</SelectItem>
+                                <SelectItem value="widowed">Janda/Duda</SelectItem>
                             </SelectContent>
                             </Select>
                         </div>
@@ -186,21 +186,21 @@ export default function EditMyProfileClientPage({ employee }: { employee: Employ
                 </Card>
 
                 <Card>
-                    <CardHeader><CardTitle>Emergency Contact</CardTitle></CardHeader>
+                    <CardHeader><CardTitle>Kontak Darurat</CardTitle></CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                            <Label htmlFor="emergencyContactName">Emergency Contact Name</Label>
+                            <Label htmlFor="emergencyContactName">Nama Kontak Darurat</Label>
                             <Input id="emergencyContactName" name="emergencyContactName" placeholder="e.g. Jane Doe" defaultValue={employee.emergencyContactName} />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="emergencyContactNumber">Emergency Contact Number</Label>
+                            <Label htmlFor="emergencyContactNumber">Nomor Kontak Darurat</Label>
                             <Input id="emergencyContactNumber" name="emergencyContactNumber" placeholder="e.g. 08123456789" defaultValue={employee.emergencyContactNumber} />
                         </div>
                     </CardContent>
                 </Card>
                 
                 <Card>
-                    <CardHeader><CardTitle>Bank Details</CardTitle></CardHeader>
+                    <CardHeader><CardTitle>Detail Bank</CardTitle></CardHeader>
                      <CardContent className="space-y-6">
                         <div className="space-y-2">
                             <Label>Jenis Rekening</Label>
@@ -218,15 +218,15 @@ export default function EditMyProfileClientPage({ employee }: { employee: Employ
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <Label htmlFor="bankName">Bank Name</Label>
+                                <Label htmlFor="bankName">Bank</Label>
                                 <Input id="bankName" name="bankName" placeholder="e.g. Bank Central Asia" defaultValue={employee.bankName} />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="accountNumber">Account Number</Label>
+                                <Label htmlFor="accountNumber">Nomor Rekening</Label>
                                 <Input id="accountNumber" name="accountNumber" placeholder="e.g. 1234567890" defaultValue={employee.accountNumber} />
                             </div>
                             <div className="space-y-2 md:col-span-2">
-                                <Label htmlFor="accountHolderName">Account Holder Name</Label>
+                                <Label htmlFor="accountHolderName">Nama Pemilik Rekening</Label>
                                 <Input 
                                     id="accountHolderName" 
                                     name="accountHolderName" 
@@ -248,12 +248,12 @@ export default function EditMyProfileClientPage({ employee }: { employee: Employ
                 </Card>
 
                  <Card>
-                    <CardHeader><CardTitle>Security</CardTitle></CardHeader>
+                    <CardHeader><CardTitle>Keamanan Akun </CardTitle></CardHeader>
                      <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                            <Label htmlFor="password">New Password</Label>
-                            <Input id="password" name="password" type="password" placeholder="Leave blank to keep current password" />
-                            <p className="text-sm text-muted-foreground">If you set a new password, you will be logged out and need to log in again.</p>
+                            <Label htmlFor="password">Password Baru</Label>
+                            <Input id="password" name="password" type="password" placeholder="Kosongkan jika tidak mengubah kata sandi." />
+                            <p className="text-sm text-muted-foreground">Jika Anda mengatur kata sandi baru, Anda akan keluar dari sistem dan perlu masuk kembali.</p>
                         </div>
                     </CardContent>
                 </Card>
