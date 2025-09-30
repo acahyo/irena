@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -20,12 +21,22 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import type { HseCategory } from '@/lib/types';
+import type { HseCategory, Employee, Department } from '@/lib/types';
 import { createHseRecord } from '@/actions/hse';
+import { getEmployees } from '@/actions/employees';
+import { getDepartments } from '@/actions/departments';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 
 
 const categoryTitles: Record<HseCategory, string> = {
@@ -44,7 +55,30 @@ export default function NewHseRecordPage() {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [filePreview, setFilePreview] = useState<string | null>(null);
   
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [selectedDepartment, setSelectedDepartment] = useState('');
+  
   const category = searchParams.get('category') as HseCategory | null;
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (category === 'incident') {
+        const [empData, deptData] = await Promise.all([
+          getEmployees(),
+          getDepartments(),
+        ]);
+        setEmployees(empData);
+        setDepartments(deptData);
+      }
+    };
+    fetchData();
+  }, [category]);
+  
+  const filteredEmployees = employees.filter(
+    (emp) => !selectedDepartment || emp.department === selectedDepartment
+  );
+
 
   if (!category || !categoryTitles[category]) {
       // Redirect or show an error if category is missing/invalid
@@ -73,23 +107,28 @@ export default function NewHseRecordPage() {
     setLoading(true);
 
     const formData = new FormData(event.currentTarget);
-    const title = formData.get('title') as string;
-    const description = formData.get('description') as string;
-
+    
     if (!date) {
         toast({ variant: 'destructive', title: 'Error', description: 'Tanggal harus diisi.' });
         setLoading(false);
         return;
     }
     
+    const recordData: Omit<HseRecord, 'id'> = {
+        category,
+        title: formData.get('title') as string,
+        description: formData.get('description') as string,
+        date,
+        fileUrl: filePreview || undefined,
+        // Incident-specific fields
+        hasFine: formData.get('hasFine') === 'on',
+        departmentName: formData.get('departmentName') as string,
+        employeeId: formData.get('employeeId') as string,
+        employeeName: formData.get('employeeName') as string,
+    };
+    
     try {
-        await createHseRecord({
-            category,
-            title,
-            description,
-            date,
-            fileUrl: filePreview || undefined
-        });
+        await createHseRecord(recordData);
         toast({
             title: 'Sukses!',
             description: 'Data HSE baru telah ditambahkan.',
@@ -152,6 +191,34 @@ export default function NewHseRecordPage() {
                   </PopoverContent>
                 </Popover>
               </div>
+
+              {category === 'incident' && (
+                <>
+                    <div className="space-y-2">
+                        <Label htmlFor="departmentName">Departemen</Label>
+                        <Select name="departmentName" onValueChange={setSelectedDepartment}>
+                            <SelectTrigger id="departmentName"><SelectValue placeholder="Pilih Departemen" /></SelectTrigger>
+                            <SelectContent>
+                                {departments.map(dept => <SelectItem key={dept.id} value={dept.name}>{dept.name}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="employeeId">Nama Karyawan</Label>
+                        <Select name="employeeId">
+                             <SelectTrigger id="employeeId"><SelectValue placeholder="Pilih Karyawan" /></SelectTrigger>
+                            <SelectContent>
+                                {filteredEmployees.map(emp => <SelectItem key={emp.id} value={emp.id}>{emp.name}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                     <div className="space-y-2 md:col-span-2 flex items-center gap-2 pt-2">
+                        <Checkbox id="hasFine" name="hasFine" />
+                        <Label htmlFor="hasFine">Ada Denda Terkait Insiden Ini?</Label>
+                    </div>
+                </>
+              )}
+
 
               <div className="space-y-2 md:col-span-2">
                  <Label htmlFor="description">Deskripsi / Ringkasan</Label>

@@ -1,3 +1,4 @@
+
 'use server';
 
 import { db, storage } from '@/lib/firebase';
@@ -72,6 +73,7 @@ export async function createHseRecord(record: Omit<HseRecord, 'id'>): Promise<st
     const recordData: { [key: string]: any } = {
         ...record,
         date: new Date(record.date),
+        hasFine: record.hasFine === true || (record as any).hasFine === 'on',
     };
     
     // Handle file upload
