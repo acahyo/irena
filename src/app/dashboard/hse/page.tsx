@@ -1,5 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, ShieldAlert, ClipboardCheck, Target } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { FileText, ShieldAlert, ClipboardCheck, Target, PlusCircle } from 'lucide-react';
+import Link from 'next/link';
 
 export default function HsePage() {
   const hseData = [
@@ -29,10 +31,20 @@ export default function HsePage() {
     <div className="space-y-6">
        <Card>
         <CardHeader>
-            <CardTitle>Dasbor HSE (Kesehatan, Keselamatan, dan Lingkungan Kerja)</CardTitle>
-            <CardDescription>
-            Pusat informasi untuk semua data terkait K3 di lingkungan kerja.
-            </CardDescription>
+            <div className="flex items-center justify-between">
+                <div>
+                    <CardTitle>Dasbor HSE (Kesehatan, Keselamatan, dan Lingkungan Kerja)</CardTitle>
+                    <CardDescription>
+                    Pusat informasi untuk semua data terkait K3 di lingkungan kerja.
+                    </CardDescription>
+                </div>
+                <Button asChild>
+                    <Link href="/dashboard/hse/new">
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Tambah Data HSE
+                    </Link>
+                </Button>
+            </div>
         </CardHeader>
        </Card>
 
