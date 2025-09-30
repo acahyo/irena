@@ -31,7 +31,7 @@ function convertTimestampsToDates(data: any): any {
 
 
 // Helper to upload base64 file to Firebase Storage and get URL
-async function uploadFileAndGetURL(base64Data: string, category: string): Promise<{ fileUrl: string, fileName: string }> {
+async function uploadFileAndGetURL(base64Data: string, category: string, fieldName: string): Promise<{ fileUrl: string, fileName: string }> {
     if (!base64Data || !base64Data.startsWith('data:')) {
         throw new Error('Invalid file data provided.');
     }
@@ -41,7 +41,7 @@ async function uploadFileAndGetURL(base64Data: string, category: string): Promis
 
     const mimeType = mimeTypeMatch[1];
     const extension = mimeType.split('/')[1] || 'bin';
-    const fileName = `${category}-${Date.now()}.${extension}`;
+    const fileName = `${category}-${fieldName}-${Date.now()}.${extension}`;
     const storageRef = ref(storage, `hse-documents/${fileName}`);
     
     const uploadResult = await uploadString(storageRef, base64Data, 'data_url');
@@ -74,13 +74,20 @@ export async function createHseRecord(record: Omit<HseRecord, 'id'>): Promise<st
         ...record,
         date: new Date(record.date),
         hasFine: record.hasFine === true || (record as any).hasFine === 'on',
+        fineAmount: record.fineAmount ? Number(record.fineAmount) : undefined,
     };
     
     // Handle file upload
     if (recordData.fileUrl && recordData.fileUrl.startsWith('data:')) {
-        const { fileUrl, fileName } = await uploadFileAndGetURL(recordData.fileUrl, record.category);
+        const { fileUrl, fileName } = await uploadFileAndGetURL(recordData.fileUrl, record.category, 'attachment');
         recordData.fileUrl = fileUrl;
         recordData.fileName = fileName;
+    }
+    
+    // Handle fine attachment upload
+    if (recordData.fineAttachmentUrl && recordData.fineAttachmentUrl.startsWith('data:')) {
+        const { fileUrl: fineFileUrl } = await uploadFileAndGetURL(recordData.fineAttachmentUrl, record.category, 'fine-attachment');
+        recordData.fineAttachmentUrl = fineFileUrl;
     }
     
     const docRef = await addDoc(collection(db, 'hseRecords'), recordData);

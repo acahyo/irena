@@ -31,10 +31,11 @@ import {
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import type { HseCategory, Employee, Department } from '@/lib/types';
+import type { HseCategory, Employee, Department, Position } from '@/lib/types';
 import { createHseRecord } from '@/actions/hse';
 import { getEmployees } from '@/actions/employees';
 import { getDepartments } from '@/actions/departments';
+import { getPositions } from '@/actions/positions';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 
@@ -54,30 +55,39 @@ export default function NewHseRecordPage() {
   const [loading, setLoading] = useState(false);
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [fineFilePreview, setFineFilePreview] = useState<string | null>(null);
   
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [positions, setPositions] = useState<Position[]>([]);
   const [selectedDepartment, setSelectedDepartment] = useState('');
+  const [selectedPosition, setSelectedPosition] = useState('');
+  const [hasFine, setHasFine] = useState(false);
   
   const category = searchParams.get('category') as HseCategory | null;
 
   useEffect(() => {
     const fetchData = async () => {
       if (category === 'incident') {
-        const [empData, deptData] = await Promise.all([
+        const [empData, deptData, posData] = await Promise.all([
           getEmployees(),
           getDepartments(),
+          getPositions(),
         ]);
         setEmployees(empData);
         setDepartments(deptData);
+        setPositions(posData);
       }
     };
     fetchData();
   }, [category]);
   
-  const filteredEmployees = employees.filter(
-    (emp) => !selectedDepartment || emp.department === selectedDepartment
-  );
+  const filteredEmployees = useMemo(() => {
+      return employees.filter(emp => 
+        (!selectedDepartment || emp.department === selectedDepartment) &&
+        (!selectedPosition || emp.positions?.includes(selectedPosition))
+      );
+  }, [employees, selectedDepartment, selectedPosition]);
 
 
   if (!category || !categoryTitles[category]) {
@@ -90,14 +100,14 @@ export default function NewHseRecordPage() {
       );
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, setter: React.Dispatch<React.SetStateAction<string | null>>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (e) => setFilePreview(e.target?.result as string);
+      reader.onload = (e) => setter(e.target?.result as string);
       reader.readAsDataURL(file);
     } else {
-      setFilePreview(null);
+      setter(null);
     }
   };
 
@@ -121,10 +131,13 @@ export default function NewHseRecordPage() {
         date,
         fileUrl: filePreview || undefined,
         // Incident-specific fields
-        hasFine: formData.get('hasFine') === 'on',
+        hasFine: hasFine,
         departmentName: formData.get('departmentName') as string,
+        positionName: formData.get('positionName') as string,
         employeeId: formData.get('employeeId') as string,
-        employeeName: formData.get('employeeName') as string,
+        employeeName: employees.find(e => e.id === formData.get('employeeId'))?.name || '',
+        fineAmount: formData.get('fineAmount') ? Number(formData.get('fineAmount')) : undefined,
+        fineAttachmentUrl: fineFilePreview || undefined,
     };
     
     try {
@@ -203,7 +216,16 @@ export default function NewHseRecordPage() {
                             </SelectContent>
                         </Select>
                     </div>
-                    <div className="space-y-2">
+                     <div className="space-y-2">
+                        <Label htmlFor="positionName">Jabatan</Label>
+                        <Select name="positionName" onValueChange={setSelectedPosition}>
+                            <SelectTrigger id="positionName"><SelectValue placeholder="Pilih Jabatan" /></SelectTrigger>
+                            <SelectContent>
+                                {positions.map(pos => <SelectItem key={pos.id} value={pos.name}>{pos.name}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
                         <Label htmlFor="employeeId">Nama Karyawan</Label>
                         <Select name="employeeId">
                              <SelectTrigger id="employeeId"><SelectValue placeholder="Pilih Karyawan" /></SelectTrigger>
@@ -212,12 +234,40 @@ export default function NewHseRecordPage() {
                             </SelectContent>
                         </Select>
                     </div>
-                     <div className="space-y-2 md:col-span-2 flex items-center gap-2 pt-2">
-                        <Checkbox id="hasFine" name="hasFine" />
+                     <div className="space-y-2 flex items-center gap-2 pt-2">
+                        <Checkbox id="hasFine" name="hasFine" checked={hasFine} onCheckedChange={(checked) => setHasFine(!!checked)} />
                         <Label htmlFor="hasFine">Ada Denda Terkait Insiden Ini?</Label>
                     </div>
                 </>
               )}
+
+             {category === 'incident' && hasFine && (
+                <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 border-l-4 border-destructive pl-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="fineAmount">Nominal Denda (Rp)</Label>
+                        <Input id="fineAmount" name="fineAmount" type="number" placeholder="e.g. 50000" required={hasFine} />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="fineAttachment">Lampiran Bukti Denda</Label>
+                         <div className="flex items-center gap-4">
+                            {fineFilePreview && (
+                                <div className="flex items-center gap-2 border p-2 rounded-md bg-muted">
+                                   <FileIcon className="h-6 w-6" />
+                                   <span className="text-sm text-muted-foreground">File dipilih</span>
+                                </div>
+                            )}
+                            <Input
+                                id="fineAttachment"
+                                name="fineAttachment"
+                                type="file"
+                                onChange={(e) => handleFileChange(e, setFineFilePreview)}
+                                className="max-w-sm"
+                                required={hasFine}
+                            />
+                        </div>
+                    </div>
+                </div>
+             )}
 
 
               <div className="space-y-2 md:col-span-2">
@@ -238,7 +288,7 @@ export default function NewHseRecordPage() {
                         id="file"
                         name="file"
                         type="file"
-                        onChange={handleFileChange}
+                        onChange={(e) => handleFileChange(e, setFilePreview)}
                         className="max-w-sm"
                     />
                 </div>

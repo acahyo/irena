@@ -1,4 +1,5 @@
 
+
 export type Allowance = {
   name: string;
   amount: number;
@@ -271,7 +272,10 @@ export type HseRecord = {
     projectName?: string;
     // Incident specific
     hasFine?: boolean;
+    fineAmount?: number;
+    fineAttachmentUrl?: string;
     departmentName?: string;
+    positionName?: string;
     employeeId?: string;
     employeeName?: string;
 }
