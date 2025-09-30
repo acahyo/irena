@@ -255,3 +255,17 @@ export type PayrollRecord = {
     accountNumber?: string;
     keterangan?: string;
 }
+
+export type HseCategory = 'incident' | 'inspection' | 'risk' | 'plan';
+
+export type HseRecord = {
+    id: string;
+    category: HseCategory;
+    title: string;
+    description: string;
+    date: Date | string;
+    fileUrl?: string;
+    fileName?: string;
+    projectId?: string;
+    projectName?: string;
+}
