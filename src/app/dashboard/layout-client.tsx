@@ -44,7 +44,8 @@ import {
   UserPlus,
   UserCheck as UserCheckIcon,
   Store,
-  History
+  History,
+  CircleDollarSign
 } from "lucide-react";
 import type { AppSettings, User, Role, MenuOrderItem } from "@/lib/types";
 import { logout } from "@/actions/auth";
@@ -70,7 +71,8 @@ const allNavItemsList = (lang: 'id' | 'en') => [
   { id: 'project', href: "/dashboard/project", icon: Briefcase, label: "Proyek" },
   { id: 'finance', href: "/dashboard/finance", icon: Landmark, label: lang === 'id' ? "Keuangan" : "Finance" },
   { id: 'koperasi-limit', href: "/dashboard/finance/koperasi-limit", icon: Wallet, label: "Limit Koperasi" },
-  { id: 'hse', href: "/dashboard/hse", icon: ShieldCheck, label: "HSE" },
+  { id: 'hse', href: "/dashboard/hse", icon: ShieldCheck, label: "Dasbor HSE" },
+  { id: 'hse-fines', href: "/dashboard/hse/fines", icon: CircleDollarSign, label: "Pengaturan Denda" },
   { id: 'users', href: "/dashboard/users", icon: UsersRound, label: "Users" },
   { id: 'roles', href: "/dashboard/roles", icon: ShieldCheck, label: "Roles" },
   { id: 'settings', href: "/dashboard/settings", icon: Settings, label: lang === 'id' ? "Pengaturan" : "Settings" },

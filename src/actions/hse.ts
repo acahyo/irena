@@ -94,6 +94,12 @@ export async function createHseRecord(record: Omit<HseRecord, 'id'>): Promise<st
     return docRef.id;
 }
 
+// Update an existing HSE record
+export async function updateHseRecord(id: string, updates: Partial<HseRecord>): Promise<void> {
+  const docRef = doc(db, 'hseRecords', id);
+  await updateDoc(docRef, updates);
+}
+
 
 // Delete an HSE record
 export async function deleteHseRecord(id: string): Promise<void> {

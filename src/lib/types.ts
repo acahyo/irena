@@ -1,5 +1,6 @@
 
 
+
 export type Allowance = {
   name: string;
   amount: number;
@@ -278,4 +279,6 @@ export type HseRecord = {
     positionName?: string;
     employeeId?: string;
     employeeName?: string;
+    fineDeductionPeriods?: number;
+    fineDeductionsApplied?: number;
 }
