@@ -79,6 +79,7 @@ const allMenus = [
   { id: 'project', label: 'Proyek' },
   { id: 'finance', label: 'Keuangan' },
   { id: 'koperasi-limit', label: 'Limit Koperasi' },
+  { id: 'hse', label: 'HSE' },
   { id: 'users', label: 'Users' },
   { id: 'roles', label: 'Roles' },
   { id: 'settings', label: 'Pengaturan' },
