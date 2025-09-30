@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { History } from 'lucide-react';
 import { getMonth, getYear, parse } from 'date-fns';
+import { getHseRecords } from '@/actions/hse';
 
 const BPJS_RATES: Record<string, number> = {
     miki: 280000,
@@ -27,11 +28,12 @@ const BPJS_RATES: Record<string, number> = {
 export default async function PayrollPage({ userSiteId }: { userSiteId?: string }) {
   const currentPeriod = new Date().toISOString().slice(0, 7);
   
-  const [employees, positions, attendanceRecords, allKoperasiOrders] = await Promise.all([
+  const [employees, positions, attendanceRecords, allKoperasiOrders, hseRecords] = await Promise.all([
     getEmployees({ siteId: userSiteId }),
     getPositions(),
     getAttendanceByPeriod(currentPeriod, { siteId: userSiteId }),
     getKoperasiOrders({}), // Fetch all orders, will be filtered by employee and period
+    getHseRecords(),
   ]);
   
   const periodDate = parse(currentPeriod, 'yyyy-MM', new Date());
@@ -56,7 +58,6 @@ export default async function PayrollPage({ userSiteId }: { userSiteId?: string 
               const baseSalary = pos.monthlySalary || 0;
               
               if(pos.salaryType === 'bulanan') {
-                // Monthly salary based on attendance, assuming 30 work days
                 const dailyRate = baseSalary / 30;
                 const calculatedSalary = dailyRate * attendanceDays;
                 earnings[`Gaji Pokok - ${pos.name}`] = calculatedSalary;
@@ -116,6 +117,23 @@ export default async function PayrollPage({ userSiteId }: { userSiteId?: string 
       if (koperasiSpending > 0) {
           deductions.potonganKoperasi = koperasiSpending;
       }
+      
+      const hseFineDeduction = hseRecords
+        .filter(record => 
+            record.employeeId === emp.id &&
+            record.hasFine &&
+            record.fineAmount &&
+            record.fineDeductionPeriods &&
+            record.fineDeductionPeriods > 0
+        )
+        .reduce((sum, record) => {
+            const monthlyDeduction = (record.fineAmount || 0) / (record.fineDeductionPeriods || 1);
+            return sum + monthlyDeduction;
+        }, 0);
+
+      if (hseFineDeduction > 0) {
+          deductions.potonganHse = hseFineDeduction;
+      }
 
       const totalDeductions = Object.values(deductions).reduce((sum, val) => sum + (val || 0), 0);
       const netSalary = totalEarnings - totalDeductions;
@@ -160,3 +178,4 @@ export default async function PayrollPage({ userSiteId }: { userSiteId?: string 
     </div>
   );
 }
+

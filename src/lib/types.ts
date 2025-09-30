@@ -1,6 +1,5 @@
 
 
-
 export type Allowance = {
   name: string;
   amount: number;
@@ -157,6 +156,7 @@ export type AttendanceRecord = {
     potonganDenda?: number;
     potonganPph?: number;
     potonganKoperasi?: number;
+    potonganHse?: number;
     bonus?: number;
 };
 

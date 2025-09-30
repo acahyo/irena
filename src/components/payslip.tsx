@@ -52,6 +52,7 @@ export default function Payslip({
           potonganSimper: "Potongan SIMPER",
           potonganDenda: "Potongan Denda/Panjar",
           potonganKoperasi: "Potongan Koperasi",
+          potonganHse: "Potongan Denda HSE",
           bonus: "Bonus",
       };
       
@@ -62,6 +63,7 @@ export default function Payslip({
           potonganSimper: "SIMPER Deduction",
           potonganDenda: "Fine/Advance Deduction",
           potonganKoperasi: "Cooperative Deduction",
+          potonganHse: "HSE Fine Deduction",
           bonus: "Bonus",
       };
       

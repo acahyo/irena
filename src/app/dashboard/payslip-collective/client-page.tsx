@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, Settings2 } from 'lucide-react';
-import type { EmployeeWithPosition, AppSettings, AttendanceRecord, Position, KoperasiOrder } from '@/lib/types';
+import type { EmployeeWithPosition, AppSettings, AttendanceRecord, Position, KoperasiOrder, HseRecord } from '@/lib/types';
 import PayslipViewer, { type PayslipData, type PayslipOptions } from '@/components/payslip-viewer';
 import { useToast } from '@/hooks/use-toast';
 import { getAttendanceByPeriod } from '@/actions/attendance';
@@ -31,6 +31,7 @@ import {
 import { format, parse, getMonth, getYear } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { savePayrollRecord } from '@/actions/payroll';
+import { getHseRecords } from '@/actions/hse';
 
 const BPJS_RATES: Record<string, number> = {
     miki: 280000,
@@ -51,6 +52,7 @@ export default function PayslipCollectiveClientPage({
   const [keterangan, setKeterangan] = useState('');
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [koperasiOrders, setKoperasiOrders] = useState<KoperasiOrder[]>([]);
+  const [hseRecords, setHseRecords] = useState<HseRecord[]>([]);
   const [isGenerating, startTransition] = useTransition();
   const { toast } = useToast();
   const [payslipOptions, setPayslipOptions] = useState<PayslipOptions>({
@@ -83,9 +85,10 @@ export default function PayslipCollectiveClientPage({
         if (!period) return;
         startTransition(async () => {
             try {
-                const [attendanceData, koperasiData] = await Promise.all([
+                const [attendanceData, koperasiData, allHseRecords] = await Promise.all([
                   getAttendanceByPeriod(period),
-                  getKoperasiOrders({})
+                  getKoperasiOrders({}),
+                  getHseRecords()
                 ]);
                 setAttendanceRecords(attendanceData);
                 
@@ -98,6 +101,8 @@ export default function PayslipCollectiveClientPage({
                   return getMonth(orderDate) === periodMonth && getYear(orderDate) === periodYear && order.status !== 'Rejected';
                 });
                 setKoperasiOrders(relevantOrders);
+
+                setHseRecords(allHseRecords.filter(r => r.hasFine));
 
             } catch (error) {
                 toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch data for the selected period.' });
@@ -222,6 +227,17 @@ export default function PayslipCollectiveClientPage({
 
             if (totalKoperasiSpending > 0) {
                 deductions.potonganKoperasi = totalKoperasiSpending;
+            }
+            
+            const hseFineDeduction = hseRecords
+              .filter(record => record.employeeId === employeeId && record.fineDeductionPeriods && record.fineDeductionPeriods > 0)
+              .reduce((sum, record) => {
+                  const monthlyDeduction = (record.fineAmount || 0) / (record.fineDeductionPeriods || 1);
+                  return sum + monthlyDeduction;
+              }, 0);
+
+            if (hseFineDeduction > 0) {
+                deductions.potonganHse = hseFineDeduction;
             }
 
             const totalDeductions = Object.values(deductions).reduce((sum, val) => sum + (val || 0), 0);
@@ -398,3 +414,4 @@ export default function PayslipCollectiveClientPage({
     </div>
   );
 }
+

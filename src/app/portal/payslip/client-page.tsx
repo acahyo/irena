@@ -14,11 +14,12 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Printer, Loader2 } from 'lucide-react';
-import type { EmployeeWithPosition, AppSettings, AttendanceRecord, Position, KoperasiOrder } from '@/lib/types';
+import type { EmployeeWithPosition, AppSettings, AttendanceRecord, Position, KoperasiOrder, HseRecord } from '@/lib/types';
 import PayslipViewer, { type PayslipData } from '@/components/payslip-viewer';
 import { useToast } from '@/hooks/use-toast';
 import { getAttendanceByEmployeeAndPeriod } from '@/actions/attendance';
 import { getKoperasiOrders } from '@/actions/koperasi';
+import { getHseRecords } from '@/actions/hse';
 import { format, parse, getMonth, getYear } from 'date-fns';
 import { id } from 'date-fns/locale';
 
@@ -38,6 +39,7 @@ export default function MyPayslipClientPage({
   const [payslipData, setPayslipData] = useState<PayslipData | null>(null);
   const [attendanceRecord, setAttendanceRecord] = useState<AttendanceRecord | null>(null);
   const [koperasiOrders, setKoperasiOrders] = useState<KoperasiOrder[]>([]);
+  const [hseRecords, setHseRecords] = useState<HseRecord[]>([]);
   const { toast } = useToast();
   const [isFetching, setIsFetching] = useState(false);
 
@@ -58,13 +60,16 @@ export default function MyPayslipClientPage({
     const fetchData = async () => {
         if (!period) {
             setAttendanceRecord(null);
+            setKoperasiOrders([]);
+            setHseRecords([]);
             return;
         };
         setIsFetching(true);
         try {
-            const [employeeRecord, allKoperasiOrders] = await Promise.all([
+            const [employeeRecord, allKoperasiOrders, allHseRecords] = await Promise.all([
                 getAttendanceByEmployeeAndPeriod(employee.id, period),
-                getKoperasiOrders({ employeeId: employee.id })
+                getKoperasiOrders({ employeeId: employee.id }),
+                getHseRecords()
             ]);
 
             setAttendanceRecord(employeeRecord || null);
@@ -78,6 +83,9 @@ export default function MyPayslipClientPage({
                 return getMonth(orderDate) === periodMonth && getYear(orderDate) === periodYear && order.status !== 'Rejected';
             });
             setKoperasiOrders(employeeOrders);
+
+            const employeeHseRecords = allHseRecords.filter(r => r.employeeId === employee.id && r.hasFine);
+            setHseRecords(employeeHseRecords);
 
         } catch (error) {
             toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch attendance data.' });
@@ -175,6 +183,17 @@ export default function MyPayslipClientPage({
     const totalKoperasiSpending = koperasiOrders.reduce((sum, order) => sum + order.totalPrice, 0);
     if (totalKoperasiSpending > 0) {
         deductions.potonganKoperasi = totalKoperasiSpending;
+    }
+    
+    const hseFineDeduction = hseRecords
+      .filter(record => record.fineDeductionPeriods && record.fineDeductionPeriods > 0)
+      .reduce((sum, record) => {
+          const monthlyDeduction = (record.fineAmount || 0) / (record.fineDeductionPeriods || 1);
+          return sum + monthlyDeduction;
+      }, 0);
+
+    if (hseFineDeduction > 0) {
+        deductions.potonganHse = hseFineDeduction;
     }
 
     const totalDeductions = Object.values(deductions).reduce((sum, val) => sum + (val || 0), 0);
