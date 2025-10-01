@@ -16,7 +16,7 @@ export default async function PjDashboardPage() {
     }
 
     // A check to ensure the employee has the correct role, e.g., 'PJ'
-    if (employee.role !== 'PJ' && employee.role !== 'Admin Proyek') {
+    if (!employee.positions?.includes('PJ')) {
         return (
             <div className="flex h-screen items-center justify-center">
                 <p className="text-destructive">Akses ditolak. Anda bukan Penanggung Jawab (PJ).</p>
