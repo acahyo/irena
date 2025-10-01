@@ -28,6 +28,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
+import Image from 'next/image';
 
 
 export default function DriverDashboardClient({ employee, initialHistory, vehicles }: { employee: Employee, initialHistory: DriverAttendance[], vehicles: Vehicle[] }) {
@@ -37,7 +38,7 @@ export default function DriverDashboardClient({ employee, initialHistory, vehicl
   // Attendance state
   const [attendanceType, setAttendanceType] = useState<'check-in' | 'check-out'>('check-in');
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [locationError, setLocationError] = useState<string | null>('');
+  const [locationError, setLocationError] = useState('');
   const videoRef = useRef<HTMLVideoElement>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState(false);
   const [history, setHistory] = useState(initialHistory);
@@ -45,7 +46,7 @@ export default function DriverDashboardClient({ employee, initialHistory, vehicl
 
   // P2H state
   const [p2hUnit, setP2hUnit] = useState('');
-  const [p2hHourMeter, setP2hHourMeter] = useState('');
+  const [p2hPhoto, setP2hPhoto] = useState<string | null>(null);
   const [p2hNotes, setP2hNotes] = useState('');
 
   // Unit Condition state
@@ -77,7 +78,7 @@ export default function DriverDashboardClient({ employee, initialHistory, vehicl
               latitude: position.coords.latitude,
               longitude: position.coords.longitude,
             });
-            setLocationError(null);
+            setLocationError('');
           },
           (error) => {
             console.error('Error getting location:', error);
@@ -144,9 +145,20 @@ export default function DriverDashboardClient({ employee, initialHistory, vehicl
     });
   };
 
+  const handleP2hPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setP2hPhoto(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleP2hSubmit = () => {
-    if (!p2hUnit || !p2hHourMeter) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Unit dan HM Wajib diisi.' });
+    if (!p2hUnit || !p2hPhoto) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Unit dan Foto wajib diisi.' });
         return;
     }
     startTransition(async () => {
@@ -154,14 +166,14 @@ export default function DriverDashboardClient({ employee, initialHistory, vehicl
             driverId: employee.id,
             driverName: employee.name,
             unitId: p2hUnit,
-            hourMeter: Number(p2hHourMeter),
+            photoDataUri: p2hPhoto,
             notes: p2hNotes,
         });
 
          if (result.success) {
             toast({ title: 'Sukses', description: result.message });
             setP2hUnit('');
-            setP2hHourMeter('');
+            setP2hPhoto(null);
             setP2hNotes('');
         } else {
             toast({ variant: 'destructive', title: 'Error', description: result.message });
@@ -264,10 +276,15 @@ export default function DriverDashboardClient({ employee, initialHistory, vehicl
                             </Select>
                         </div>
                          <div className="space-y-2">
-                            <Label>HM (Hour Meter)</Label>
-                            <Input type="number" placeholder="Masukkan angka HM" value={p2hHourMeter} onChange={e => setP2hHourMeter(e.target.value)} />
+                            <Label>Foto Unit</Label>
+                             <Input type="file" accept="image/*" onChange={handleP2hPhotoChange} />
                         </div>
                     </div>
+                    {p2hPhoto && (
+                        <div className="relative w-full max-w-sm aspect-video">
+                            <Image src={p2hPhoto} alt="P2H Photo Preview" layout="fill" className="object-cover rounded-md" />
+                        </div>
+                    )}
                      <div className="space-y-2">
                         <Label>Catatan P2H (Opsional)</Label>
                         <Textarea placeholder="Contoh: Ban depan kiri kurang angin." value={p2hNotes} onChange={e => setP2hNotes(e.target.value)} />

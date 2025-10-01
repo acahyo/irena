@@ -1,6 +1,7 @@
 
 
 
+
 export type Allowance = {
   name: string;
   amount: number;
@@ -301,7 +302,7 @@ export type P2hReport = {
     driverName: string;
     timestamp: Date;
     unitId: string;
-    hourMeter: number;
+    photoUrl: string;
     notes: string;
 };
 

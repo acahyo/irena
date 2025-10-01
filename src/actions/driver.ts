@@ -39,10 +39,14 @@ export async function submitDriverAttendance(attendanceData: Omit<DriverAttendan
     }
 }
 
-export async function submitP2hReport(reportData: Omit<P2hReport, 'id' | 'timestamp'>): Promise<{ success: boolean, message: string }> {
+export async function submitP2hReport(reportData: Omit<P2hReport, 'id' | 'timestamp' | 'photoUrl'> & { photoDataUri: string }): Promise<{ success: boolean, message: string }> {
     try {
+        const { driverId, photoDataUri } = reportData;
+        const photoUrl = await uploadFileAndGetURL(photoDataUri, `p2h-reports/${driverId}/${Date.now()}.jpg`);
+
         const finalData: Omit<P2hReport, 'id'> = {
             ...reportData,
+            photoUrl,
             timestamp: new Date(),
         };
         await addDoc(collection(db, 'p2hReports'), finalData);
@@ -89,4 +93,3 @@ export async function getDriverAttendanceHistory(driverId: string): Promise<Driv
         return [];
     }
 }
-
