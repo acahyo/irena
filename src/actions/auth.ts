@@ -13,8 +13,8 @@ const EMPLOYEE_SESSION_COOKIE_NAME = 'employee-session';
 
 export async function authenticateUser(
     { email, password }: Pick<User, 'email' | 'password'>, 
-    userType: 'admin' | 'employee' | 'driver'
-): Promise<{ success: boolean; message: string; userType: 'admin' | 'employee' | 'driver' | null }> {
+    userType: 'admin' | 'employee' | 'driver' | 'pj'
+): Promise<{ success: boolean; message: string; userType: 'admin' | 'employee' | 'driver' | 'pj' | null }> {
     if (!email || !password) {
         return { success: false, message: 'Email and password are required.', userType: null };
     }
@@ -42,7 +42,7 @@ export async function authenticateUser(
                     return { success: true, message: 'Admin login successful.', userType: 'admin' };
                 }
             }
-        } else if (userType === 'employee' || userType === 'driver') {
+        } else if (userType === 'employee' || userType === 'driver' || userType === 'pj') {
             const employeesRef = collection(db, 'employees');
             const employeeQuery = query(employeesRef, where('email', '==', email));
             const employeeSnapshot = await getDocs(employeeQuery);
@@ -53,14 +53,16 @@ export async function authenticateUser(
                 
                 if (employee.password === hashedPassword) {
                     const isDriver = employee.positions?.includes('Driver LV Office');
+                    const isPj = employee.positions?.includes('PJ');
 
-                    // If login is from driver page, only allow drivers
                     if (userType === 'driver' && !isDriver) {
                          return { success: false, message: 'This account is not registered as a driver.', userType: null };
                     }
-                    // If login is from employee page, do not allow drivers to log in here
-                    if (userType === 'employee' && isDriver) {
-                         return { success: false, message: 'This is a driver account. Please log in through the driver portal.', userType: null };
+                    if (userType === 'pj' && !isPj) {
+                        return { success: false, message: 'Akun ini tidak terdaftar sebagai PJ.', userType: null };
+                    }
+                    if (userType === 'employee' && (isDriver || isPj)) {
+                         return { success: false, message: 'This is a special account. Please log in through the correct portal.', userType: null };
                     }
                     
                     const sessionData = { id: employeeDoc.id, roles: employee.positions };
@@ -73,6 +75,9 @@ export async function authenticateUser(
                     
                     if (isDriver) {
                          return { success: true, message: 'Driver login successful.', userType: 'driver' };
+                    }
+                    if (isPj) {
+                        return { success: true, message: 'PJ login successful.', userType: 'pj' };
                     }
                     return { success: true, message: 'Employee login successful.', userType: 'employee' };
                 }

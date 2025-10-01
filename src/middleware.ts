@@ -21,20 +21,27 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith('/driver-dashboard') && !employeeSessionCookie) {
     return NextResponse.redirect(new URL('/login/driver', request.url));
   }
+  
+  // If trying to access pj-dashboard pages without an employee session, redirect to pj login
+  if (pathname.startsWith('/pj-dashboard') && !employeeSessionCookie) {
+    return NextResponse.redirect(new URL('/login/pj', request.url));
+  }
 
   // If already logged in as admin and trying to access a login page, redirect to dashboard
   if ((pathname === '/' || pathname.startsWith('/login')) && adminSession) {
       return NextResponse.redirect(new URL('/dashboard', request.url));
   }
   
-  // If already logged in as employee/driver and trying to access a login page
+  // If already logged in as employee/driver/pj and trying to access a login page
    if ((pathname === '/' || pathname.startsWith('/login')) && employeeSessionCookie) {
         try {
             const sessionData = JSON.parse(employeeSessionCookie.value);
-            const isDriver = sessionData.roles?.includes('Driver LV Office');
-
-            if (isDriver) {
+            const roles = sessionData.roles || [];
+            
+            if (roles.includes('Driver LV Office')) {
                 return NextResponse.redirect(new URL('/driver-dashboard', request.url));
+            } else if (roles.includes('PJ')) {
+                return NextResponse.redirect(new URL('/pj-dashboard', request.url));
             } else {
                 return NextResponse.redirect(new URL('/portal', request.url));
             }
