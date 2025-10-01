@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Camera, MapPin, Send, Loader2, Info } from 'lucide-react';
+import { Camera, MapPin, Send, Loader2, LogOut } from 'lucide-react';
 import type { Employee, PjAttendance } from '@/lib/types';
 import { submitPjAttendance } from '@/actions/pj';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -30,10 +30,13 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { useRouter } from 'next/navigation';
+import { logout } from '@/actions/auth';
 
 export default function PjDashboardClient({ employee, initialHistory }: { employee: Employee, initialHistory: PjAttendance[] }) {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const [attendanceType, setAttendanceType] = useState<'Masuk' | 'Pulang' | 'Izin' | 'Sakit'>('Masuk');
   const [keterangan, setKeterangan] = useState('');
@@ -151,6 +154,13 @@ export default function PjDashboardClient({ employee, initialHistory }: { employ
     });
   };
 
+  const handleLogout = async () => {
+    startTransition(async () => {
+        await logout('employee');
+        router.push('/login/pj');
+    });
+  };
+
   const getTypeVariant = (type: string) => {
     switch (type) {
         case 'Masuk': return 'default';
@@ -165,8 +175,15 @@ export default function PjDashboardClient({ employee, initialHistory }: { employ
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Dasbor Penanggung Jawab</CardTitle>
-          <CardDescription>Selamat datang, {employee.name}. Silakan rekam absensi Anda di sini.</CardDescription>
+            <div className="flex justify-between items-start">
+                <div>
+                    <CardTitle>Selamat datang, {employee.name}.</CardTitle>
+                    <CardDescription>Silakan rekam absensi Anda di sini.</CardDescription>
+                </div>
+                <Button variant="outline" size="sm" onClick={handleLogout} disabled={isPending}>
+                    {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
+                </Button>
+            </div>
         </CardHeader>
       </Card>
       
