@@ -3,7 +3,8 @@ import { getEmployeeSession } from '@/actions/auth';
 import { notFound, redirect } from 'next/navigation';
 import DriverDashboardClient from './client-page';
 import { getDriverAttendanceHistory } from '@/actions/driver';
-import type { DriverAttendance } from '@/lib/types';
+import type { DriverAttendance, Vehicle } from '@/lib/types';
+import { getVehicles } from '@/actions/vehicles';
 
 
 export default async function DriverDashboardPage() {
@@ -24,7 +25,11 @@ export default async function DriverDashboardPage() {
         )
     }
 
-    const attendanceHistory = await getDriverAttendanceHistory(employee.id);
+    const [attendanceHistory, vehicles] = await Promise.all([
+        getDriverAttendanceHistory(employee.id),
+        getVehicles()
+    ]);
+
 
     // Convert Date objects to strings to avoid serialization issues
     const serializedHistory: DriverAttendance[] = attendanceHistory.map(rec => ({
@@ -33,6 +38,5 @@ export default async function DriverDashboardPage() {
     }));
 
 
-    return <DriverDashboardClient employee={employee} initialHistory={serializedHistory} />;
+    return <DriverDashboardClient employee={employee} initialHistory={serializedHistory} vehicles={vehicles} />;
 }
-

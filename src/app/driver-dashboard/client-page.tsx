@@ -21,29 +21,22 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Camera, MapPin, Send, Loader2, Clock } from 'lucide-react';
-import type { Employee, DriverAttendance } from '@/lib/types';
+import type { Employee, DriverAttendance, Vehicle } from '@/lib/types';
 import { submitDriverAttendance, submitP2hReport, submitUnitConditionReport } from '@/actions/driver';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 
-// Mock data for LV units
-const lvUnits = [
-  { id: 'LV001', name: 'LV-001' },
-  { id: 'LV002', name: 'LV-002' },
-  { id: 'LV003', name: 'LV-003' },
-  { id: 'SARANA01', name: 'Sarana-01' },
-];
 
-export default function DriverDashboardClient({ employee, initialHistory }: { employee: Employee, initialHistory: DriverAttendance[] }) {
+export default function DriverDashboardClient({ employee, initialHistory, vehicles }: { employee: Employee, initialHistory: DriverAttendance[], vehicles: Vehicle[] }) {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
 
   // Attendance state
   const [attendanceType, setAttendanceType] = useState<'check-in' | 'check-out'>('check-in');
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [locationError, setLocationError] = useState<string | null>(null);
+  const [locationError, setLocationError] = useState<string | null>('');
   const videoRef = useRef<HTMLVideoElement>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState(false);
   const [history, setHistory] = useState(initialHistory);
@@ -261,7 +254,7 @@ export default function DriverDashboardClient({ employee, initialHistory }: { em
                             <Select value={p2hUnit} onValueChange={setP2hUnit}>
                                 <SelectTrigger><SelectValue placeholder="Pilih Unit" /></SelectTrigger>
                                 <SelectContent>
-                                    {lvUnits.map(unit => <SelectItem key={unit.id} value={unit.id}>{unit.name}</SelectItem>)}
+                                    {vehicles.map(vehicle => <SelectItem key={vehicle.id} value={vehicle.fleetNumber}>{vehicle.fleetNumber} ({vehicle.category})</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -292,7 +285,7 @@ export default function DriverDashboardClient({ employee, initialHistory }: { em
                         <Select value={conditionUnit} onValueChange={setConditionUnit}>
                             <SelectTrigger><SelectValue placeholder="Pilih Unit" /></SelectTrigger>
                             <SelectContent>
-                                {lvUnits.map(unit => <SelectItem key={unit.id} value={unit.id}>{unit.name}</SelectItem>)}
+                                {vehicles.map(vehicle => <SelectItem key={vehicle.id} value={vehicle.fleetNumber}>{vehicle.fleetNumber} ({vehicle.category})</SelectItem>)}
                             </SelectContent>
                         </Select>
                     </div>
