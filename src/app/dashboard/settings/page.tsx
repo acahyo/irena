@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, Upload, Download, ShieldCheck, GripVertical, PlusCircle, Trash2, Database, WalletCards, ShoppingCart, UserCheck, Store, Wallet, CircleDollarSign } from 'lucide-react';
+import { Loader2, Upload, Download, ShieldCheck, GripVertical, PlusCircle, Trash2, Database, WalletCards, ShoppingCart, UserCheck, Store, Wallet, CircleDollarSign, Car } from 'lucide-react';
 import { getSettings, saveSettings } from '@/actions/settings';
 import type { AppSettings, Role, MenuOrderItem } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -83,6 +83,7 @@ const allMenus = [
   { id: 'hse-fines', label: 'Pengaturan Denda', icon: CircleDollarSign },
   { id: 'users', label: 'Users' },
   { id: 'roles', label: 'Roles' },
+  { id: 'driver-access', label: 'Hak Akses Driver' },
   { id: 'settings', label: 'Pengaturan' },
 ];
 

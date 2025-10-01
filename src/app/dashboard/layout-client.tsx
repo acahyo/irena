@@ -45,7 +45,8 @@ import {
   UserCheck as UserCheckIcon,
   Store,
   History,
-  CircleDollarSign
+  CircleDollarSign,
+  Car
 } from "lucide-react";
 import type { AppSettings, User, Role, MenuOrderItem } from "@/lib/types";
 import { logout } from "@/actions/auth";
@@ -75,6 +76,7 @@ const allNavItemsList = (lang: 'id' | 'en') => [
   { id: 'hse-fines', href: "/dashboard/hse/fines", icon: CircleDollarSign, label: "Pengaturan Denda" },
   { id: 'users', href: "/dashboard/users", icon: UsersRound, label: "Users" },
   { id: 'roles', href: "/dashboard/roles", icon: ShieldCheck, label: "Roles" },
+  { id: 'driver-access', href: "/dashboard/driver-access", icon: Car, label: "Hak Akses Driver" },
   { id: 'settings', href: "/dashboard/settings", icon: Settings, label: lang === 'id' ? "Pengaturan" : "Settings" },
 ];
 
