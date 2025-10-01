@@ -1,7 +1,8 @@
+
 'use server';
 
 import { db, storage } from '@/lib/firebase';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, orderBy, Timestamp } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from "firebase/storage";
 import type { DriverAttendance, P2hReport, UnitConditionReport } from '@/lib/types';
 
@@ -65,3 +66,24 @@ export async function submitUnitConditionReport(reportData: Omit<UnitConditionRe
         return { success: false, message: 'Gagal mengirim laporan kondisi unit.' };
     }
 }
+
+export async function getDriverAttendanceHistory(driverId: string): Promise<DriverAttendance[]> {
+    try {
+        const q = query(collection(db, 'driverAttendance'), where('driverId', '==', driverId), orderBy('timestamp', 'desc'));
+        const querySnapshot = await getDocs(q);
+        const history: DriverAttendance[] = [];
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            history.push({
+                id: doc.id,
+                ...data,
+                timestamp: (data.timestamp as Timestamp).toDate(),
+            } as DriverAttendance);
+        });
+        return history;
+    } catch (error) {
+        console.error("Error fetching driver attendance history:", error);
+        return [];
+    }
+}
+

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useEffect, useTransition } from 'react';
@@ -20,10 +21,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Camera, MapPin, Send, Loader2 } from 'lucide-react';
-import type { Employee } from '@/lib/types';
+import { Camera, MapPin, Send, Loader2, Clock } from 'lucide-react';
+import type { Employee, DriverAttendance } from '@/lib/types';
 import { submitDriverAttendance, submitP2hReport, submitUnitConditionReport } from '@/actions/driver';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { format } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
 
 // Mock data for LV units
 const lvUnits = [
@@ -33,7 +37,7 @@ const lvUnits = [
   { id: 'SARANA01', name: 'Sarana-01' },
 ];
 
-export default function DriverDashboardClient({ employee }: { employee: Employee }) {
+export default function DriverDashboardClient({ employee, initialHistory }: { employee: Employee, initialHistory: DriverAttendance[] }) {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
 
@@ -43,6 +47,7 @@ export default function DriverDashboardClient({ employee }: { employee: Employee
   const [locationError, setLocationError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
+  const [history, setHistory] = useState(initialHistory);
 
   // P2H state
   const [p2hUnit, setP2hUnit] = useState('');
@@ -124,6 +129,18 @@ export default function DriverDashboardClient({ employee }: { employee: Employee
 
       if (result.success) {
         toast({ title: 'Sukses', description: result.message });
+        // Add new record to the top of the history
+        const newRecord: DriverAttendance = {
+            id: new Date().toISOString(), // Temporary ID
+            driverId: employee.id,
+            driverName: employee.name,
+            timestamp: new Date().toISOString() as any,
+            type: attendanceType,
+            latitude: location.latitude,
+            longitude: location.longitude,
+            photoUrl: photoDataUri, // Show temporary local preview
+        };
+        setHistory(prev => [newRecord, ...prev]);
       } else {
         toast({ variant: 'destructive', title: 'Error', description: result.message });
       }
@@ -288,6 +305,49 @@ export default function DriverDashboardClient({ employee }: { employee: Employee
                         {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
                         Kirim Laporan Kondisi
                     </Button>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Riwayat Absensi</CardTitle>
+                    <CardDescription>Daftar absensi masuk dan pulang Anda.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                     <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Tanggal</TableHead>
+                                <TableHead>Jam</TableHead>
+                                <TableHead>Tipe</TableHead>
+                                <TableHead>Lokasi</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {history.length > 0 ? (
+                                history.map(rec => (
+                                    <TableRow key={rec.id}>
+                                        <TableCell>{format(new Date(rec.timestamp as any), 'dd MMM yyyy')}</TableCell>
+                                        <TableCell>{format(new Date(rec.timestamp as any), 'HH:mm:ss')}</TableCell>
+                                        <TableCell>
+                                            <Badge variant={rec.type === 'check-in' ? 'default' : 'secondary'}>
+                                                {rec.type === 'check-in' ? 'Masuk' : 'Pulang'}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell className="text-xs">
+                                            {rec.latitude.toFixed(4)}, {rec.longitude.toFixed(4)}
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={4} className="h-24 text-center">
+                                        Belum ada riwayat absensi.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
                 </CardContent>
             </Card>
         </div>

@@ -1,6 +1,10 @@
+
 import { getEmployeeSession } from '@/actions/auth';
 import { notFound, redirect } from 'next/navigation';
 import DriverDashboardClient from './client-page';
+import { getDriverAttendanceHistory } from '@/actions/driver';
+import type { DriverAttendance } from '@/lib/types';
+
 
 export default async function DriverDashboardPage() {
     const employee = await getEmployeeSession();
@@ -20,5 +24,15 @@ export default async function DriverDashboardPage() {
         )
     }
 
-    return <DriverDashboardClient employee={employee} />;
+    const attendanceHistory = await getDriverAttendanceHistory(employee.id);
+
+    // Convert Date objects to strings to avoid serialization issues
+    const serializedHistory: DriverAttendance[] = attendanceHistory.map(rec => ({
+        ...rec,
+        timestamp: rec.timestamp.toISOString() as any,
+    }));
+
+
+    return <DriverDashboardClient employee={employee} initialHistory={serializedHistory} />;
 }
+
