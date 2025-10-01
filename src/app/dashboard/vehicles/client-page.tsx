@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -65,6 +65,11 @@ export default function VehiclesClientPage({
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const router = useRouter();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
   
   const handleOpenDialog = (vehicle: Vehicle | null = null) => {
     setEditingVehicle(vehicle);
@@ -175,7 +180,7 @@ export default function VehiclesClientPage({
                                   <div className="flex justify-between items-start">
                                       <div>
                                           <p className="font-semibold">{report.driverName}</p>
-                                          <p className="text-xs text-muted-foreground">{report.unitId} - {format(new Date(report.timestamp as any), 'dd MMM yyyy, HH:mm')}</p>
+                                          {isClient && <p className="text-xs text-muted-foreground">{report.unitId} - {format(new Date(report.timestamp as any), 'dd MMM yyyy, HH:mm')}</p>}
                                       </div>
                                       <a href={report.photoUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">Lihat Foto</a>
                                   </div>
@@ -201,7 +206,7 @@ export default function VehiclesClientPage({
                           initialConditionReports.slice(0, 5).map(report => (
                                <div key={report.id} className="p-3 border rounded-md text-sm">
                                   <p className="font-semibold">{report.driverName}</p>
-                                  <p className="text-xs text-muted-foreground">{report.unitId} - {format(new Date(report.timestamp as any), 'dd MMM yyyy, HH:mm')}</p>
+                                  {isClient && <p className="text-xs text-muted-foreground">{report.unitId} - {format(new Date(report.timestamp as any), 'dd MMM yyyy, HH:mm')}</p>}
                                   <p className="mt-2 text-xs italic">"{report.notes}"</p>
                               </div>
                           ))
@@ -234,7 +239,7 @@ export default function VehiclesClientPage({
                     {initialP2hReports.length > 0 ? (
                         initialP2hReports.map(report => (
                             <TableRow key={report.id}>
-                                <TableCell>{format(new Date(report.timestamp as any), 'PPP, HH:mm')}</TableCell>
+                                {isClient ? <TableCell>{format(new Date(report.timestamp as any), 'PPP, HH:mm')}</TableCell> : <TableCell>Loading...</TableCell>}
                                 <TableCell>{report.driverName}</TableCell>
                                 <TableCell>{report.unitId}</TableCell>
                                 <TableCell className="max-w-xs truncate">{report.notes || '-'}</TableCell>
@@ -277,7 +282,7 @@ export default function VehiclesClientPage({
                     {initialConditionReports.length > 0 ? (
                         initialConditionReports.map(report => (
                             <TableRow key={report.id}>
-                                <TableCell>{format(new Date(report.timestamp as any), 'PPP, HH:mm')}</TableCell>
+                                {isClient ? <TableCell>{format(new Date(report.timestamp as any), 'PPP, HH:mm')}</TableCell> : <TableCell>Loading...</TableCell>}
                                 <TableCell>{report.driverName}</TableCell>
                                 <TableCell>{report.unitId}</TableCell>
                                 <TableCell>{report.notes}</TableCell>
