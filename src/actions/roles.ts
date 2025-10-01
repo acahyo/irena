@@ -10,7 +10,14 @@ export async function getRoles(): Promise<Role[]> {
   try {
     const querySnapshot = await getDocs(collection(db, 'roles'));
     if (querySnapshot.empty) {
-      return staticRoles;
+      // If the collection is empty, pre-populate it with static data.
+      const batch = writeBatch(db);
+      staticRoles.forEach(role => {
+        const docRef = doc(db, 'roles', role.id);
+        batch.set(docRef, role);
+      });
+      await batch.commit();
+      return staticRoles.sort((a, b) => a.name.localeCompare(b.name));
     }
     const roles: Role[] = [];
     querySnapshot.forEach((doc) => {
@@ -19,7 +26,7 @@ export async function getRoles(): Promise<Role[]> {
     return roles.sort((a, b) => a.name.localeCompare(b.name));
   } catch (error) {
     console.error("Error fetching roles, falling back to static data:", error);
-    return staticRoles;
+    return staticRoles.sort((a, b) => a.name.localeCompare(b.name));
   }
 }
 

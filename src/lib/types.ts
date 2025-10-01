@@ -2,6 +2,7 @@
 
 
 
+
 export type Allowance = {
   name: string;
   amount: number;
@@ -289,18 +290,31 @@ export type DriverAttendance = {
     id?: string;
     driverId: string;
     driverName: string;
-    timestamp: Date;
+    timestamp: Date | string;
     type: 'check-in' | 'check-out';
     latitude: number;
     longitude: number;
     photoUrl: string;
 };
 
+export type PjAttendance = {
+    id?: string;
+    pjId: string;
+    pjName: string;
+    timestamp: Date | string;
+    type: 'Masuk' | 'Pulang' | 'Izin' | 'Sakit';
+    latitude: number;
+    longitude: number;
+    photoUrl?: string;
+    keterangan?: string;
+};
+
+
 export type P2hReport = {
     id?: string;
     driverId: string;
     driverName: string;
-    timestamp: Date;
+    timestamp: Date | string;
     unitId: string;
     photoUrl: string;
     notes: string;
@@ -310,7 +324,7 @@ export type UnitConditionReport = {
     id?: string;
     driverId: string;
     driverName: string;
-    timestamp: Date;
+    timestamp: Date | string;
     unitId: string;
     notes: string;
 };
