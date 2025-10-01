@@ -64,3 +64,24 @@ export async function getPjAttendanceHistory(pjId: string): Promise<PjAttendance
         return [];
     }
 }
+
+
+export async function getAllPjAttendance(): Promise<PjAttendance[]> {
+  try {
+    const q = query(collection(db, 'pjAttendance'), orderBy('timestamp', 'desc'));
+    const querySnapshot = await getDocs(q);
+    const history: PjAttendance[] = [];
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      history.push({
+        id: doc.id,
+        ...data,
+        timestamp: (data.timestamp as Timestamp).toDate(),
+      } as PjAttendance);
+    });
+    return history;
+  } catch (error) {
+    console.error("Error fetching all PJ attendance:", error);
+    return [];
+  }
+}

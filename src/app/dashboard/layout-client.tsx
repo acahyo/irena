@@ -80,6 +80,7 @@ const allNavItemsList = (lang: 'id' | 'en') => [
   { id: 'hse-fines', href: "/dashboard/hse/fines", icon: CircleDollarSign, label: "Pengaturan Denda" },
   { id: 'vehicles', href: "/dashboard/vehicles", icon: Truck, label: "Kendaraan" },
   { id: 'driver-attendance', href: "/dashboard/driver-attendance", icon: ClipboardList, label: "Absensi Driver" },
+  { id: 'pj-attendance', href: "/dashboard/pj-attendance", icon: ClipboardList, label: "Absensi PJ" },
   { id: 'users', href: "/dashboard/users", icon: UsersRound, label: "Users" },
   { id: 'roles', href: "/dashboard/roles", icon: ShieldCheck, label: "Roles" },
   { id: 'driver-access', href: "/dashboard/driver-access", icon: Car, label: "Hak Akses Driver" },
