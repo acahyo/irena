@@ -282,3 +282,33 @@ export type HseRecord = {
     fineDeductionPeriods?: number;
     fineDeductionsApplied?: number;
 }
+
+export type DriverAttendance = {
+    id?: string;
+    driverId: string;
+    driverName: string;
+    timestamp: Date;
+    type: 'check-in' | 'check-out';
+    latitude: number;
+    longitude: number;
+    photoUrl: string;
+};
+
+export type P2hReport = {
+    id?: string;
+    driverId: string;
+    driverName: string;
+    timestamp: Date;
+    unitId: string;
+    hourMeter: number;
+    notes: string;
+};
+
+export type UnitConditionReport = {
+    id?: string;
+    driverId: string;
+    driverName: string;
+    timestamp: Date;
+    unitId: string;
+    notes: string;
+};

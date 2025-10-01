@@ -13,8 +13,8 @@ const EMPLOYEE_SESSION_COOKIE_NAME = 'employee-session';
 
 export async function authenticateUser(
     { email, password }: Pick<User, 'email' | 'password'>, 
-    userType: 'admin' | 'employee'
-): Promise<{ success: boolean; message: string; userType: 'admin' | 'employee' | null }> {
+    userType: 'admin' | 'employee' | 'driver'
+): Promise<{ success: boolean; message: string; userType: 'admin' | 'employee' | 'driver' | null }> {
     if (!email || !password) {
         return { success: false, message: 'Email and password are required.', userType: null };
     }
@@ -42,7 +42,7 @@ export async function authenticateUser(
                     return { success: true, message: 'Admin login successful.', userType: 'admin' };
                 }
             }
-        } else if (userType === 'employee') {
+        } else if (userType === 'employee' || userType === 'driver') {
             const employeesRef = collection(db, 'employees');
             const employeeQuery = query(employeesRef, where('email', '==', email));
             const employeeSnapshot = await getDocs(employeeQuery);
@@ -53,12 +53,18 @@ export async function authenticateUser(
                 
                 if (employee.password === hashedPassword) {
                     const sessionData = { id: employeeDoc.id };
+                    const isDriver = employee.role === 'Driver LV Office';
+
                     cookies().set(EMPLOYEE_SESSION_COOKIE_NAME, JSON.stringify(sessionData), {
                         httpOnly: true,
                         secure: process.env.NODE_ENV === 'production',
                         maxAge: 60 * 60 * 24 * 7, // 1 week
                         path: '/',
                     });
+                    
+                    if (isDriver) {
+                         return { success: true, message: 'Driver login successful.', userType: 'driver' };
+                    }
                     return { success: true, message: 'Employee login successful.', userType: 'employee' };
                 }
             }

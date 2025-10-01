@@ -159,6 +159,7 @@ export const roles: Role[] = [
     { id: '5', name: 'Purchasing', description: 'Manages purchase requests' },
     { id: '6', name: 'Finance', description: 'Manages finances and approves requests' },
     { id: '7', name: 'Admin Absensi', description: 'Manages attendance for a specific position' },
+    { id: '8', name: 'Driver LV Office', description: 'Access to driver-specific dashboard' },
 ];
 
 
