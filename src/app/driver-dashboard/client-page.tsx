@@ -34,7 +34,7 @@ const lvUnits = [
 ];
 
 export default function DriverDashboardClient({ employee }: { employee: Employee }) {
-  const { toast } } from useToast();
+  const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
 
   // Attendance state
