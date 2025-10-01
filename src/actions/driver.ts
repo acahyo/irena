@@ -93,3 +93,43 @@ export async function getDriverAttendanceHistory(driverId: string): Promise<Driv
         return [];
     }
 }
+
+export async function getP2hReports(): Promise<P2hReport[]> {
+  try {
+    const q = query(collection(db, 'p2hReports'), orderBy('timestamp', 'desc'));
+    const querySnapshot = await getDocs(q);
+    const reports: P2hReport[] = [];
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      reports.push({
+        id: doc.id,
+        ...data,
+        timestamp: (data.timestamp as Timestamp).toDate(),
+      } as P2hReport);
+    });
+    return reports;
+  } catch (error) {
+    console.error("Error fetching P2H reports:", error);
+    return [];
+  }
+}
+
+export async function getUnitConditionReports(): Promise<UnitConditionReport[]> {
+  try {
+    const q = query(collection(db, 'unitConditionReports'), orderBy('timestamp', 'desc'));
+    const querySnapshot = await getDocs(q);
+    const reports: UnitConditionReport[] = [];
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      reports.push({
+        id: doc.id,
+        ...data,
+        timestamp: (data.timestamp as Timestamp).toDate(),
+      } as UnitConditionReport);
+    });
+    return reports;
+  } catch (error) {
+    console.error("Error fetching unit condition reports:", error);
+    return [];
+  }
+}

@@ -41,13 +41,23 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MoreHorizontal, PlusCircle, Trash2, Pencil, Loader2, Truck } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash2, Pencil, Loader2, Truck, Wrench, ClipboardCheck, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import type { Vehicle } from '@/lib/types';
+import type { Vehicle, P2hReport, UnitConditionReport } from '@/lib/types';
 import { createVehicle, updateVehicle, deleteVehicle } from '@/actions/vehicles';
 import { useRouter } from 'next/navigation';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { format } from 'date-fns';
 
-export default function VehiclesClientPage({ initialVehicles }: { initialVehicles: Vehicle[] }) {
+export default function VehiclesClientPage({
+  initialVehicles,
+  initialP2hReports,
+  initialConditionReports
+}: {
+  initialVehicles: Vehicle[],
+  initialP2hReports: P2hReport[],
+  initialConditionReports: UnitConditionReport[]
+}) {
   const [vehicles, setVehicles] = useState(initialVehicles);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
@@ -100,7 +110,8 @@ export default function VehiclesClientPage({ initialVehicles }: { initialVehicle
   };
 
   return (
-    <>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+      <div className="lg:col-span-2 space-y-6">
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -149,6 +160,58 @@ export default function VehiclesClientPage({ initialVehicles }: { initialVehicle
           </Table>
         </CardContent>
       </Card>
+      </div>
+
+       <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><ClipboardCheck /> Laporan P2H Terbaru</CardTitle>
+        </CardHeader>
+        <CardContent>
+            <ScrollArea className="h-72">
+                <div className="space-y-4">
+                    {initialP2hReports.length > 0 ? (
+                        initialP2hReports.slice(0, 5).map(report => (
+                             <div key={report.id} className="p-3 border rounded-md text-sm">
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <p className="font-semibold">{report.driverName}</p>
+                                        <p className="text-xs text-muted-foreground">{report.unitId} - {format(new Date(report.timestamp as any), 'dd MMM yyyy, HH:mm')}</p>
+                                    </div>
+                                    <a href={report.photoUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">Lihat Foto</a>
+                                </div>
+                                {report.notes && <p className="mt-2 text-xs italic">"{report.notes}"</p>}
+                            </div>
+                        ))
+                    ) : (
+                        <p className="text-sm text-center text-muted-foreground py-10">Tidak ada laporan P2H.</p>
+                    )}
+                </div>
+            </ScrollArea>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><Wrench /> Laporan Kondisi Unit Terbaru</CardTitle>
+        </CardHeader>
+        <CardContent>
+             <ScrollArea className="h-72">
+                <div className="space-y-4">
+                     {initialConditionReports.length > 0 ? (
+                        initialConditionReports.slice(0, 5).map(report => (
+                             <div key={report.id} className="p-3 border rounded-md text-sm">
+                                <p className="font-semibold">{report.driverName}</p>
+                                <p className="text-xs text-muted-foreground">{report.unitId} - {format(new Date(report.timestamp as any), 'dd MMM yyyy, HH:mm')}</p>
+                                <p className="mt-2 text-xs italic">"{report.notes}"</p>
+                            </div>
+                        ))
+                    ) : (
+                        <p className="text-sm text-center text-muted-foreground py-10">Tidak ada laporan kondisi unit.</p>
+                    )}
+                </div>
+            </ScrollArea>
+        </CardContent>
+      </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
@@ -181,6 +244,6 @@ export default function VehiclesClientPage({ initialVehicles }: { initialVehicle
             </form>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }
