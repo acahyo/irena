@@ -1,5 +1,6 @@
 
 
+
 export type Allowance = {
   name: string;
   amount: number;
@@ -149,7 +150,7 @@ export type AttendanceRecord = {
     employeeName: string;
     period: string; // YYYY-MM
     date: string; // For date range queries
-    attendanceByPosition?: Record<string, number>; // e.g. { 'Operator': 20, 'Welder': 5 }
+    attendanceByPosition?: Record<string, number>; // e.g., { 'Operator': 20, 'Welder': 5 }
     overtimeByPosition?: Record<string, number>;
     potonganIdCard?: number;
     potonganSimper?: number;
@@ -311,4 +312,10 @@ export type UnitConditionReport = {
     timestamp: Date;
     unitId: string;
     notes: string;
+};
+
+export type Vehicle = {
+    id: string;
+    fleetNumber: string;
+    category: 'LV' | 'BUS';
 };
