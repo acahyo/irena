@@ -61,9 +61,6 @@ export async function authenticateUser(
                     if (userType === 'pj' && !isPj) {
                         return { success: false, message: 'Akun ini tidak terdaftar sebagai PJ.', userType: null };
                     }
-                    if (userType === 'employee' && (isDriver || isPj)) {
-                         return { success: false, message: 'This is a special account. Please log in through the correct portal.', userType: null };
-                    }
                     
                     const sessionData = { id: employeeDoc.id, roles: employee.positions };
                     cookies().set(EMPLOYEE_SESSION_COOKIE_NAME, JSON.stringify(sessionData), {
@@ -73,13 +70,15 @@ export async function authenticateUser(
                         path: '/',
                     });
                     
-                    if (isDriver) {
+                    if (isDriver && userType === 'driver') {
                          return { success: true, message: 'Driver login successful.', userType: 'driver' };
                     }
-                    if (isPj) {
+                    if (isPj && userType === 'pj') {
                         return { success: true, message: 'PJ login successful.', userType: 'pj' };
                     }
-                    return { success: true, message: 'Employee login successful.', userType: 'employee' };
+                    if (userType === 'employee') {
+                        return { success: true, message: 'Employee login successful.', userType: 'employee' };
+                    }
                 }
             }
         }
