@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useEffect, useTransition } from 'react';
@@ -40,6 +41,7 @@ export default function DriverDashboardClient({ employee, initialHistory, vehicl
   const videoRef = useRef<HTMLVideoElement>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState(false);
   const [history, setHistory] = useState(initialHistory);
+  const [isClient, setIsClient] = useState(false);
 
   // P2H state
   const [p2hUnit, setP2hUnit] = useState('');
@@ -51,7 +53,10 @@ export default function DriverDashboardClient({ employee, initialHistory, vehicl
   const [conditionNotes, setConditionNotes] = useState('');
 
    useEffect(() => {
+    setIsClient(true);
+    
     const getCameraPermission = async () => {
+      if (!navigator.mediaDevices) return;
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         if (videoRef.current) {
@@ -204,13 +209,13 @@ export default function DriverDashboardClient({ employee, initialHistory, vehicl
             <CardDescription>Absen masuk atau pulang kerja dari lokasi Anda.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-             {!hasCameraPermission && (
+             {isClient && !hasCameraPermission && (
                 <Alert variant="destructive">
                     <AlertTitle>Kamera Tidak Dapat Diakses</AlertTitle>
                     <AlertDescription>Mohon izinkan akses kamera di browser Anda untuk menggunakan fitur absensi.</AlertDescription>
                 </Alert>
              )}
-             {locationError && (
+             {isClient && locationError && (
                 <Alert variant="destructive">
                     <AlertTitle>Lokasi Gagal Dimuat</AlertTitle>
                     <AlertDescription>{locationError}</AlertDescription>
