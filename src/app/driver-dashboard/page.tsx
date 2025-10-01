@@ -10,7 +10,7 @@ export default async function DriverDashboardPage() {
     }
 
     // You could add a check here to ensure the employee has the correct role
-    if (employee.role !== 'Driver LV Office') {
+    if (!employee.positions?.includes('Driver LV Office')) {
         // Maybe redirect to the regular employee portal?
         // Or just show an error.
         return (

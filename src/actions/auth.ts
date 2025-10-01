@@ -52,18 +52,18 @@ export async function authenticateUser(
                 const employee = employeeDoc.data() as Employee;
                 
                 if (employee.password === hashedPassword) {
-                    const isDriver = employee.role === 'Driver LV Office';
+                    const isDriver = employee.positions?.includes('Driver LV Office');
 
                     // If login is from driver page, only allow drivers
                     if (userType === 'driver' && !isDriver) {
                          return { success: false, message: 'This account is not registered as a driver.', userType: null };
                     }
-                    // If login is from employee page, do not allow drivers
+                    // If login is from employee page, do not allow drivers to log in here
                     if (userType === 'employee' && isDriver) {
                          return { success: false, message: 'This is a driver account. Please log in through the driver portal.', userType: null };
                     }
                     
-                    const sessionData = { id: employeeDoc.id, role: employee.role };
+                    const sessionData = { id: employeeDoc.id, roles: employee.positions };
                     cookies().set(EMPLOYEE_SESSION_COOKIE_NAME, JSON.stringify(sessionData), {
                         httpOnly: true,
                         secure: process.env.NODE_ENV === 'production',

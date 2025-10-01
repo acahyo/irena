@@ -31,7 +31,9 @@ export async function middleware(request: NextRequest) {
    if ((pathname === '/' || pathname.startsWith('/login')) && employeeSessionCookie) {
         try {
             const sessionData = JSON.parse(employeeSessionCookie.value);
-            if (sessionData.role === 'Driver LV Office') {
+            const isDriver = sessionData.roles?.includes('Driver LV Office');
+
+            if (isDriver) {
                 return NextResponse.redirect(new URL('/driver-dashboard', request.url));
             } else {
                 return NextResponse.redirect(new URL('/portal', request.url));
