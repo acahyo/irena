@@ -1,3 +1,4 @@
+
 import { getVehicles } from '@/actions/vehicles';
 import VehiclesClientPage from './client-page';
 import { getAdminSession } from '@/actions/auth';
@@ -19,7 +20,7 @@ export default async function VehiclesPage() {
         getUnitConditionReports()
     ]);
     
-    // Serialize date objects to strings
+    // Serialize date objects to strings to avoid hydration errors
     const serializedP2h: P2hReport[] = p2hReports.map(r => ({ ...r, timestamp: (r.timestamp as Date).toISOString() as any }));
     const serializedCondition: UnitConditionReport[] = unitConditionReports.map(r => ({ ...r, timestamp: (r.timestamp as Date).toISOString() as any }));
 
