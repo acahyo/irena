@@ -94,6 +94,26 @@ export async function getDriverAttendanceHistory(driverId: string): Promise<Driv
     }
 }
 
+export async function getAllDriverAttendance(): Promise<DriverAttendance[]> {
+  try {
+    const q = query(collection(db, 'driverAttendance'), orderBy('timestamp', 'desc'));
+    const querySnapshot = await getDocs(q);
+    const history: DriverAttendance[] = [];
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      history.push({
+        id: doc.id,
+        ...data,
+        timestamp: (data.timestamp as Timestamp).toDate(),
+      } as DriverAttendance);
+    });
+    return history;
+  } catch (error) {
+    console.error("Error fetching all driver attendance:", error);
+    return [];
+  }
+}
+
 export async function getP2hReports(): Promise<P2hReport[]> {
   try {
     const q = query(collection(db, 'p2hReports'), orderBy('timestamp', 'desc'));

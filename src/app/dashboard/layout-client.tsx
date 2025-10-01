@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from "next/link";
@@ -48,6 +49,7 @@ import {
   CircleDollarSign,
   Car,
   Truck,
+  ClipboardList,
 } from "lucide-react";
 import type { AppSettings, User, Role, MenuOrderItem } from "@/lib/types";
 import { logout } from "@/actions/auth";
@@ -76,6 +78,7 @@ const allNavItemsList = (lang: 'id' | 'en') => [
   { id: 'hse', href: "/dashboard/hse", icon: ShieldCheck, label: "Dasbor HSE" },
   { id: 'hse-fines', href: "/dashboard/hse/fines", icon: CircleDollarSign, label: "Pengaturan Denda" },
   { id: 'vehicles', href: "/dashboard/vehicles", icon: Truck, label: "Kendaraan" },
+  { id: 'driver-attendance', href: "/dashboard/driver-attendance", icon: ClipboardList, label: "Absensi Driver" },
   { id: 'users', href: "/dashboard/users", icon: UsersRound, label: "Users" },
   { id: 'roles', href: "/dashboard/roles", icon: ShieldCheck, label: "Roles" },
   { id: 'driver-access', href: "/dashboard/driver-access", icon: Car, label: "Hak Akses Driver" },
