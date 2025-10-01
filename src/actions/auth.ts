@@ -32,7 +32,7 @@ export async function authenticateUser(
                 const user = userDoc.data() as User;
 
                 if (user.password === hashedPassword) {
-                    const sessionData = { id: userDoc.id };
+                    const sessionData = { id: userDoc.id, role: user.role };
                     cookies().set(ADMIN_SESSION_COOKIE_NAME, JSON.stringify(sessionData), {
                         httpOnly: true,
                         secure: process.env.NODE_ENV === 'production',
@@ -52,9 +52,18 @@ export async function authenticateUser(
                 const employee = employeeDoc.data() as Employee;
                 
                 if (employee.password === hashedPassword) {
-                    const sessionData = { id: employeeDoc.id };
                     const isDriver = employee.role === 'Driver LV Office';
 
+                    // If login is from driver page, only allow drivers
+                    if (userType === 'driver' && !isDriver) {
+                         return { success: false, message: 'This account is not registered as a driver.', userType: null };
+                    }
+                    // If login is from employee page, do not allow drivers
+                    if (userType === 'employee' && isDriver) {
+                         return { success: false, message: 'This is a driver account. Please log in through the driver portal.', userType: null };
+                    }
+                    
+                    const sessionData = { id: employeeDoc.id, role: employee.role };
                     cookies().set(EMPLOYEE_SESSION_COOKIE_NAME, JSON.stringify(sessionData), {
                         httpOnly: true,
                         secure: process.env.NODE_ENV === 'production',
