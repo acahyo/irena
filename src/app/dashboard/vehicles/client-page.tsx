@@ -42,7 +42,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MoreHorizontal, PlusCircle, Trash2, Pencil, Loader2, Truck, Wrench, ClipboardCheck, FileText } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash2, Pencil, Loader2, Truck, Wrench, ClipboardCheck, FileText, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Vehicle, P2hReport, UnitConditionReport } from '@/lib/types';
 import { createVehicle, updateVehicle, deleteVehicle } from '@/actions/vehicles';
@@ -111,108 +111,189 @@ export default function VehiclesClientPage({
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-      <div className="lg:col-span-2 space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Kendaraan Operasional</CardTitle>
-              <CardDescription>Kelola daftar kendaraan operasional untuk office.</CardDescription>
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <Card className="lg:col-span-1">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Kendaraan Operasional</CardTitle>
+                <CardDescription>Kelola daftar kendaraan operasional untuk office.</CardDescription>
+              </div>
+              <Button onClick={() => handleOpenDialog()}><PlusCircle className="mr-2 h-4 w-4" /> Tambah</Button>
             </div>
-            <Button onClick={() => handleOpenDialog()}><PlusCircle className="mr-2 h-4 w-4" /> Tambah Kendaraan</Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nomor Lambung</TableHead>
-                <TableHead>Kategori</TableHead>
-                <TableHead className="text-right w-[100px]">Aksi</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {vehicles.map((vehicle) => (
-                <TableRow key={vehicle.id}>
-                  <TableCell className="font-medium">{vehicle.fleetNumber}</TableCell>
-                  <TableCell>{vehicle.category}</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(vehicle)}><Pencil className="h-4 w-4" /></Button>
-                    <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                           <Button variant="ghost" size="icon" className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
-                        </AlertDialogTrigger>
-                         <AlertDialogContent>
-                            <AlertDialogHeader><AlertDialogTitle>Anda yakin?</AlertDialogTitle><AlertDialogDescription>Aksi ini akan menghapus data kendaraan secara permanen.</AlertDialogDescription></AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel>Batal</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDelete(vehicle.id)}>Hapus</AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                  </TableCell>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nomor Lambung</TableHead>
+                  <TableHead>Kategori</TableHead>
+                  <TableHead className="text-right w-[100px]">Aksi</TableHead>
                 </TableRow>
-              ))}
-              {vehicles.length === 0 && (
-                <TableRow><TableCell colSpan={3} className="h-24 text-center">Belum ada kendaraan yang ditambahkan.</TableCell></TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+              </TableHeader>
+              <TableBody>
+                {vehicles.map((vehicle) => (
+                  <TableRow key={vehicle.id}>
+                    <TableCell className="font-medium">{vehicle.fleetNumber}</TableCell>
+                    <TableCell>{vehicle.category}</TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(vehicle)}><Pencil className="h-4 w-4" /></Button>
+                      <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                             <Button variant="ghost" size="icon" className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                          </AlertDialogTrigger>
+                           <AlertDialogContent>
+                              <AlertDialogHeader><AlertDialogTitle>Anda yakin?</AlertDialogTitle><AlertDialogDescription>Aksi ini akan menghapus data kendaraan secara permanen.</AlertDialogDescription></AlertDialogHeader>
+                              <AlertDialogFooter>
+                                  <AlertDialogCancel>Batal</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDelete(vehicle.id)}>Hapus</AlertDialogAction>
+                              </AlertDialogFooter>
+                          </AlertDialogContent>
+                      </AlertDialog>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {vehicles.length === 0 && (
+                  <TableRow><TableCell colSpan={3} className="h-24 text-center">Belum ada kendaraan yang ditambahkan.</TableCell></TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><ClipboardCheck /> Laporan P2H Terbaru</CardTitle>
+          </CardHeader>
+          <CardContent>
+              <ScrollArea className="h-72">
+                  <div className="space-y-4">
+                      {initialP2hReports.length > 0 ? (
+                          initialP2hReports.slice(0, 5).map(report => (
+                               <div key={report.id} className="p-3 border rounded-md text-sm">
+                                  <div className="flex justify-between items-start">
+                                      <div>
+                                          <p className="font-semibold">{report.driverName}</p>
+                                          <p className="text-xs text-muted-foreground">{report.unitId} - {format(new Date(report.timestamp as any), 'dd MMM yyyy, HH:mm')}</p>
+                                      </div>
+                                      <a href={report.photoUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">Lihat Foto</a>
+                                  </div>
+                                  {report.notes && <p className="mt-2 text-xs italic">"{report.notes}"</p>}
+                              </div>
+                          ))
+                      ) : (
+                          <p className="text-sm text-center text-muted-foreground py-10">Tidak ada laporan P2H.</p>
+                      )}
+                  </div>
+              </ScrollArea>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Wrench /> Laporan Kondisi Unit Terbaru</CardTitle>
+          </CardHeader>
+          <CardContent>
+               <ScrollArea className="h-72">
+                  <div className="space-y-4">
+                       {initialConditionReports.length > 0 ? (
+                          initialConditionReports.slice(0, 5).map(report => (
+                               <div key={report.id} className="p-3 border rounded-md text-sm">
+                                  <p className="font-semibold">{report.driverName}</p>
+                                  <p className="text-xs text-muted-foreground">{report.unitId} - {format(new Date(report.timestamp as any), 'dd MMM yyyy, HH:mm')}</p>
+                                  <p className="mt-2 text-xs italic">"{report.notes}"</p>
+                              </div>
+                          ))
+                      ) : (
+                          <p className="text-sm text-center text-muted-foreground py-10">Tidak ada laporan kondisi unit.</p>
+                      )}
+                  </div>
+              </ScrollArea>
+          </CardContent>
+        </Card>
       </div>
 
-       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2"><ClipboardCheck /> Laporan P2H Terbaru</CardTitle>
-        </CardHeader>
-        <CardContent>
-            <ScrollArea className="h-72">
-                <div className="space-y-4">
-                    {initialP2hReports.length > 0 ? (
-                        initialP2hReports.slice(0, 5).map(report => (
-                             <div key={report.id} className="p-3 border rounded-md text-sm">
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <p className="font-semibold">{report.driverName}</p>
-                                        <p className="text-xs text-muted-foreground">{report.unitId} - {format(new Date(report.timestamp as any), 'dd MMM yyyy, HH:mm')}</p>
-                                    </div>
-                                    <a href={report.photoUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">Lihat Foto</a>
-                                </div>
-                                {report.notes && <p className="mt-2 text-xs italic">"{report.notes}"</p>}
-                            </div>
-                        ))
-                    ) : (
-                        <p className="text-sm text-center text-muted-foreground py-10">Tidak ada laporan P2H.</p>
-                    )}
-                </div>
-            </ScrollArea>
-        </CardContent>
-      </Card>
-      
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Wrench /> Laporan Kondisi Unit Terbaru</CardTitle>
+          <CardTitle>Riwayat Laporan P2H</CardTitle>
         </CardHeader>
         <CardContent>
-             <ScrollArea className="h-72">
-                <div className="space-y-4">
-                     {initialConditionReports.length > 0 ? (
-                        initialConditionReports.slice(0, 5).map(report => (
-                             <div key={report.id} className="p-3 border rounded-md text-sm">
-                                <p className="font-semibold">{report.driverName}</p>
-                                <p className="text-xs text-muted-foreground">{report.unitId} - {format(new Date(report.timestamp as any), 'dd MMM yyyy, HH:mm')}</p>
-                                <p className="mt-2 text-xs italic">"{report.notes}"</p>
-                            </div>
+           <ScrollArea className="h-[400px]">
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Tanggal</TableHead>
+                        <TableHead>Driver</TableHead>
+                        <TableHead>Unit</TableHead>
+                        <TableHead>Catatan</TableHead>
+                        <TableHead className="text-right">Foto</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {initialP2hReports.length > 0 ? (
+                        initialP2hReports.map(report => (
+                            <TableRow key={report.id}>
+                                <TableCell>{format(new Date(report.timestamp as any), 'PPP, HH:mm')}</TableCell>
+                                <TableCell>{report.driverName}</TableCell>
+                                <TableCell>{report.unitId}</TableCell>
+                                <TableCell className="max-w-xs truncate">{report.notes || '-'}</TableCell>
+                                <TableCell className="text-right">
+                                    <Button asChild variant="outline" size="sm">
+                                        <a href={report.photoUrl} target="_blank" rel="noopener noreferrer">
+                                            Lihat <ExternalLink className="ml-2 h-3 w-3"/>
+                                        </a>
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
                         ))
                     ) : (
-                        <p className="text-sm text-center text-muted-foreground py-10">Tidak ada laporan kondisi unit.</p>
+                        <TableRow>
+                            <TableCell colSpan={5} className="h-24 text-center">Tidak ada riwayat laporan.</TableCell>
+                        </TableRow>
                     )}
-                </div>
-            </ScrollArea>
+                </TableBody>
+            </Table>
+           </ScrollArea>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Riwayat Laporan Kondisi Unit</CardTitle>
+        </CardHeader>
+        <CardContent>
+           <ScrollArea className="h-[400px]">
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Tanggal</TableHead>
+                        <TableHead>Driver</TableHead>
+                        <TableHead>Unit</TableHead>
+                        <TableHead>Catatan</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {initialConditionReports.length > 0 ? (
+                        initialConditionReports.map(report => (
+                            <TableRow key={report.id}>
+                                <TableCell>{format(new Date(report.timestamp as any), 'PPP, HH:mm')}</TableCell>
+                                <TableCell>{report.driverName}</TableCell>
+                                <TableCell>{report.unitId}</TableCell>
+                                <TableCell>{report.notes}</TableCell>
+                            </TableRow>
+                        ))
+                    ) : (
+                        <TableRow>
+                            <TableCell colSpan={4} className="h-24 text-center">Tidak ada riwayat laporan.</TableCell>
+                        </TableRow>
+                    )}
+                </TableBody>
+            </Table>
+           </ScrollArea>
+        </CardContent>
+      </Card>
+
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
