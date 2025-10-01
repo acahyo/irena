@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef, useEffect, useTransition } from 'react';
@@ -46,7 +45,7 @@ export default function DriverDashboardClient({ employee, initialHistory }: { em
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
+  const [hasCameraPermission, setHasCameraPermission] = useState(false);
   const [history, setHistory] = useState(initialHistory);
 
   // P2H state
@@ -212,7 +211,7 @@ export default function DriverDashboardClient({ employee, initialHistory }: { em
             <CardDescription>Absen masuk atau pulang kerja dari lokasi Anda.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-             {hasCameraPermission === false && (
+             {!hasCameraPermission && (
                 <Alert variant="destructive">
                     <AlertTitle>Kamera Tidak Dapat Diakses</AlertTitle>
                     <AlertDescription>Mohon izinkan akses kamera di browser Anda untuk menggunakan fitur absensi.</AlertDescription>
@@ -241,7 +240,7 @@ export default function DriverDashboardClient({ employee, initialHistory }: { em
                 <MapPin className="h-4 w-4" />
                 {location ? `Lokasi: ${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)}` : 'Mencari lokasi...'}
             </div>
-            <Button className="w-full" onClick={handleAttendanceSubmit} disabled={isPending || hasCameraPermission === false || !location}>
+            <Button className="w-full" onClick={handleAttendanceSubmit} disabled={isPending || !hasCameraPermission || !location}>
                 {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Camera className="mr-2 h-4 w-4" />}
                 Ambil Foto & Kirim Absen
             </Button>
