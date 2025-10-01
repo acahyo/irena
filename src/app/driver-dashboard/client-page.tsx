@@ -65,8 +65,8 @@ export default function DriverDashboardClient({ employee, initialHistory, vehicl
         }
         setHasCameraPermission(true);
       } catch (error) {
-        console.error('Error accessing camera:', error);
         setHasCameraPermission(false);
+        console.error('Error accessing camera:', error);
       }
     };
 
@@ -209,7 +209,7 @@ export default function DriverDashboardClient({ employee, initialHistory, vehicl
       <Card>
         <CardHeader>
           <CardTitle>Selamat Datang, {employee.name}</CardTitle>
-          <CardDescription>Dasbor khusus untuk Driver LV Office.</CardDescription>
+          <CardDescription>Dasbor khusus untuk Driver.</CardDescription>
         </CardHeader>
       </Card>
       
@@ -221,20 +221,29 @@ export default function DriverDashboardClient({ employee, initialHistory, vehicl
             <CardDescription>Absen masuk atau pulang kerja dari lokasi Anda.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-             {isClient && !hasCameraPermission && (
-                <Alert variant="destructive">
-                    <AlertTitle>Kamera Tidak Dapat Diakses</AlertTitle>
-                    <AlertDescription>Mohon izinkan akses kamera di browser Anda untuk menggunakan fitur absensi.</AlertDescription>
-                </Alert>
-             )}
-             {isClient && locationError && (
-                <Alert variant="destructive">
-                    <AlertTitle>Lokasi Gagal Dimuat</AlertTitle>
-                    <AlertDescription>{locationError}</AlertDescription>
-                </Alert>
-             )}
+            {isClient && (
+              <>
+                {!hasCameraPermission && (
+                    <Alert variant="destructive">
+                        <AlertTitle>Kamera Tidak Dapat Diakses</AlertTitle>
+                        <AlertDescription>Mohon izinkan akses kamera di browser Anda untuk menggunakan fitur absensi.</AlertDescription>
+                    </Alert>
+                )}
+                {locationError && (
+                    <Alert variant="destructive">
+                        <AlertTitle>Lokasi Gagal Dimuat</AlertTitle>
+                        <AlertDescription>{locationError}</AlertDescription>
+                    </Alert>
+                )}
+                <video ref={videoRef} className="w-full aspect-video rounded-md bg-muted" autoPlay muted playsInline />
+              </>
+            )}
+            {!isClient && (
+              <div className="w-full aspect-video rounded-md bg-muted flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            )}
 
-            <video ref={videoRef} className="w-full aspect-video rounded-md bg-muted" autoPlay muted playsInline />
 
             <div className="space-y-2">
               <Label>Tipe Absen</Label>
@@ -261,7 +270,7 @@ export default function DriverDashboardClient({ employee, initialHistory, vehicl
         <div className="lg:col-span-2 space-y-6">
             <Card>
                 <CardHeader>
-                    <CardTitle>Laporan P2H LV</CardTitle>
+                    <CardTitle>Laporan P2H</CardTitle>
                     <CardDescription>Lakukan pemeriksaan harian kendaraan sebelum digunakan.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
