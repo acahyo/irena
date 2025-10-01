@@ -27,6 +27,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
+import { cn } from '@/lib/utils';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 
 export default function PjDashboardClient({ employee, initialHistory }: { employee: Employee, initialHistory: PjAttendance[] }) {
   const { toast } = useToast();
@@ -131,7 +134,7 @@ export default function PjDashboardClient({ employee, initialHistory }: { employ
             id: new Date().toISOString(),
             pjId: employee.id,
             pjName: employee.name,
-            timestamp: new Date().toISOString(),
+            timestamp: new Date().toISOString() as any,
             type: attendanceType,
             latitude: location.latitude,
             longitude: location.longitude,
@@ -182,7 +185,7 @@ export default function PjDashboardClient({ employee, initialHistory }: { employ
             )}
 
             <div className="space-y-2">
-              <label htmlFor="attendance-type">Keterangan Kehadiran</label>
+              <Label htmlFor="attendance-type">Keterangan Kehadiran</Label>
               <Select value={attendanceType} onValueChange={(v) => setAttendanceType(v as any)}>
                 <SelectTrigger id="attendance-type"><SelectValue /></SelectTrigger>
                 <SelectContent>
