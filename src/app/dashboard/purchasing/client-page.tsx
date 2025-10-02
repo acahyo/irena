@@ -36,10 +36,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { MoreHorizontal, Trash2, SquarePen, Eye, Loader2, CheckCircle, XCircle, Bot, CircleDollarSign, Download } from 'lucide-react';
+import { MoreHorizontal, Trash2, SquarePen, Eye, Loader2, CheckCircle, XCircle, Bot, CircleDollarSign, Download, ArrowLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import type { PurchaseRequest, PurchaseRequestItem, Site } from '@/lib/types';
+import type { PurchaseRequest, PurchaseRequestItem, Site, User } from '@/lib/types';
 import { deletePurchaseRequest, updatePurchaseRequest } from '@/actions/purchasing';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
@@ -84,10 +84,12 @@ export default function PurchasingClientPage({
   initialRequests,
   sites,
   userRole,
+  user
 }: {
   initialRequests: PurchaseRequest[];
   sites: Site[];
   userRole: string;
+  user: User;
 }) {
   const [requests, setRequests] = useState(initialRequests);
   const [projectFilter, setProjectFilter] = useState('all');
@@ -213,85 +215,95 @@ export default function PurchasingClientPage({
 
   return (
     <>
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div>
-              <CardTitle>Manajemen Purchasing</CardTitle>
-              <CardDescription>Verifikasi dan setujui pengajuan barang dari berbagai proyek.</CardDescription>
+    <div className="space-y-6">
+        {user.role === 'Admin Proyek' && (
+            <Button asChild variant="outline" size="sm">
+                <Link href="/dashboard">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Kembali ke Dasbor
+                </Link>
+            </Button>
+        )}
+        <Card>
+            <CardHeader>
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div>
+                <CardTitle>Manajemen Purchasing</CardTitle>
+                <CardDescription>Verifikasi dan setujui pengajuan barang dari berbagai proyek.</CardDescription>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                <Select value={projectFilter} onValueChange={setProjectFilter}>
+                    <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Filter Proyek" />
+                    </SelectTrigger>
+                    <SelectContent>
+                    <SelectItem value="all">Semua Proyek</SelectItem>
+                    {sites.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Filter Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                    <SelectItem value="all">Semua Status</SelectItem>
+                    <SelectItem value="Pending">Pending</SelectItem>
+                    <SelectItem value="Verified by Purchasing">Verified by Purchasing</SelectItem>
+                    <SelectItem value="Approved by Finance">Approved by Finance</SelectItem>
+                    <SelectItem value="Processing">Processing</SelectItem>
+                    <SelectItem value="Completed">Completed</SelectItem>
+                    <SelectItem value="Rejected">Rejected</SelectItem>
+                    </SelectContent>
+                </Select>
+                <Button variant="outline" onClick={handleExport}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Ekspor Excel
+                </Button>
+                </div>
             </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <Select value={projectFilter} onValueChange={setProjectFilter}>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Filter Proyek" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Semua Proyek</SelectItem>
-                  {sites.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Filter Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Semua Status</SelectItem>
-                  <SelectItem value="Pending">Pending</SelectItem>
-                  <SelectItem value="Verified by Purchasing">Verified by Purchasing</SelectItem>
-                  <SelectItem value="Approved by Finance">Approved by Finance</SelectItem>
-                   <SelectItem value="Processing">Processing</SelectItem>
-                  <SelectItem value="Completed">Completed</SelectItem>
-                  <SelectItem value="Rejected">Rejected</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button variant="outline" onClick={handleExport}>
-                <Download className="mr-2 h-4 w-4" />
-                Ekspor Excel
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Tanggal</TableHead>
-                <TableHead>Proyek</TableHead>
-                <TableHead>Pemohon</TableHead>
-                <TableHead>Total Estimasi</TableHead>
-                <TableHead>Total Aktual</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-[100px] text-right">Aksi</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredRequests.length > 0 ? (
-                filteredRequests.map((req) => (
-                  <TableRow key={req.id}>
-                    <TableCell>{format(new Date(req.requestDate), 'PPP')}</TableCell>
-                    <TableCell>{req.projectName}</TableCell>
-                    <TableCell>{req.requesterName}</TableCell>
-                    <TableCell>{formatCurrency(req.totalEstimatedPrice)}</TableCell>
-                    <TableCell>{formatCurrency(req.totalActualPrice)}</TableCell>
-                    <TableCell><Badge variant={getStatusVariant(req.status)}>{req.status}</Badge></TableCell>
-                    <TableCell className="text-right">
-                       <Button variant="ghost" size="icon" onClick={() => handleOpenModal(req)}>
-                           <Eye className="h-4 w-4" />
-                       </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
+            </CardHeader>
+            <CardContent>
+            <Table>
+                <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center">
-                    Tidak ada pengajuan ditemukan.
-                  </TableCell>
+                    <TableHead>Tanggal</TableHead>
+                    <TableHead>Proyek</TableHead>
+                    <TableHead>Pemohon</TableHead>
+                    <TableHead>Total Estimasi</TableHead>
+                    <TableHead>Total Aktual</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="w-[100px] text-right">Aksi</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                </TableHeader>
+                <TableBody>
+                {filteredRequests.length > 0 ? (
+                    filteredRequests.map((req) => (
+                    <TableRow key={req.id}>
+                        <TableCell>{format(new Date(req.requestDate), 'PPP')}</TableCell>
+                        <TableCell>{req.projectName}</TableCell>
+                        <TableCell>{req.requesterName}</TableCell>
+                        <TableCell>{formatCurrency(req.totalEstimatedPrice)}</TableCell>
+                        <TableCell>{formatCurrency(req.totalActualPrice)}</TableCell>
+                        <TableCell><Badge variant={getStatusVariant(req.status)}>{req.status}</Badge></TableCell>
+                        <TableCell className="text-right">
+                        <Button variant="ghost" size="icon" onClick={() => handleOpenModal(req)}>
+                            <Eye className="h-4 w-4" />
+                        </Button>
+                        </TableCell>
+                    </TableRow>
+                    ))
+                ) : (
+                    <TableRow>
+                    <TableCell colSpan={7} className="h-24 text-center">
+                        Tidak ada pengajuan ditemukan.
+                    </TableCell>
+                    </TableRow>
+                )}
+                </TableBody>
+            </Table>
+            </CardContent>
+        </Card>
+      </div>
 
       {selectedRequest && (
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>

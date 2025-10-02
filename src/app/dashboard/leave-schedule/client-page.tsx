@@ -25,10 +25,10 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, PlusCircle, CheckCircle, XCircle, Trash2 } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, CheckCircle, XCircle, Trash2, ArrowLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import type { LeaveRequest } from '@/lib/types';
+import type { LeaveRequest, User } from '@/lib/types';
 import { getLeaveRequests, updateLeaveRequestStatus, deleteLeaveRequest } from '@/actions/leave';
 
 const getStatusVariant = (status: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
@@ -44,7 +44,7 @@ const getStatusVariant = (status: string): 'default' | 'secondary' | 'destructiv
   }
 };
 
-export default function LeaveScheduleClientPage({ initialRequests }: { initialRequests: LeaveRequest[] }) {
+export default function LeaveScheduleClientPage({ initialRequests, user }: { initialRequests: LeaveRequest[], user: User }) {
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>(initialRequests);
   const { toast } = useToast();
 
@@ -90,81 +90,91 @@ export default function LeaveScheduleClientPage({ initialRequests }: { initialRe
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Jadwal Cuti Karyawan</CardTitle>
-            <CardDescription>
-              Kelola dan lihat jadwal cuti karyawan di sini.
-            </CardDescription>
-          </div>
-          <Button asChild>
-            <Link href="/dashboard/leave-schedule/new">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Ajukan Cuti
-            </Link>
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nama Karyawan</TableHead>
-              <TableHead>Tanggal Mulai</TableHead>
-              <TableHead>Tanggal Selesai</TableHead>
-              <TableHead>Jenis Cuti</TableHead>
-              <TableHead>Alasan</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="w-[100px] text-right">Aksi</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {leaveRequests.length > 0 ? (
-              leaveRequests.map((req) => (
-                <TableRow key={req.id}>
-                  <TableCell className="font-medium">{req.employeeName}</TableCell>
-                  <TableCell>{format(req.startDate, 'PPP')}</TableCell>
-                  <TableCell>{format(req.endDate, 'PPP')}</TableCell>
-                  <TableCell>{req.type}</TableCell>
-                  <TableCell className="max-w-xs truncate">{req.reason}</TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusVariant(req.status)}>{req.status}</Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Open menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleStatusUpdate(req.id, 'Approved')}>
-                           <CheckCircle className="mr-2 h-4 w-4" /> Approve
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleStatusUpdate(req.id, 'Rejected')}>
-                           <XCircle className="mr-2 h-4 w-4" /> Reject
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDelete(req.id)} className="text-destructive">
-                           <Trash2 className="mr-2 h-4 w-4" /> Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+    <div className="space-y-6">
+        {user.role === 'Admin Proyek' && (
+            <Button asChild variant="outline" size="sm">
+                <Link href="/dashboard">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Kembali ke Dasbor
+                </Link>
+            </Button>
+        )}
+        <Card>
+        <CardHeader>
+            <div className="flex items-center justify-between">
+            <div>
+                <CardTitle>Jadwal Cuti Karyawan</CardTitle>
+                <CardDescription>
+                Kelola dan lihat jadwal cuti karyawan di sini.
+                </CardDescription>
+            </div>
+            <Button asChild>
+                <Link href="/dashboard/leave-schedule/new">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Ajukan Cuti
+                </Link>
+            </Button>
+            </div>
+        </CardHeader>
+        <CardContent>
+            <Table>
+            <TableHeader>
+                <TableRow>
+                <TableHead>Nama Karyawan</TableHead>
+                <TableHead>Tanggal Mulai</TableHead>
+                <TableHead>Tanggal Selesai</TableHead>
+                <TableHead>Jenis Cuti</TableHead>
+                <TableHead>Alasan</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="w-[100px] text-right">Aksi</TableHead>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center">
-                  Tidak ada jadwal cuti ditemukan.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+            </TableHeader>
+            <TableBody>
+                {leaveRequests.length > 0 ? (
+                leaveRequests.map((req) => (
+                    <TableRow key={req.id}>
+                    <TableCell className="font-medium">{req.employeeName}</TableCell>
+                    <TableCell>{format(new Date(req.startDate), 'PPP')}</TableCell>
+                    <TableCell>{format(new Date(req.endDate), 'PPP')}</TableCell>
+                    <TableCell>{req.type}</TableCell>
+                    <TableCell className="max-w-xs truncate">{req.reason}</TableCell>
+                    <TableCell>
+                        <Badge variant={getStatusVariant(req.status)}>{req.status}</Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                        <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleStatusUpdate(req.id, 'Approved')}>
+                            <CheckCircle className="mr-2 h-4 w-4" /> Approve
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStatusUpdate(req.id, 'Rejected')}>
+                            <XCircle className="mr-2 h-4 w-4" /> Reject
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDelete(req.id)} className="text-destructive">
+                            <Trash2 className="mr-2 h-4 w-4" /> Delete
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                        </DropdownMenu>
+                    </TableCell>
+                    </TableRow>
+                ))
+                ) : (
+                <TableRow>
+                    <TableCell colSpan={7} className="h-24 text-center">
+                    Tidak ada jadwal cuti ditemukan.
+                    </TableCell>
+                </TableRow>
+                )}
+            </TableBody>
+            </Table>
+        </CardContent>
+        </Card>
+    </div>
   );
 }

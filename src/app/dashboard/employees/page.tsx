@@ -3,6 +3,7 @@ import { getEmployees } from '@/actions/employees';
 import { getLeaveRequests } from '@/actions/leave';
 import EmployeeDirectoryClientPage from './client-page';
 import { format, parseISO } from 'date-fns';
+import type { User } from '@/lib/types';
 
 const formatDate = (date: string | Date | undefined): string | undefined => {
   if (!date) return undefined;
@@ -20,7 +21,7 @@ const formatDate = (date: string | Date | undefined): string | undefined => {
 };
 
 
-export default async function EmployeeDirectoryPage({ userSiteIds }: { userSiteIds?: string[] }) {
+export default async function EmployeeDirectoryPage({ user, userSiteIds }: { user: User, userSiteIds?: string[] }) {
   const [fetchedEmployees, leaveRequests] = await Promise.all([
       getEmployees({ siteIds: userSiteIds }),
       getLeaveRequests({ siteId: userSiteIds ? userSiteIds[0] : undefined }), // Note: Leave requests might need adjustment for multi-site
@@ -43,5 +44,5 @@ export default async function EmployeeDirectoryPage({ userSiteIds }: { userSiteI
       onLeave: approvedLeave.some((req) => req.employeeId === emp.id),
     }));
 
-  return <EmployeeDirectoryClientPage initialEmployees={employeesWithLeaveStatus} />;
+  return <EmployeeDirectoryClientPage initialEmployees={employeesWithLeaveStatus} user={user} />;
 }

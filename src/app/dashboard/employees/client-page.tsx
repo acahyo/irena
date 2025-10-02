@@ -3,7 +3,7 @@
 import { useState, useMemo, useRef, useEffect, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import type { Employee } from '@/lib/types';
+import type { Employee, User } from '@/lib/types';
 import { EmployeeCard } from '@/components/employee-card';
 import { Input } from '@/components/ui/input';
 import {
@@ -14,14 +14,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Search, Upload, Download, Loader2 } from 'lucide-react';
+import { PlusCircle, Search, Upload, Download, Loader2, ArrowLeft } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { createEmployee } from '@/actions/employees';
 
 
-export default function EmployeeDirectoryClientPage({ initialEmployees }: { initialEmployees: Employee[]}) {
+export default function EmployeeDirectoryClientPage({ initialEmployees, user }: { initialEmployees: Employee[], user: User }) {
   const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
   const [searchTerm, setSearchTerm] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('all');
@@ -134,6 +134,14 @@ export default function EmployeeDirectoryClientPage({ initialEmployees }: { init
 
   return (
     <div className="space-y-6">
+      {user.role === 'Admin Proyek' && (
+        <Button asChild variant="outline" size="sm">
+            <Link href="/dashboard">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Kembali ke Dasbor
+            </Link>
+        </Button>
+      )}
       <div className="flex flex-col gap-4 md:flex-row md:items-center">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
