@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
@@ -23,7 +23,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
+import { getSites } from '@/actions/sites';
+import type { Site } from '@/lib/types';
+
 
 type AllowanceField = {
     id: number;
@@ -35,7 +37,16 @@ export default function NewPositionPage() {
     const [loading, setLoading] = useState(false);
     const [salaryType, setSalaryType] = useState<string | undefined>();
     const [allowances, setAllowances] = useState<AllowanceField[]>([]);
+    const [sites, setSites] = useState<Site[]>([]);
     
+    useEffect(() => {
+        const fetchSites = async () => {
+            const siteData = await getSites();
+            setSites(siteData);
+        };
+        fetchSites();
+    }, []);
+
     const addAllowance = () => {
         setAllowances([...allowances, { id: Date.now() }]);
     };
@@ -93,8 +104,18 @@ export default function NewPositionPage() {
                     <Input id="name" name="name" placeholder="e.g. Software Engineer" required />
                 </div>
                  <div className="space-y-2">
-                    <Label htmlFor="projectDescription">Keterangan Proyek</Label>
-                    <Textarea id="projectDescription" name="projectDescription" placeholder="e.g. Untuk proyek pembangunan jalan tol..." />
+                    <Label htmlFor="projectName">Nama Proyek</Label>
+                    <Select name="projectName">
+                        <SelectTrigger id="projectName">
+                            <SelectValue placeholder="Pilih Proyek" />
+                        </SelectTrigger>
+                        <SelectContent>
+                             <SelectItem value="">Tidak ada</SelectItem>
+                            {sites.map((site) => (
+                                <SelectItem key={site.id} value={site.name}>{site.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
                  <div className="space-y-2 md:col-span-3">
                  <Card>

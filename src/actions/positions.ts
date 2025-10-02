@@ -10,7 +10,7 @@ const processFormData = (data: any) => {
     const positionData: Partial<Position> = {
         name: data.name,
         salaryType: data.salaryType,
-        projectDescription: data.projectDescription,
+        projectName: data.projectName,
     };
 
     if (data.salaryType === 'harian') {

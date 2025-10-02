@@ -16,7 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { getPosition, updatePosition } from '@/actions/positions';
-import type { Position, Allowance } from '@/lib/types';
+import type { Position, Allowance, Site } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
+import { getSites } from '@/actions/sites';
 
 type AllowanceField = {
     id: number;
@@ -42,6 +42,7 @@ export default function EditPositionPage() {
     const [pageLoading, setPageLoading] = useState(true);
     const [salaryType, setSalaryType] = useState<string | undefined>();
     const [allowances, setAllowances] = useState<AllowanceField[]>([]);
+    const [sites, setSites] = useState<Site[]>([]);
     
     const id = params.id as string;
 
@@ -62,7 +63,11 @@ export default function EditPositionPage() {
             const fetchPosition = async () => {
                 setPageLoading(true);
                 try {
-                    const data = await getPosition(id);
+                    const [data, siteData] = await Promise.all([
+                        getPosition(id),
+                        getSites(),
+                    ]);
+                    setSites(siteData);
                     if (data) {
                         setPosition(data);
                         setSalaryType(data.salaryType);
@@ -175,8 +180,18 @@ export default function EditPositionPage() {
                     <Input id="name" name="name" defaultValue={position.name} required />
                 </div>
                  <div className="space-y-2">
-                    <Label htmlFor="projectDescription">Keterangan Proyek</Label>
-                    <Textarea id="projectDescription" name="projectDescription" placeholder="e.g. Untuk proyek pembangunan jalan tol..." defaultValue={position.projectDescription} />
+                    <Label htmlFor="projectName">Nama Proyek</Label>
+                    <Select name="projectName" defaultValue={position.projectName}>
+                        <SelectTrigger id="projectName">
+                            <SelectValue placeholder="Pilih Proyek" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="">Tidak ada</SelectItem>
+                            {sites.map((site) => (
+                                <SelectItem key={site.id} value={site.name}>{site.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
                  <div className="space-y-2 md:col-span-3">
                  <Card>
