@@ -25,13 +25,13 @@ const BPJS_RATES: Record<string, number> = {
 };
 
 
-export default async function PayrollPage({ userSiteId }: { userSiteId?: string }) {
+export default async function PayrollPage({ userSiteIds }: { userSiteIds?: string[] }) {
   const currentPeriod = new Date().toISOString().slice(0, 7);
   
-  const [employees, positions, attendanceRecords, allKoperasiOrders, hseRecords] = await Promise.all([
-    getEmployees({ siteId: userSiteId }),
+  const [employees, positions, allAttendanceForPeriod, allKoperasiOrders, hseRecords] = await Promise.all([
+    getEmployees({ siteIds: userSiteIds }),
     getPositions(),
-    getAttendanceByPeriod(currentPeriod, { siteId: userSiteId }),
+    getAttendanceByPeriod(currentPeriod), // Fetch all, then filter
     getKoperasiOrders({}), // Fetch all orders, will be filtered by employee and period
     getHseRecords(),
   ]);
@@ -47,7 +47,7 @@ export default async function PayrollPage({ userSiteId }: { userSiteId?: string 
         .map(posName => positions.find(p => p.name === posName))
         .filter((p): p is Position => !!p);
         
-      const attendance = attendanceRecords.find(a => a.employeeId === emp.id);
+      const attendance = allAttendanceForPeriod.find(a => a.employeeId === emp.id);
       const attendanceDays = attendance?.attendanceByPosition ? Object.values(attendance.attendanceByPosition).reduce((a, b) => a + (b || 0), 0) : 0;
 
       const earnings: Record<string, number> = {};
@@ -178,4 +178,3 @@ export default async function PayrollPage({ userSiteId }: { userSiteId?: string 
     </div>
   );
 }
-

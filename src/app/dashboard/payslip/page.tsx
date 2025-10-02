@@ -1,4 +1,5 @@
 
+
 import { getEmployees } from '@/actions/employees';
 import PayslipClientPage from './client-page';
 import { getSettings } from '@/actions/settings';
@@ -9,9 +10,9 @@ import { getDepartments } from '@/actions/departments';
 import { getAdminSession } from '@/actions/auth';
 
 
-export default async function PayslipPage({ userSiteId }: { userSiteId?: string }) {
+export default async function PayslipPage({ userSiteIds }: { userSiteIds?: string[] }) {
   const [employees, settings, positions, departments, user] = await Promise.all([
-    getEmployees({ siteId: userSiteId }),
+    getEmployees({ siteIds: userSiteIds }),
     getSettings(),
     getPositions(),
     getDepartments(),
@@ -32,7 +33,7 @@ export default async function PayslipPage({ userSiteId }: { userSiteId?: string 
   
   // Also pre-fetch attendance for the current month
   const currentPeriod = new Date().toISOString().slice(0, 7);
-  const attendanceRecordsData = await getAttendanceByPeriod(currentPeriod, { siteId: userSiteId });
+  const attendanceRecordsData = await getAttendanceByPeriod(currentPeriod);
   
   // Convert Date objects to strings
   const attendanceRecords = attendanceRecordsData.map(record => ({

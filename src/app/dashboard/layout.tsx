@@ -23,7 +23,8 @@ export default async function DashboardLayout({
 
   // Pass siteId(s) for Admin Proyek role
   const childrenWithProps = React.cloneElement(children as React.ReactElement, { 
-      userSiteId: currentUser.role === 'Admin Proyek' ? (currentUser.siteIds ? currentUser.siteIds[0] : undefined) : undefined 
+      userSiteId: currentUser.role === 'Admin Proyek' && currentUser.siteIds ? currentUser.siteIds[0] : undefined,
+      userSiteIds: currentUser.role === 'Admin Proyek' ? currentUser.siteIds : undefined
   });
 
   return (

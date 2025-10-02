@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, CalendarOff, UserCheck, Clock, UserX, LogOut, CircleSlash, ListChecks, UserRound } from 'lucide-react';
@@ -25,10 +26,10 @@ import AttendanceAdminDashboard from './attendance-admin-dashboard';
 import { getSitesByIds } from '@/actions/sites';
 
 
-async function getDashboardData({ siteId }: { siteId?: string }) {
+async function getDashboardData({ siteIds }: { siteIds?: string[] }) {
     const [employees, leaveRequests] = await Promise.all([
-        getEmployees({ siteId }),
-        getLeaveRequests({ siteId })
+        getEmployees({ siteIds }),
+        getLeaveRequests({ siteId: siteIds ? siteIds[0] : undefined }) // Leave requests might need more specific logic for multi-site
     ]);
 
     const today = new Date();
@@ -82,7 +83,7 @@ async function getDashboardData({ siteId }: { siteId?: string }) {
 }
 
 
-export default async function DashboardPage({ searchParams }: { searchParams: { projectId?: string }}) {
+export default async function DashboardPage({ searchParams, userSiteIds }: { searchParams: { projectId?: string }, userSiteIds?: string[] }) {
     const user = await getAdminSession();
     if (!user) {
         redirect('/');
@@ -105,7 +106,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
     }
 
     const [stats, settings] = await Promise.all([
-        getDashboardData({ siteId: undefined }), // General admin sees all sites
+        getDashboardData({ siteIds: userSiteIds }), // General admin sees all sites
         getSettings()
     ]);
     

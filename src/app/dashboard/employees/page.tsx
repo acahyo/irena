@@ -1,3 +1,4 @@
+
 import { getEmployees } from '@/actions/employees';
 import { getLeaveRequests } from '@/actions/leave';
 import EmployeeDirectoryClientPage from './client-page';
@@ -19,10 +20,10 @@ const formatDate = (date: string | Date | undefined): string | undefined => {
 };
 
 
-export default async function EmployeeDirectoryPage({ userSiteId }: { userSiteId?: string }) {
+export default async function EmployeeDirectoryPage({ userSiteIds }: { userSiteIds?: string[] }) {
   const [fetchedEmployees, leaveRequests] = await Promise.all([
-      getEmployees({ siteId: userSiteId }),
-      getLeaveRequests({ siteId: userSiteId }),
+      getEmployees({ siteIds: userSiteIds }),
+      getLeaveRequests({ siteId: userSiteIds ? userSiteIds[0] : undefined }), // Note: Leave requests might need adjustment for multi-site
     ]);
 
     const today = new Date();

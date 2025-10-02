@@ -7,9 +7,9 @@ import { getSettings } from '@/actions/settings';
 import type { AttendanceRecord, EmployeeWithPosition, Position } from '@/lib/types';
 import { getAdminSession } from '@/actions/auth';
 
-export default async function AttendancePage({ userSiteId }: { userSiteId?: string }) {
+export default async function AttendancePage({ userSiteIds }: { userSiteIds?: string[] }) {
   const [employees, positions, settings, user] = await Promise.all([
-    getEmployees({ siteId: userSiteId }),
+    getEmployees({ siteIds: userSiteIds }),
     getPositions(),
     getSettings(),
     getAdminSession()
@@ -29,7 +29,11 @@ export default async function AttendancePage({ userSiteId }: { userSiteId?: stri
 
   // Fetch initial attendance for the current month, filtering by site if applicable
   const currentPeriod = new Date().toISOString().slice(0, 7);
-  const initialAttendance = await getAttendanceByPeriod(currentPeriod, { siteId: userSiteId });
+  const employeeIdsToFetch = employees.map(e => e.id);
+  
+  // To keep getAttendanceByPeriod simple, we filter in-app after a broader fetch
+  const allAttendanceForPeriod = await getAttendanceByPeriod(currentPeriod);
+  const initialAttendance = allAttendanceForPeriod.filter(att => employeeIdsToFetch.includes(att.employeeId));
 
 
   return (

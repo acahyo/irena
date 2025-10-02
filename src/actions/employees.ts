@@ -2,11 +2,12 @@
 'use server';
 
 import { db, storage } from '@/lib/firebase';
-import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, Timestamp, writeBatch, setDoc, query, where } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, Timestamp, writeBatch, setDoc, query, where, documentId } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from "firebase/storage";
 import type { Employee } from '@/lib/types';
 import { format } from 'date-fns';
 import { createHash } from 'crypto';
+import { getSitesByIds } from './sites';
 
 
 // Helper to convert Firestore Timestamps to Dates in a document
@@ -43,18 +44,28 @@ async function uploadFileAndGetURL(base64Data: string, employeeId: string, field
 
 
 // Get all employees
-export async function getEmployees({ siteId }: { siteId?: string } = {}): Promise<Employee[]> {
+export async function getEmployees({ siteId, siteIds }: { siteId?: string, siteIds?: string[] } = {}): Promise<Employee[]> {
   try {
     const employeesRef = collection(db, 'employees');
     let q = query(employeesRef);
-
+    
+    // Handle single siteId
     if (siteId) {
         const siteDoc = await getDoc(doc(db, 'sites', siteId));
         if (siteDoc.exists()) {
             const siteName = siteDoc.data().name;
             q = query(employeesRef, where('siteLocation', '==', siteName));
         } else {
-            // If siteId is provided but not found, return no employees
+            return [];
+        }
+    } 
+    // Handle multiple siteIds for Admin Proyek
+    else if (siteIds && siteIds.length > 0) {
+        const sites = await getSitesByIds(siteIds);
+        if (sites.length > 0) {
+            const siteNames = sites.map(s => s.name);
+            q = query(employeesRef, where('siteLocation', 'in', siteNames));
+        } else {
             return [];
         }
     }
