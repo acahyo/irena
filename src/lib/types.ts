@@ -1,11 +1,4 @@
 
-
-
-
-
-
-
-
 export type Allowance = {
   name: string;
   amount: number;
@@ -92,7 +85,7 @@ export type User = {
     role: string;
     password?: string;
     avatar?: string;
-    siteId?: string;
+    siteIds?: string[];
     positionName?: string;
 };
 
@@ -119,6 +112,7 @@ export type Position = {
     name: string;
     salaryType?: 'harian' | 'bulanan' | 'direksi';
     projectName?: string;
+    projectDescription?: string;
     // Harian
     dailyWage?: number;
     overtimeRate?: number;

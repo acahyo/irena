@@ -1,10 +1,11 @@
+
 'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -18,12 +19,27 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { User, Role, Site, Position } from '@/lib/types';
 import { updateUser } from '@/actions/users';
+import { Badge } from '@/components/ui/badge';
 
 export default function EditUserClientPage({ user, roles, sites, positions }: { user: User, roles: Role[], sites: Site[], positions: Position[] }) {
     const router = useRouter();
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
     const [selectedRole, setSelectedRole] = useState(user.role);
+    const [selectedSiteIds, setSelectedSiteIds] = useState<string[]>(user.siteIds || []);
+    const [siteToAdd, setSiteToAdd] = useState('');
+
+    const addSite = () => {
+      if (siteToAdd && !selectedSiteIds.includes(siteToAdd)) {
+          setSelectedSiteIds([...selectedSiteIds, siteToAdd]);
+          setSiteToAdd('');
+      }
+    };
+
+    const removeSite = (siteIdToRemove: string) => {
+        setSelectedSiteIds(selectedSiteIds.filter(id => id !== siteIdToRemove));
+    };
+
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -34,7 +50,6 @@ export default function EditUserClientPage({ user, roles, sites, positions }: { 
         const email = formData.get('email') as string;
         const role = formData.get('role') as string;
         const password = formData.get('password') as string;
-        const siteId = formData.get('siteId') as string;
         const positionName = formData.get('positionName') as string;
 
         const userData: Partial<User> = { name, email, role };
@@ -42,7 +57,7 @@ export default function EditUserClientPage({ user, roles, sites, positions }: { 
             userData.password = password;
         }
         if (role === 'Admin Proyek') {
-            userData.siteId = siteId;
+            userData.siteIds = selectedSiteIds;
         }
         if (role === 'Admin Absensi') {
             userData.positionName = positionName;
@@ -114,18 +129,36 @@ export default function EditUserClientPage({ user, roles, sites, positions }: { 
                     </div>
 
                     {selectedRole === 'Admin Proyek' && (
-                       <div className="space-y-2">
-                            <Label htmlFor="siteId">Proyek</Label>
-                            <Select name="siteId" defaultValue={user.siteId} required>
-                                <SelectTrigger id="siteId">
-                                    <SelectValue placeholder="Pilih Proyek" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {sites.map((site) => (
-                                        <SelectItem key={site.id} value={site.id}>{site.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                        <div className="space-y-4 md:col-span-2">
+                            <Label>Proyek yang Dikelola</Label>
+                            <div className="flex items-center gap-2">
+                                <Select value={siteToAdd} onValueChange={setSiteToAdd}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Pilih proyek untuk ditambahkan" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {sites.filter(s => !selectedSiteIds.includes(s.id)).map((site) => (
+                                            <SelectItem key={site.id} value={site.id}>{site.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <Button type="button" onClick={addSite} disabled={!siteToAdd}><PlusCircle className="mr-2 h-4 w-4" /> Tambah</Button>
+                            </div>
+                            <div className="flex flex-wrap gap-2 p-2 border rounded-md min-h-[40px]">
+                                {selectedSiteIds.map(id => {
+                                    const site = sites.find(s => s.id === id);
+                                    return (
+                                        <Badge key={id} variant="secondary" className="flex items-center gap-2">
+                                            {site?.name}
+                                            <button type="button" onClick={() => removeSite(id)} className="ml-1 rounded-full hover:bg-destructive/20 p-0.5">
+                                                <Trash2 className="h-3 w-3 text-destructive" />
+                                            </button>
+                                        </Badge>
+                                    );
+                                })}
+                                {selectedSiteIds.length === 0 && <p className="text-sm text-muted-foreground">Belum ada proyek dipilih.</p>}
+                            </div>
+                            <input type="hidden" name="siteIds" value={selectedSiteIds.join(',')} />
                         </div>
                     )}
                     {selectedRole === 'Admin Absensi' && (

@@ -1,3 +1,4 @@
+
 import { getEmployees } from '@/actions/employees';
 import { getPurchaseRequests } from '@/actions/purchasing';
 import { getSite } from '@/actions/sites';
@@ -48,7 +49,8 @@ async function getProjectDashboardData(siteId?: string) {
 
 export default async function AdminProjectDashboard({ user }: { user: User }) {
 
-    const data = await getProjectDashboardData(user.siteId);
+    const primarySiteId = user.siteIds?.[0]; // For now, dashboard shows the first assigned project
+    const data = await getProjectDashboardData(primarySiteId);
 
     if (!data.site) {
         return (

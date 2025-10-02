@@ -1,3 +1,4 @@
+
 'use server';
 
 import { createHash } from 'crypto';
@@ -76,6 +77,7 @@ export async function authenticateUser(
                     if (isPj && userType === 'pj') {
                         return { success: true, message: 'PJ login successful.', userType: 'pj' };
                     }
+                    // Allow employee login regardless of special roles
                     if (userType === 'employee') {
                         return { success: true, message: 'Employee login successful.', userType: 'employee' };
                     }

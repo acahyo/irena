@@ -1,3 +1,4 @@
+
 'use server';
 
 import { createHash } from 'crypto';
@@ -64,14 +65,21 @@ export async function createUser(user: Omit<User, 'id'>): Promise<string> {
     if (user.password) {
         user.password = createHash('md5').update(user.password).digest('hex');
     }
-  const docRef = await addDoc(collection(db, 'users'), user);
-  return docRef.id;
+
+    const userData: any = { ...user };
+    if (typeof user.siteIds === 'string') {
+        userData.siteIds = (user.siteIds as string).split(',').map(id => id.trim()).filter(Boolean);
+    }
+
+    const docRef = await addDoc(collection(db, 'users'), userData);
+    return docRef.id;
 }
 
 // Update an existing user
 export async function updateUser(id: string, user: Partial<User>): Promise<void> {
   const docRef = doc(db, 'users', id);
-  const userData = { ...user };
+  const userData: { [key: string]: any } = { ...user };
+  
   // Hash password only if it's being changed (i.e., it's not empty)
   if (userData.password) {
       userData.password = createHash('md5').update(userData.password).digest('hex');
@@ -80,11 +88,17 @@ export async function updateUser(id: string, user: Partial<User>): Promise<void>
       delete userData.password;
   }
   
+  if (typeof user.siteIds === 'string') {
+    userData.siteIds = (user.siteIds as string).split(',').map(id => id.trim()).filter(Boolean);
+  } else if (Array.isArray(user.siteIds)) {
+    userData.siteIds = user.siteIds;
+  }
+
   if (userData.role !== 'Admin Proyek') {
-    (userData as any).siteId = null;
+    userData.siteIds = null;
   }
   if (userData.role !== 'Admin Absensi') {
-    (userData as any).positionName = null;
+    userData.positionName = null;
   }
 
   await updateDoc(docRef, userData);
