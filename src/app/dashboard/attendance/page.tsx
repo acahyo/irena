@@ -4,8 +4,9 @@ import { getPositions } from '@/actions/positions';
 import AttendanceClientPage from './client-page';
 import { getAttendanceByPeriod } from '@/actions/attendance';
 import { getSettings } from '@/actions/settings';
-import type { AttendanceRecord, EmployeeWithPosition, Position } from '@/lib/types';
+import type { AttendanceRecord, EmployeeWithPosition, Position, Site } from '@/lib/types';
 import { getAdminSession } from '@/actions/auth';
+import { getSitesByIds } from '@/actions/sites';
 
 export default async function AttendancePage({ userSiteIds }: { userSiteIds?: string[] }) {
   const [employees, positions, settings, user] = await Promise.all([
@@ -14,6 +15,11 @@ export default async function AttendancePage({ userSiteIds }: { userSiteIds?: st
     getSettings(),
     getAdminSession()
   ]);
+
+  let assignedSites: Site[] | undefined = undefined;
+  if(user?.role === 'Admin Proyek' && userSiteIds && userSiteIds.length > 0) {
+    assignedSites = await getSitesByIds(userSiteIds);
+  }
 
   // Filter employees based on position if user is Admin Absensi
   const filteredEmployeesForPage = user?.role === 'Admin Absensi' && user.positionName 
@@ -41,6 +47,7 @@ export default async function AttendancePage({ userSiteIds }: { userSiteIds?: st
       employees={employeesWithPositionDetails}
       initialAttendance={initialAttendance}
       settings={settings}
+      assignedSites={assignedSites}
     />
   );
 }

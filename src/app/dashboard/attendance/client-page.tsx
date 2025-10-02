@@ -22,7 +22,7 @@ import { Label } from '@/components/ui/label';
 import { Loader2, Download, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getAttendanceByPeriod, saveAttendanceRecord, importAttendanceRecords } from '@/actions/attendance';
-import type { EmployeeWithPosition, AttendanceRecord, AppSettings } from '@/lib/types';
+import type { EmployeeWithPosition, AttendanceRecord, AppSettings, Site } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -52,13 +52,16 @@ export default function AttendanceClientPage({
   employees,
   initialAttendance,
   settings,
+  assignedSites,
 }: {
   employees: EmployeeWithPosition[];
   initialAttendance: AttendanceRecord[];
   settings: AppSettings;
+  assignedSites?: Site[];
 }) {
   const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
   const [positionFilter, setPositionFilter] = useState('all');
+  const [projectFilter, setProjectFilter] = useState('all');
   const [attendanceData, setAttendanceData] = useState<AttendanceData>({});
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -72,7 +75,9 @@ export default function AttendanceClientPage({
       title: lang === 'id' ? 'Input Absensi Karyawan' : 'Employee Attendance Input',
       description: lang === 'id' ? 'Masukkan jumlah kehadiran, lembur, dan potongan untuk setiap karyawan. Data disimpan otomatis.' : 'Enter attendance, overtime, and deductions for each employee. Data is saved automatically.',
       filterByPosition: lang === 'id' ? 'Filter berdasarkan jabatan' : 'Filter by position',
+      filterByProject: lang === 'id' ? 'Filter berdasarkan proyek' : 'Filter by project',
       allPositions: lang === 'id' ? 'Semua Jabatan' : 'All Positions',
+      allProjects: lang === 'id' ? 'Semua Proyek' : 'All Projects',
       import: lang === 'id' ? 'Impor' : 'Import',
       export: lang === 'id' ? 'Ekspor' : 'Export',
       employee: lang === 'id' ? 'Karyawan' : 'Employee',
@@ -106,11 +111,12 @@ export default function AttendanceClientPage({
   }, [employees]);
 
   const filteredEmployees = useMemo(() => {
-    if (positionFilter === 'all') {
-      return employees;
-    }
-    return employees.filter((emp) => emp.positions?.includes(positionFilter));
-  }, [employees, positionFilter]);
+    return employees.filter(emp => {
+        const matchesPosition = positionFilter === 'all' || (emp.positions || []).includes(positionFilter);
+        const matchesProject = projectFilter === 'all' || emp.siteLocation === projectFilter;
+        return matchesPosition && matchesProject;
+    });
+  }, [employees, positionFilter, projectFilter]);
 
   useEffect(() => {
     // Populate initial state from fetched records
@@ -271,6 +277,21 @@ export default function AttendanceClientPage({
             </CardDescription>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            {assignedSites && assignedSites.length > 0 && (
+                 <Select value={projectFilter} onValueChange={setProjectFilter}>
+                    <SelectTrigger className="w-full md:w-[180px]">
+                        <SelectValue placeholder={T.filterByProject} />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">{T.allProjects}</SelectItem>
+                        {assignedSites.map((site) => (
+                            <SelectItem key={site.id} value={site.name}>
+                                {site.name}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            )}
             <Select value={positionFilter} onValueChange={setPositionFilter}>
               <SelectTrigger className="w-full md:w-[180px]">
                   <SelectValue placeholder={T.filterByPosition} />
@@ -458,5 +479,3 @@ export default function AttendanceClientPage({
     </Card>
   );
 }
-
-    
