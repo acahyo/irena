@@ -232,7 +232,7 @@ export default function KoperasiLimitClientPage({ initialEmployees, positions, s
                      <Input
                         type="number"
                         placeholder="e.g. 500000"
-                        value={emp.koperasiLimit || ''}
+                        value={emp.koperasiLimit ?? ''}
                         onChange={(e) => handleValueChange(emp.id, 'koperasiLimit', e.target.value)}
                       />
                   </TableCell>

@@ -181,7 +181,7 @@ export default function EditPositionPage() {
             <form onSubmit={handleSubmit} className="space-y-8">
                 <div className="space-y-2">
                     <Label htmlFor="name">Nama Jabatan</Label>
-                    <Input id="name" name="name" defaultValue={position.name} required />
+                    <Input id="name" name="name" defaultValue={position.name ?? ''} required />
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="projectName">Nama Proyek</Label>
@@ -222,11 +222,11 @@ export default function EditPositionPage() {
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-md border p-4">
                             <div className="space-y-2">
                               <Label htmlFor="dailyWage">Upah Harian (Rp)</Label>
-                              <Input id="dailyWage" name="dailyWage" type="number" placeholder="e.g. 150000" defaultValue={position.dailyWage} />
+                              <Input id="dailyWage" name="dailyWage" type="number" placeholder="e.g. 150000" defaultValue={position.dailyWage ?? ''} />
                             </div>
                             <div className="space-y-2">
                               <Label htmlFor="overtimeRate">Lembur per Jam (Rp)</Label>
-                              <Input id="overtimeRate" name="overtimeRate" type="number" placeholder="e.g. 25000" defaultValue={position.overtimeRate} />
+                              <Input id="overtimeRate" name="overtimeRate" type="number" placeholder="e.g. 25000" defaultValue={position.overtimeRate ?? ''} />
                             </div>
                           </div>
                         )}
@@ -235,7 +235,7 @@ export default function EditPositionPage() {
                            <div className="space-y-4 rounded-md border p-4">
                             <div className="space-y-2">
                               <Label htmlFor="monthlySalary">Gaji Pokok Bulanan (Rp)</Label>
-                              <Input id="monthlySalary" name="monthlySalary" type="number" placeholder="e.g. 4500000" defaultValue={position.monthlySalary} />
+                              <Input id="monthlySalary" name="monthlySalary" type="number" placeholder="e.g. 4500000" defaultValue={position.monthlySalary ?? ''} />
                             </div>
                           </div>
                         )}

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -162,11 +163,11 @@ export default function EditMyProfileClientPage({ employee }: { employee: Employ
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                             <Label htmlFor="address">Alamat</Label>
-                            <Textarea id="address" name="address" placeholder="e.g. 123 Main St, Anytown" defaultValue={employee.address} />
+                            <Textarea id="address" name="address" placeholder="e.g. 123 Main St, Anytown" defaultValue={employee.address ?? ''} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="phone">Nomor Handphone / Whatsapp</Label>
-                            <Input id="phone" name="phone" type="tel" placeholder="e.g. 08123456789" defaultValue={employee.phone} />
+                            <Input id="phone" name="phone" type="tel" placeholder="e.g. 08123456789" defaultValue={employee.phone ?? ''} />
                         </div>
                          <div className="space-y-2">
                             <Label htmlFor="maritalStatus">Status Pernikahan</Label>
@@ -190,11 +191,11 @@ export default function EditMyProfileClientPage({ employee }: { employee: Employ
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                             <Label htmlFor="emergencyContactName">Nama Kontak Darurat</Label>
-                            <Input id="emergencyContactName" name="emergencyContactName" placeholder="e.g. Jane Doe" defaultValue={employee.emergencyContactName} />
+                            <Input id="emergencyContactName" name="emergencyContactName" placeholder="e.g. Jane Doe" defaultValue={employee.emergencyContactName ?? ''} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="emergencyContactNumber">Nomor Kontak Darurat</Label>
-                            <Input id="emergencyContactNumber" name="emergencyContactNumber" placeholder="e.g. 08123456789" defaultValue={employee.emergencyContactNumber} />
+                            <Input id="emergencyContactNumber" name="emergencyContactNumber" placeholder="e.g. 08123456789" defaultValue={employee.emergencyContactNumber ?? ''} />
                         </div>
                     </CardContent>
                 </Card>
@@ -219,18 +220,18 @@ export default function EditMyProfileClientPage({ employee }: { employee: Employ
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
                                 <Label htmlFor="bankName">Bank</Label>
-                                <Input id="bankName" name="bankName" placeholder="e.g. Bank Central Asia" defaultValue={employee.bankName} />
+                                <Input id="bankName" name="bankName" placeholder="e.g. Bank Central Asia" defaultValue={employee.bankName ?? ''} />
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="accountNumber">Nomor Rekening</Label>
-                                <Input id="accountNumber" name="accountNumber" placeholder="e.g. 1234567890" defaultValue={employee.accountNumber} />
+                                <Input id="accountNumber" name="accountNumber" placeholder="e.g. 1234567890" defaultValue={employee.accountNumber ?? ''} />
                             </div>
                             <div className="space-y-2 md:col-span-2">
                                 <Label htmlFor="accountHolderName">Nama Pemilik Rekening</Label>
                                 <Input 
                                     id="accountHolderName" 
                                     name="accountHolderName" 
-                                    value={accountHolderName}
+                                    value={accountHolderName ?? ''}
                                     onChange={(e: any) => setAccountHolderName(e.target.value)}
                                     readOnly={accountType === 'pribadi'}
                                 />

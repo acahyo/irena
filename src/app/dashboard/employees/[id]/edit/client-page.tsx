@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -295,7 +296,7 @@ export default function EditEmployeePageClient({ employee, departments, position
               </div>
               <div className="space-y-2">
                 <Label htmlFor="npwpNumber">Nomor NPWP (Opsional)</Label>
-                <Input id="npwpNumber" name="npwpNumber" placeholder="e.g. 99.999.999.9-999.999" defaultValue={employee.npwpNumber} />
+                <Input id="npwpNumber" name="npwpNumber" placeholder="e.g. 99.999.999.9-999.999" defaultValue={employee.npwpNumber ?? ''} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="placeOfBirth">Tempat Lahir</Label>
@@ -333,26 +334,26 @@ export default function EditEmployeePageClient({ employee, departments, position
               </div>
               <div className="space-y-2 md:col-span-3">
                 <Label htmlFor="address">Alamat</Label>
-                <Input id="address" name="address" placeholder="e.g. 123 Main St, Anytown" required defaultValue={employee.address} />
+                <Input id="address" name="address" placeholder="e.g. 123 Main St, Anytown" required defaultValue={employee.address ?? ''} />
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
-                <Input id="email" name="email" type="email" placeholder="e.g. john@example.com" defaultValue={employee.email} />
+                <Input id="email" name="email" type="email" placeholder="e.g. john@example.com" defaultValue={employee.email ?? ''} />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone Number</Label>
-                <Input id="phone" name="phone" type="tel" placeholder="e.g. 08123456789" defaultValue={employee.phone} />
+                <Input id="phone" name="phone" type="tel" placeholder="e.g. 08123456789" defaultValue={employee.phone ?? ''} />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="emergencyContactName">Nama Kontak Darurat</Label>
-                <Input id="emergencyContactName" name="emergencyContactName" placeholder="e.g. Jane Doe" defaultValue={employee.emergencyContactName} />
+                <Input id="emergencyContactName" name="emergencyContactName" placeholder="e.g. Jane Doe" defaultValue={employee.emergencyContactName ?? ''} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="emergencyContactNumber">Nomor Kontak Darurat</Label>
-                <Input id="emergencyContactNumber" name="emergencyContactNumber" placeholder="e.g. 08123456789" defaultValue={employee.emergencyContactNumber} />
+                <Input id="emergencyContactNumber" name="emergencyContactNumber" placeholder="e.g. 08123456789" defaultValue={employee.emergencyContactNumber ?? ''} />
               </div>
 
               <div className="md:col-span-3">
@@ -377,11 +378,11 @@ export default function EditEmployeePageClient({ employee, departments, position
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
                                 <Label htmlFor="bankName">Nama Bank</Label>
-                                <Input id="bankName" name="bankName" placeholder="e.g. Bank Central Asia" defaultValue={employee.bankName} />
+                                <Input id="bankName" name="bankName" placeholder="e.g. Bank Central Asia" defaultValue={employee.bankName ?? ''} />
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="accountNumber">Nomor Rekening</Label>
-                                <Input id="accountNumber" name="accountNumber" placeholder="e.g. 1234567890" defaultValue={employee.accountNumber} />
+                                <Input id="accountNumber" name="accountNumber" placeholder="e.g. 1234567890" defaultValue={employee.accountNumber ?? ''} />
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="accountHolderName">Nama Pemilik Rekening</Label>
@@ -389,8 +390,8 @@ export default function EditEmployeePageClient({ employee, departments, position
                                     id="accountHolderName" 
                                     name="accountHolderName" 
                                     placeholder="e.g. John Doe"
-                                    value={accountType === 'pribadi' ? employeeName : undefined}
-                                    defaultValue={accountType === 'keluarga' ? employee.accountHolderName : undefined}
+                                    value={accountType === 'pribadi' ? employeeName : (employee.accountHolderName ?? '')}
+                                    defaultValue={accountType === 'keluarga' ? (employee.accountHolderName ?? '') : undefined}
                                     readOnly={accountType === 'pribadi'}
                                 />
                             </div>
@@ -424,7 +425,7 @@ export default function EditEmployeePageClient({ employee, departments, position
                 <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
                     <div className="space-y-2">
                         <Label htmlFor="bpjsNumber">Nomor BPJS</Label>
-                        <Input id="bpjsNumber" name="bpjsNumber" placeholder="e.g. 0001234567890" defaultValue={employee.bpjsNumber} />
+                        <Input id="bpjsNumber" name="bpjsNumber" placeholder="e.g. 0001234567890" defaultValue={employee.bpjsNumber ?? ''} />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="bpjsType">Tipe BPJS</Label>
@@ -449,15 +450,15 @@ export default function EditEmployeePageClient({ employee, departments, position
 
               <div className="space-y-2">
                 <Label htmlFor="idCardNumber">Nomor ID Card</Label>
-                <Input id="idCardNumber" name="idCardNumber" placeholder="e.g. 67890" defaultValue={employee.idCardNumber} />
+                <Input id="idCardNumber" name="idCardNumber" placeholder="e.g. 67890" defaultValue={employee.idCardNumber ?? ''} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="workContractNumber">Nomor Kontrak Kerja</Label>
-                <Input id="workContractNumber" name="workContractNumber" placeholder="e.g. KK/2024/001" defaultValue={employee.workContractNumber} />
+                <Input id="workContractNumber" name="workContractNumber" placeholder="e.g. KK/2024/001" defaultValue={employee.workContractNumber ?? ''} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="simperNumber">Nomor Simper</Label>
-                <Input id="simperNumber" name="simperNumber" placeholder="e.g. 12345" defaultValue={employee.simperNumber} />
+                <Input id="simperNumber" name="simperNumber" placeholder="e.g. 12345" defaultValue={employee.simperNumber ?? ''} />
               </div>
               
               <div className="space-y-4 md:col-span-3">
@@ -507,7 +508,7 @@ export default function EditEmployeePageClient({ employee, departments, position
 
               <div className="space-y-2">
                 <Label htmlFor="messRoomNumber">Nomor Kamar/Mes</Label>
-                <Input id="messRoomNumber" name="messRoomNumber" placeholder="e.g. A-101" defaultValue={employee.messRoomNumber} />
+                <Input id="messRoomNumber" name="messRoomNumber" placeholder="e.g. A-101" defaultValue={employee.messRoomNumber ?? ''} />
               </div>
                <div className="space-y-2">
                 <Label htmlFor="messEntryDate">Tanggal Masuk Mes</Label>
@@ -551,7 +552,7 @@ export default function EditEmployeePageClient({ employee, departments, position
               
               <div className="space-y-2 md:col-span-3">
                 <Label htmlFor="workEquipment">Peralatan Kerja</Label>
-                <Textarea id="workEquipment" name="workEquipment" placeholder="e.g. Laptop, Mouse, Keyboard" defaultValue={employee.workEquipment} />
+                <Textarea id="workEquipment" name="workEquipment" placeholder="e.g. Laptop, Mouse, Keyboard" defaultValue={employee.workEquipment ?? ''} />
               </div>
               
                <div className="space-y-2">
