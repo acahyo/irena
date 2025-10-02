@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -111,6 +112,9 @@ export default function EditPositionPage() {
             finalData[`allowanceAmount-${index}`] = allowance.amount.toString();
         });
 
+        if (finalData.projectName === '_none_') {
+            finalData.projectName = '';
+        }
 
         try {
             await updatePosition(id, finalData);
@@ -181,12 +185,12 @@ export default function EditPositionPage() {
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="projectName">Nama Proyek</Label>
-                    <Select name="projectName" defaultValue={position.projectName}>
+                    <Select name="projectName" defaultValue={position.projectName || '_none_'}>
                         <SelectTrigger id="projectName">
                             <SelectValue placeholder="Pilih Proyek" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="">Tidak ada</SelectItem>
+                            <SelectItem value="_none_">Tidak ada</SelectItem>
                             {sites.map((site) => (
                                 <SelectItem key={site.id} value={site.name}>{site.name}</SelectItem>
                             ))}

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -62,6 +63,10 @@ export default function NewPositionPage() {
         const formData = new FormData(event.currentTarget);
         const data = Object.fromEntries(formData.entries());
 
+        if (data.projectName === '_none_') {
+            data.projectName = '';
+        }
+
         try {
             await createPosition(data);
             toast({
@@ -110,7 +115,7 @@ export default function NewPositionPage() {
                             <SelectValue placeholder="Pilih Proyek" />
                         </SelectTrigger>
                         <SelectContent>
-                             <SelectItem value="">Tidak ada</SelectItem>
+                             <SelectItem value="_none_">Tidak ada</SelectItem>
                             {sites.map((site) => (
                                 <SelectItem key={site.id} value={site.name}>{site.name}</SelectItem>
                             ))}
