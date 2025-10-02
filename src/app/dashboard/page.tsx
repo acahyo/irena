@@ -22,6 +22,7 @@ import { redirect } from 'next/navigation';
 import AdminProjectDashboard from './admin-project-dashboard';
 import PurchasingDashboard from './purchasing-dashboard';
 import AttendanceAdminDashboard from './attendance-admin-dashboard';
+import { getSitesByIds } from '@/actions/sites';
 
 
 async function getDashboardData({ siteId }: { siteId?: string }) {
@@ -81,7 +82,7 @@ async function getDashboardData({ siteId }: { siteId?: string }) {
 }
 
 
-export default async function DashboardPage() {
+export default async function DashboardPage({ searchParams }: { searchParams: { projectId?: string }}) {
     const user = await getAdminSession();
     if (!user) {
         redirect('/');
@@ -89,7 +90,8 @@ export default async function DashboardPage() {
 
     // If user is Admin Proyek, show their specific dashboard
     if (user.role === 'Admin Proyek') {
-        return <AdminProjectDashboard user={user} />;
+        const assignedSites = user.siteIds ? await getSitesByIds(user.siteIds) : [];
+        return <AdminProjectDashboard user={user} assignedSites={assignedSites} currentProjectId={searchParams.projectId} />;
     }
 
     // If user is Purchasing, show their dashboard

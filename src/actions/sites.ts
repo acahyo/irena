@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/lib/firebase';
-import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, query, where, documentId } from 'firebase/firestore';
 import type { Site } from '@/lib/types';
 import { sites as staticSites } from '@/lib/data';
 
@@ -39,6 +39,27 @@ export async function getSite(id: string): Promise<Site | null> {
     return staticSites.find(s => s.id === id) || null;
   }
 }
+
+// Get multiple sites by an array of IDs
+export async function getSitesByIds(ids: string[]): Promise<Site[]> {
+  if (!ids || ids.length === 0) {
+    return [];
+  }
+  try {
+    const sitesRef = collection(db, 'sites');
+    const q = query(sitesRef, where(documentId(), 'in', ids));
+    const querySnapshot = await getDocs(q);
+    const sites: Site[] = [];
+    querySnapshot.forEach((doc) => {
+      sites.push({ id: doc.id, ...doc.data() } as Site);
+    });
+    return sites;
+  } catch (error) {
+    console.error("Error fetching sites by IDs, returning empty array:", error);
+    return [];
+  }
+}
+
 
 // Create a new site
 export async function createSite(site: Omit<Site, 'id'>): Promise<string> {
