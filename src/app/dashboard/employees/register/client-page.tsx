@@ -36,19 +36,17 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { createEmployee } from '@/actions/employees';
 import { getDepartments } from '@/actions/departments';
 import { getPositions } from '@/actions/positions';
-import { getSites } from '@/actions/sites';
 import type { Employee, Department, Position, Site, User } from '@/lib/types';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 
-export default function RegisterEmployeeClientPage({ user }: { user: User }) {
+export default function RegisterEmployeeClientPage({ user, assignedSites }: { user: User, assignedSites: Site[] }) {
   const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [positions, setPositions] = useState<Position[]>([]);
-  const [sites, setSites] = useState<Site[]>([]);
   const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>();
   const [messEntryDate, setMessEntryDate] = useState<Date | undefined>();
   const [contractStartDate, setContractStartDate] = useState<Date | undefined>();
@@ -67,29 +65,18 @@ export default function RegisterEmployeeClientPage({ user }: { user: User }) {
   const [employeeName, setEmployeeName] = useState('');
 
   const [siteLocation, setSiteLocation] = useState<string>(
-    user.siteIds && user.siteIds.length > 0 && sites.find(s => s.id === user.siteIds![0])
-      ? sites.find(s => s.id === user.siteIds![0])!.name
-      : ''
+    assignedSites.length === 1 ? assignedSites[0].name : ''
   );
 
   useEffect(() => {
     const fetchDropdownData = async () => {
       try {
-        const [depts, pos, siteData] = await Promise.all([
+        const [depts, pos] = await Promise.all([
           getDepartments(),
           getPositions(),
-          getSites(),
         ]);
         setDepartments(depts);
         setPositions(pos);
-        setSites(siteData);
-        // Set default site location if user has one
-        if (user.siteIds && user.siteIds.length > 0) {
-          const defaultSite = siteData.find(s => s.id === user.siteIds![0]);
-          if (defaultSite) {
-            setSiteLocation(defaultSite.name);
-          }
-        }
       } catch (error) {
         toast({
           variant: 'destructive',
@@ -99,7 +86,7 @@ export default function RegisterEmployeeClientPage({ user }: { user: User }) {
       }
     };
     fetchDropdownData();
-  }, [toast, user.siteIds]);
+  }, [toast]);
   
   const addPosition = () => {
     if (positionToAdd && !selectedPositions.includes(positionToAdd)) {
@@ -557,7 +544,7 @@ export default function RegisterEmployeeClientPage({ user }: { user: User }) {
                     <SelectValue placeholder="Pilih Lokasi/Site" />
                   </SelectTrigger>
                   <SelectContent>
-                    {sites.map((site) => (
+                    {assignedSites.map((site) => (
                       <SelectItem key={site.id} value={site.name}>{site.name}</SelectItem>
                     ))}
                   </SelectContent>
