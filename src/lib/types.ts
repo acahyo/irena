@@ -4,6 +4,7 @@
 
 
 
+
 export type Allowance = {
   name: string;
   amount: number;
@@ -116,6 +117,7 @@ export type Position = {
     id: string;
     name: string;
     salaryType?: 'harian' | 'bulanan' | 'direksi';
+    projectDescription?: string;
     // Harian
     dailyWage?: number;
     overtimeRate?: number;

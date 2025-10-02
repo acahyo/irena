@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 
 type AllowanceField = {
     id: number;
@@ -172,6 +173,10 @@ export default function EditPositionPage() {
                 <div className="space-y-2">
                     <Label htmlFor="name">Nama Jabatan</Label>
                     <Input id="name" name="name" defaultValue={position.name} required />
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="projectDescription">Keterangan Proyek</Label>
+                    <Textarea id="projectDescription" name="projectDescription" placeholder="e.g. Untuk proyek pembangunan jalan tol..." defaultValue={position.projectDescription} />
                 </div>
                  <div className="space-y-2 md:col-span-3">
                  <Card>
