@@ -362,7 +362,7 @@ export default function PayslipClientPage({
                 <Input
                     id="period"
                     type="month"
-                    value={period}
+                    defaultValue={period}
                     onChange={(e) => setPeriod(e.target.value)}
                 />
             </div>

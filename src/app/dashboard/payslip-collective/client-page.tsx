@@ -308,7 +308,7 @@ export default function PayslipCollectiveClientPage({
                 <Input
                     id="period"
                     type="month"
-                    value={period}
+                    defaultValue={period}
                     onChange={(e) => setPeriod(e.target.value)}
                     disabled={isGenerating}
                 />
@@ -414,4 +414,3 @@ export default function PayslipCollectiveClientPage({
     </div>
   );
 }
-
