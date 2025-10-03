@@ -22,14 +22,10 @@ const formatDate = (date: string | Date | undefined): string | undefined => {
 };
 
 
-export default async function EmployeeDirectoryPage({ user, userSiteIds }: { user: User, userSiteIds?: string[] }) {
-  if (!user) {
-    // This case should be handled by the layout, but as a safeguard:
-    return <EmployeeDirectoryClientPage initialEmployees={[]} user={{ id: '', name: '', email: '', role: '' }} />;
-  }
+export default async function EmployeeDirectoryPage({ user }: { user: User }) {
 
-  // HR should see all employees, regardless of siteIds
-  const siteIdsForFilter = user.role === 'HR' ? undefined : userSiteIds;
+  // HR and Admin see all employees, regardless of siteIds
+  const siteIdsForFilter = (user.role === 'HR' || user.role === 'Administrator') ? undefined : user.siteIds;
 
   const [fetchedEmployees, leaveRequests] = await Promise.all([
       getEmployees({ siteIds: siteIdsForFilter }),
@@ -53,5 +49,5 @@ export default async function EmployeeDirectoryPage({ user, userSiteIds }: { use
       onLeave: approvedLeave.some((req) => req.employeeId === emp.id),
     }));
 
-  return <EmployeeDirectoryClientPage initialEmployees={employeesWithLeaveStatus} user={user} />;
+  return <EmployeeDirectoryClientPage initialEmployees={employeesWithLeaveStatus} />;
 }

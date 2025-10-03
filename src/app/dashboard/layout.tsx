@@ -1,4 +1,5 @@
 
+
 import React from "react";
 import { redirect } from "next/navigation";
 import DashboardClientLayout from "./layout-client";
@@ -22,12 +23,25 @@ export default async function DashboardLayout({
 
   const currentUserRole = roles.find(r => r.name === currentUser.role) || null;
 
-  // Pass userSiteIds to children that need it, like the main dashboard page
+  // Pass user object to children that need it.
   const childrenWithProps = React.Children.map(children, child => {
     if (React.isValidElement(child)) {
       // @ts-ignore
-      if (child.type.name === 'DashboardPage' || child.type.name === 'LeaveSchedulePage' || child.type.name === 'EmployeesPage' || child.type.name === 'PayrollPage' || child.type.name === 'PayslipCollectivePage' || child.type.name === 'BpjsIdSimperPage' || child.type.name === 'FinancePage' || child.type.name === 'KoperasiLimitPage' || child.type.name === 'PurchasingPage' || child.type.name === 'PayslipPage') {
-        return React.cloneElement(child, {
+      const pageName = child.type.name;
+       if (
+        pageName === 'DashboardPage' ||
+        pageName === 'LeaveSchedulePage' ||
+        pageName === 'EmployeeDirectoryPage' ||
+        pageName === 'PayrollPage' ||
+        pageName === 'PayslipCollectivePage' ||
+        pageName === 'BpjsIdSimperPage' ||
+        pageName === 'FinancePage' ||
+        pageName === 'KoperasiLimitPage' ||
+        pageName === 'PurchasingPage' ||
+        pageName === 'PayslipPage'
+      ) {
+         return React.cloneElement(child, {
+          user: currentUser,
           userSiteIds: currentUser.role === 'Admin Proyek' ? currentUser.siteIds : undefined,
         } as any);
       }
