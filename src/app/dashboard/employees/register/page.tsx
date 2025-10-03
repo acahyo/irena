@@ -1,3 +1,4 @@
+
 import { getAdminSession } from '@/actions/auth';
 import { redirect } from 'next/navigation';
 import RegisterEmployeeClientPage from './client-page';
@@ -8,8 +9,13 @@ import { getSitesByIds } from '@/actions/sites';
 export default async function RegisterEmployeePage() {
   const currentUser = await getAdminSession();
   
-  if (!currentUser || currentUser.role !== 'Admin Proyek') {
-    // Redirect non-project-admins away
+  if (!currentUser) {
+    // If no user session, redirect to login
+    redirect('/');
+  }
+
+  // Only Admin Proyek can access this page
+  if (currentUser.role !== 'Admin Proyek') {
     redirect('/dashboard');
   }
 
