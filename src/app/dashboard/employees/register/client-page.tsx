@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
@@ -69,7 +69,7 @@ export default function RegisterEmployeeClientPage({ user, assignedSites }: { us
   const [accountType, setAccountType] = useState<'pribadi' | 'keluarga' | undefined>();
   const [employeeName, setEmployeeName] = useState('');
   const [accountHolderName, setAccountHolderName] = useState<string | undefined>();
-
+  
   const [siteLocation, setSiteLocation] = useState<string>(
     assignedSites.length === 1 ? assignedSites[0].name : ''
   );
@@ -101,9 +101,24 @@ export default function RegisterEmployeeClientPage({ user, assignedSites }: { us
         setAccountHolderName('');
     }
   }, [accountType, employeeName]);
+  
+  const handleSiteChange = (value: string) => {
+    setSiteLocation(value);
+    // Reset selected positions if they are not valid for the new site
+    setSelectedPositions(prev => prev.filter(pos => {
+      const positionDetails = positions.find(p => p.name === pos.name);
+      return !positionDetails?.projectName || positionDetails.projectName === value;
+    }));
+    setPositionToAdd('');
+  };
+
+  const filteredPositions = useMemo(() => {
+    if (!siteLocation) return [];
+    return positions.filter(p => !p.projectName || p.projectName === siteLocation);
+  }, [positions, siteLocation]);
 
   const addPosition = () => {
-    const position = positions.find(p => p.name === positionToAdd);
+    const position = positions.find(p => p.id === positionToAdd);
     if (position && !selectedPositions.some(p => p.id === position.id)) {
         setSelectedPositions([...selectedPositions, { id: position.id, name: position.name }]);
         setPositionToAdd('');
@@ -477,16 +492,30 @@ export default function RegisterEmployeeClientPage({ user, assignedSites }: { us
                 <Input id="simperNumber" name="simperNumber" placeholder="e.g. 12345" />
               </div>
               
-              <div className="space-y-4 md:col-span-3">
+              <div className="space-y-2">
+                <Label htmlFor="siteLocation">Lokasi/Site Kerja <span className="text-destructive">*</span></Label>
+                 <Select name="siteLocation" value={siteLocation} onValueChange={handleSiteChange} required>
+                  <SelectTrigger id="siteLocation-select">
+                    <SelectValue placeholder="Pilih Lokasi/Site" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {assignedSites.map((site) => (
+                      <SelectItem key={site.id} value={site.name}>{site.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-4 md:col-span-2">
                     <Label>Jabatan</Label>
                     <div className="flex items-center gap-2">
-                         <Select value={positionToAdd} onValueChange={setPositionToAdd}>
+                         <Select value={positionToAdd} onValueChange={setPositionToAdd} disabled={!siteLocation}>
                             <SelectTrigger>
-                                <SelectValue placeholder="Pilih jabatan untuk ditambahkan" />
+                                <SelectValue placeholder={!siteLocation ? "Pilih proyek dulu" : "Pilih jabatan"} />
                             </SelectTrigger>
                             <SelectContent>
-                                {positions.filter(p => !selectedPositions.some(sp => sp.id === p.id)).map((pos) => (
-                                    <SelectItem key={pos.id} value={pos.name}>{pos.name}</SelectItem>
+                                {filteredPositions.filter(p => !selectedPositions.some(sp => p.id === sp.id)).map((pos) => (
+                                    <SelectItem key={pos.id} value={pos.id}>{pos.name}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
@@ -549,19 +578,6 @@ export default function RegisterEmployeeClientPage({ user, assignedSites }: { us
               <div className="space-y-2">
                 <Label htmlFor="contractEndDate">Tanggal Akhir Kontrak</Label>
                 <DatePicker date={contractEndDate} setDate={setContractEndDate} />
-              </div>
-               <div className="space-y-2">
-                <Label htmlFor="siteLocation">Lokasi/Site Kerja</Label>
-                 <Select name="siteLocation" defaultValue={siteLocation} required>
-                  <SelectTrigger id="siteLocation">
-                    <SelectValue placeholder="Pilih Lokasi/Site" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {assignedSites.map((site) => (
-                      <SelectItem key={site.id} value={site.name}>{site.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
 
                <div className="space-y-2 md:col-span-3">
