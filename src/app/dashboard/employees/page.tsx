@@ -1,4 +1,5 @@
 
+
 import { getEmployees } from '@/actions/employees';
 import { getLeaveRequests } from '@/actions/leave';
 import EmployeeDirectoryClientPage from './client-page';
@@ -27,9 +28,12 @@ export default async function EmployeeDirectoryPage({ user, userSiteIds }: { use
     return <EmployeeDirectoryClientPage initialEmployees={[]} user={{ id: '', name: '', email: '', role: '' }} />;
   }
 
+  // HR should see all employees, regardless of siteIds
+  const siteIdsForFilter = user.role === 'HR' ? undefined : userSiteIds;
+
   const [fetchedEmployees, leaveRequests] = await Promise.all([
-      getEmployees({ siteIds: userSiteIds }),
-      getLeaveRequests({ siteId: userSiteIds ? userSiteIds[0] : undefined }), // Note: Leave requests might need adjustment for multi-site
+      getEmployees({ siteIds: siteIdsForFilter }),
+      getLeaveRequests({ siteId: siteIdsForFilter ? siteIdsForFilter[0] : undefined }), // Note: Leave requests might need adjustment for multi-site
     ]);
 
     const today = new Date();
