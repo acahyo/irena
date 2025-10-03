@@ -112,10 +112,13 @@ export type LeaveRequest = {
 export type Position = {
     id: string;
     name: string;
-    salaryType?: 'harian' | 'bulanan' | 'direksi';
+    salaryType?: 'jam' | 'harian' | 'bulanan' | 'direksi';
     projectName?: string;
     // Harian
     dailyWage?: number;
+    // Jam
+    hourlyRate?: number;
+    // Lembur
     overtimeRate?: number;
     // Bulanan or Direksi
     monthlySalary?: number; // Gaji Pokok

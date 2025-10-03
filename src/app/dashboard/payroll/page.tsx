@@ -58,6 +58,8 @@ export default async function PayrollPage() {
         
       const attendance = allAttendanceForPeriod.find(a => a.employeeId === emp.id);
       const attendanceDays = attendance?.attendanceByPosition ? Object.values(attendance.attendanceByPosition).reduce((a, b) => a + (b || 0), 0) : 0;
+      const overtimeHours = attendance?.overtimeByPosition ? Object.values(attendance.overtimeByPosition).reduce((a, b) => a + (b || 0), 0) : 0;
+
 
       let earnings: Record<string, number> = {};
       let totalEarnings = 0;
@@ -95,6 +97,13 @@ export default async function PayrollPage() {
                   const overtimeIncome = (pos.overtimeRate || 0) * overtimeForPos;
                   earnings[`overtime-${pos.name}`] = overtimeIncome;
                   totalEarnings += overtimeIncome;
+              }
+          } else if (pos.salaryType === 'jam') {
+              const totalHoursForPos = attendance?.overtimeByPosition?.[pos.name] || 0;
+              if (totalHoursForPos > 0) {
+                const hourlyIncome = (pos.hourlyRate || 0) * totalHoursForPos;
+                earnings[`hourlyWage-${pos.name}`] = hourlyIncome;
+                totalEarnings += hourlyIncome;
               }
           }
       });

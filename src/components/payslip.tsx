@@ -72,6 +72,10 @@ export default function Payslip({
           const attendanceForPos = data.attendanceDays || '...';
           return lang === 'id' ? `Upah Harian - ${positionName}` : `Daily Wage - ${positionName}`;
       }
+      if (key.startsWith('hourlyWage-')) {
+          const positionName = key.replace('hourlyWage-', '');
+          return lang === 'id' ? `Upah per Jam - ${positionName}` : `Hourly Wage - ${positionName}`;
+      }
       if (key.startsWith('overtime-')) {
           const positionName = key.replace('overtime-', '');
            const overtimeForPos = data.overtimeHours || '...';

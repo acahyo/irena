@@ -148,6 +148,13 @@ export default function MyPayslipClientPage({
               earnings[`overtime-${pos.name}`] = overtimeIncome;
               totalEarnings += overtimeIncome;
           }
+      } else if (pos.salaryType === 'jam') {
+          const totalHoursForPos = attendanceRecord?.overtimeByPosition?.[pos.name] || 0;
+            if (totalHoursForPos > 0) {
+              const hourlyIncome = (pos.hourlyRate || 0) * totalHoursForPos;
+              earnings[`hourlyWage-${pos.name}`] = hourlyIncome;
+              totalEarnings += hourlyIncome;
+            }
       }
     });
 

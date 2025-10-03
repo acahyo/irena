@@ -207,7 +207,14 @@ export default function PayslipClientPage({
               earnings[`overtime-${pos.name}`] = overtimeIncome;
               totalEarnings += overtimeIncome;
           }
-      }
+      } else if (pos.salaryType === 'jam') {
+            const totalHoursForPos = attendanceRecord?.overtimeByPosition?.[pos.name] || 0;
+            if (totalHoursForPos > 0) {
+              const hourlyIncome = (pos.hourlyRate || 0) * totalHoursForPos;
+              earnings[`hourlyWage-${pos.name}`] = hourlyIncome;
+              totalEarnings += hourlyIncome;
+            }
+        }
     });
 
     if (bonus > 0) {
@@ -369,7 +376,7 @@ export default function PayslipClientPage({
                 placeholder="e.g. 22"
               />
             </div>
-             {isClient && selectedEmployee?.positionDetails?.some(p => p.salaryType === 'harian') && (
+             {isClient && selectedEmployee?.positionDetails?.some(p => p.salaryType === 'harian' || p.salaryType === 'jam') && (
                <div className="space-y-2">
                 <Label htmlFor="overtime">Jumlah Jam Lembur</Label>
                 <Input
@@ -437,4 +444,3 @@ export default function PayslipClientPage({
     </div>
   );
 }
-

@@ -136,12 +136,22 @@ export default function NewPositionPage() {
                               <SelectValue placeholder="Pilih Tipe Gaji" />
                             </SelectTrigger>
                             <SelectContent>
+                              <SelectItem value="jam">Gaji per Jam</SelectItem>
                               <SelectItem value="harian">Gaji Harian</SelectItem>
                               <SelectItem value="bulanan">Gaji Bulanan</SelectItem>
                               <SelectItem value="direksi">Direksi</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
+
+                        {salaryType === 'jam' && (
+                          <div className="rounded-md border p-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="hourlyRate">Upah per Jam (Rp)</Label>
+                              <Input id="hourlyRate" name="hourlyRate" type="number" placeholder="e.g. 20000" />
+                            </div>
+                          </div>
+                        )}
                         
                         {salaryType === 'harian' && (
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-md border p-4">
