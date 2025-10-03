@@ -220,10 +220,14 @@ export default function EditPositionPage() {
                         </div>
                         
                         {salaryType === 'jam' && (
-                          <div className="rounded-md border p-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-md border p-4">
                             <div className="space-y-2">
                               <Label htmlFor="hourlyRate">Upah per Jam (Rp)</Label>
                               <Input id="hourlyRate" name="hourlyRate" type="number" placeholder="e.g. 20000" defaultValue={position.hourlyRate ?? ''}/>
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="overtimeRate">Lembur per Jam (Rp)</Label>
+                              <Input id="overtimeRate" name="overtimeRate" type="number" placeholder="e.g. 30000" defaultValue={position.overtimeRate ?? ''} />
                             </div>
                           </div>
                         )}
