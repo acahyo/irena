@@ -66,6 +66,7 @@ export default function NewEmployeePage() {
   const [accountType, setAccountType] = useState<'pribadi' | 'keluarga' | undefined>();
   const [employeeName, setEmployeeName] = useState('');
   const [accountHolderName, setAccountHolderName] = useState<string | undefined>();
+  const [siteLocation, setSiteLocation] = useState<string>('');
 
   useEffect(() => {
     const fetchDropdownData = async () => {
@@ -97,6 +98,17 @@ export default function NewEmployeePage() {
     }
   }, [accountType, employeeName]);
   
+  const filteredPositions = positions.filter(p => !p.projectName || p.projectName === siteLocation);
+  
+  const handleSiteChange = (value: string) => {
+      setSiteLocation(value);
+      // Reset selected positions if they are not valid for the new site
+      setSelectedPositions(prev => prev.filter(posName => {
+          const pos = positions.find(p => p.name === posName);
+          return !pos?.projectName || pos.projectName === value;
+      }));
+  };
+
   const addPosition = () => {
     if (positionToAdd && !selectedPositions.includes(positionToAdd)) {
         setSelectedPositions([...selectedPositions, positionToAdd]);
@@ -151,6 +163,12 @@ export default function NewEmployeePage() {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    
+    if (!siteLocation) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Lokasi/Site Kerja wajib diisi.' });
+        return;
+    }
+
     setLoading(true);
 
     const formData = new FormData(event.currentTarget);
@@ -167,6 +185,7 @@ export default function NewEmployeePage() {
 
     const employeeData: Partial<Employee> = {
         ...data,
+        siteLocation: siteLocation,
         dateOfBirth: dateOfBirth,
         messEntryDate: messEntryDate,
         contractStartDate: contractStartDate,
@@ -302,7 +321,7 @@ export default function NewEmployeePage() {
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="name">Nama Lengkap</Label>
-                <Input id="name" name="name" placeholder="e.g. John Doe" required value={employeeName} onChange={(e) => setEmployeeName(e.target.value)} />
+                <Input id="name" name="name" placeholder="e.g. John Doe" required defaultValue={employeeName} onChange={(e) => setEmployeeName(e.target.value)} />
               </div>
                <div className="space-y-2">
                 <Label htmlFor="npwpNumber">Nomor NPWP (Opsional)</Label>
@@ -399,7 +418,7 @@ export default function NewEmployeePage() {
                                     id="accountHolderName" 
                                     name="accountHolderName" 
                                     placeholder="e.g. John Doe"
-                                    value={accountHolderName ?? ''}
+                                    defaultValue={accountHolderName ?? ''}
                                     onChange={(e) => setAccountHolderName(e.target.value)}
                                     readOnly={accountType === 'pribadi'}
                                 />
@@ -470,16 +489,30 @@ export default function NewEmployeePage() {
                 <Label htmlFor="simperNumber">Nomor Simper</Label>
                 <Input id="simperNumber" name="simperNumber" placeholder="e.g. 12345" />
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="siteLocation">Lokasi/Site Kerja <span className="text-destructive">*</span></Label>
+                 <Select name="siteLocation" onValueChange={handleSiteChange} required>
+                  <SelectTrigger id="siteLocation">
+                    <SelectValue placeholder="Pilih Lokasi/Site" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sites.map((site) => (
+                      <SelectItem key={site.id} value={site.name}>{site.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               
-              <div className="space-y-4 md:col-span-3">
+              <div className="space-y-4 md:col-span-2">
                     <Label>Jabatan</Label>
                     <div className="flex items-center gap-2">
-                         <Select value={positionToAdd} onValueChange={setPositionToAdd}>
+                         <Select value={positionToAdd} onValueChange={setPositionToAdd} disabled={!siteLocation}>
                             <SelectTrigger>
-                                <SelectValue placeholder="Pilih jabatan untuk ditambahkan" />
+                                <SelectValue placeholder={!siteLocation ? "Pilih proyek dulu" : "Pilih jabatan"} />
                             </SelectTrigger>
                             <SelectContent>
-                                {positions.filter(p => !selectedPositions.includes(p.name)).map((pos) => (
+                                {filteredPositions.filter(p => !selectedPositions.includes(p.name)).map((pos) => (
                                     <SelectItem key={pos.id} value={pos.name}>{pos.name}</SelectItem>
                                 ))}
                             </SelectContent>
@@ -546,20 +579,7 @@ export default function NewEmployeePage() {
                 <Label htmlFor="contractEndDate">Tanggal Akhir Kontrak</Label>
                 <DatePicker date={contractEndDate} setDate={setContractEndDate} />
               </div>
-               <div className="space-y-2">
-                <Label htmlFor="siteLocation">Lokasi/Site Kerja</Label>
-                 <Select name="siteLocation">
-                  <SelectTrigger id="siteLocation">
-                    <SelectValue placeholder="Pilih Lokasi/Site" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {sites.map((site) => (
-                      <SelectItem key={site.id} value={site.name}>{site.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
+              
                <div className="space-y-2 md:col-span-3">
                 <Label htmlFor="workEquipment">Peralatan Kerja</Label>
                 <Textarea id="workEquipment" name="workEquipment" placeholder="e.g. Laptop, Mouse, Keyboard" />
