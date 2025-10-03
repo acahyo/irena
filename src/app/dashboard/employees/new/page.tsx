@@ -431,7 +431,7 @@ export default function NewEmployeePage() {
                                     id="accountHolderName" 
                                     name="accountHolderName" 
                                     placeholder="e.g. John Doe"
-                                    defaultValue={accountHolderName ?? ''}
+                                    value={accountHolderName ?? ''}
                                     onChange={(e) => setAccountHolderName(e.target.value)}
                                     readOnly={accountType === 'pribadi'}
                                 />

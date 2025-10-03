@@ -131,7 +131,7 @@ export default function EditEmployeePageClient({ employee, departments, position
       const allowedTypes = [
         'image/jpeg', 'image/png', 'image/jpg', 'image/x-icon',
         'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'application/vnd.ms-excel', 'applicationvnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       ];
       if (!allowedTypes.includes(file.type)) {
         toast({
