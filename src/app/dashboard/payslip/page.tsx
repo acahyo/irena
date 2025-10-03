@@ -8,15 +8,22 @@ import { getAttendanceByPeriod } from '@/actions/attendance';
 import type { EmployeeWithPosition, AttendanceRecord, Position } from '@/lib/types';
 import { getDepartments } from '@/actions/departments';
 import { getAdminSession } from '@/actions/auth';
+import { redirect } from 'next/navigation';
 
 
-export default async function PayslipPage({ userSiteIds }: { userSiteIds?: string[] }) {
-  const [employees, settings, positions, departments, user] = await Promise.all([
+export default async function PayslipPage() {
+  const user = await getAdminSession();
+  if (!user) {
+    redirect('/');
+  }
+
+  const userSiteIds = (user.role === 'HR' || user.role === 'Administrator') ? undefined : user.siteIds;
+
+  const [employees, settings, positions, departments] = await Promise.all([
     getEmployees({ siteIds: userSiteIds }),
     getSettings(),
     getPositions(),
     getDepartments(),
-    getAdminSession()
   ]);
 
   // Filter employees based on position if user is Admin Absensi

@@ -1,12 +1,22 @@
 
+
 import { getEmployees } from '@/actions/employees';
 import PayslipCollectiveClientPage from './client-page';
 import { getSettings } from '@/actions/settings';
 import { getPositions } from '@/actions/positions';
 import type { EmployeeWithPosition, Position } from '@/lib/types';
+import { getAdminSession } from '@/actions/auth';
+import { redirect } from 'next/navigation';
 
 
-export default async function PayslipCollectivePage({ userSiteId }: { userSiteId?: string }) {
+export default async function PayslipCollectivePage() {
+  const user = await getAdminSession();
+  if (!user) {
+    redirect('/');
+  }
+
+  const userSiteId = (user.role === 'Admin Proyek') ? user.siteIds?.[0] : undefined;
+
   const [employees, settings, positions] = await Promise.all([
     getEmployees({ siteId: userSiteId }),
     getSettings(),

@@ -18,6 +18,8 @@ import Link from 'next/link';
 import { History } from 'lucide-react';
 import { getMonth, getYear, parse } from 'date-fns';
 import { getHseRecords } from '@/actions/hse';
+import { getAdminSession } from '@/actions/auth';
+import { redirect } from 'next/navigation';
 
 const BPJS_RATES: Record<string, number> = {
     miki: 280000,
@@ -25,7 +27,14 @@ const BPJS_RATES: Record<string, number> = {
 };
 
 
-export default async function PayrollPage({ userSiteIds }: { userSiteIds?: string[] }) {
+export default async function PayrollPage() {
+  const user = await getAdminSession();
+  if (!user) {
+    redirect('/');
+  }
+
+  const userSiteIds = (user.role === 'HR' || user.role === 'Administrator') ? undefined : user.siteIds;
+
   const currentPeriod = new Date().toISOString().slice(0, 7);
   
   const [employees, positions, allAttendanceForPeriod, allKoperasiOrders, hseRecords] = await Promise.all([
@@ -50,7 +59,7 @@ export default async function PayrollPage({ userSiteIds }: { userSiteIds?: strin
       const attendance = allAttendanceForPeriod.find(a => a.employeeId === emp.id);
       const attendanceDays = attendance?.attendanceByPosition ? Object.values(attendance.attendanceByPosition).reduce((a, b) => a + (b || 0), 0) : 0;
 
-      const earnings: Record<string, number> = {};
+      let earnings: Record<string, number> = {};
       let totalEarnings = 0;
 
       positionDetails.forEach(pos => {

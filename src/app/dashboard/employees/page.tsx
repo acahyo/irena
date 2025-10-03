@@ -4,7 +4,8 @@ import { getEmployees } from '@/actions/employees';
 import { getLeaveRequests } from '@/actions/leave';
 import EmployeeDirectoryClientPage from './client-page';
 import { format, parseISO } from 'date-fns';
-import type { User } from '@/lib/types';
+import { getAdminSession } from '@/actions/auth';
+import { redirect } from 'next/navigation';
 
 const formatDate = (date: string | Date | undefined): string | undefined => {
   if (!date) return undefined;
@@ -22,7 +23,11 @@ const formatDate = (date: string | Date | undefined): string | undefined => {
 };
 
 
-export default async function EmployeeDirectoryPage({ user }: { user: User }) {
+export default async function EmployeeDirectoryPage() {
+  const user = await getAdminSession();
+  if (!user) {
+    redirect('/');
+  }
 
   // HR and Admin see all employees, regardless of siteIds
   const siteIdsForFilter = (user.role === 'HR' || user.role === 'Administrator') ? undefined : user.siteIds;
