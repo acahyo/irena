@@ -141,21 +141,35 @@ export default function DashboardClientLayout({
   
   const navItems = useMemo(() => {
     if (!role) return [];
-    if (role.name.toLowerCase() === 'administrator') return orderedNavItems;
 
-    const accessibleMenus = new Set(role.accessibleMenus || []);
-    
-    return orderedNavItems.map(item => {
-        if ((item as any).isGroup) {
-            const accessibleSubItems = (item as any).subItems.filter((sub: any) => accessibleMenus.has(sub.id));
-            if (accessibleSubItems.length > 0) {
-                return { ...item, subItems: accessibleSubItems };
+    let accessibleItems = [];
+    if (role.name.toLowerCase() === 'administrator') {
+      accessibleItems = orderedNavItems;
+    } else {
+        const accessibleMenus = new Set(role.accessibleMenus || []);
+        accessibleItems = orderedNavItems.map(item => {
+            if ((item as any).isGroup) {
+                const accessibleSubItems = (item as any).subItems.filter((sub: any) => accessibleMenus.has(sub.id));
+                if (accessibleSubItems.length > 0) {
+                    return { ...item, subItems: accessibleSubItems };
+                }
+                return null;
             }
-            return null;
-        }
-        return accessibleMenus.has(item.id) ? item : null;
-    }).filter(Boolean);
-  }, [orderedNavItems, role]);
+            return accessibleMenus.has(item.id) ? item : null;
+        }).filter(Boolean);
+    }
+    
+    const hasDashboard = accessibleItems.some(item => item.id === 'dashboard');
+    if (!hasDashboard) {
+      const dashboardItem = allNavItemsMap.get('dashboard');
+      if (dashboardItem) {
+        return [dashboardItem, ...accessibleItems];
+      }
+    }
+    
+    return accessibleItems;
+
+  }, [orderedNavItems, role, allNavItemsMap]);
 
 
   const getActiveLabel = () => {

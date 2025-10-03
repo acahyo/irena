@@ -83,6 +83,7 @@ const allMenus = [
   { id: 'hse', label: 'Dasbor HSE', icon: ShieldCheck },
   { id: 'hse-fines', label: 'Pengaturan Denda', icon: CircleDollarSign },
   { id: 'driver-attendance', label: 'Absensi Driver', icon: ClipboardList },
+  { id: 'pj-attendance', label: 'Absensi PJ', icon: ClipboardList },
   { id: 'users', label: 'Users' },
   { id: 'roles', label: 'Roles' },
   { id: 'driver-access', label: 'Hak Akses Driver' },
