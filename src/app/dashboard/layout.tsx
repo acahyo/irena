@@ -14,8 +14,11 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const settings = await getSettings();
-  const [currentUser, roles] = await Promise.all([getAdminSession(), getRoles()]);
+  const [settings, currentUser, roles] = await Promise.all([
+      getSettings(), 
+      getAdminSession(), 
+      getRoles()
+  ]);
   
   if (!currentUser) {
     redirect('/');
@@ -23,7 +26,8 @@ export default async function DashboardLayout({
 
   const currentUserRole = roles.find(r => r.name === currentUser.role) || null;
 
-  // Pass user object to children that need it.
+  // Pass user object to children that need it via context.
+  // Pages that need siteIds will fetch it themselves based on the user from the session.
   const childrenWithProps = React.Children.map(children, child => {
     if (React.isValidElement(child)) {
       // @ts-ignore
@@ -36,9 +40,7 @@ export default async function DashboardLayout({
         pageName === 'PayslipCollectivePage' ||
         pageName === 'BpjsIdSimperPage' ||
         pageName === 'FinancePage' ||
-        pageName === 'KoperasiLimitPage' ||
-        pageName === 'PurchasingPage' ||
-        pageName === 'PayslipPage'
+        pageName === 'KoperasiLimitPage'
       ) {
          return React.cloneElement(child, {
           user: currentUser,
@@ -56,7 +58,7 @@ export default async function DashboardLayout({
         user={currentUser}
         role={currentUserRole}
       >
-        {childrenWithProps}
+        {children}
       </DashboardClientLayout>
     </UserProvider>
   );
