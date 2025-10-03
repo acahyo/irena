@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import Link from "next/link";
@@ -68,8 +69,8 @@ const allNavItemsList = (lang: 'id' | 'en') => [
   { id: 'payslip', href: "/dashboard/payslip", icon: Printer, label: lang === 'id' ? "Cetak Slip Gaji" : "Print Payslip" },
   { id: 'payslip-collective', href: "/dashboard/payslip-collective", icon: Printer, label: lang === 'id' ? "Slip Gaji Kolektif" : "Collective Payslip" },
   { id: 'purchasing', href: "/dashboard/purchasing", icon: ShoppingCart, label: "Purchasing" },
-  { id: 'purchasing-items', href: "/dashboard/koperasi/orders", icon: ShoppingCart, label: "Pesanan Koperasi" },
-  { id: 'koperasi-orders', href: "/dashboard/koperasi/items", icon: Store, label: "Barang Koperasi" },
+  { id: 'koperasi-orders', href: "/dashboard/koperasi/orders", icon: ShoppingCart, label: "Pesanan Koperasi" },
+  { id: 'koperasi-items', href: "/dashboard/koperasi/items", icon: Store, label: "Barang Koperasi" },
   { id: 'bpjs-id-simper', href: "/dashboard/bpjs-id-simper", icon: Database, label: "BPJS-ID-SIMPER" },
   { id: 'department', href: "/dashboard/department", icon: Briefcase, label: lang === 'id' ? "Departemen" : "Department" },
   { id: 'position', href: "/dashboard/position", icon: WalletCards, label: lang === 'id' ? "Jabatan & Gaji" : "Position & Salary" },
@@ -88,6 +89,50 @@ const allNavItemsList = (lang: 'id' | 'en') => [
   { id: 'settings', href: "/dashboard/settings", icon: Settings, label: lang === 'id' ? "Pengaturan" : "Settings" },
 ];
 
+const staticMenuOrder: MenuOrderItem[] = [
+    { id: 'dashboard' },
+    {
+      id: 'karyawan-group',
+      isGroup: true,
+      subItems: ['employees', 'employee-register', 'employee-review', 'leave-schedule'],
+    },
+    {
+      id: 'payroll-group',
+      isGroup: true,
+      subItems: ['payroll', 'payroll-history', 'attendance', 'payslip', 'payslip-collective'],
+    },
+    {
+      id: 'purchasing-group',
+      isGroup: true,
+      subItems: ['purchasing', 'koperasi-items', 'koperasi-orders'],
+    },
+    { id: 'bpjs-id-simper' },
+    {
+      id: 'data-master-group',
+      isGroup: true,
+      subItems: ['department', 'position', 'project'],
+    },
+    {
+      id: 'finance-group',
+      isGroup: true,
+      subItems: ['finance', 'koperasi-limit'],
+    },
+    {
+      id: 'hse-group',
+      isGroup: true,
+      subItems: ['hse', 'hse-fines'],
+    },
+    {
+      id: 'driver-group',
+      isGroup: true,
+      subItems: ['vehicles', 'driver-attendance', 'pj-attendance'],
+    },
+    {
+      id: 'admin-group',
+      isGroup: true,
+      subItems: ['users', 'roles', 'driver-access', 'pj-access', 'settings'],
+    },
+];
 
 export default function DashboardClientLayout({
   children,
@@ -111,38 +156,50 @@ export default function DashboardClientLayout({
   }, [lang]);
 
   const orderedNavItems = useMemo(() => {
-    const fullNavList = allNavItemsList(lang);
-    const menuOrder = settings.menuOrder || [];
-    const usedIds = new Set(menuOrder.flatMap(item => [item.id, ...(item.subItems || [])]));
-    
-    // Add any items not defined in the saved order to the end
-    const remainingItems = fullNavList.filter(item => !usedIds.has(item.id)).map(item => ({ id: item.id }));
+    // Group titles are not in allNavItemsList, so we define them here.
+    const groupLabels: Record<string, string> = {
+        'karyawan-group': 'Manajemen Karyawan',
+        'payroll-group': 'Payroll',
+        'purchasing-group': 'Purchasing & Koperasi',
+        'data-master-group': 'Data Master',
+        'finance-group': 'Keuangan',
+        'hse-group': 'HSE',
+        'driver-group': 'Driver & PJ',
+        'admin-group': 'Administrasi',
+    };
+    const groupIcons: Record<string, React.ElementType> = {
+        'karyawan-group': Users,
+        'payroll-group': Wallet,
+        'purchasing-group': ShoppingCart,
+        'data-master-group': Database,
+        'finance-group': Landmark,
+        'hse-group': ShieldCheck,
+        'driver-group': Truck,
+        'admin-group': Settings,
+    };
 
-    const finalOrder = [...menuOrder, ...remainingItems];
-
-    return finalOrder.map(orderItem => {
-        const mainItem = allNavItemsMap.get(orderItem.id);
-        if (!mainItem) return null;
-
+    return staticMenuOrder.map(orderItem => {
         if (orderItem.isGroup) {
             const subItems = (orderItem.subItems || [])
                 .map(subId => allNavItemsMap.get(subId))
                 .filter(Boolean);
             
             return {
-                ...mainItem,
+                id: orderItem.id,
+                label: groupLabels[orderItem.id] || 'Group',
+                icon: groupIcons[orderItem.id] || Briefcase,
                 isGroup: true,
                 subItems: subItems,
             };
         }
-        return mainItem;
+        return allNavItemsMap.get(orderItem.id);
     }).filter(Boolean);
-  }, [allNavItemsMap, settings.menuOrder, lang]);
+  }, [allNavItemsMap, lang]);
   
   const navItems = useMemo(() => {
     if (!role) return [];
 
-    let accessibleItems = [];
+    let accessibleItems;
     if (role.name.toLowerCase() === 'administrator') {
       accessibleItems = orderedNavItems;
     } else {

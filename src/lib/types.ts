@@ -1,4 +1,5 @@
 
+
 export type Allowance = {
   name: string;
   amount: number;
@@ -140,7 +141,6 @@ export type AppSettings = {
   backgroundColor?: string;
   accentColor?: string;
   language?: 'id' | 'en';
-  menuOrder?: MenuOrderItem[];
   employeePayslipAccess?: boolean;
 }
 
