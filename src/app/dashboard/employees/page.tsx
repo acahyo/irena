@@ -22,6 +22,11 @@ const formatDate = (date: string | Date | undefined): string | undefined => {
 
 
 export default async function EmployeeDirectoryPage({ user, userSiteIds }: { user: User, userSiteIds?: string[] }) {
+  if (!user) {
+    // This case should be handled by the layout, but as a safeguard:
+    return <EmployeeDirectoryClientPage initialEmployees={[]} user={{ id: '', name: '', email: '', role: '' }} />;
+  }
+
   const [fetchedEmployees, leaveRequests] = await Promise.all([
       getEmployees({ siteIds: userSiteIds }),
       getLeaveRequests({ siteId: userSiteIds ? userSiteIds[0] : undefined }), // Note: Leave requests might need adjustment for multi-site
