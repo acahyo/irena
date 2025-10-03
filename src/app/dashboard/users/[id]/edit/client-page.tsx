@@ -142,7 +142,7 @@ export default function EditUserClientPage({ user, roles, sites, positions }: { 
                     {showProjectAccessOptions && (
                         <div className="space-y-3 md:col-span-2">
                             <Label>Akses Data Proyek</Label>
-                            <RadioGroup name="projectAccess" value={projectAccess} onValueChange={(value) => setProjectAccess(value as any)} className="flex gap-4">
+                            <RadioGroup name="projectAccess" defaultValue={projectAccess} onValueChange={(value) => setProjectAccess(value as any)} className="flex gap-4">
                                 <div className="flex items-center space-x-2">
                                     <RadioGroupItem value="all" id="access-all" />
                                     <Label htmlFor="access-all">Lihat Semua Proyek</Label>

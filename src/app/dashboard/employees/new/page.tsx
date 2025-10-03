@@ -65,7 +65,7 @@ export default function NewEmployeePage() {
   const [positionToAdd, setPositionToAdd] = useState('');
   const [accountType, setAccountType] = useState<'pribadi' | 'keluarga' | undefined>();
   const [employeeName, setEmployeeName] = useState('');
-
+  const [accountHolderName, setAccountHolderName] = useState<string | undefined>();
 
   useEffect(() => {
     const fetchDropdownData = async () => {
@@ -88,6 +88,14 @@ export default function NewEmployeePage() {
     };
     fetchDropdownData();
   }, [toast]);
+  
+  useEffect(() => {
+    if (accountType === 'pribadi') {
+        setAccountHolderName(employeeName);
+    } else {
+        setAccountHolderName('');
+    }
+  }, [accountType, employeeName]);
   
   const addPosition = () => {
     if (positionToAdd && !selectedPositions.includes(positionToAdd)) {
@@ -391,8 +399,8 @@ export default function NewEmployeePage() {
                                     id="accountHolderName" 
                                     name="accountHolderName" 
                                     placeholder="e.g. John Doe"
-                                    value={accountType === 'pribadi' ? employeeName : undefined}
-                                    defaultValue={accountType === 'keluarga' ? '' : undefined}
+                                    value={accountHolderName ?? ''}
+                                    onChange={(e) => setAccountHolderName(e.target.value)}
                                     readOnly={accountType === 'pribadi'}
                                 />
                             </div>

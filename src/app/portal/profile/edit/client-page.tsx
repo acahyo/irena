@@ -205,7 +205,7 @@ export default function EditMyProfileClientPage({ employee }: { employee: Employ
                      <CardContent className="space-y-6">
                         <div className="space-y-2">
                             <Label>Jenis Rekening</Label>
-                             <RadioGroup name="accountType" className="flex gap-4" value={accountType} onValueChange={(value) => setAccountType(value as any)}>
+                             <RadioGroup name="accountType" className="flex gap-4" defaultValue={accountType} onValueChange={(value) => setAccountType(value as any)}>
                                 <div className="flex items-center space-x-2">
                                     <RadioGroupItem value="pribadi" id="acc-pribadi" />
                                     <Label htmlFor="acc-pribadi">Pribadi</Label>
@@ -232,7 +232,7 @@ export default function EditMyProfileClientPage({ employee }: { employee: Employ
                                     id="accountHolderName" 
                                     name="accountHolderName" 
                                     value={accountHolderName ?? ''}
-                                    onChange={(e: any) => setAccountHolderName(e.target.value)}
+                                    onChange={(e) => setAccountHolderName(e.target.value)}
                                     readOnly={accountType === 'pribadi'}
                                 />
                             </div>

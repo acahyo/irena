@@ -57,6 +57,7 @@ export default function EditEmployeePageClient({ employee, departments, position
   const [contractStartDate, setContractStartDate] = useState<Date | undefined>();
   const [contractEndDate, setContractEndDate] = useState<Date | undefined>();
   const [employeeName, setEmployeeName] = useState(employee.name || '');
+  const [accountHolderName, setAccountHolderName] = useState(employee.accountHolderName);
 
   // Initialize date states on the client to avoid hydration mismatch
   useEffect(() => {
@@ -80,6 +81,13 @@ export default function EditEmployeePageClient({ employee, departments, position
   const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
   const [positionToAdd, setPositionToAdd] = useState('');
   const [accountType, setAccountType] = useState<'pribadi' | 'keluarga' | undefined>();
+
+  useEffect(() => {
+    if (accountType === 'pribadi') {
+        setAccountHolderName(employeeName);
+    }
+  }, [accountType, employeeName]);
+
 
   const addPosition = () => {
     if (positionToAdd && !selectedPositions.includes(positionToAdd)) {
@@ -292,7 +300,7 @@ export default function EditEmployeePageClient({ employee, departments, position
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="name">Nama Lengkap</Label>
-                <Input id="name" name="name" placeholder="e.g. John Doe" required value={employeeName} onChange={(e) => setEmployeeName(e.target.value)} />
+                <Input id="name" name="name" placeholder="e.g. John Doe" required defaultValue={employeeName} onChange={(e) => setEmployeeName(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="npwpNumber">Nomor NPWP (Opsional)</Label>
@@ -364,7 +372,7 @@ export default function EditEmployeePageClient({ employee, departments, position
                     <CardContent className="space-y-6">
                         <div className="space-y-2">
                             <Label>Jenis Rekening</Label>
-                            <RadioGroup name="accountType" className="flex gap-4" value={accountType} onValueChange={(value) => setAccountType(value as any)}>
+                            <RadioGroup name="accountType" className="flex gap-4" defaultValue={accountType} onValueChange={(value) => setAccountType(value as any)}>
                                 <div className="flex items-center space-x-2">
                                     <RadioGroupItem value="pribadi" id="acc-pribadi" />
                                     <Label htmlFor="acc-pribadi">Pribadi</Label>
@@ -390,8 +398,8 @@ export default function EditEmployeePageClient({ employee, departments, position
                                     id="accountHolderName" 
                                     name="accountHolderName" 
                                     placeholder="e.g. John Doe"
-                                    value={accountType === 'pribadi' ? employeeName : (employee.accountHolderName ?? '')}
-                                    defaultValue={accountType === 'keluarga' ? (employee.accountHolderName ?? '') : undefined}
+                                    value={accountType === 'pribadi' ? employeeName : accountHolderName ?? ''}
+                                    onChange={(e) => setAccountHolderName(e.target.value)}
                                     readOnly={accountType === 'pribadi'}
                                 />
                             </div>

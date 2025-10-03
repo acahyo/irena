@@ -63,6 +63,7 @@ export default function RegisterEmployeeClientPage({ user, assignedSites }: { us
   const [positionToAdd, setPositionToAdd] = useState('');
   const [accountType, setAccountType] = useState<'pribadi' | 'keluarga' | undefined>();
   const [employeeName, setEmployeeName] = useState('');
+  const [accountHolderName, setAccountHolderName] = useState<string | undefined>();
 
   const [siteLocation, setSiteLocation] = useState<string>(
     assignedSites.length === 1 ? assignedSites[0].name : ''
@@ -88,6 +89,14 @@ export default function RegisterEmployeeClientPage({ user, assignedSites }: { us
     fetchDropdownData();
   }, [toast]);
   
+  useEffect(() => {
+    if (accountType === 'pribadi') {
+        setAccountHolderName(employeeName);
+    } else {
+        setAccountHolderName('');
+    }
+  }, [accountType, employeeName]);
+
   const addPosition = () => {
     if (positionToAdd && !selectedPositions.includes(positionToAdd)) {
         setSelectedPositions([...selectedPositions, positionToAdd]);
@@ -293,7 +302,7 @@ export default function RegisterEmployeeClientPage({ user, assignedSites }: { us
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="name">Nama Lengkap</Label>
-                <Input id="name" name="name" placeholder="e.g. John Doe" required value={employeeName} onChange={(e) => setEmployeeName(e.target.value)} />
+                <Input id="name" name="name" placeholder="e.g. John Doe" required defaultValue={employeeName} onChange={(e) => setEmployeeName(e.target.value)} />
               </div>
                <div className="space-y-2">
                 <Label htmlFor="npwpNumber">Nomor NPWP (Opsional)</Label>
@@ -390,8 +399,8 @@ export default function RegisterEmployeeClientPage({ user, assignedSites }: { us
                                     id="accountHolderName" 
                                     name="accountHolderName" 
                                     placeholder="e.g. John Doe"
-                                    value={accountType === 'pribadi' ? employeeName : undefined}
-                                    defaultValue={accountType === 'keluarga' ? '' : undefined}
+                                    value={accountHolderName ?? ''}
+                                    onChange={(e) => setAccountHolderName(e.target.value)}
                                     readOnly={accountType === 'pribadi'}
                                 />
                             </div>
@@ -539,7 +548,7 @@ export default function RegisterEmployeeClientPage({ user, assignedSites }: { us
               </div>
                <div className="space-y-2">
                 <Label htmlFor="siteLocation">Lokasi/Site Kerja</Label>
-                 <Select name="siteLocation" value={siteLocation} onValueChange={setSiteLocation} required>
+                 <Select name="siteLocation">
                   <SelectTrigger id="siteLocation">
                     <SelectValue placeholder="Pilih Lokasi/Site" />
                   </SelectTrigger>
