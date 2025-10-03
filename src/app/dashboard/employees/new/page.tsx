@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
@@ -105,7 +105,10 @@ export default function NewEmployeePage() {
     }
   }, [accountType, employeeName]);
   
-  const filteredPositions = positions.filter(p => !p.projectName || p.projectName === siteLocation);
+  const filteredPositions = useMemo(() => {
+    if (!siteLocation) return [];
+    return positions.filter(p => !p.projectName || p.projectName === siteLocation);
+  }, [positions, siteLocation]);
   
   const handleSiteChange = (value: string) => {
       const selectedSite = sites.find(s => s.name === value);
@@ -115,10 +118,11 @@ export default function NewEmployeePage() {
           const positionDetails = positions.find(p => p.name === pos.name);
           return !positionDetails?.projectName || positionDetails.projectName === value;
       }));
+      setPositionToAdd('');
   };
 
   const addPosition = () => {
-    const position = positions.find(p => p.name === positionToAdd);
+    const position = positions.find(p => p.id === positionToAdd);
     if (position && !selectedPositions.some(p => p.id === position.id)) {
         setSelectedPositions([...selectedPositions, { id: position.id, name: position.name }]);
         setPositionToAdd('');
@@ -521,8 +525,8 @@ export default function NewEmployeePage() {
                                 <SelectValue placeholder={!siteLocation ? "Pilih proyek dulu" : "Pilih jabatan"} />
                             </SelectTrigger>
                             <SelectContent>
-                                {filteredPositions.filter(p => !selectedPositions.some(sp => sp.name === p.name)).map((pos) => (
-                                    <SelectItem key={pos.id} value={pos.name}>{pos.name}</SelectItem>
+                                {filteredPositions.filter(p => !selectedPositions.some(sp => sp.id === p.id)).map((pos) => (
+                                    <SelectItem key={pos.id} value={pos.id}>{pos.name}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>

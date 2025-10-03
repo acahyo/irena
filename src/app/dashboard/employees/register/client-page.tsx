@@ -323,7 +323,7 @@ export default function RegisterEmployeeClientPage({ user, assignedSites }: { us
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="name">Nama Lengkap</Label>
-                <Input id="name" name="name" placeholder="e.g. John Doe" required value={employeeName} onChange={(e) => setEmployeeName(e.target.value)} />
+                <Input id="name" name="name" placeholder="e.g. John Doe" required defaultValue={employeeName} onChange={(e) => setEmployeeName(e.target.value)} />
               </div>
                <div className="space-y-2">
                 <Label htmlFor="npwpNumber">Nomor NPWP (Opsional)</Label>
@@ -514,7 +514,7 @@ export default function RegisterEmployeeClientPage({ user, assignedSites }: { us
                                 <SelectValue placeholder={!siteLocation ? "Pilih proyek dulu" : "Pilih jabatan"} />
                             </SelectTrigger>
                             <SelectContent>
-                                {filteredPositions.filter(p => !selectedPositions.some(sp => p.id === sp.id)).map((pos) => (
+                                {filteredPositions.filter(p => !selectedPositions.some(sp => sp.id === p.id)).map((pos) => (
                                     <SelectItem key={pos.id} value={pos.id}>{pos.name}</SelectItem>
                                 ))}
                             </SelectContent>
