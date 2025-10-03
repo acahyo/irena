@@ -20,12 +20,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import type { User, Role, Site, Position } from '@/lib/types';
 import { updateUser } from '@/actions/users';
 import { Badge } from '@/components/ui/badge';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+
 
 export default function EditUserClientPage({ user, roles, sites, positions }: { user: User, roles: Role[], sites: Site[], positions: Position[] }) {
     const router = useRouter();
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
     const [selectedRole, setSelectedRole] = useState(user.role);
+    const [projectAccess, setProjectAccess] = useState<'all' | 'assigned'>(user.projectAccess || 'all');
     const [selectedSiteIds, setSelectedSiteIds] = useState<string[]>(user.siteIds || []);
     const [siteToAdd, setSiteToAdd] = useState('');
 
@@ -52,12 +55,16 @@ export default function EditUserClientPage({ user, roles, sites, positions }: { 
         const password = formData.get('password') as string;
         const positionName = formData.get('positionName') as string;
 
-        const userData: Partial<User> = { name, email, role };
+        const userData: Partial<User> = { 
+          name, 
+          email, 
+          role,
+          projectAccess: role !== 'Admin Proyek' ? projectAccess : undefined,
+          siteIds: (role === 'Admin Proyek' || projectAccess === 'assigned') ? selectedSiteIds : undefined,
+        };
+
         if (password) {
             userData.password = password;
-        }
-        if (role === 'Admin Proyek') {
-            userData.siteIds = selectedSiteIds;
         }
         if (role === 'Admin Absensi') {
             userData.positionName = positionName;
@@ -82,6 +89,10 @@ export default function EditUserClientPage({ user, roles, sites, positions }: { 
             setLoading(false);
         }
     };
+    
+    const showProjectAccessOptions = selectedRole && selectedRole !== 'Admin Proyek';
+    const showSiteSelector = selectedRole === 'Admin Proyek' || (showProjectAccessOptions && projectAccess === 'assigned');
+
 
   return (
     <div className="space-y-6">
@@ -128,7 +139,23 @@ export default function EditUserClientPage({ user, roles, sites, positions }: { 
                         </Select>
                     </div>
 
-                    {selectedRole === 'Admin Proyek' && (
+                    {showProjectAccessOptions && (
+                        <div className="space-y-3 md:col-span-2">
+                            <Label>Akses Data Proyek</Label>
+                            <RadioGroup name="projectAccess" value={projectAccess} onValueChange={(value) => setProjectAccess(value as any)} className="flex gap-4">
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="all" id="access-all" />
+                                    <Label htmlFor="access-all">Lihat Semua Proyek</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="assigned" id="access-assigned" />
+                                    <Label htmlFor="access-assigned">Berdasarkan Proyek yang Dikelola</Label>
+                                </div>
+                            </RadioGroup>
+                        </div>
+                    )}
+
+                    {showSiteSelector && (
                         <div className="space-y-4 md:col-span-2">
                             <Label>Proyek yang Dikelola</Label>
                             <div className="flex items-center gap-2">

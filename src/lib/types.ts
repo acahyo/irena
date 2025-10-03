@@ -88,6 +88,7 @@ export type User = {
     avatar?: string;
     siteIds?: string[];
     positionName?: string;
+    projectAccess?: 'all' | 'assigned';
 };
 
 export type Role = {
@@ -104,8 +105,8 @@ export type LeaveRequest = {
     startDate: Date | string;
     endDate: Date | string;
     type: 'Annual Leave' | 'Sick Leave' | 'Unpaid Leave' | 'Other';
-    reason: string;
     status: 'Pending' | 'Approved by Admin Proyek' | 'Approved' | 'Rejected';
+    reason: string;
 };
 
 export type Position = {
@@ -113,7 +114,6 @@ export type Position = {
     name: string;
     salaryType?: 'harian' | 'bulanan' | 'direksi';
     projectName?: string;
-    projectDescription?: string;
     // Harian
     dailyWage?: number;
     overtimeRate?: number;

@@ -25,6 +25,7 @@ import { getSites } from '@/actions/sites';
 import { getPositions } from '@/actions/positions';
 import type { Role, Employee, User, Site, Position } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 
 export default function NewUserPage() {
@@ -39,6 +40,7 @@ export default function NewUserPage() {
 
     const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
     const [selectedRole, setSelectedRole] = useState<string>('');
+    const [projectAccess, setProjectAccess] = useState<'all' | 'assigned'>('all');
     const [selectedSiteIds, setSelectedSiteIds] = useState<string[]>([]);
     const [siteToAdd, setSiteToAdd] = useState('');
 
@@ -110,11 +112,10 @@ export default function NewUserPage() {
             email: selectedEmployee?.email || '', 
             role, 
             password,
+            projectAccess: role !== 'Admin Proyek' ? projectAccess : undefined,
+            siteIds: (role === 'Admin Proyek' || projectAccess === 'assigned') ? selectedSiteIds : undefined,
         };
 
-        if (role === 'Admin Proyek') {
-            userData.siteIds = selectedSiteIds;
-        }
         if (role === 'Admin Absensi') {
             userData.positionName = positionName;
         }
@@ -137,6 +138,10 @@ export default function NewUserPage() {
             setLoading(false);
         }
     };
+
+    const showProjectAccessOptions = selectedRole && selectedRole !== 'Admin Proyek';
+    const showSiteSelector = selectedRole === 'Admin Proyek' || (showProjectAccessOptions && projectAccess === 'assigned');
+
 
   if (pageLoading) {
       return <p>Loading data...</p>
@@ -196,7 +201,25 @@ export default function NewUserPage() {
                             </SelectContent>
                         </Select>
                     </div>
-                    {selectedRole === 'Admin Proyek' && (
+
+                    {showProjectAccessOptions && (
+                        <div className="space-y-3 md:col-span-2">
+                            <Label>Akses Data Proyek</Label>
+                            <RadioGroup name="projectAccess" value={projectAccess} onValueChange={(value) => setProjectAccess(value as any)} className="flex gap-4">
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="all" id="access-all" />
+                                    <Label htmlFor="access-all">Lihat Semua Proyek</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="assigned" id="access-assigned" />
+                                    <Label htmlFor="access-assigned">Berdasarkan Proyek yang Dikelola</Label>
+                                </div>
+                            </RadioGroup>
+                        </div>
+                    )}
+
+
+                    {showSiteSelector && (
                        <div className="space-y-4 md:col-span-2">
                             <Label>Proyek yang Dikelola</Label>
                             <div className="flex items-center gap-2">

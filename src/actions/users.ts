@@ -71,6 +71,10 @@ export async function createUser(user: Omit<User, 'id'>): Promise<string> {
         userData.siteIds = (user.siteIds as string).split(',').map(id => id.trim()).filter(Boolean);
     }
 
+    if (user.role !== 'Admin Proyek' && user.projectAccess === 'all') {
+      userData.siteIds = null;
+    }
+
     const docRef = await addDoc(collection(db, 'users'), userData);
     return docRef.id;
 }
@@ -94,10 +98,21 @@ export async function updateUser(id: string, user: Partial<User>): Promise<void>
     userData.siteIds = user.siteIds;
   }
 
-  if (userData.role !== 'Admin Proyek') {
+  if (user.role !== 'Admin Proyek' && user.projectAccess === 'all') {
     userData.siteIds = null;
   }
-  if (userData.role !== 'Admin Absensi') {
+
+  // Remove siteIds if the role is not Admin Proyek and projectAccess is not 'assigned'
+  if (user.role !== 'Admin Proyek' && user.projectAccess !== 'assigned') {
+    userData.siteIds = null;
+  }
+
+  // Remove projectAccess if the role is Admin Proyek
+  if (user.role === 'Admin Proyek') {
+    userData.projectAccess = null;
+  }
+  
+  if (user.role !== 'Admin Absensi') {
     userData.positionName = null;
   }
 
