@@ -105,7 +105,7 @@ export type LeaveRequest = {
     endDate: Date | string;
     type: 'Annual Leave' | 'Sick Leave' | 'Unpaid Leave' | 'Other';
     reason: string;
-    status: 'Pending' | 'Approved' | 'Rejected';
+    status: 'Pending' | 'Approved by Admin Proyek' | 'Approved' | 'Rejected';
 };
 
 export type Position = {
@@ -128,9 +128,7 @@ export type Position = {
 
 export type MenuOrderItem = {
   id: string;
-  isGroup?: boolean;
-  subItems?: string[];
-}
+};
 
 export type AppSettings = {
   id?: string;

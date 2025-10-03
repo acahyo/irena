@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useRef, useEffect, useTransition } from 'react';
@@ -19,9 +20,10 @@ import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { createEmployee } from '@/actions/employees';
+import { useUser } from '@/contexts/user-context';
 
 
-export default function EmployeeDirectoryClientPage({ initialEmployees, user }: { initialEmployees: Employee[], user: User }) {
+export default function EmployeeDirectoryClientPage({ initialEmployees }: { initialEmployees: Employee[] }) {
   const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
   const [searchTerm, setSearchTerm] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('all');
@@ -30,6 +32,7 @@ export default function EmployeeDirectoryClientPage({ initialEmployees, user }: 
   const { toast } = useToast();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const user = useUser();
 
   useEffect(() => {
     setEmployees(initialEmployees);
@@ -131,6 +134,10 @@ export default function EmployeeDirectoryClientPage({ initialEmployees, user }: 
       }
     });
   };
+
+  if (!user) {
+    return <div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin"/></div>
+  }
 
   return (
     <div className="space-y-6">

@@ -5,6 +5,7 @@ import DashboardClientLayout from "./layout-client";
 import { getSettings } from "@/actions/settings";
 import { getAdminSession } from "@/actions/auth";
 import { getRoles } from "@/actions/roles";
+import { UserProvider } from "@/contexts/user-context";
 
 
 export default async function DashboardLayout({
@@ -21,20 +22,28 @@ export default async function DashboardLayout({
 
   const currentUserRole = roles.find(r => r.name === currentUser.role) || null;
 
-  // Pass siteId(s) and user object for Admin Proyek role
-  const childrenWithProps = React.cloneElement(children as React.ReactElement, { 
-      user: currentUser,
-      userSiteId: currentUser.role === 'Admin Proyek' && currentUser.siteIds ? currentUser.siteIds[0] : undefined,
-      userSiteIds: currentUser.role === 'Admin Proyek' ? currentUser.siteIds : undefined
+  // Pass userSiteIds to children that need it, like the main dashboard page
+  const childrenWithProps = React.Children.map(children, child => {
+    if (React.isValidElement(child)) {
+      // @ts-ignore
+      if (child.type.name === 'DashboardPage' || child.type.name === 'LeaveSchedulePage' || child.type.name === 'EmployeesPage' || child.type.name === 'PayrollPage' || child.type.name === 'PayslipCollectivePage' || child.type.name === 'BpjsIdSimperPage' || child.type.name === 'FinancePage' || child.type.name === 'KoperasiLimitPage' || child.type.name === 'PurchasingPage' || child.type.name === 'PayslipPage') {
+        return React.cloneElement(child, {
+          userSiteIds: currentUser.role === 'Admin Proyek' ? currentUser.siteIds : undefined,
+        } as any);
+      }
+    }
+    return child;
   });
 
   return (
-    <DashboardClientLayout
-      settings={settings}
-      user={currentUser}
-      role={currentUserRole}
-    >
-      {childrenWithProps}
-    </DashboardClientLayout>
+    <UserProvider user={currentUser}>
+      <DashboardClientLayout
+        settings={settings}
+        user={currentUser}
+        role={currentUserRole}
+      >
+        {childrenWithProps}
+      </DashboardClientLayout>
+    </UserProvider>
   );
 }

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useTransition } from 'react';
@@ -56,6 +57,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import * as XLSX from 'xlsx';
+import { useUser } from '@/contexts/user-context';
 
 
 const formatCurrency = (amount: number | undefined | null) => {
@@ -83,19 +85,16 @@ const getStatusVariant = (status: string) => {
 export default function PurchasingClientPage({
   initialRequests,
   sites,
-  userRole,
-  user
 }: {
   initialRequests: PurchaseRequest[];
   sites: Site[];
-  userRole: string;
-  user: User;
 }) {
   const [requests, setRequests] = useState(initialRequests);
   const [projectFilter, setProjectFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+  const user = useUser();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<PurchaseRequest | null>(null);
@@ -111,11 +110,12 @@ export default function PurchasingClientPage({
   }, [requests, projectFilter, statusFilter]);
 
   const handleOpenModal = (req: PurchaseRequest) => {
+    if (!user) return;
     setSelectedRequest(req);
     setEditedItems(JSON.parse(JSON.stringify(req.items))); // Deep copy
-    if (userRole === 'Purchasing') {
+    if (user.role === 'Purchasing') {
         setNotes(req.purchasingNotes || '');
-    } else if (userRole === 'Finance') {
+    } else if (user.role === 'Finance') {
         setNotes(req.financeNotes || '');
     }
     setRejectionReason(req.rejectionReason || '');
@@ -129,16 +129,16 @@ export default function PurchasingClientPage({
   };
   
   const handleStatusUpdate = (status: PurchaseRequest['status']) => {
-    if (!selectedRequest) return;
+    if (!selectedRequest || !user) return;
     
     startTransition(async () => {
         try {
             const updates: Partial<PurchaseRequest> = { status };
-            if (userRole === 'Purchasing') {
+            if (user.role === 'Purchasing') {
                 updates.items = editedItems;
                 updates.purchasingNotes = notes;
             }
-            if (userRole === 'Finance') {
+            if (user.role === 'Finance') {
                 updates.financeNotes = notes;
             }
             if (status === 'Rejected') {
@@ -212,6 +212,10 @@ export default function PurchasingClientPage({
     if (!editedItems) return 0;
     return editedItems.reduce((sum, item) => sum + ((item.actualPrice || 0) * item.quantity), 0);
   }, [editedItems]);
+
+  if (!user) {
+    return <div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin"/></div>
+  }
 
   return (
     <>
@@ -333,7 +337,7 @@ export default function PurchasingClientPage({
                                         <TableCell>{item.quantity} {item.unit}</TableCell>
                                         <TableCell>{formatCurrency(item.estimatedPrice)}</TableCell>
                                         <TableCell>
-                                             {userRole === 'Purchasing' && selectedRequest.status === 'Pending' ? (
+                                             {user.role === 'Purchasing' && selectedRequest.status === 'Pending' ? (
                                                 <Input 
                                                     type="number" 
                                                     value={item.actualPrice || ''}
@@ -370,7 +374,7 @@ export default function PurchasingClientPage({
                                 <p className="text-sm border p-2 rounded-md border-destructive/50 bg-destructive/10">{selectedRequest.rejectionReason}</p>
                             </div>
                         )}
-                        {(userRole === 'Purchasing' || userRole === 'Finance') && (
+                        {(user.role === 'Purchasing' || user.role === 'Finance') && (
                             <div className="space-y-2 mb-4">
                                 <Label htmlFor="notes">Catatan Anda</Label>
                                 <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
@@ -386,7 +390,7 @@ export default function PurchasingClientPage({
                 </div>
                 <DialogFooter>
                     <DialogClose asChild><Button variant="outline">Tutup</Button></DialogClose>
-                     {userRole === 'Purchasing' && selectedRequest.status === 'Pending' && (
+                     {user.role === 'Purchasing' && selectedRequest.status === 'Pending' && (
                         <>
                          <Button variant="destructive" onClick={() => handleStatusUpdate('Rejected')} disabled={isPending}>
                             {isPending ? <Loader2 className="animate-spin" /> : <XCircle />} Tolak
@@ -396,7 +400,7 @@ export default function PurchasingClientPage({
                          </Button>
                         </>
                     )}
-                    {userRole === 'Finance' && selectedRequest.status === 'Verified by Purchasing' && (
+                    {user.role === 'Finance' && selectedRequest.status === 'Verified by Purchasing' && (
                         <>
                          <Button variant="destructive" onClick={() => handleStatusUpdate('Rejected')} disabled={isPending}>
                            {isPending ? <Loader2 className="animate-spin" /> : <XCircle />} Tolak
@@ -406,12 +410,12 @@ export default function PurchasingClientPage({
                          </Button>
                         </>
                     )}
-                     {userRole === 'Purchasing' && selectedRequest.status === 'Approved by Finance' && (
+                     {user.role === 'Purchasing' && selectedRequest.status === 'Approved by Finance' && (
                         <Button onClick={() => handleStatusUpdate('Processing')} disabled={isPending}>
                             {isPending ? <Loader2 className="animate-spin" /> : <Bot />} Proses Pembelian
                         </Button>
                     )}
-                     {userRole === 'Purchasing' && selectedRequest.status === 'Processing' && (
+                     {user.role === 'Purchasing' && selectedRequest.status === 'Processing' && (
                         <Button onClick={() => handleStatusUpdate('Completed')} disabled={isPending}>
                             {isPending ? <Loader2 className="animate-spin" /> : <CheckCircle />} Selesai
                         </Button>

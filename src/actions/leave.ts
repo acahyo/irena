@@ -1,3 +1,4 @@
+
 'use server';
 
 import { db } from '@/lib/firebase';
@@ -72,11 +73,18 @@ export async function createLeaveRequest(request: Omit<LeaveRequest, 'id' | 'sta
   return docRef.id;
 }
 
-// Update an existing leave request status
-export async function updateLeaveRequestStatus(id: string, status: 'Approved' | 'Rejected'): Promise<void> {
+// Update an existing leave request status (for Admin Proyek)
+export async function updateLeaveRequestStatus(id: string, status: 'Approved by Admin Proyek' | 'Rejected'): Promise<void> {
   const docRef = doc(db, 'leaveRequests', id);
   await updateDoc(docRef, { status });
 }
+
+// Final approval by HR
+export async function approveLeaveRequestByHR(id: string): Promise<void> {
+  const docRef = doc(db, 'leaveRequests', id);
+  await updateDoc(docRef, { status: 'Approved' });
+}
+
 
 // Delete a leave request
 export async function deleteLeaveRequest(id: string): Promise<void> {

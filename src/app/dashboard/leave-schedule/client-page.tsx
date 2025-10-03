@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -25,16 +26,19 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, PlusCircle, CheckCircle, XCircle, Trash2, ArrowLeft } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, CheckCircle, XCircle, Trash2, ArrowLeft, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import type { LeaveRequest, User } from '@/lib/types';
-import { getLeaveRequests, updateLeaveRequestStatus, deleteLeaveRequest } from '@/actions/leave';
+import { getLeaveRequests, updateLeaveRequestStatus, deleteLeaveRequest, approveLeaveRequestByHR } from '@/actions/leave';
+import { useUser } from '@/contexts/user-context';
 
 const getStatusVariant = (status: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
   switch (status) {
     case 'Approved':
       return 'default';
+    case 'Approved by Admin Proyek':
+        return 'default';
     case 'Pending':
       return 'secondary';
     case 'Rejected':
@@ -44,21 +48,22 @@ const getStatusVariant = (status: string): 'default' | 'secondary' | 'destructiv
   }
 };
 
-export default function LeaveScheduleClientPage({ initialRequests, user }: { initialRequests: LeaveRequest[], user: User }) {
+export default function LeaveScheduleClientPage({ initialRequests }: { initialRequests: LeaveRequest[] }) {
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>(initialRequests);
   const { toast } = useToast();
+  const user = useUser();
 
   useEffect(() => {
     setLeaveRequests(initialRequests);
   }, [initialRequests]);
   
 
-  const handleStatusUpdate = async (id: string, status: 'Approved' | 'Rejected') => {
+  const handleAdminProyekApproval = async (id: string, status: 'Approved by Admin Proyek' | 'Rejected') => {
     try {
         await updateLeaveRequestStatus(id, status);
         toast({
             title: 'Success!',
-            description: `Leave request has been ${status.toLowerCase()}.`,
+            description: `Leave request has been ${status === 'Rejected' ? 'rejected' : 'approved'}.`,
         });
         const updatedRequests = await getLeaveRequests();
         setLeaveRequests(updatedRequests);
@@ -67,6 +72,24 @@ export default function LeaveScheduleClientPage({ initialRequests, user }: { ini
             variant: 'destructive',
             title: 'Error',
             description: 'Failed to update leave request status.',
+        });
+    }
+  };
+
+  const handleHrApproval = async (id: string) => {
+    try {
+        await approveLeaveRequestByHR(id);
+        toast({
+            title: 'Success!',
+            description: 'Leave request has been finalized and approved.',
+        });
+        const updatedRequests = await getLeaveRequests();
+        setLeaveRequests(updatedRequests);
+    } catch (error) {
+        toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'Failed to approve leave request.',
         });
     }
   };
@@ -88,6 +111,10 @@ export default function LeaveScheduleClientPage({ initialRequests, user }: { ini
         });
     }
   };
+
+  if (!user) {
+    return <div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin"/></div>
+  }
 
   return (
     <div className="space-y-6">
@@ -150,15 +177,34 @@ export default function LeaveScheduleClientPage({ initialRequests, user }: { ini
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleStatusUpdate(req.id, 'Approved')}>
-                            <CheckCircle className="mr-2 h-4 w-4" /> Approve
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleStatusUpdate(req.id, 'Rejected')}>
-                            <XCircle className="mr-2 h-4 w-4" /> Reject
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDelete(req.id)} className="text-destructive">
-                            <Trash2 className="mr-2 h-4 w-4" /> Delete
-                            </DropdownMenuItem>
+                            {user.role === 'Admin Proyek' && req.status === 'Pending' && (
+                                <>
+                                    <DropdownMenuItem onClick={() => handleAdminProyekApproval(req.id, 'Approved by Admin Proyek')}>
+                                        <CheckCircle className="mr-2 h-4 w-4" /> Approve
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleAdminProyekApproval(req.id, 'Rejected')}>
+                                        <XCircle className="mr-2 h-4 w-4" /> Reject
+                                    </DropdownMenuItem>
+                                </>
+                            )}
+                             {(user.role === 'HR' || user.role === 'Administrator') && (
+                                <>
+                                    {req.status === 'Approved by Admin Proyek' && (
+                                        <DropdownMenuItem onClick={() => handleHrApproval(req.id)}>
+                                            <CheckCircle className="mr-2 h-4 w-4" /> Final Approve
+                                        </DropdownMenuItem>
+                                    )}
+                                    {req.status !== 'Approved' && (
+                                        <DropdownMenuItem onClick={() => handleAdminProyekApproval(req.id, 'Rejected')}>
+                                            <XCircle className="mr-2 h-4 w-4" /> Reject
+                                        </DropdownMenuItem>
+                                    )}
+                                    <DropdownMenuItem onClick={() => handleDelete(req.id)} className="text-destructive">
+                                        <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                    </DropdownMenuItem>
+                                </>
+                             )}
+                             
                         </DropdownMenuContent>
                         </DropdownMenu>
                     </TableCell>
