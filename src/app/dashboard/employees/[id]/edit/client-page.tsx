@@ -39,6 +39,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 
+type SelectedPosition = {
+    id: string;
+    name: string;
+};
 
 const parseDate = (date: string | Date | undefined): Date | undefined => {
   if (!date) return undefined;
@@ -66,9 +70,16 @@ export default function EditEmployeePageClient({ employee, departments, position
     setContractStartDate(parseDate(employee.contractStartDate));
     setContractEndDate(parseDate(employee.contractEndDate));
     setCanGeneratePayslip(employee.canGeneratePayslip ?? true);
-    setSelectedPositions(employee.positions || []);
+    setSelectedPositions(
+        (employee.positions || [])
+            .map(posName => {
+                const pos = positions.find(p => p.name === posName);
+                return pos ? { id: pos.id, name: pos.name } : null;
+            })
+            .filter((p): p is SelectedPosition => p !== null)
+    );
     setAccountType(employee.accountType);
-  }, [employee]);
+  }, [employee, positions]);
 
   const [photoPreview, setPhotoPreview] = useState<string | null>(employee.avatar || null);
   const [ktpPreview, setKtpPreview] = useState<string | null>(employee.ktpPhoto || null);
@@ -78,7 +89,7 @@ export default function EditEmployeePageClient({ employee, departments, position
   const [bankBookPreview, setBankBookPreview] = useState<string | null>(employee.bankBookPhoto || null);
   const [bpjsStatus, setBpjsStatus] = useState<string | undefined>(employee.bpjsStatus);
   const [canGeneratePayslip, setCanGeneratePayslip] = useState(true);
-  const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
+  const [selectedPositions, setSelectedPositions] = useState<SelectedPosition[]>([]);
   const [positionToAdd, setPositionToAdd] = useState('');
   const [accountType, setAccountType] = useState<'pribadi' | 'keluarga' | undefined>();
 
@@ -90,14 +101,15 @@ export default function EditEmployeePageClient({ employee, departments, position
 
 
   const addPosition = () => {
-    if (positionToAdd && !selectedPositions.includes(positionToAdd)) {
-        setSelectedPositions([...selectedPositions, positionToAdd]);
+    const position = positions.find(p => p.name === positionToAdd);
+    if (position && !selectedPositions.some(p => p.id === position.id)) {
+        setSelectedPositions([...selectedPositions, { id: position.id, name: position.name }]);
         setPositionToAdd('');
     }
   };
 
-  const removePosition = (positionToRemove: string) => {
-      setSelectedPositions(selectedPositions.filter(p => p !== positionToRemove));
+  const removePosition = (positionId: string) => {
+      setSelectedPositions(selectedPositions.filter(p => p.id !== positionId));
   };
 
 
@@ -169,7 +181,7 @@ export default function EditEmployeePageClient({ employee, departments, position
         kartuKeluargaPhoto: kkPreview,
         bankBookPhoto: bankBookPreview,
         canGeneratePayslip: (data.canGeneratePayslip === 'on'),
-        positions: selectedPositions,
+        positions: selectedPositions.map(p => p.name),
     } as Partial<Employee>;
     
     try {
@@ -477,7 +489,7 @@ export default function EditEmployeePageClient({ employee, departments, position
                                 <SelectValue placeholder="Pilih jabatan untuk ditambahkan" />
                             </SelectTrigger>
                             <SelectContent>
-                                {positions.filter(p => !selectedPositions.includes(p.name)).map((pos) => (
+                                {positions.filter(p => !selectedPositions.some(sp => sp.id === p.id)).map((pos) => (
                                     <SelectItem key={pos.id} value={pos.name}>{pos.name}</SelectItem>
                                 ))}
                             </SelectContent>
@@ -485,18 +497,16 @@ export default function EditEmployeePageClient({ employee, departments, position
                         <Button type="button" onClick={addPosition} disabled={!positionToAdd}><PlusCircle className="mr-2 h-4 w-4" /> Tambah</Button>
                     </div>
                     <div className="flex flex-wrap gap-2 p-2 border rounded-md min-h-[40px]">
-                        {selectedPositions.map((pos, index) => (
-                            <Badge key={`${pos}-${index}`} variant="secondary" className="flex items-center gap-2">
-                                {pos}
-                                <button type="button" onClick={() => removePosition(pos)} className="ml-1 rounded-full hover:bg-destructive/20 p-0.5">
+                        {selectedPositions.map((pos) => (
+                            <Badge key={pos.id} variant="secondary" className="flex items-center gap-2">
+                                {pos.name}
+                                <button type="button" onClick={() => removePosition(pos.id)} className="ml-1 rounded-full hover:bg-destructive/20 p-0.5">
                                     <Trash2 className="h-3 w-3 text-destructive" />
                                 </button>
                             </Badge>
                         ))}
                         {selectedPositions.length === 0 && <p className="text-sm text-muted-foreground">Belum ada jabatan dipilih.</p>}
                     </div>
-                    {/* Hidden input to pass array to form data */}
-                    <input type="hidden" name="positions" value={selectedPositions.join(',')} />
               </div>
 
 
