@@ -3,6 +3,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { format, parseISO } from 'date-fns';
 import {
   Avatar,
   AvatarFallback,
@@ -64,9 +65,20 @@ const formatCurrency = (amount: number | undefined | null) => {
     }).format(amount);
 };
 
+const formatDate = (date: string | Date | undefined): string | undefined => {
+  if (!date) return undefined;
+  const dateObj = typeof date === 'string' ? parseISO(date) : date;
+  try {
+    return format(dateObj, 'PPP');
+  } catch (error) {
+    console.error("Invalid date format:", date);
+    return 'Invalid Date';
+  }
+};
 
-// The employee object passed here should have dates pre-formatted as strings
-export default function EmployeeProfileClientPage({ employee, isPortalView = false }: { employee: EmployeeWithPosition & { dateOfBirth?: string, messEntryDate?: string, contractStartDate?: string, contractEndDate?: string }, isPortalView?: boolean }) {
+
+// The employee object passed here should have dates as Date objects or ISO strings
+export default function EmployeeProfileClientPage({ employee, isPortalView = false }: { employee: EmployeeWithPosition, isPortalView?: boolean }) {
     const router = useRouter();
     const { toast } = useToast();
 
@@ -101,7 +113,7 @@ export default function EmployeeProfileClientPage({ employee, isPortalView = fal
         <div className="text-muted-foreground w-5 mt-1">{icon}</div>
         <div>
           <p className="font-semibold text-sm">{label}</p>
-          <p className="text-muted-foreground">{displayValue}</p>
+          <p className="text-muted-foreground">{String(displayValue)}</p>
         </div>
       </div>
     );
@@ -216,7 +228,7 @@ export default function EmployeeProfileClientPage({ employee, isPortalView = fal
                 <DetailItem icon={<UserSquare className="h-5 w-5"/>} label="NIK" value={employee.nik} />
                 <DetailItem icon={<FileText className="h-5 w-5"/>} label="Nomor NPWP" value={employee.npwpNumber} />
                 <DetailItem icon={<MapPin className="h-5 w-5"/>} label="Place of Birth" value={employee.placeOfBirth} />
-                <DetailItem icon={<Calendar className="h-5 w-5"/>} label="Date of Birth" value={employee.dateOfBirth} />
+                <DetailItem icon={<Calendar className="h-5 w-5"/>} label="Date of Birth" value={formatDate(employee.dateOfBirth)} />
                 <DetailItem icon={<VenetianMask className="h-5 w-5"/>} label="Gender" value={employee.gender} />
                 <DetailItem icon={<Home className="h-5 w-5"/>} label="Address" value={employee.address} />
                 <DetailItem icon={<Heart className="h-5 w-5"/>} label="Marital Status" value={employee.maritalStatus} />
@@ -305,7 +317,7 @@ export default function EmployeeProfileClientPage({ employee, isPortalView = fal
             </CardHeader>
             <CardContent className="space-y-4">
                 <DetailItem icon={<Home className="h-5 w-5"/>} label="Mess Room" value={employee.messRoomNumber} />
-                <DetailItem icon={<Calendar className="h-5 w-5"/>} label="Mess Entry Date" value={employee.messEntryDate} />
+                <DetailItem icon={<Calendar className="h-5 w-5"/>} label="Mess Entry Date" value={formatDate(employee.messEntryDate)} />
                 <DetailItem icon={<Briefcase className="h-5 w-5"/>} label="Peralatan Kerja" value={employee.workEquipment} />
             </CardContent>
         </Card>
@@ -315,8 +327,8 @@ export default function EmployeeProfileClientPage({ employee, isPortalView = fal
                 <CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5" /> Contract Information</CardTitle>
             </CardHeader>
              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 <DetailItem icon={<Calendar className="h-5 w-5"/>} label="Contract Start Date" value={employee.contractStartDate} />
-                <DetailItem icon={<Calendar className="h-5 w-5"/>} label="Contract End Date" value={employee.contractEndDate} />
+                 <DetailItem icon={<Calendar className="h-5 w-5"/>} label="Contract Start Date" value={formatDate(employee.contractStartDate)} />
+                <DetailItem icon={<Calendar className="h-5 w-5"/>} label="Contract End Date" value={formatDate(employee.contractEndDate)} />
             </CardContent>
         </Card>
 
@@ -368,8 +380,8 @@ export default function EmployeeProfileClientPage({ employee, isPortalView = fal
                         {employee.leaveHistory && employee.leaveHistory.length > 0 ? (
                             employee.leaveHistory.map((req) => (
                                 <TableRow key={req.id}>
-                                    <TableCell>{req.startDate as string}</TableCell>
-                                    <TableCell>{req.endDate as string}</TableCell>
+                                    <TableCell>{formatDate(req.startDate)}</TableCell>
+                                    <TableCell>{formatDate(req.endDate)}</TableCell>
                                     <TableCell>{req.type}</TableCell>
                                     <TableCell className="max-w-xs truncate">{req.reason}</TableCell>
                                     <TableCell>
