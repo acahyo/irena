@@ -91,47 +91,34 @@ const allNavItemsList = (lang: 'id' | 'en') => [
 
 const staticMenuOrder: MenuOrderItem[] = [
     { id: 'dashboard' },
-    {
-      id: 'karyawan-group',
-      isGroup: true,
-      subItems: ['employees', 'employee-register', 'employee-review', 'leave-schedule'],
-    },
-    {
-      id: 'payroll-group',
-      isGroup: true,
-      subItems: ['payroll', 'payroll-history', 'attendance', 'payslip', 'payslip-collective'],
-    },
-    {
-      id: 'purchasing-group',
-      isGroup: true,
-      subItems: ['purchasing', 'koperasi-items', 'koperasi-orders'],
-    },
+    { id: 'employees' },
+    { id: 'employee-register' },
+    { id: 'employee-review' },
+    { id: 'leave-schedule' },
+    { id: 'payroll' },
+    { id: 'payroll-history' },
+    { id: 'attendance' },
+    { id: 'payslip' },
+    { id: 'payslip-collective' },
+    { id: 'purchasing' },
+    { id: 'koperasi-items' },
+    { id: 'koperasi-orders' },
     { id: 'bpjs-id-simper' },
-    {
-      id: 'data-master-group',
-      isGroup: true,
-      subItems: ['department', 'position', 'project'],
-    },
-    {
-      id: 'finance-group',
-      isGroup: true,
-      subItems: ['finance', 'koperasi-limit'],
-    },
-    {
-      id: 'hse-group',
-      isGroup: true,
-      subItems: ['hse', 'hse-fines'],
-    },
-    {
-      id: 'driver-group',
-      isGroup: true,
-      subItems: ['vehicles', 'driver-attendance', 'pj-attendance'],
-    },
-    {
-      id: 'admin-group',
-      isGroup: true,
-      subItems: ['users', 'roles', 'driver-access', 'pj-access', 'settings'],
-    },
+    { id: 'department' },
+    { id: 'position' },
+    { id: 'project' },
+    { id: 'finance' },
+    { id: 'koperasi-limit' },
+    { id: 'hse' },
+    { id: 'hse-fines' },
+    { id: 'vehicles' },
+    { id: 'driver-attendance' },
+    { id: 'pj-attendance' },
+    { id: 'users' },
+    { id: 'roles' },
+    { id: 'driver-access' },
+    { id: 'pj-access' },
+    { id: 'settings' },
 ];
 
 export default function DashboardClientLayout({
@@ -156,42 +143,7 @@ export default function DashboardClientLayout({
   }, [lang]);
 
   const orderedNavItems = useMemo(() => {
-    // Group titles are not in allNavItemsList, so we define them here.
-    const groupLabels: Record<string, string> = {
-        'karyawan-group': 'Manajemen Karyawan',
-        'payroll-group': 'Payroll',
-        'purchasing-group': 'Purchasing & Koperasi',
-        'data-master-group': 'Data Master',
-        'finance-group': 'Keuangan',
-        'hse-group': 'HSE',
-        'driver-group': 'Driver & PJ',
-        'admin-group': 'Administrasi',
-    };
-    const groupIcons: Record<string, React.ElementType> = {
-        'karyawan-group': Users,
-        'payroll-group': Wallet,
-        'purchasing-group': ShoppingCart,
-        'data-master-group': Database,
-        'finance-group': Landmark,
-        'hse-group': ShieldCheck,
-        'driver-group': Truck,
-        'admin-group': Settings,
-    };
-
     return staticMenuOrder.map(orderItem => {
-        if (orderItem.isGroup) {
-            const subItems = (orderItem.subItems || [])
-                .map(subId => allNavItemsMap.get(subId))
-                .filter(Boolean);
-            
-            return {
-                id: orderItem.id,
-                label: groupLabels[orderItem.id] || 'Group',
-                icon: groupIcons[orderItem.id] || Briefcase,
-                isGroup: true,
-                subItems: subItems,
-            };
-        }
         return allNavItemsMap.get(orderItem.id);
     }).filter(Boolean);
   }, [allNavItemsMap, lang]);
@@ -205,13 +157,6 @@ export default function DashboardClientLayout({
     } else {
         const accessibleMenus = new Set(role.accessibleMenus || []);
         accessibleItems = orderedNavItems.map(item => {
-            if ((item as any).isGroup) {
-                const accessibleSubItems = (item as any).subItems.filter((sub: any) => accessibleMenus.has(sub.id));
-                if (accessibleSubItems.length > 0) {
-                    return { ...item, subItems: accessibleSubItems };
-                }
-                return null;
-            }
             return accessibleMenus.has(item.id) ? item : null;
         }).filter(Boolean);
     }
@@ -267,39 +212,15 @@ export default function DashboardClientLayout({
           <SidebarMenu>
             {navItems.map((item: any, index) => (
               <SidebarMenuItem key={`${item.id}-${index}`}>
-                {item.isGroup ? (
-                   <>
-                        <SidebarMenuButton
-                            isSubmenu
-                            isActive={item.subItems?.some((sub: any) => pathname.startsWith(sub.href))}
-                            tooltip={{ children: item.label }}
-                        >
-                            <item.icon />
-                            <span>{item.label}</span>
-                        </SidebarMenuButton>
-                         <SidebarMenuSub>
-                            {item.subItems.map((subItem: any) => (
-                                 <SidebarMenuItem key={subItem.href}>
-                                    <Link href={subItem.href} passHref>
-                                        <SidebarMenuSubButton isActive={pathname.startsWith(subItem.href)}>
-                                            {subItem.label}
-                                        </SidebarMenuSubButton>
-                                    </Link>
-                                 </SidebarMenuItem>
-                            ))}
-                        </SidebarMenuSub>
-                    </>
-                ) : (
-                    <Link href={item.href} passHref>
-                        <SidebarMenuButton
-                            isActive={item.exact ? pathname === item.href : pathname.startsWith(item.href)}
-                            tooltip={{ children: item.label }}
-                        >
-                            <item.icon />
-                            <span>{item.label}</span>
-                        </SidebarMenuButton>
-                    </Link>
-                )}
+                <Link href={item.href} passHref>
+                    <SidebarMenuButton
+                        isActive={item.exact ? pathname === item.href : pathname.startsWith(item.href)}
+                        tooltip={{ children: item.label }}
+                    >
+                        <item.icon />
+                        <span>{item.label}</span>
+                    </SidebarMenuButton>
+                </Link>
               </SidebarMenuItem>
             ))}
           </SidebarMenu>
