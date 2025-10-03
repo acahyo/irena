@@ -41,6 +41,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 
+type SelectedPosition = {
+    id: string;
+    name: string;
+};
+
 export default function RegisterEmployeeClientPage({ user, assignedSites }: { user: User, assignedSites: Site[] }) {
   const router = useRouter();
   const { toast } = useToast();
@@ -59,7 +64,7 @@ export default function RegisterEmployeeClientPage({ user, assignedSites }: { us
   const [bankBookPreview, setBankBookPreview] = useState<string | null>(null);
   const [bpjsStatus, setBpjsStatus] = useState<string | undefined>();
   const [canGeneratePayslip, setCanGeneratePayslip] = useState(true);
-  const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
+  const [selectedPositions, setSelectedPositions] = useState<SelectedPosition[]>([]);
   const [positionToAdd, setPositionToAdd] = useState('');
   const [accountType, setAccountType] = useState<'pribadi' | 'keluarga' | undefined>();
   const [employeeName, setEmployeeName] = useState('');
@@ -98,14 +103,15 @@ export default function RegisterEmployeeClientPage({ user, assignedSites }: { us
   }, [accountType, employeeName]);
 
   const addPosition = () => {
-    if (positionToAdd && !selectedPositions.includes(positionToAdd)) {
-        setSelectedPositions([...selectedPositions, positionToAdd]);
+    const position = positions.find(p => p.name === positionToAdd);
+    if (position && !selectedPositions.some(p => p.id === position.id)) {
+        setSelectedPositions([...selectedPositions, { id: position.id, name: position.name }]);
         setPositionToAdd('');
     }
   };
 
-  const removePosition = (positionToRemove: string) => {
-      setSelectedPositions(selectedPositions.filter(p => p !== positionToRemove));
+  const removePosition = (positionId: string) => {
+      setSelectedPositions(selectedPositions.filter(p => p.id !== positionId));
   };
 
 
@@ -178,7 +184,7 @@ export default function RegisterEmployeeClientPage({ user, assignedSites }: { us
         kartuKeluargaPhoto: kkPreview,
         bankBookPhoto: bankBookPreview,
         canGeneratePayslip: (data.canGeneratePayslip === 'on'),
-        positions: selectedPositions,
+        positions: selectedPositions.map(p => p.name),
     } as Partial<Employee>;
     
     try {
@@ -302,7 +308,7 @@ export default function RegisterEmployeeClientPage({ user, assignedSites }: { us
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="name">Nama Lengkap</Label>
-                <Input id="name" name="name" placeholder="e.g. John Doe" required defaultValue={employeeName} onChange={(e) => setEmployeeName(e.target.value)} />
+                <Input id="name" name="name" placeholder="e.g. John Doe" required value={employeeName} onChange={(e) => setEmployeeName(e.target.value)} />
               </div>
                <div className="space-y-2">
                 <Label htmlFor="npwpNumber">Nomor NPWP (Opsional)</Label>
@@ -479,7 +485,7 @@ export default function RegisterEmployeeClientPage({ user, assignedSites }: { us
                                 <SelectValue placeholder="Pilih jabatan untuk ditambahkan" />
                             </SelectTrigger>
                             <SelectContent>
-                                {positions.filter(p => !selectedPositions.includes(p.name)).map((pos) => (
+                                {positions.filter(p => !selectedPositions.some(sp => sp.id === p.id)).map((pos) => (
                                     <SelectItem key={pos.id} value={pos.name}>{pos.name}</SelectItem>
                                 ))}
                             </SelectContent>
@@ -487,18 +493,16 @@ export default function RegisterEmployeeClientPage({ user, assignedSites }: { us
                         <Button type="button" onClick={addPosition} disabled={!positionToAdd}><PlusCircle className="mr-2 h-4 w-4" /> Tambah</Button>
                     </div>
                     <div className="flex flex-wrap gap-2 p-2 border rounded-md min-h-[40px]">
-                        {selectedPositions.map(pos => (
-                            <Badge key={pos} variant="secondary" className="flex items-center gap-2">
-                                {pos}
-                                <button type="button" onClick={() => removePosition(pos)} className="ml-1 rounded-full hover:bg-destructive/20 p-0.5">
+                        {selectedPositions.map((pos) => (
+                            <Badge key={pos.id} variant="secondary" className="flex items-center gap-2">
+                                {pos.name}
+                                <button type="button" onClick={() => removePosition(pos.id)} className="ml-1 rounded-full hover:bg-destructive/20 p-0.5">
                                     <Trash2 className="h-3 w-3 text-destructive" />
                                 </button>
                             </Badge>
                         ))}
                         {selectedPositions.length === 0 && <p className="text-sm text-muted-foreground">Belum ada jabatan dipilih.</p>}
                     </div>
-                    {/* Hidden input to pass array to form data */}
-                    <input type="hidden" name="positions" value={selectedPositions.join(',')} />
               </div>
 
 
@@ -548,7 +552,7 @@ export default function RegisterEmployeeClientPage({ user, assignedSites }: { us
               </div>
                <div className="space-y-2">
                 <Label htmlFor="siteLocation">Lokasi/Site Kerja</Label>
-                 <Select name="siteLocation">
+                 <Select name="siteLocation" defaultValue={siteLocation} required>
                   <SelectTrigger id="siteLocation">
                     <SelectValue placeholder="Pilih Lokasi/Site" />
                   </SelectTrigger>
