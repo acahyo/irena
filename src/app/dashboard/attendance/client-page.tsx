@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef, useTransition } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -34,7 +35,6 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import * as XLSX from 'xlsx';
-import { useRouter } from 'next/navigation';
 
 type AttendanceData = {
     [employeeId: string]: {
@@ -59,15 +59,16 @@ export default function AttendanceClientPage({
   settings: AppSettings;
   assignedSites?: Site[];
 }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
   const [positionFilter, setPositionFilter] = useState('all');
-  const [projectFilter, setProjectFilter] = useState('all');
+  const [projectFilter, setProjectFilter] = useState(searchParams.get('projectId') || 'all');
   const [attendanceData, setAttendanceData] = useState<AttendanceData>({});
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isImporting, startImportTransition] = useTransition();
-  const router = useRouter();
 
   const lang = settings.language || 'id';
 
@@ -109,14 +110,22 @@ export default function AttendanceClientPage({
     const allPositions = employees.flatMap((emp) => emp.positions || []).filter(Boolean);
     return ['all', ...Array.from(new Set(allPositions as string[]))];
   }, [employees]);
+  
+  const handleProjectFilterChange = (projectId: string) => {
+    setProjectFilter(projectId);
+    const params = new URLSearchParams(window.location.search);
+    params.set('projectId', projectId);
+    router.push(`/dashboard/attendance?${params.toString()}`);
+  };
 
   const filteredEmployees = useMemo(() => {
     return employees.filter(emp => {
         const matchesPosition = positionFilter === 'all' || (emp.positions || []).includes(positionFilter);
+        // Project filtering is now handled by server component fetching, but we keep this for consistency if needed.
         const matchesProject = projectFilter === 'all' || emp.siteLocation === projectFilter;
-        return matchesPosition && matchesProject;
+        return matchesPosition && (assignedSites ? matchesProject : true);
     });
-  }, [employees, positionFilter, projectFilter]);
+  }, [employees, positionFilter, projectFilter, assignedSites]);
 
   useEffect(() => {
     // Populate initial state from fetched records
@@ -278,14 +287,14 @@ export default function AttendanceClientPage({
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {assignedSites && assignedSites.length > 0 && (
-                 <Select value={projectFilter} onValueChange={setProjectFilter}>
+                 <Select value={projectFilter} onValueChange={handleProjectFilterChange}>
                     <SelectTrigger className="w-full md:w-[180px]">
                         <SelectValue placeholder={T.filterByProject} />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">{T.allProjects}</SelectItem>
                         {assignedSites.map((site) => (
-                            <SelectItem key={site.id} value={site.name}>
+                            <SelectItem key={site.id} value={site.id}>
                                 {site.name}
                             </SelectItem>
                         ))}
