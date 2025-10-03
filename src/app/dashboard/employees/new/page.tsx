@@ -492,8 +492,8 @@ export default function NewEmployeePage() {
 
               <div className="space-y-2">
                 <Label htmlFor="siteLocation">Lokasi/Site Kerja <span className="text-destructive">*</span></Label>
-                 <Select name="siteLocation" onValueChange={handleSiteChange} required>
-                  <SelectTrigger id="siteLocation">
+                 <Select onValueChange={handleSiteChange} required>
+                  <SelectTrigger id="siteLocation-select">
                     <SelectValue placeholder="Pilih Lokasi/Site" />
                   </SelectTrigger>
                   <SelectContent>
@@ -502,6 +502,7 @@ export default function NewEmployeePage() {
                     ))}
                   </SelectContent>
                 </Select>
+                 <input type="hidden" name="siteLocation" value={siteLocation} />
               </div>
               
               <div className="space-y-4 md:col-span-2">
@@ -520,8 +521,8 @@ export default function NewEmployeePage() {
                         <Button type="button" onClick={addPosition} disabled={!positionToAdd}><PlusCircle className="mr-2 h-4 w-4" /> Tambah</Button>
                     </div>
                     <div className="flex flex-wrap gap-2 p-2 border rounded-md min-h-[40px]">
-                        {selectedPositions.map(pos => (
-                            <Badge key={pos} variant="secondary" className="flex items-center gap-2">
+                        {selectedPositions.map((pos, index) => (
+                            <Badge key={`${pos}-${index}`} variant="secondary" className="flex items-center gap-2">
                                 {pos}
                                 <button type="button" onClick={() => removePosition(pos)} className="ml-1 rounded-full hover:bg-destructive/20 p-0.5">
                                     <Trash2 className="h-3 w-3 text-destructive" />

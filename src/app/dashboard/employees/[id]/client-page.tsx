@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -154,7 +155,7 @@ export default function EmployeeProfileClientPage({ employee, isPortalView = fal
             <h2 className="text-3xl font-bold">{employee.name}</h2>
             <div className="flex flex-wrap gap-2 mt-1">
                 {(employee.positions && employee.positions.length > 0) ? (
-                    employee.positions.map(pos => <Badge key={pos} variant="secondary">{pos}</Badge>)
+                    employee.positions.map((pos, index) => <Badge key={`${pos}-${index}`} variant="secondary">{pos}</Badge>)
                 ) : (
                     <p className="text-lg text-muted-foreground">No Position</p>
                 )}
@@ -325,7 +326,7 @@ export default function EmployeeProfileClientPage({ employee, isPortalView = fal
             </CardHeader>
             <CardContent className="space-y-4">
                  {(employee.positionDetails && employee.positionDetails.length > 0) ? employee.positionDetails.map((pos: Position, idx: number) => (
-                    <div key={idx} className="border-b pb-4 mb-4 last:border-b-0 last:pb-0 last:mb-0">
+                    <div key={pos.id || idx} className="border-b pb-4 mb-4 last:border-b-0 last:pb-0 last:mb-0">
                          <CardDescription className="font-semibold mb-2">Gaji untuk Jabatan: <Badge variant="outline" className="capitalize">{pos.name}</Badge></CardDescription>
                          {pos.salaryType === 'harian' && (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

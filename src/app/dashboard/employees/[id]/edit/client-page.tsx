@@ -119,7 +119,7 @@ export default function EditEmployeePageClient({ employee, departments, position
       const allowedTypes = [
         'image/jpeg', 'image/png', 'image/jpg', 'image/x-icon',
         'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        'application/vnd.ms-excel', 'applicationvnd.openxmlformats-officedocument.spreadsheetml.sheet'
       ];
       if (!allowedTypes.includes(file.type)) {
         toast({
@@ -450,7 +450,7 @@ export default function EditEmployeePageClient({ employee, departments, position
                  </div>
               )}
 
-              <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
+              <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-8">
                 <FileInput id="ktpPhoto" label="Foto KTP" preview={ktpPreview} onChange={(e) => handleFileChange(e, setKtpPreview)} />
                 <FileInput id="simPhoto" label="Foto SIM" preview={simPreview} onChange={(e) => handleFileChange(e, setSimPreview)} />
                 <FileInput id="sioPhoto" label="Foto SIO" preview={sioPreview} onChange={(e) => handleFileChange(e, setSioPreview)} />
@@ -485,8 +485,8 @@ export default function EditEmployeePageClient({ employee, departments, position
                         <Button type="button" onClick={addPosition} disabled={!positionToAdd}><PlusCircle className="mr-2 h-4 w-4" /> Tambah</Button>
                     </div>
                     <div className="flex flex-wrap gap-2 p-2 border rounded-md min-h-[40px]">
-                        {selectedPositions.map(pos => (
-                            <Badge key={pos} variant="secondary" className="flex items-center gap-2">
+                        {selectedPositions.map((pos, index) => (
+                            <Badge key={`${pos}-${index}`} variant="secondary" className="flex items-center gap-2">
                                 {pos}
                                 <button type="button" onClick={() => removePosition(pos)} className="ml-1 rounded-full hover:bg-destructive/20 p-0.5">
                                     <Trash2 className="h-3 w-3 text-destructive" />
