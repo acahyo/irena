@@ -7,7 +7,7 @@ import type { DriverAttendance } from '@/lib/types';
 
 export default async function DriverAttendanceRecapPage() {
   const user = await getAdminSession();
-  if (!user || user.role !== 'Administrator') {
+  if (!user || (user.role !== 'Administrator' && user.role !== 'HR')) {
     redirect('/dashboard');
   }
 
