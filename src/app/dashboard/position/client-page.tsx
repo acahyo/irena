@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -101,6 +102,7 @@ export default function PositionClientPage({ initialPositions }: { initialPositi
             <TableHeader>
                 <TableRow>
                     <TableHead>Nama Jabatan</TableHead>
+                    <TableHead>Proyek</TableHead>
                     <TableHead>Tipe Gaji</TableHead>
                     <TableHead>Gaji Pokok / Upah Harian</TableHead>
                     <TableHead>Lembur per Jam</TableHead>
@@ -112,6 +114,7 @@ export default function PositionClientPage({ initialPositions }: { initialPositi
                 positions.map((pos) => (
                     <TableRow key={pos.id}>
                         <TableCell className="font-medium">{pos.name}</TableCell>
+                        <TableCell>{pos.projectName || 'N/A'}</TableCell>
                         <TableCell>
                             {pos.salaryType ? (
                                 <Badge variant="outline" className="capitalize">{pos.salaryType}</Badge>
@@ -168,7 +171,7 @@ export default function PositionClientPage({ initialPositions }: { initialPositi
                 ))
                ) : (
                 <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center">
+                    <TableCell colSpan={6} className="h-24 text-center">
                         Tidak ada jabatan ditemukan.
                     </TableCell>
                 </TableRow>
