@@ -18,9 +18,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { createViolationRecord, getViolationRecords } from '@/actions/violations';
 import { getEmployees } from '@/actions/employees';
-import type { Employee, ViolationRecord, Department, Position, Site } from '@/lib/types';
+import type { Employee, ViolationRecord, Position, Site } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { getDepartments } from '@/actions/departments';
 import { getPositions } from '@/actions/positions';
 import { getSites } from '@/actions/sites';
 
@@ -42,14 +41,12 @@ export default function NewViolationPage() {
   
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [allViolations, setAllViolations] = useState<ViolationRecord[]>([]);
-  const [departments, setDepartments] = useState<Department[]>([]);
   const [positions, setPositions] = useState<Position[]>([]);
   const [sites, setSites] = useState<Site[]>([]);
   
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
 
-  const [departmentFilter, setDepartmentFilter] = useState('all');
   const [positionFilter, setPositionFilter] = useState('all');
   const [siteFilter, setSiteFilter] = useState('all');
   
@@ -83,16 +80,14 @@ export default function NewViolationPage() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [emps, violations, depts, poss, siteData] = await Promise.all([
+        const [emps, violations, poss, siteData] = await Promise.all([
           getEmployees(), 
           getViolationRecords(),
-          getDepartments(),
           getPositions(),
           getSites(),
         ]);
         setEmployees(emps);
         setAllViolations(violations);
-        setDepartments(depts);
         setPositions(poss);
         setSites(siteData);
       } catch (error) {
@@ -107,10 +102,9 @@ export default function NewViolationPage() {
   const filteredEmployees = useMemo(() => {
     return employees.filter(emp => 
         (siteFilter === 'all' || emp.siteLocation === siteFilter) &&
-        (departmentFilter === 'all' || emp.department === departmentFilter) &&
         (positionFilter === 'all' || emp.positions?.includes(positionFilter))
     );
-  }, [employees, siteFilter, departmentFilter, positionFilter]);
+  }, [employees, siteFilter, positionFilter]);
 
   const filteredPositions = useMemo(() => {
     if (siteFilter === 'all') {
@@ -189,7 +183,7 @@ export default function NewViolationPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-8">
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label>Filter Proyek</Label>
                     <Select value={siteFilter} onValueChange={(value) => { setSiteFilter(value); setPositionFilter('all'); }}>
@@ -197,16 +191,6 @@ export default function NewViolationPage() {
                         <SelectContent>
                             <SelectItem value="all">Semua Proyek</SelectItem>
                             {sites.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}
-                        </SelectContent>
-                    </Select>
-                </div>
-                 <div className="space-y-2">
-                    <Label>Filter Departemen</Label>
-                    <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-                        <SelectTrigger><SelectValue/></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">Semua Departemen</SelectItem>
-                            {departments.map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}
                         </SelectContent>
                     </Select>
                 </div>
