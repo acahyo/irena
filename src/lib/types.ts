@@ -1,5 +1,6 @@
 
 
+
 export type Allowance = {
   name: string;
   amount: number;

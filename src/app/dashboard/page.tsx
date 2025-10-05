@@ -1,10 +1,11 @@
 
+
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, CalendarOff, UserCheck, Clock, UserX, LogOut, CircleSlash, ListChecks, UserRound } from 'lucide-react';
+import { Users, CalendarOff, UserCheck, Clock, UserX, LogOut, CircleSlash, ListChecks, UserRound, AlertOctagon } from 'lucide-react';
 import { getEmployees } from '@/actions/employees';
 import { getLeaveRequests } from '@/actions/leave';
-import type { Employee } from '@/lib/types';
+import type { Employee, ViolationRecord } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -24,12 +25,14 @@ import AdminProjectDashboard from './admin-project-dashboard';
 import PurchasingDashboard from './purchasing-dashboard';
 import AttendanceAdminDashboard from './attendance-admin-dashboard';
 import { getSitesByIds } from '@/actions/sites';
+import { getViolationRecords } from '@/actions/violations';
 
 
 async function getDashboardData({ siteIds }: { siteIds?: string[] }) {
-    const [employees, leaveRequests] = await Promise.all([
+    const [employees, leaveRequests, violationRecords] = await Promise.all([
         getEmployees({ siteIds }),
-        getLeaveRequests({ siteId: siteIds ? siteIds[0] : undefined }) // Leave requests might need more specific logic for multi-site
+        getLeaveRequests({ siteId: siteIds ? siteIds[0] : undefined }), // Leave requests might need more specific logic for multi-site
+        getViolationRecords()
     ]);
 
     const today = new Date();
@@ -72,6 +75,21 @@ async function getDashboardData({ siteIds }: { siteIds?: string[] }) {
             return { ...emp, daysActive: diffDays };
         })
         .filter(emp => emp.daysActive! >= 120 && emp.employeeStatus === 'active');
+        
+    const violationsSummary = violationRecords.reduce((acc, record) => {
+        const key = `${record.siteLocation}-${record.employeePosition}-${record.status}`;
+        if (!acc[key]) {
+            acc[key] = {
+                project: record.siteLocation,
+                position: record.employeePosition,
+                status: record.status,
+                count: 0
+            };
+        }
+        acc[key].count++;
+        return acc;
+    }, {} as Record<string, { project: string; position: string; status: ViolationRecord['status']; count: number }>);
+
 
     return {
         totalEmployees: employees.length,
@@ -79,6 +97,7 @@ async function getDashboardData({ siteIds }: { siteIds?: string[] }) {
         employeesByPosition: employeesByPosition.sort((a,b) => b.value - a.value),
         employeesByStatus: employeesByStatus,
         leaveRecommendation,
+        violationsSummary: Object.values(violationsSummary).sort((a, b) => a.project.localeCompare(b.project) || a.position.localeCompare(b.position)),
     };
 }
 
@@ -131,6 +150,10 @@ export default async function DashboardPage({ searchParams, userSiteIds }: { sea
         leaveRecommendationDesc: lang === 'id' ? 'Karyawan aktif lebih dari 120 hari yang direkomendasikan untuk mengambil cuti.' : 'Active employees for more than 120 days recommended to take leave.',
         days: lang === 'id' ? 'hari' : 'days',
         noRecommendation: lang === 'id' ? 'Tidak ada karyawan yang memenuhi kriteria saat ini.' : 'No employees meet the criteria at this time.',
+        violationRecap: lang === 'id' ? 'Rekap Pelanggaran' : 'Violation Recap',
+        project: lang === 'id' ? 'Proyek' : 'Project',
+        violationStatus: lang === 'id' ? 'Status Peringatan' : 'Warning Status',
+        noViolationData: lang === 'id' ? 'Tidak ada data pelanggaran.' : 'No violation data available.',
     };
 
     const StatusItem = ({ icon, label, value, color }: { icon: React.ReactNode, label: string, value: number, color?: string }) => (
@@ -142,6 +165,17 @@ export default async function DashboardPage({ searchParams, userSiteIds }: { sea
             <Badge variant="secondary" className={color}>{value}</Badge>
         </div>
     );
+    
+    const getViolationStatusVariant = (status: ViolationRecord['status']): 'default' | 'secondary' | 'destructive' | 'outline' => {
+      switch (status) {
+        case 'SP1': return 'default';
+        case 'SP2': return 'secondary';
+        case 'SP3': return 'destructive';
+        case 'SPPT': return 'outline';
+        default: return 'outline';
+      }
+    };
+
 
     return (
         <div className="space-y-6">
@@ -254,6 +288,45 @@ export default async function DashboardPage({ searchParams, userSiteIds }: { sea
                     </CardContent>
                 </Card>
             </div>
+             <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><AlertOctagon /> {T.violationRecap}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <ScrollArea className="h-72">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>{T.project}</TableHead>
+                                <TableHead>{T.position}</TableHead>
+                                <TableHead>{T.violationStatus}</TableHead>
+                                <TableHead className="text-right">{T.employeeCount}</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {stats.violationsSummary.length > 0 ? (
+                                stats.violationsSummary.map((item, index) => (
+                                    <TableRow key={index}>
+                                        <TableCell className="font-medium">{item.project}</TableCell>
+                                        <TableCell>{item.position}</TableCell>
+                                        <TableCell>
+                                            <Badge variant={getViolationStatusVariant(item.status)}>{item.status}</Badge>
+                                        </TableCell>
+                                        <TableCell className="text-right font-bold">{item.count}</TableCell>
+                                    </TableRow>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={4} className="h-24 text-center">
+                                        {T.noViolationData}
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                    </ScrollArea>
+                </CardContent>
+            </Card>
         </div>
     );
 }
