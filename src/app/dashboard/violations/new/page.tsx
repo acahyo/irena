@@ -112,6 +112,16 @@ export default function NewViolationPage() {
     );
   }, [employees, siteFilter, departmentFilter, positionFilter]);
 
+  const filteredPositions = useMemo(() => {
+    if (siteFilter === 'all') {
+      return positions;
+    }
+    const selectedSite = sites.find(s => s.name === siteFilter);
+    if (!selectedSite) return positions;
+
+    return positions.filter(p => !p.projectName || p.projectName === selectedSite.name);
+  }, [positions, siteFilter, sites]);
+
 
   const handleEmployeeChange = (employeeId: string) => {
     const emp = employees.find(e => e.id === employeeId);
@@ -182,7 +192,7 @@ export default function NewViolationPage() {
              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                     <Label>Filter Proyek</Label>
-                    <Select value={siteFilter} onValueChange={setSiteFilter}>
+                    <Select value={siteFilter} onValueChange={(value) => { setSiteFilter(value); setPositionFilter('all'); }}>
                         <SelectTrigger><SelectValue/></SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">Semua Proyek</SelectItem>
@@ -202,11 +212,11 @@ export default function NewViolationPage() {
                 </div>
                  <div className="space-y-2">
                     <Label>Filter Jabatan</Label>
-                    <Select value={positionFilter} onValueChange={setPositionFilter}>
+                    <Select value={positionFilter} onValueChange={setPositionFilter} >
                         <SelectTrigger><SelectValue/></SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">Semua Jabatan</SelectItem>
-                            {positions.map(p => <SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>)}
+                            {filteredPositions.map(p => <SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>)}
                         </SelectContent>
                     </Select>
                 </div>
