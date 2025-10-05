@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Pencil, Loader2, Users, ShieldCheck, UserSquare, WalletCards } from 'lucide-react';
+import { Pencil, Loader2, Users, ShieldCheck, UserSquare, WalletCards, Save, Upload } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -25,6 +25,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { updateEmployee } from '@/actions/employees';
 import type { Employee, Site, Position } from '@/lib/types';
+import { Button } from '@/components/ui/button';
 
 
 export default function BpjsIdSimperClientPage({
@@ -41,6 +42,32 @@ export default function BpjsIdSimperClientPage({
   const [positionFilter, setPositionFilter] = useState('all');
   const [isSaving, startSavingTransition] = useTransition();
   const { toast } = useToast();
+  
+  const [dirtyFields, setDirtyFields] = useState<Record<string, Set<keyof Employee>>>({});
+  
+  const markDirty = (employeeId: string, field: keyof Employee) => {
+    setDirtyFields(prev => {
+        const newDirty = { ...prev };
+        if (!newDirty[employeeId]) {
+            newDirty[employeeId] = new Set();
+        }
+        newDirty[employeeId].add(field);
+        return newDirty;
+    });
+  };
+
+  const isDirty = (employeeId: string) => {
+      return dirtyFields[employeeId] && dirtyFields[employeeId].size > 0;
+  }
+
+  const clearDirty = (employeeId: string) => {
+      setDirtyFields(prev => {
+          const newDirty = { ...prev };
+          delete newDirty[employeeId];
+          return newDirty;
+      });
+  }
+
 
   useEffect(() => {
     setEmployees(initialEmployees);
@@ -94,29 +121,57 @@ export default function BpjsIdSimperClientPage({
         emp.id === employeeId ? { ...emp, [field]: value } : emp
       )
     );
+    markDirty(employeeId, field);
   };
   
-  const handleSave = (employeeId: string, field: keyof Employee, value: any) => {
+    const handleFileChange = (
+        event: React.ChangeEvent<HTMLInputElement>,
+        employeeId: string,
+        field: 'ktpPhoto' | 'simPhoto'
+    ) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                handleFieldChange(employeeId, field, e.target?.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+  const handleSave = (employeeId: string) => {
     const employee = employees.find(e => e.id === employeeId);
-    if (!employee) return;
-    
-    // Optimistically update UI
-    handleFieldChange(employeeId, field, value);
+    if (!employee || !dirtyFields[employeeId]) return;
+
+    // Validation
+    if (employee.idCardStatus === 'active' && (!employee.idCardNumber || !employee.ktpPhoto)) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Nomor ID Card dan Foto KTP wajib diisi untuk status Aktif.'});
+        return;
+    }
+    if (employee.simperStatus === 'active' && (!employee.simperNumber || !employee.simPhoto)) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Nomor SIMPER dan Foto SIM wajib diisi untuk status Aktif.'});
+        return;
+    }
+
+    const updates: Partial<Employee> = {};
+    dirtyFields[employeeId].forEach(field => {
+        (updates as any)[field] = (employee as any)[field];
+    });
 
     startSavingTransition(async () => {
         try {
-            await updateEmployee(employeeId, { [field]: value });
+            await updateEmployee(employeeId, updates);
             toast({
                 title: 'Tersimpan!',
-                description: `Data ${String(field)} untuk ${employee.name} telah diperbarui.`,
+                description: `Data untuk ${employee.name} telah diperbarui.`,
             });
+            clearDirty(employeeId);
         } catch (error) {
              toast({
                 variant: 'destructive',
                 title: 'Error',
                 description: `Gagal menyimpan data untuk ${employee.name}.`,
             });
-            // Revert on error if needed, though for simplicity we don't here.
         }
     });
   };
@@ -131,56 +186,33 @@ export default function BpjsIdSimperClientPage({
     setEmployees(prev => 
       prev.map(emp => emp.id === employeeId ? { ...emp, ...updateData } : emp)
     );
-
-    startSavingTransition(async () => {
-        try {
-            await updateEmployee(employeeId, updateData);
-            toast({ title: 'Tersimpan!', description: `Status BPJS telah diperbarui.` });
-        } catch (error) {
-            toast({ variant: 'destructive', title: 'Error', description: 'Gagal menyimpan status BPJS.' });
-        }
-    });
+    markDirty(employeeId, 'bpjsStatus');
+    markDirty(employeeId, 'bpjsNumber');
+    markDirty(employeeId, 'bpjsType');
   }
 
   const handleIdCardStatusChange = (employeeId: string, value: string) => {
     const updateData: Partial<Employee> = { idCardStatus: value as any };
-    // If status is not 'active', clear the number
     if (value !== 'active') {
         updateData.idCardNumber = '';
+        updateData.ktpPhoto = ''; // Clear photo if not active
     }
-    
     setEmployees(prev => 
       prev.map(emp => emp.id === employeeId ? { ...emp, ...updateData } : emp)
     );
-
-    startSavingTransition(async () => {
-        try {
-            await updateEmployee(employeeId, updateData);
-            toast({ title: 'Tersimpan!', description: `Status ID Card telah diperbarui.` });
-        } catch (error) {
-            toast({ variant: 'destructive', title: 'Error', description: 'Gagal menyimpan status ID Card.' });
-        }
-    });
+    markDirty(employeeId, 'idCardStatus');
   }
 
   const handleSimperStatusChange = (employeeId: string, value: string) => {
     const updateData: Partial<Employee> = { simperStatus: value as any };
     if (value !== 'active') {
         updateData.simperNumber = '';
+        updateData.simPhoto = ''; // Clear photo if not active
     }
-    
     setEmployees(prev => 
       prev.map(emp => emp.id === employeeId ? { ...emp, ...updateData } : emp)
     );
-
-    startSavingTransition(async () => {
-        try {
-            await updateEmployee(employeeId, updateData);
-            toast({ title: 'Tersimpan!', description: `Status SIMPER telah diperbarui.` });
-        } catch (error) {
-            toast({ variant: 'destructive', title: 'Error', description: 'Gagal menyimpan status SIMPER.' });
-        }
-    });
+    markDirty(employeeId, 'simperStatus');
   }
 
   const renderCellContent = (employee: Employee, field: 'bpjs' | 'idCard' | 'simper') => {
@@ -203,7 +235,7 @@ export default function BpjsIdSimperClientPage({
                         <>
                             <Select
                                 value={employee.bpjsType || ''}
-                                onValueChange={(value) => handleSave(employee.id, 'bpjsType', value)}
+                                onValueChange={(value) => handleFieldChange(employee.id, 'bpjsType', value)}
                             >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Pilih Tipe BPJS" />
@@ -215,8 +247,8 @@ export default function BpjsIdSimperClientPage({
                             </Select>
                             <Input 
                                 placeholder="Nomor BPJS"
-                                defaultValue={employee.bpjsNumber}
-                                onBlur={(e) => handleSave(employee.id, 'bpjsNumber', e.target.value)}
+                                value={employee.bpjsNumber || ''}
+                                onChange={(e) => handleFieldChange(employee.id, 'bpjsNumber', e.target.value)}
                             />
                         </>
                     )}
@@ -224,7 +256,7 @@ export default function BpjsIdSimperClientPage({
               );
           case 'idCard':
               return (
-                  <div className="flex flex-col gap-2 w-full md:w-[200px]">
+                  <div className="flex flex-col gap-2 w-full md:w-[250px]">
                     <Select
                         value={employee.idCardStatus || 'not-registered'}
                         onValueChange={(value) => handleIdCardStatusChange(employee.id, value === 'not-registered' ? '' : value)}
@@ -237,17 +269,26 @@ export default function BpjsIdSimperClientPage({
                         </SelectContent>
                     </Select>
                     {employee.idCardStatus === 'active' && (
-                        <Input 
-                            placeholder="Nomor ID Card"
-                            defaultValue={employee.idCardNumber}
-                            onBlur={(e) => handleSave(employee.id, 'idCardNumber', e.target.value)}
-                        />
+                        <>
+                            <Input 
+                                placeholder="Nomor ID Card"
+                                value={employee.idCardNumber || ''}
+                                onChange={(e) => handleFieldChange(employee.id, 'idCardNumber', e.target.value)}
+                            />
+                            <div className="flex items-center gap-2">
+                                <Avatar className="h-10 w-10 rounded-md">
+                                    <AvatarImage src={employee.ktpPhoto || undefined} alt="KTP" className="object-contain" />
+                                    <AvatarFallback className="rounded-md"><Upload className="h-4 w-4" /></AvatarFallback>
+                                </Avatar>
+                                <Input type="file" accept="image/*" onChange={(e) => handleFileChange(e, employee.id, 'ktpPhoto')} className="text-xs" />
+                            </div>
+                        </>
                     )}
                  </div>
               );
           case 'simper':
               return (
-                   <div className="flex flex-col gap-2 w-full md:w-[200px]">
+                   <div className="flex flex-col gap-2 w-full md:w-[250px]">
                     <Select
                         value={employee.simperStatus || 'not-registered'}
                         onValueChange={(value) => handleSimperStatusChange(employee.id, value === 'not-registered' ? '' : value)}
@@ -260,11 +301,20 @@ export default function BpjsIdSimperClientPage({
                         </SelectContent>
                     </Select>
                     {employee.simperStatus === 'active' && (
-                        <Input 
-                            placeholder="Nomor SIMPER"
-                            defaultValue={employee.simperNumber}
-                            onBlur={(e) => handleSave(employee.id, 'simperNumber', e.target.value)}
-                        />
+                        <>
+                            <Input 
+                                placeholder="Nomor SIMPER"
+                                value={employee.simperNumber || ''}
+                                onChange={(e) => handleFieldChange(employee.id, 'simperNumber', e.target.value)}
+                            />
+                            <div className="flex items-center gap-2">
+                                <Avatar className="h-10 w-10 rounded-md">
+                                    <AvatarImage src={employee.simPhoto || undefined} alt="SIM" className="object-contain" />
+                                    <AvatarFallback className="rounded-md"><Upload className="h-4 w-4" /></AvatarFallback>
+                                </Avatar>
+                                <Input type="file" accept="image/*" onChange={(e) => handleFileChange(e, employee.id, 'simPhoto')} className="text-xs" />
+                            </div>
+                        </>
                     )}
                  </div>
               );
@@ -382,6 +432,7 @@ export default function BpjsIdSimperClientPage({
                             <TableHead>BPJS</TableHead>
                             <TableHead>ID Card</TableHead>
                             <TableHead>SIMPER</TableHead>
+                            <TableHead className="sticky right-0 bg-card">Aksi</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -403,11 +454,20 @@ export default function BpjsIdSimperClientPage({
                                 <TableCell>{renderCellContent(emp, 'bpjs')}</TableCell>
                                 <TableCell>{renderCellContent(emp, 'idCard')}</TableCell>
                                 <TableCell>{renderCellContent(emp, 'simper')}</TableCell>
+                                <TableCell className="sticky right-0 bg-card">
+                                    {isDirty(emp.id) && (
+                                        <Button size="sm" onClick={() => handleSave(emp.id)} disabled={isSaving}>
+                                            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                                            <Save className="mr-2 h-4 w-4"/>
+                                            Simpan
+                                        </Button>
+                                    )}
+                                </TableCell>
                             </TableRow>
                         ))}
                         {filteredEmployees.length === 0 && (
                              <TableRow>
-                                <TableCell colSpan={5} className="h-24 text-center">
+                                <TableCell colSpan={6} className="h-24 text-center">
                                     Tidak ada data karyawan ditemukan untuk filter yang dipilih.
                                 </TableCell>
                             </TableRow>
@@ -420,5 +480,3 @@ export default function BpjsIdSimperClientPage({
     </div>
   );
 }
-
-    
