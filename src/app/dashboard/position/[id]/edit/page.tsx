@@ -17,7 +17,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { getPosition, updatePosition } from '@/actions/positions';
-import type { Position, Allowance, Site } from '@/lib/types';
+import type { Position, Allowance, Site, User } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { getSites } from '@/actions/sites';
+import { useUser } from '@/contexts/user-context';
 
 type AllowanceField = {
     id: number;
@@ -38,14 +39,20 @@ export default function EditPositionPage() {
     const router = useRouter();
     const params = useParams();
     const { toast } = useToast();
+    const user = useUser();
     const [position, setPosition] = useState<Position | null>(null);
     const [loading, setLoading] = useState(false);
     const [pageLoading, setPageLoading] = useState(true);
     const [salaryType, setSalaryType] = useState<string | undefined>();
     const [allowances, setAllowances] = useState<AllowanceField[]>([]);
-    const [sites, setSites] = useState<Site[]>([]);
+    const [allSites, setAllSites] = useState<Site[]>([]);
     
     const id = params.id as string;
+
+    const availableSites = user?.role === 'Admin Proyek' 
+        ? allSites.filter(site => user.siteIds?.includes(site.id))
+        : allSites;
+
 
     const addAllowance = () => {
         setAllowances([...allowances, { id: Date.now(), name: '', amount: 0 }]);
@@ -68,7 +75,7 @@ export default function EditPositionPage() {
                         getPosition(id),
                         getSites(),
                     ]);
-                    setSites(siteData);
+                    setAllSites(siteData);
                     if (data) {
                         setPosition(data);
                         setSalaryType(data.salaryType);
@@ -135,7 +142,7 @@ export default function EditPositionPage() {
         }
     };
 
-  if (pageLoading || !position) {
+  if (pageLoading || !position || !user) {
     return (
         <div className="space-y-6">
             <Skeleton className="h-9 w-40" />
@@ -190,8 +197,8 @@ export default function EditPositionPage() {
                             <SelectValue placeholder="Pilih Proyek" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="_none_">Tidak ada</SelectItem>
-                            {sites.map((site) => (
+                            <SelectItem value="_none_">Tidak ada (Jabatan Umum)</SelectItem>
+                            {availableSites.map((site) => (
                                 <SelectItem key={site.id} value={site.name}>{site.name}</SelectItem>
                             ))}
                         </SelectContent>

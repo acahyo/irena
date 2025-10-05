@@ -25,7 +25,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { getSites } from '@/actions/sites';
-import type { Site } from '@/lib/types';
+import type { Site, User } from '@/lib/types';
+import { useUser } from '@/contexts/user-context';
 
 
 type AllowanceField = {
@@ -35,18 +36,24 @@ type AllowanceField = {
 export default function NewPositionPage() {
     const router = useRouter();
     const { toast } = useToast();
+    const user = useUser();
     const [loading, setLoading] = useState(false);
     const [salaryType, setSalaryType] = useState<string | undefined>();
     const [allowances, setAllowances] = useState<AllowanceField[]>([]);
-    const [sites, setSites] = useState<Site[]>([]);
+    const [allSites, setAllSites] = useState<Site[]>([]);
     
     useEffect(() => {
         const fetchSites = async () => {
             const siteData = await getSites();
-            setSites(siteData);
+            setAllSites(siteData);
         };
         fetchSites();
     }, []);
+
+    const availableSites = user?.role === 'Admin Proyek' 
+        ? allSites.filter(site => user.siteIds?.includes(site.id))
+        : allSites;
+
 
     const addAllowance = () => {
         setAllowances([...allowances, { id: Date.now() }]);
@@ -86,6 +93,10 @@ export default function NewPositionPage() {
         }
     };
 
+    if (!user) {
+        return <div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin"/></div>
+    }
+
   return (
     <div className="space-y-6">
        <Button asChild variant="outline" size="sm">
@@ -115,8 +126,8 @@ export default function NewPositionPage() {
                             <SelectValue placeholder="Pilih Proyek" />
                         </SelectTrigger>
                         <SelectContent>
-                             <SelectItem value="_none_">Tidak ada</SelectItem>
-                            {sites.map((site) => (
+                             <SelectItem value="_none_">Tidak ada (Jabatan Umum)</SelectItem>
+                            {availableSites.map((site) => (
                                 <SelectItem key={site.id} value={site.name}>{site.name}</SelectItem>
                             ))}
                         </SelectContent>
