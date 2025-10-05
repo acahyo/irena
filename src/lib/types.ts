@@ -333,3 +333,16 @@ export type Vehicle = {
     fleetNumber: string;
     category: 'LV' | 'BUS';
 };
+
+export type ViolationRecord = {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  employeePosition: string;
+  siteLocation: string;
+  date: Date | string;
+  status: 'SP1' | 'SP2' | 'SP3' | 'SPPT';
+  description: string;
+  fileUrl?: string;
+  fileName?: string;
+};

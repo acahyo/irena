@@ -52,6 +52,7 @@ import {
   Truck,
   ClipboardList,
   Contact,
+  AlertTriangle,
 } from "lucide-react";
 import type { AppSettings, User, Role, MenuOrderItem } from "@/lib/types";
 import { logout } from "@/actions/auth";
@@ -62,6 +63,7 @@ const allNavItemsList = (lang: 'id' | 'en') => [
   { id: 'employees', href: "/dashboard/employees", icon: Users, label: lang === 'id' ? "Karyawan" : "Employees" },
   { id: 'employee-register', href: "/dashboard/employees/register", icon: UserPlus, label: "Registrasi Karyawan" },
   { id: 'employee-review', href: "/dashboard/employees/review", icon: UserCheckIcon, label: "Tinjau Registrasi" },
+  { id: 'violations', href: "/dashboard/violations", icon: AlertTriangle, label: "Catatan Pelanggaran" },
   { id: 'leave-schedule', href: "/dashboard/leave-schedule", icon: CalendarCheck, label: lang === 'id' ? "Jadwal Cuti" : "Leave Schedule" },
   { id: 'payroll', href: "/dashboard/payroll", icon: Wallet, label: "Payroll" },
   { id: 'payroll-history', href: "/dashboard/payroll/history", icon: History, label: "Riwayat Payroll" },
@@ -94,6 +96,7 @@ const staticMenuOrder: MenuOrderItem[] = [
     { id: 'employees' },
     { id: 'employee-register' },
     { id: 'employee-review' },
+    { id: 'violations' },
     { id: 'leave-schedule' },
     { id: 'payroll' },
     { id: 'payroll-history' },
