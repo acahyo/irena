@@ -66,10 +66,15 @@ export default function PayslipCollectiveClientPage({
   };
 
   const positions = useMemo(() => {
-    const allPositions = initialEmployees
-      .flatMap((emp) => emp.positions || [])
-      .filter(Boolean);
-    return ['all', ...Array.from(new Set(allPositions as string[]))];
+    const allPositions = new Map<string, { id: string, name: string }>();
+    initialEmployees.forEach(emp => {
+      (emp.positionDetails || []).forEach(pos => {
+        if (!allPositions.has(pos.id)) {
+          allPositions.set(pos.id, { id: pos.id, name: pos.name });
+        }
+      });
+    });
+    return [{ id: 'all', name: 'Semua Jabatan' }, ...Array.from(allPositions.values())];
   }, [initialEmployees]);
 
   const filteredEmployees = useMemo(() => {
@@ -321,8 +326,8 @@ export default function PayslipCollectiveClientPage({
                     </SelectTrigger>
                     <SelectContent>
                         {positions.map((pos) => (
-                            <SelectItem key={pos} value={pos}>
-                                {pos === 'all' ? 'Semua Jabatan' : pos}
+                            <SelectItem key={pos.id} value={pos.name}>
+                                {pos.name}
                             </SelectItem>
                         ))}
                     </SelectContent>

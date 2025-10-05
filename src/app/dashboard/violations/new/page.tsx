@@ -113,6 +113,7 @@ export default function NewViolationPage() {
     const selectedSite = sites.find(s => s.name === siteFilter);
     if (!selectedSite) return positions;
 
+    // Return positions that are not project-specific OR belong to the selected project
     return positions.filter(p => !p.projectName || p.projectName === selectedSite.name);
   }, [positions, siteFilter, sites]);
 

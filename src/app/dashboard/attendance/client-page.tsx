@@ -107,9 +107,16 @@ export default function AttendanceClientPage({
 
 
   const positions = useMemo(() => {
-    const allPositions = employees.flatMap((emp) => emp.positions || []).filter(Boolean);
-    return ['all', ...Array.from(new Set(allPositions as string[]))];
-  }, [employees]);
+    const allPositions = new Map<string, { id: string, name: string }>();
+    employees.forEach(emp => {
+      (emp.positionDetails || []).forEach(pos => {
+        if (!allPositions.has(pos.id)) {
+          allPositions.set(pos.id, { id: pos.id, name: pos.name });
+        }
+      });
+    });
+    return [{ id: 'all', name: T.allPositions }, ...Array.from(allPositions.values())];
+  }, [employees, T.allPositions]);
   
   const handleProjectFilterChange = (projectId: string) => {
     setProjectFilter(projectId);
@@ -307,8 +314,8 @@ export default function AttendanceClientPage({
               </SelectTrigger>
               <SelectContent>
                   {positions.map((pos) => (
-                      <SelectItem key={pos} value={pos}>
-                          {pos === 'all' ? T.allPositions : pos}
+                      <SelectItem key={pos.id} value={pos.name}>
+                          {pos.name}
                       </SelectItem>
                   ))}
               </SelectContent>
