@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -8,23 +9,26 @@ import { getSite } from '@/actions/sites';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { User, Employee, PurchaseRequest, Site } from '@/lib/types';
-import { Building, Users, UserPlus } from 'lucide-react';
+import { Building, Users, UserPlus, ListChecks, UserRound } from 'lucide-react';
 import NewPurchaseRequestForm from './new-purchase-request-form';
 import ProjectPurchaseRequests from './project-purchase-requests';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 type DashboardData = {
     site: Site | null;
     employees: Employee[];
     purchaseRequests: PurchaseRequest[];
     employeesByPosition: { name: string, value: number }[];
+    leaveRecommendation: (Employee & { daysActive: number })[];
 }
 
 async function getProjectDashboardData(siteId?: string): Promise<DashboardData> {
     if (!siteId) {
-        return { site: null, employees: [], purchaseRequests: [], employeesByPosition: [] };
+        return { site: null, employees: [], purchaseRequests: [], employeesByPosition: [], leaveRecommendation: [] };
     }
     
     const [site, employees, purchaseRequests] = await Promise.all([
@@ -43,12 +47,26 @@ async function getProjectDashboardData(siteId?: string): Promise<DashboardData> 
         }
         return acc;
     }, [] as { name: string, value: number }[]);
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const leaveRecommendation = employees
+        .filter(emp => emp.contractStartDate)
+        .map(emp => {
+            const startDate = new Date(emp.contractStartDate!);
+            const diffTime = today.getTime() - startDate.getTime();
+            const daysActive = Math.ceil(diffTime / (1000 * 3600 * 24));
+            return { ...emp, daysActive };
+        })
+        .filter(emp => emp.daysActive >= 120 && emp.employeeStatus === 'active');
 
     return {
         site,
         employees,
         purchaseRequests,
         employeesByPosition: employeesByPosition.sort((a,b) => b.value - a.value),
+        leaveRecommendation,
     };
 }
 
@@ -64,7 +82,7 @@ export default function AdminProjectDashboard({ user, assignedSites, currentProj
                 const dashboardData = await getProjectDashboardData(selectedProjectId);
                 setData(dashboardData);
             } else {
-                setData({ site: null, employees: [], purchaseRequests: [], employeesByPosition: [] });
+                setData({ site: null, employees: [], purchaseRequests: [], employeesByPosition: [], leaveRecommendation: [] });
             }
         };
 
@@ -172,9 +190,43 @@ export default function AdminProjectDashboard({ user, assignedSites, currentProj
                     </CardContent>
                 </Card>
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <NewPurchaseRequestForm user={user} site={data.site} />
                 <ProjectPurchaseRequests initialRequests={data.purchaseRequests} />
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <ListChecks /> Rekomendasi Cuti
+                        </CardTitle>
+                        <CardDescription>Karyawan aktif lebih dari 120 hari.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <ScrollArea className="h-[300px]">
+                            <div className="space-y-4">
+                                {data.leaveRecommendation.length > 0 ? (
+                                    data.leaveRecommendation.map(emp => (
+                                        <div key={emp.id} className="flex items-center">
+                                            <Avatar className="h-9 w-9">
+                                                <AvatarImage src={emp.avatar} alt={emp.name} />
+                                                <AvatarFallback>{emp.name.charAt(0)}</AvatarFallback>
+                                            </Avatar>
+                                            <div className="ml-4 space-y-1">
+                                                <Link href={`/dashboard/employees/${emp.id}`} className="text-sm font-medium leading-none hover:underline">{emp.name}</Link>
+                                                <p className="text-xs text-muted-foreground">{emp.position}</p>
+                                            </div>
+                                            <div className="ml-auto font-medium text-xs">{emp.daysActive} hari</div>
+                                        </div>
+                                    ))
+                                ) : (
+                                     <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-8">
+                                        <UserRound className="h-8 w-8 mb-2" />
+                                        <p className="text-sm">Tidak ada karyawan yang memenuhi kriteria saat ini.</p>
+                                    </div>
+                                )}
+                            </div>
+                        </ScrollArea>
+                    </CardContent>
+                </Card>
             </div>
         </div>
     )
