@@ -31,13 +31,18 @@ const getStatusBadge = (status?: string) => {
     }
 }
 
-const getViolationBadgeVariant = (status: Employee['latestViolation']['status']): 'default' | 'secondary' | 'destructive' | 'outline' => {
+const getViolationBadgeClasses = (status: Employee['latestViolation']['status']): string => {
   switch (status) {
-    case 'SP1': return 'default';
-    case 'SP2': return 'secondary';
-    case 'SP3': return 'destructive';
-    case 'SPPT': return 'destructive';
-    default: return 'outline';
+    case 'SP1':
+      return 'bg-yellow-400 text-yellow-900 hover:bg-yellow-400/80';
+    case 'SP2':
+      return 'bg-orange-400 text-orange-900 hover:bg-orange-400/80';
+    case 'SP3':
+      return 'bg-red-500 text-white hover:bg-red-500/80';
+    case 'SPPT':
+      return 'bg-black text-white hover:bg-black/80';
+    default:
+      return 'bg-gray-400 text-gray-900 hover:bg-gray-400/80';
   }
 };
 
@@ -54,7 +59,7 @@ export function EmployeeCard({ employee }: EmployeeCardProps) {
         
         {employee.latestViolation && (
           <div className="absolute top-2 left-2 text-center">
-            <Badge variant={getViolationBadgeVariant(employee.latestViolation.status)}>
+            <Badge className={getViolationBadgeClasses(employee.latestViolation.status)}>
               <AlertTriangle className="h-3 w-3 mr-1" />
               {employee.latestViolation.status}
             </Badge>
