@@ -1,3 +1,4 @@
+
 'use server';
 
 import { db } from '@/lib/firebase';
@@ -15,6 +16,7 @@ export async function getSettings(): Promise<AppSettings> {
       appName: 'Staff Hub',
       appDescription: 'An application for employee management.',
       logo: 'https://drive.google.com/file/d/1ggYVy0-UgoXuQvB96yIdDQm8M4pr7iZt/view?usp=sharing',
+      favicon: 'https://drive.google.com/file/d/1ggYVy0-UgoXuQvB96yIdDQm8M4pr7iZt/view?usp=sharing',
       primaryColor: '#136F63',
       backgroundColor: '#D2E9E6',
       accentColor: '#877795',

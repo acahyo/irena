@@ -1,5 +1,6 @@
 
 
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -102,6 +103,7 @@ export default function SettingsPage() {
     const { toast } = useToast();
     const [settings, setSettings] = useState<Omit<AppSettings, 'logo' | 'id'> | null>(null);
     const [logoPreview, setLogoPreview] = useState<string | undefined | null>(null);
+    const [faviconPreview, setFaviconPreview] = useState<string | undefined | null>(null);
     const [loading, setLoading] = useState(false);
     const [downloading, setDownloading] = useState(false);
     const [pageLoading, setPageLoading] = useState(true);
@@ -117,9 +119,10 @@ export default function SettingsPage() {
             try {
                 const [settingsData, rolesData] = await Promise.all([getSettings(), getRoles()]);
                 
-                const { logo, id, ...rest } = settingsData;
+                const { logo, favicon, id, ...rest } = settingsData;
                 setSettings(rest);
                 setLogoPreview(logo);
+                setFaviconPreview(favicon);
                 setEmployeePayslipAccess(settingsData.employeePayslipAccess ?? true);
                 
                 setRoles(rolesData);
@@ -173,16 +176,16 @@ export default function SettingsPage() {
         }
     };
 
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, setPreview: React.Dispatch<React.SetStateAction<string | null | undefined>>) => {
         const file = event.target.files?.[0];
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                setLogoPreview(reader.result as string);
+                setPreview(reader.result as string);
             };
             reader.readAsDataURL(file);
         } else {
-             setLogoPreview(null);
+             setPreview(null);
         }
     };
     
@@ -204,6 +207,7 @@ export default function SettingsPage() {
             const settingsToSave: Omit<AppSettings, 'id'> = {
                 ...settings,
                 logo: logoPreview || '',
+                favicon: faviconPreview || '',
                 employeePayslipAccess,
             };
 
@@ -365,10 +369,31 @@ export default function SettingsPage() {
                                     name="logo"
                                     type="file"
                                     accept="image/*"
-                                    onChange={handleFileChange}
+                                    onChange={(e) => handleFileChange(e, setLogoPreview)}
                                     className="max-w-sm"
                                 />
                             </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                            <Label>{lang === 'id' ? 'Favicon & Ikon Shortcut' : 'Favicon & Shortcut Icon'}</Label>
+                            <div className="flex items-center gap-4">
+                                <Avatar className="h-16 w-16 rounded-md">
+                                    <AvatarImage src={faviconPreview || undefined} alt="Favicon" className="object-contain" />
+                                    <AvatarFallback className="rounded-md">
+                                        <Upload className="h-6 w-6 text-muted-foreground" />
+                                    </AvatarFallback>
+                                </Avatar>
+                                <Input
+                                    id="favicon"
+                                    name="favicon"
+                                    type="file"
+                                    accept="image/png, image/x-icon, image/svg+xml"
+                                    onChange={(e) => handleFileChange(e, setFaviconPreview)}
+                                    className="max-w-sm"
+                                />
+                            </div>
+                            <p className="text-sm text-muted-foreground">Gunakan file .png atau .ico untuk hasil terbaik. Disarankan ukuran 512x512 piksel.</p>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

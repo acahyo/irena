@@ -1,6 +1,7 @@
 
 
 
+
 export type Allowance = {
   name: string;
   amount: number;
@@ -144,6 +145,7 @@ export type AppSettings = {
   appName?: string;
   appDescription?: string;
   logo?: string;
+  favicon?: string;
   primaryColor?: string;
   backgroundColor?: string;
   accentColor?: string;
