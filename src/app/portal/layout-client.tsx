@@ -1,8 +1,9 @@
+
 'use client';
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import {
   Avatar,
   AvatarFallback,
@@ -72,6 +73,14 @@ export default function PortalClientLayout({
   const pathname = usePathname();
   const router = useRouter();
   const lang = settings.language || 'id';
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      router.refresh();
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [router]);
   
   const navItems = useMemo(() => getNavItems(lang, settings), [lang, settings]);
 
