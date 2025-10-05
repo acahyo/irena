@@ -108,10 +108,10 @@ export default function NewViolationPage() {
 
   const filteredPositions = useMemo(() => {
     if (siteFilter === 'all') {
-      return positions;
+      return [];
     }
     const selectedSite = sites.find(s => s.name === siteFilter);
-    if (!selectedSite) return positions;
+    if (!selectedSite) return [];
 
     // Return positions that are not project-specific OR belong to the selected project
     return positions.filter(p => !p.projectName || p.projectName === selectedSite.name);
@@ -197,8 +197,8 @@ export default function NewViolationPage() {
                 </div>
                  <div className="space-y-2">
                     <Label>Filter Jabatan</Label>
-                    <Select value={positionFilter} onValueChange={setPositionFilter} >
-                        <SelectTrigger><SelectValue/></SelectTrigger>
+                    <Select value={positionFilter} onValueChange={setPositionFilter} disabled={siteFilter === 'all'}>
+                        <SelectTrigger><SelectValue placeholder={siteFilter === 'all' ? 'Pilih proyek dulu' : 'Semua Jabatan'}/></SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">Semua Jabatan</SelectItem>
                             {filteredPositions.map(p => <SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>)}
