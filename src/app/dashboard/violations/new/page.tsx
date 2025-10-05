@@ -18,8 +18,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { createViolationRecord, getViolationRecords } from '@/actions/violations';
 import { getEmployees } from '@/actions/employees';
-import type { Employee, ViolationRecord } from '@/lib/types';
+import type { Employee, ViolationRecord, Department, Position, Site } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { getDepartments } from '@/actions/departments';
+import { getPositions } from '@/actions/positions';
+import { getSites } from '@/actions/sites';
 
 const getNextStatus = (currentStatus: ViolationRecord['status']): ViolationRecord['status'] => {
     switch (currentStatus) {
@@ -36,10 +39,19 @@ export default function NewViolationPage() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [date, setDate] = useState<Date | undefined>(new Date());
+  
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [allViolations, setAllViolations] = useState<ViolationRecord[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [positions, setPositions] = useState<Position[]>([]);
+  const [sites, setSites] = useState<Site[]>([]);
+  
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
+
+  const [departmentFilter, setDepartmentFilter] = useState('all');
+  const [positionFilter, setPositionFilter] = useState('all');
+  const [siteFilter, setSiteFilter] = useState('all');
   
   const lastViolation = useMemo(() => {
     if (!selectedEmployee) return null;
@@ -71,9 +83,18 @@ export default function NewViolationPage() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [emps, violations] = await Promise.all([getEmployees(), getViolationRecords()]);
+        const [emps, violations, depts, poss, siteData] = await Promise.all([
+          getEmployees(), 
+          getViolationRecords(),
+          getDepartments(),
+          getPositions(),
+          getSites(),
+        ]);
         setEmployees(emps);
         setAllViolations(violations);
+        setDepartments(depts);
+        setPositions(poss);
+        setSites(siteData);
       } catch (error) {
         toast({ variant: 'destructive', title: 'Error', description: 'Gagal memuat data karyawan atau riwayat pelanggaran.'});
       } finally {
@@ -82,6 +103,15 @@ export default function NewViolationPage() {
     };
     fetchData();
   }, [toast]);
+  
+  const filteredEmployees = useMemo(() => {
+    return employees.filter(emp => 
+        (siteFilter === 'all' || emp.siteLocation === siteFilter) &&
+        (departmentFilter === 'all' || emp.department === departmentFilter) &&
+        (positionFilter === 'all' || emp.positions?.includes(positionFilter))
+    );
+  }, [employees, siteFilter, departmentFilter, positionFilter]);
+
 
   const handleEmployeeChange = (employeeId: string) => {
     const emp = employees.find(e => e.id === employeeId);
@@ -149,13 +179,45 @@ export default function NewViolationPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-8">
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                    <Label>Filter Proyek</Label>
+                    <Select value={siteFilter} onValueChange={setSiteFilter}>
+                        <SelectTrigger><SelectValue/></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Semua Proyek</SelectItem>
+                            {sites.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                </div>
+                 <div className="space-y-2">
+                    <Label>Filter Departemen</Label>
+                    <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+                        <SelectTrigger><SelectValue/></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Semua Departemen</SelectItem>
+                            {departments.map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                </div>
+                 <div className="space-y-2">
+                    <Label>Filter Jabatan</Label>
+                    <Select value={positionFilter} onValueChange={setPositionFilter}>
+                        <SelectTrigger><SelectValue/></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Semua Jabatan</SelectItem>
+                            {positions.map(p => <SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="employeeId">Karyawan</Label>
                 <Select onValueChange={handleEmployeeChange} required>
                   <SelectTrigger id="employeeId"><SelectValue placeholder="Pilih Karyawan" /></SelectTrigger>
                   <SelectContent>
-                    {employees.map((emp) => (
+                    {filteredEmployees.map((emp) => (
                       <SelectItem key={emp.id} value={emp.id}>{emp.name}</SelectItem>
                     ))}
                   </SelectContent>
