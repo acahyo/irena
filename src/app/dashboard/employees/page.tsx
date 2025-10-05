@@ -51,7 +51,7 @@ export default async function EmployeeDirectoryPage() {
         new Date(req.endDate) >= today
     );
     
-    const employeesWithDetails = fetchedEmployees.map((emp) => {
+    const employeesWithDetails: Employee[] = fetchedEmployees.map((emp) => {
         const latestViolation = violationRecords
             .filter(v => v.employeeId === emp.id)
             .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
@@ -73,8 +73,8 @@ export default async function EmployeeDirectoryPage() {
         
         return {
           ...emp,
-          contractStartDate: formatDate(emp.contractStartDate),
-          contractEndDate: formatDate(emp.contractEndDate),
+          contractStartDate: emp.contractStartDate ? new Date(emp.contractStartDate).toISOString() : undefined,
+          contractEndDate: emp.contractEndDate ? new Date(emp.contractEndDate).toISOString() : undefined,
           onLeave: approvedLeave.some((req) => req.employeeId === emp.id),
           latestViolation: violationInfo,
         };

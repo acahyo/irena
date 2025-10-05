@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useTransition } from 'react';
@@ -212,8 +213,8 @@ export default function MyLeaveClientPage({
               {initialRequests.length > 0 ? (
                 initialRequests.map((req) => (
                   <TableRow key={req.id}>
-                    <TableCell>{req.startDate as string}</TableCell>
-                    <TableCell>{req.endDate as string}</TableCell>
+                    <TableCell>{format(new Date(req.startDate), 'PPP')}</TableCell>
+                    <TableCell>{format(new Date(req.endDate), 'PPP')}</TableCell>
                     <TableCell>{req.type}</TableCell>
                     <TableCell className="max-w-xs truncate">{req.reason}</TableCell>
                     <TableCell>

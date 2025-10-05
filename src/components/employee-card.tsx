@@ -1,3 +1,6 @@
+
+'use client';
+
 import Link from 'next/link';
 import type { Employee } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -11,6 +14,9 @@ import {
 } from '@/components/ui/card';
 import { Phone, Building, Calendar, User, FileText, Clock, Briefcase, AlertTriangle } from 'lucide-react';
 import { Badge } from './ui/badge';
+import { useState, useEffect } from 'react';
+import { format, parseISO } from 'date-fns';
+
 
 interface EmployeeCardProps {
   employee: Employee;
@@ -48,10 +54,25 @@ const getViolationBadgeClasses = (status: Employee['latestViolation']['status'])
 
 
 export function EmployeeCard({ employee }: EmployeeCardProps) {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const displayPosition = employee.positions && employee.positions.length > 0
     ? employee.positions.join(', ')
     : 'No position';
     
+  const formatDate = (dateString: string | Date | undefined) => {
+    if (!dateString || !isClient) return 'N/A';
+    try {
+      return format(parseISO(dateString as string), 'PP');
+    } catch {
+      return 'Invalid Date';
+    }
+  };
+
   return (
     <Link href={`/dashboard/employees/${employee.id}`}>
       <Card className="h-full flex flex-col transform-gpu transition-all duration-200 ease-in-out hover:-translate-y-1 hover:shadow-lg relative">
@@ -91,11 +112,11 @@ export function EmployeeCard({ employee }: EmployeeCardProps) {
         <CardFooter className="flex-col items-start gap-2 text-xs text-muted-foreground border-t pt-4">
              <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
-                <span>Mulai: {employee.contractStartDate || 'N/A'}</span>
+                <span>Mulai: {formatDate(employee.contractStartDate)}</span>
             </div>
              <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
-                <span>Selesai: {employee.contractEndDate || 'N/A'}</span>
+                <span>Selesai: {formatDate(employee.contractEndDate)}</span>
             </div>
         </CardFooter>
       </Card>
