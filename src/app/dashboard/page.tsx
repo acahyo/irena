@@ -26,6 +26,9 @@ import PurchasingDashboard from './purchasing-dashboard';
 import AttendanceAdminDashboard from './attendance-admin-dashboard';
 import { getSitesByIds } from '@/actions/sites';
 import { getViolationRecords } from '@/actions/violations';
+import { format, getMonth, getYear } from 'date-fns';
+import { id } from 'date-fns/locale';
+import ViolationChart from './violation-chart';
 
 
 async function getDashboardData({ siteIds }: { siteIds?: string[] }) {
@@ -89,6 +92,26 @@ async function getDashboardData({ siteIds }: { siteIds?: string[] }) {
         acc[key].count++;
         return acc;
     }, {} as Record<string, { project: string; position: string; status: ViolationRecord['status']; count: number }>);
+    
+    const violationHistory = violationRecords.reduce((acc, record) => {
+        const recordDate = new Date(record.date);
+        const month = format(recordDate, 'MMM', { locale: id });
+        const year = getYear(recordDate);
+        const key = `${year}-${month}`;
+
+        if (!acc[key]) {
+            acc[key] = { month, SP1: 0, SP2: 0, SP3: 0, SPPT: 0 };
+        }
+        acc[key][record.status]++;
+        
+        return acc;
+    }, {} as Record<string, { month: string; SP1: number; SP2: number; SP3: number; SPPT: number; }>);
+    
+    const sortedViolationHistory = Object.values(violationHistory).sort((a,b) => {
+        const dateA = new Date(`01-${a.month}-2024`);
+        const dateB = new Date(`01-${b.month}-2024`);
+        return dateA.getTime() - dateB.getTime();
+    });
 
 
     return {
@@ -98,6 +121,7 @@ async function getDashboardData({ siteIds }: { siteIds?: string[] }) {
         employeesByStatus: employeesByStatus,
         leaveRecommendation,
         violationsSummary: Object.values(violationsSummary).sort((a, b) => a.project.localeCompare(b.project) || a.position.localeCompare(b.position)),
+        violationHistory: sortedViolationHistory,
     };
 }
 
@@ -288,6 +312,9 @@ export default async function DashboardPage({ searchParams, userSiteIds }: { sea
                     </CardContent>
                 </Card>
             </div>
+             
+             <ViolationChart data={stats.violationHistory} />
+            
              <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2"><AlertOctagon /> {T.violationRecap}</CardTitle>
