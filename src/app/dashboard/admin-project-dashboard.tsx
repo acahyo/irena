@@ -5,10 +5,11 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getEmployees } from '@/actions/employees';
 import { getPurchaseRequests } from '@/actions/purchasing';
+import { getLeaveRequests } from '@/actions/leave';
 import { getSite } from '@/actions/sites';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import type { User, Employee, PurchaseRequest, Site } from '@/lib/types';
+import type { User, Employee, PurchaseRequest, Site, LeaveRequest } from '@/lib/types';
 import { Building, Users, UserPlus, ListChecks, UserRound } from 'lucide-react';
 import NewPurchaseRequestForm from './new-purchase-request-form';
 import ProjectPurchaseRequests from './project-purchase-requests';
@@ -17,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { differenceInDays } from 'date-fns';
 
 type DashboardData = {
     site: Site | null;
@@ -31,10 +33,11 @@ async function getProjectDashboardData(siteId?: string): Promise<DashboardData> 
         return { site: null, employees: [], purchaseRequests: [], employeesByPosition: [], leaveRecommendation: [] };
     }
     
-    const [site, employees, purchaseRequests] = await Promise.all([
+    const [site, employees, purchaseRequests, leaveRequests] = await Promise.all([
         getSite(siteId),
         getEmployees({ siteId }),
         getPurchaseRequests({ siteId }),
+        getLeaveRequests({ siteId }),
     ]);
 
     const employeesByPosition = employees.reduce((acc, emp) => {
@@ -52,14 +55,21 @@ async function getProjectDashboardData(siteId?: string): Promise<DashboardData> 
     today.setHours(0, 0, 0, 0);
 
     const leaveRecommendation = employees
-        .filter(emp => emp.contractStartDate)
+        .filter(emp => emp.employeeStatus === 'active')
         .map(emp => {
-            const startDate = new Date(emp.contractStartDate!);
-            const diffTime = today.getTime() - startDate.getTime();
-            const daysActive = Math.ceil(diffTime / (1000 * 3600 * 24));
+            const lastApprovedLeave = leaveRequests
+                .filter(req => req.employeeId === emp.id && req.status === 'Approved')
+                .sort((a, b) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime())[0];
+            
+            const referenceDate = lastApprovedLeave ? new Date(lastApprovedLeave.endDate) : (emp.contractStartDate ? new Date(emp.contractStartDate) : null);
+
+            if (!referenceDate) return null;
+
+            const daysActive = differenceInDays(today, referenceDate);
             return { ...emp, daysActive };
         })
-        .filter(emp => emp.daysActive >= 120 && emp.employeeStatus === 'active');
+        .filter((emp): emp is Employee & { daysActive: number } => emp !== null && emp.daysActive >= 120);
+
 
     return {
         site,

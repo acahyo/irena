@@ -26,7 +26,7 @@ import PurchasingDashboard from './purchasing-dashboard';
 import AttendanceAdminDashboard from './attendance-admin-dashboard';
 import { getSitesByIds } from '@/actions/sites';
 import { getViolationRecords } from '@/actions/violations';
-import { format, getMonth, getYear } from 'date-fns';
+import { format, getMonth, getYear, differenceInDays } from 'date-fns';
 import { id } from 'date-fns/locale';
 import ViolationChart from './violation-chart';
 
@@ -70,14 +70,20 @@ async function getDashboardData({ siteIds }: { siteIds?: string[] }) {
     }, { active: 0, nonaktif: 0, resign: 0, phk: 0 });
 
     const leaveRecommendation = employees
-        .filter(emp => emp.contractStartDate)
+        .filter(emp => emp.employeeStatus === 'active')
         .map(emp => {
-            const startDate = new Date(emp.contractStartDate!);
-            const diffTime = today.getTime() - startDate.getTime();
-            const diffDays = Math.ceil(diffTime / (1000 * 3600 * 24));
-            return { ...emp, daysActive: diffDays };
+            const lastApprovedLeave = leaveRequests
+                .filter(req => req.employeeId === emp.id && req.status === 'Approved')
+                .sort((a, b) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime())[0];
+
+            const referenceDate = lastApprovedLeave ? new Date(lastApprovedLeave.endDate) : (emp.contractStartDate ? new Date(emp.contractStartDate) : null);
+            
+            if (!referenceDate) return null;
+
+            const daysActive = differenceInDays(today, referenceDate);
+            return { ...emp, daysActive };
         })
-        .filter(emp => emp.daysActive! >= 120 && emp.employeeStatus === 'active');
+        .filter((emp): emp is Employee & { daysActive: number } => emp !== null && emp.daysActive >= 120);
         
     const violationsSummary = violationRecords.reduce((acc, record) => {
         const key = `${record.siteLocation}-${record.employeePosition}-${record.status}`;

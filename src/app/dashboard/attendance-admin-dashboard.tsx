@@ -8,6 +8,7 @@ import type { User, Employee, LeaveRequest, AttendanceRecord } from '@/lib/types
 import { Users, CalendarOff, UserCheck, AlertTriangle, ListChecks, UserRound } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { differenceInDays } from 'date-fns';
 
 async function getDashboardData(positionName?: string) {
     if (!positionName) {
@@ -46,14 +47,21 @@ async function getDashboardData(positionName?: string) {
     const activeEmployees = employees.filter(emp => emp.employeeStatus === 'active' && !emp.onLeave).length;
 
     const leaveRecommendation = employees
-        .filter(emp => emp.contractStartDate)
+        .filter(emp => emp.employeeStatus === 'active')
         .map(emp => {
-            const startDate = new Date(emp.contractStartDate!);
-            const diffTime = today.getTime() - startDate.getTime();
-            const diffDays = Math.ceil(diffTime / (1000 * 3600 * 24));
-            return { ...emp, daysActive: diffDays };
+            const lastApprovedLeave = leaveRequests
+                .filter(req => req.employeeId === emp.id && req.status === 'Approved')
+                .sort((a, b) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime())[0];
+            
+            const referenceDate = lastApprovedLeave ? new Date(lastApprovedLeave.endDate) : (emp.contractStartDate ? new Date(emp.contractStartDate) : null);
+
+            if (!referenceDate) return null;
+
+            const daysActive = differenceInDays(today, referenceDate);
+            return { ...emp, daysActive };
         })
-        .filter(emp => emp.daysActive! >= 120 && emp.employeeStatus === 'active');
+        .filter((emp): emp is Employee & { daysActive: number } => emp !== null && emp.daysActive >= 120);
+
         
     const currentPeriod = new Date().toISOString().slice(0, 7);
     const attendanceRecords = await getAttendanceByPeriod(currentPeriod);
