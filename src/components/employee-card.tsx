@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Phone, Building, Calendar, User, FileText, Clock, Briefcase } from 'lucide-react';
+import { Phone, Building, Calendar, User, FileText, Clock, Briefcase, AlertTriangle } from 'lucide-react';
 import { Badge } from './ui/badge';
 
 interface EmployeeCardProps {
@@ -31,6 +31,16 @@ const getStatusBadge = (status?: string) => {
     }
 }
 
+const getViolationBadgeVariant = (status: Employee['latestViolation']['status']): 'default' | 'secondary' | 'destructive' | 'outline' => {
+  switch (status) {
+    case 'SP1': return 'default';
+    case 'SP2': return 'secondary';
+    case 'SP3': return 'destructive';
+    case 'SPPT': return 'destructive';
+    default: return 'outline';
+  }
+};
+
 
 export function EmployeeCard({ employee }: EmployeeCardProps) {
   const displayPosition = employee.positions && employee.positions.length > 0
@@ -39,9 +49,20 @@ export function EmployeeCard({ employee }: EmployeeCardProps) {
     
   return (
     <Link href={`/dashboard/employees/${employee.id}`}>
-      <Card className="h-full flex flex-col transform-gpu transition-all duration-200 ease-in-out hover:-translate-y-1 hover:shadow-lg">
-        <CardHeader className="items-center text-center">
-            {employee.onLeave ? getStatusBadge('onLeave') : getStatusBadge(employee.employeeStatus)}
+      <Card className="h-full flex flex-col transform-gpu transition-all duration-200 ease-in-out hover:-translate-y-1 hover:shadow-lg relative">
+        {employee.onLeave ? getStatusBadge('onLeave') : getStatusBadge(employee.employeeStatus)}
+        
+        {employee.latestViolation && (
+          <div className="absolute top-2 left-2 text-center">
+            <Badge variant={getViolationBadgeVariant(employee.latestViolation.status)}>
+              <AlertTriangle className="h-3 w-3 mr-1" />
+              {employee.latestViolation.status}
+            </Badge>
+            <p className="text-xs text-muted-foreground mt-1">{employee.latestViolation.expiresInDays} hari lagi</p>
+          </div>
+        )}
+
+        <CardHeader className="items-center text-center pt-16">
             <Avatar className="h-24 w-24 border-2 border-primary/20">
               <AvatarImage src={employee.avatar} alt={employee.name} />
               <AvatarFallback>{employee.name ? employee.name.charAt(0) : '?'}</AvatarFallback>

@@ -3,9 +3,12 @@
 import { getEmployees } from '@/actions/employees';
 import { getLeaveRequests } from '@/actions/leave';
 import EmployeeDirectoryClientPage from './client-page';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, differenceInDays, addMonths } from 'date-fns';
 import { getAdminSession } from '@/actions/auth';
 import { redirect } from 'next/navigation';
+import { getViolationRecords } from '@/actions/violations';
+import type { Employee } from '@/lib/types';
+
 
 const formatDate = (date: string | Date | undefined): string | undefined => {
   if (!date) return undefined;
@@ -32,9 +35,10 @@ export default async function EmployeeDirectoryPage() {
   // HR and Admin see all employees, regardless of siteIds
   const siteIdsForFilter = (user.role === 'HR' || user.role === 'Administrator') ? undefined : user.siteIds;
 
-  const [fetchedEmployees, leaveRequests] = await Promise.all([
+  const [fetchedEmployees, leaveRequests, violationRecords] = await Promise.all([
       getEmployees({ siteIds: siteIdsForFilter }),
-      getLeaveRequests({ siteId: siteIdsForFilter ? siteIdsForFilter[0] : undefined }), // Note: Leave requests might need adjustment for multi-site
+      getLeaveRequests({ siteId: siteIdsForFilter ? siteIdsForFilter[0] : undefined }),
+      getViolationRecords(),
     ]);
 
     const today = new Date();
@@ -47,12 +51,34 @@ export default async function EmployeeDirectoryPage() {
         new Date(req.endDate) >= today
     );
     
-    const employeesWithLeaveStatus = fetchedEmployees.map((emp) => ({
-      ...emp,
-      contractStartDate: formatDate(emp.contractStartDate),
-      contractEndDate: formatDate(emp.contractEndDate),
-      onLeave: approvedLeave.some((req) => req.employeeId === emp.id),
-    }));
+    const employeesWithDetails = fetchedEmployees.map((emp) => {
+        const latestViolation = violationRecords
+            .filter(v => v.employeeId === emp.id)
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+            
+        let violationInfo: Employee['latestViolation'] | undefined = undefined;
+        if (latestViolation) {
+            const violationDate = new Date(latestViolation.date);
+            const expiryDate = addMonths(violationDate, 6);
+            const expiresInDays = differenceInDays(expiryDate, today);
 
-  return <EmployeeDirectoryClientPage initialEmployees={employeesWithLeaveStatus} />;
+            if (expiresInDays > 0) {
+                violationInfo = {
+                    status: latestViolation.status,
+                    date: latestViolation.date,
+                    expiresInDays,
+                };
+            }
+        }
+        
+        return {
+          ...emp,
+          contractStartDate: formatDate(emp.contractStartDate),
+          contractEndDate: formatDate(emp.contractEndDate),
+          onLeave: approvedLeave.some((req) => req.employeeId === emp.id),
+          latestViolation: violationInfo,
+        };
+    });
+
+  return <EmployeeDirectoryClientPage initialEmployees={employeesWithDetails} />;
 }

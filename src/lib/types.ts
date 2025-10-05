@@ -57,6 +57,11 @@ export type Employee = {
   koperasiLimit?: number;
   koperasiLimitStartDate?: Date | string;
   koperasiLimitEndDate?: Date | string;
+  latestViolation?: {
+    status: ViolationRecord['status'];
+    date: Date | string;
+    expiresInDays: number;
+  };
 };
 
 export type CalendarEvent = {
