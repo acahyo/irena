@@ -7,7 +7,7 @@ import type { PjAttendance } from '@/lib/types';
 
 export default async function PjAttendanceRecapPage() {
   const user = await getAdminSession();
-  if (!user || user.role !== 'Administrator') {
+  if (!user || (user.role !== 'Administrator' && user.role !== 'HR')) {
     redirect('/dashboard');
   }
 
