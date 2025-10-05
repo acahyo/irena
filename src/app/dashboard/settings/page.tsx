@@ -71,6 +71,7 @@ const allMenus = [
   { id: 'employees', label: 'Karyawan' },
   { id: 'employee-register', label: 'Registrasi Karyawan'},
   { id: 'employee-review', label: 'Tinjau Registrasi' },
+  { id: 'violations', label: 'Catatan Pelanggaran' },
   { id: 'leave-schedule', label: 'Jadwal Cuti' },
   { id: 'payroll', label: 'Payroll' },
   { id: 'attendance', label: 'Input Absensi' },
