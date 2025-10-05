@@ -1,12 +1,12 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
-import { ArrowLeft, Loader2, Calendar as CalendarIcon, Upload, FileIcon } from 'lucide-react';
+import { format, differenceInMonths, addMonths } from 'date-fns';
+import { ArrowLeft, Loader2, Calendar as CalendarIcon, Upload, FileIcon, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -16,9 +16,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calendar } from '@/components/ui/calendar';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import { createViolationRecord } from '@/actions/violations';
+import { createViolationRecord, getViolationRecords } from '@/actions/violations';
 import { getEmployees } from '@/actions/employees';
-import type { Employee } from '@/lib/types';
+import type { Employee, ViolationRecord } from '@/lib/types';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+
+const getNextStatus = (currentStatus: ViolationRecord['status']): ViolationRecord['status'] => {
+    switch (currentStatus) {
+        case 'SP1': return 'SP2';
+        case 'SP2': return 'SP3';
+        case 'SP3': return 'SPPT';
+        case 'SPPT': return 'SPPT';
+        default: return 'SP1';
+    }
+}
 
 export default function NewViolationPage() {
   const router = useRouter();
@@ -26,16 +37,51 @@ export default function NewViolationPage() {
   const [loading, setLoading] = useState(false);
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [allViolations, setAllViolations] = useState<ViolationRecord[]>([]);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
+  
+  const lastViolation = useMemo(() => {
+    if (!selectedEmployee) return null;
+    return allViolations
+      .filter(v => v.employeeId === selectedEmployee.id)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+  }, [selectedEmployee, allViolations]);
+  
+  const recommendation = useMemo(() => {
+    if (!lastViolation) return { recommended: 'SP1', message: 'Ini adalah pelanggaran pertama yang tercatat untuk karyawan ini.' };
+    
+    const lastViolationDate = new Date(lastViolation.date);
+    const monthsSinceLast = differenceInMonths(new Date(), lastViolationDate);
+
+    if (monthsSinceLast < 6) {
+        const nextStatus = getNextStatus(lastViolation.status);
+        return {
+            recommended: nextStatus,
+            message: `Karyawan ini memiliki ${lastViolation.status} aktif yang diberikan pada ${format(lastViolationDate, 'PPP')}.`,
+        };
+    }
+    
+    return { recommended: 'SP1', message: 'Pelanggaran terakhir sudah lebih dari 6 bulan yang lalu.' };
+
+  }, [lastViolation]);
+
 
   useEffect(() => {
-    const fetchEmployees = async () => {
-      const emps = await getEmployees();
-      setEmployees(emps);
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [emps, violations] = await Promise.all([getEmployees(), getViolationRecords()]);
+        setEmployees(emps);
+        setAllViolations(violations);
+      } catch (error) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Gagal memuat data karyawan atau riwayat pelanggaran.'});
+      } finally {
+        setLoading(false);
+      }
     };
-    fetchEmployees();
-  }, []);
+    fetchData();
+  }, [toast]);
 
   const handleEmployeeChange = (employeeId: string) => {
     const emp = employees.find(e => e.id === employeeId);
@@ -104,7 +150,7 @@ export default function NewViolationPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
+              <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="employeeId">Karyawan</Label>
                 <Select onValueChange={handleEmployeeChange} required>
                   <SelectTrigger id="employeeId"><SelectValue placeholder="Pilih Karyawan" /></SelectTrigger>
@@ -115,6 +161,18 @@ export default function NewViolationPage() {
                   </SelectContent>
                 </Select>
               </div>
+
+               {selectedEmployee && (
+                  <div className="md:col-span-2">
+                      <Alert>
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertTitle>Rekomendasi Status Pelanggaran: <span className="font-bold">{recommendation.recommended}</span></AlertTitle>
+                        <AlertDescription>
+                           {recommendation.message}
+                        </AlertDescription>
+                      </Alert>
+                  </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="date">Tanggal Pelanggaran</Label>
@@ -131,7 +189,7 @@ export default function NewViolationPage() {
               
               <div className="space-y-2">
                 <Label htmlFor="status">Status Pelanggaran</Label>
-                <Select name="status" required>
+                <Select name="status" defaultValue={recommendation.recommended} required key={recommendation.recommended}>
                   <SelectTrigger id="status"><SelectValue placeholder="Pilih Status" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="SP1">SP1</SelectItem>
@@ -148,7 +206,7 @@ export default function NewViolationPage() {
               </div>
 
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="file">Lampiran File (Opsional)</Label>
+                <Label htmlFor="file">Lampiran File (Wajib)</Label>
                 <div className="flex items-center gap-4">
                   {filePreview && (
                     <div className="flex items-center gap-2 border p-2 rounded-md bg-muted">
@@ -156,7 +214,7 @@ export default function NewViolationPage() {
                       <span className="text-sm text-muted-foreground">File dipilih</span>
                     </div>
                   )}
-                  <Input id="file" name="file" type="file" onChange={handleFileChange} className="max-w-sm" />
+                  <Input id="file" name="file" type="file" onChange={handleFileChange} className="max-w-sm" required/>
                 </div>
               </div>
             </div>
