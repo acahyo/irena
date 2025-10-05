@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
@@ -64,7 +64,8 @@ export default function EditEmployeePageClient({ employee, departments, position
   const [employeeName, setEmployeeName] = useState(employee.name || '');
   const [accountHolderName, setAccountHolderName] = useState(employee.accountHolderName);
 
-  // Initialize date states on the client to avoid hydration mismatch
+  const [siteLocation, setSiteLocation] = useState(employee.siteLocation || '');
+  
   useEffect(() => {
     setDateOfBirth(parseDate(employee.dateOfBirth));
     setMessEntryDate(parseDate(employee.messEntryDate));
@@ -93,6 +94,20 @@ export default function EditEmployeePageClient({ employee, departments, position
   const [selectedPositions, setSelectedPositions] = useState<SelectedPosition[]>([]);
   const [positionToAdd, setPositionToAdd] = useState('');
   const [accountType, setAccountType] = useState<'pribadi' | 'keluarga' | undefined>();
+  
+  const filteredPositions = useMemo(() => {
+    if (!siteLocation) return positions.filter(p => !p.projectName); // Only general if no site
+    return positions.filter(p => !p.projectName || p.projectName === siteLocation);
+  }, [positions, siteLocation]);
+  
+  const handleSiteChange = (value: string) => {
+    setSiteLocation(value);
+    // Reset selected positions if they are not valid for the new site
+    const validPositions = filteredPositions.map(p => p.name);
+    setSelectedPositions(prev => prev.filter(pos => validPositions.includes(pos.name)));
+    setPositionToAdd('');
+  };
+
 
   useEffect(() => {
     if (accountType === 'pribadi') {
@@ -102,7 +117,7 @@ export default function EditEmployeePageClient({ employee, departments, position
 
 
   const addPosition = () => {
-    const position = positions.find(p => p.name === positionToAdd);
+    const position = filteredPositions.find(p => p.name === positionToAdd);
     if (position && !selectedPositions.some(p => p.id === position.id)) {
         setSelectedPositions([...selectedPositions, { id: position.id, name: position.name }]);
         setPositionToAdd('');
@@ -183,6 +198,7 @@ export default function EditEmployeePageClient({ employee, departments, position
         bankBookPhoto: bankBookPreview,
         canGeneratePayslip: (data.canGeneratePayslip === 'on'),
         positions: selectedPositions.map(p => p.name),
+        siteLocation: siteLocation,
     } as Partial<Employee>;
     
     try {
@@ -482,7 +498,21 @@ export default function EditEmployeePageClient({ employee, departments, position
                 <Input id="simperNumber" name="simperNumber" placeholder="e.g. 12345" defaultValue={employee.simperNumber ?? ''} />
               </div>
               
-              <div className="space-y-4 md:col-span-3">
+                <div className="space-y-2">
+                <Label htmlFor="siteLocation">Lokasi/Site</Label>
+                <Select name="siteLocation" value={siteLocation} onValueChange={handleSiteChange}>
+                  <SelectTrigger id="siteLocation-select">
+                    <SelectValue placeholder="Select site" />
+                  </SelectTrigger>
+                  <SelectContent>
+                     {sites.map((site) => (
+                        <SelectItem key={site.id} value={site.name}>{site.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-4 md:col-span-2">
                     <Label>Jabatan</Label>
                     <div className="flex items-center gap-2">
                          <Select value={positionToAdd} onValueChange={setPositionToAdd}>
@@ -490,7 +520,7 @@ export default function EditEmployeePageClient({ employee, departments, position
                                 <SelectValue placeholder="Pilih jabatan untuk ditambahkan" />
                             </SelectTrigger>
                             <SelectContent>
-                                {positions.filter(p => !selectedPositions.some(sp => sp.id === p.id)).map((pos) => (
+                                {filteredPositions.filter(p => !selectedPositions.some(sp => sp.name === p.name)).map((pos) => (
                                     <SelectItem key={pos.id} value={pos.name}>{pos.name}</SelectItem>
                                 ))}
                             </SelectContent>
@@ -555,19 +585,6 @@ export default function EditEmployeePageClient({ employee, departments, position
                 <Label htmlFor="contractEndDate">Tanggal Akhir Kontrak</Label>
                 <DatePicker date={contractEndDate} setDate={setContractEndDate} />
               </div>
-               <div className="space-y-2">
-                <Label htmlFor="siteLocation">Lokasi/Site</Label>
-                <Select name="siteLocation" defaultValue={employee.siteLocation}>
-                  <SelectTrigger id="siteLocation">
-                    <SelectValue placeholder="Select site" />
-                  </SelectTrigger>
-                  <SelectContent>
-                     {sites.map((site) => (
-                        <SelectItem key={site.id} value={site.name}>{site.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
               
               <div className="space-y-2 md:col-span-3">
                 <Label htmlFor="workEquipment">Peralatan Kerja</Label>
@@ -621,4 +638,3 @@ export default function EditEmployeePageClient({ employee, departments, position
     </div>
   );
 }
-
