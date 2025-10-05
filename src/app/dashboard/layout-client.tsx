@@ -239,7 +239,7 @@ export default function DashboardClientLayout({
         <SidebarFooter>
           <div className="flex items-center gap-2">
             <Avatar className="h-8 w-8">
-              <AvatarImage src={user.avatar || "https://placehold.co/100x100/877795/FFFFFF"} alt={user.name} />
+              <AvatarImage src={user.avatar} alt={user.name} />
               <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col text-sm">
