@@ -3,27 +3,11 @@
 import { getEmployees } from '@/actions/employees';
 import { getLeaveRequests } from '@/actions/leave';
 import EmployeeDirectoryClientPage from './client-page';
-import { format, parseISO, differenceInDays, addMonths } from 'date-fns';
+import { format, parseISO, differenceInDays, addMonths, isValid } from 'date-fns';
 import { getAdminSession } from '@/actions/auth';
 import { redirect } from 'next/navigation';
 import { getViolationRecords } from '@/actions/violations';
 import type { Employee } from '@/lib/types';
-
-
-const formatDate = (date: string | Date | undefined): string | undefined => {
-  if (!date) return undefined;
-  const dateObj = typeof date === 'string' ? parseISO(date) : date;
-  try {
-    // Check if date is valid before formatting
-    if (isNaN(dateObj.getTime())) {
-        return 'Invalid Date';
-    }
-    return format(dateObj, 'PP');
-  } catch (error) {
-    console.error('Invalid date format:', date);
-    return 'Invalid Date';
-  }
-};
 
 
 export default async function EmployeeDirectoryPage() {
@@ -72,17 +56,23 @@ export default async function EmployeeDirectoryPage() {
         }
         
         let contractWarningDays: number | undefined = undefined;
+        let endDate: Date | undefined;
         if (emp.contractEndDate) {
-            const endDate = new Date(emp.contractEndDate);
-            if (endDate > today) {
-                contractWarningDays = differenceInDays(endDate, today);
+            const parsedEndDate = new Date(emp.contractEndDate);
+            if (isValid(parsedEndDate)) {
+                endDate = parsedEndDate;
+                if (endDate > today) {
+                    contractWarningDays = differenceInDays(endDate, today);
+                }
             }
         }
         
+        const startDate = emp.contractStartDate ? new Date(emp.contractStartDate) : undefined;
+
         return {
           ...emp,
-          contractStartDate: emp.contractStartDate ? new Date(emp.contractStartDate).toISOString() : undefined,
-          contractEndDate: emp.contractEndDate ? new Date(emp.contractEndDate).toISOString() : undefined,
+          contractStartDate: startDate && isValid(startDate) ? startDate.toISOString() : undefined,
+          contractEndDate: endDate && isValid(endDate) ? endDate.toISOString() : undefined,
           onLeave: approvedLeave.some((req) => req.employeeId === emp.id),
           latestViolation: violationInfo,
           contractWarningDays,
@@ -91,4 +81,3 @@ export default async function EmployeeDirectoryPage() {
 
   return <EmployeeDirectoryClientPage initialEmployees={employeesWithDetails} />;
 }
-
