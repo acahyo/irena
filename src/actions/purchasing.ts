@@ -1,3 +1,4 @@
+
 'use server';
 
 import { db } from '@/lib/firebase';
@@ -109,12 +110,16 @@ export async function updatePurchaseRequest(id: string, updates: Partial<Purchas
   
   await updateDoc(docRef, updates);
 
-  // If the status is 'Approved by Finance', create a corresponding finance record
+  // If the status is 'Approved', create a corresponding finance record
   if (updates.status === 'Approved') {
     const requestSnap = await getDoc(docRef);
+    if (!requestSnap.exists()) {
+        throw new Error("Purchase request not found after update.");
+    }
     const requestData = requestSnap.data() as PurchaseRequest;
     
-    const finalPrice = updates.proposedAmount ?? requestData.proposedAmount;
+    // The final price is the proposedAmount set by Purchasing
+    const finalPrice = requestData.proposedAmount;
 
     if (finalPrice && finalPrice > 0 && requestData.projectId && requestData.projectName) {
         await createFinanceRecord({
