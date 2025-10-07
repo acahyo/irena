@@ -62,7 +62,6 @@ export default function AttendanceClientPage({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
-  const [positionFilter, setPositionFilter] = useState('all');
   const [projectFilter, setProjectFilter] = useState(searchParams.get('projectId') || 'all');
   const [attendanceData, setAttendanceData] = useState<AttendanceData>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -75,9 +74,7 @@ export default function AttendanceClientPage({
   const T = useMemo(() => ({
       title: lang === 'id' ? 'Input Absensi Karyawan' : 'Employee Attendance Input',
       description: lang === 'id' ? 'Masukkan jumlah kehadiran, lembur, dan potongan untuk setiap karyawan. Data disimpan otomatis.' : 'Enter attendance, overtime, and deductions for each employee. Data is saved automatically.',
-      filterByPosition: lang === 'id' ? 'Filter berdasarkan jabatan' : 'Filter by position',
       filterByProject: lang === 'id' ? 'Filter berdasarkan proyek' : 'Filter by project',
-      allPositions: lang === 'id' ? 'Semua Jabatan' : 'All Positions',
       allProjects: lang === 'id' ? 'Semua Proyek' : 'All Projects',
       import: lang === 'id' ? 'Impor' : 'Import',
       export: lang === 'id' ? 'Ekspor' : 'Export',
@@ -105,18 +102,6 @@ export default function AttendanceClientPage({
 
   }), [lang]);
 
-
-  const positions = useMemo(() => {
-    const allPositions = new Map<string, { id: string, name: string }>();
-    employees.forEach(emp => {
-      (emp.positionDetails || []).forEach(pos => {
-        if (!allPositions.has(pos.id)) {
-          allPositions.set(pos.id, { id: pos.id, name: pos.name });
-        }
-      });
-    });
-    return [{ id: 'all', name: T.allPositions }, ...Array.from(allPositions.values())];
-  }, [employees, T.allPositions]);
   
   const handleProjectFilterChange = (projectId: string) => {
     setProjectFilter(projectId);
@@ -127,12 +112,12 @@ export default function AttendanceClientPage({
 
   const filteredEmployees = useMemo(() => {
     return employees.filter(emp => {
-        const matchesPosition = positionFilter === 'all' || (emp.positions || []).includes(positionFilter);
-        // Project filtering is now handled by server component fetching, but we keep this for consistency if needed.
+        // Project filtering is now handled by server component fetching, 
+        // but we keep this client-side filter for responsiveness.
         const matchesProject = projectFilter === 'all' || emp.siteLocation === projectFilter;
-        return matchesPosition && (assignedSites ? matchesProject : true);
+        return assignedSites ? matchesProject : true;
     });
-  }, [employees, positionFilter, projectFilter, assignedSites]);
+  }, [employees, projectFilter, assignedSites]);
 
   useEffect(() => {
     // Populate initial state from fetched records
@@ -308,18 +293,6 @@ export default function AttendanceClientPage({
                     </SelectContent>
                 </Select>
             )}
-            <Select value={positionFilter} onValueChange={setPositionFilter}>
-              <SelectTrigger className="w-full md:w-[180px]">
-                  <SelectValue placeholder={T.filterByPosition} />
-              </SelectTrigger>
-              <SelectContent>
-                  {positions.map((pos) => (
-                      <SelectItem key={pos.id} value={pos.name}>
-                          {pos.name}
-                      </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
             <Input
               id="period"
               type="month"
