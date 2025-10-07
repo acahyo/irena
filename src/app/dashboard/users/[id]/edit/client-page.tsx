@@ -210,7 +210,7 @@ export default function EditUserClientPage({ user, roles, sites, positions }: { 
                                 <Button type="button" onClick={addSite} disabled={!siteToAdd}><PlusCircle className="mr-2 h-4 w-4" /> Tambah</Button>
                             </div>
                             <div className="flex flex-wrap gap-2 p-2 border rounded-md min-h-[40px]">
-                                {selectedSiteIds.map(id => {
+                                {selectedSiteIds.length > 0 ? selectedSiteIds.map(id => {
                                     const site = sites.find(s => s.id === id);
                                     return (
                                         <Badge key={id} variant="secondary" className="flex items-center gap-2">
@@ -220,8 +220,9 @@ export default function EditUserClientPage({ user, roles, sites, positions }: { 
                                             </button>
                                         </Badge>
                                     );
-                                })}
-                                {selectedSiteIds.length === 0 && <p className="text-sm text-muted-foreground">Belum ada proyek dipilih.</p>}
+                                }) : (
+                                    <p className="text-sm text-muted-foreground">Belum ada proyek dipilih.</p>
+                                )}
                             </div>
                             <input type="hidden" name="siteIds" value={selectedSiteIds.join(',')} />
                         </div>
