@@ -71,14 +71,24 @@ export default async function EmployeeDirectoryPage() {
             }
         }
         
+        let contractWarningDays: number | undefined = undefined;
+        if (emp.contractEndDate) {
+            const endDate = new Date(emp.contractEndDate);
+            if (endDate > today) {
+                contractWarningDays = differenceInDays(endDate, today);
+            }
+        }
+        
         return {
           ...emp,
           contractStartDate: emp.contractStartDate ? new Date(emp.contractStartDate).toISOString() : undefined,
           contractEndDate: emp.contractEndDate ? new Date(emp.contractEndDate).toISOString() : undefined,
           onLeave: approvedLeave.some((req) => req.employeeId === emp.id),
           latestViolation: violationInfo,
+          contractWarningDays,
         };
     });
 
   return <EmployeeDirectoryClientPage initialEmployees={employeesWithDetails} />;
 }
+

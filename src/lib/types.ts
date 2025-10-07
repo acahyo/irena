@@ -3,6 +3,7 @@
 
 
 
+
 export type Allowance = {
   name: string;
   amount: number;
@@ -66,6 +67,7 @@ export type Employee = {
     date: Date | string;
     expiresInDays: number;
   };
+  contractWarningDays?: number;
 };
 
 export type CalendarEvent = {
@@ -359,3 +361,4 @@ export type ViolationRecord = {
   fileUrl?: string;
   fileName?: string;
 };
+

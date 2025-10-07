@@ -17,6 +17,7 @@ import { Badge } from './ui/badge';
 import { useState, useEffect } from 'react';
 import { format, parseISO, isValid } from 'date-fns';
 import { Checkbox } from './ui/checkbox';
+import { cn } from '@/lib/utils';
 
 
 interface EmployeeCardProps {
@@ -81,8 +82,15 @@ export function EmployeeCard({ employee, isSelected, onSelect }: EmployeeCardPro
     ? employee.positions.join(', ')
     : 'No position';
     
+  const getCardClasses = () => {
+    if (employee.contractWarningDays === undefined) return '';
+    if (employee.contractWarningDays <= 5) return 'bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-800';
+    if (employee.contractWarningDays <= 12) return 'bg-yellow-100 dark:bg-yellow-900/30 border-yellow-300 dark:border-yellow-800';
+    return '';
+  };
+    
   return (
-      <Card className="h-full flex flex-col transform-gpu transition-all duration-200 ease-in-out hover:-translate-y-1 hover:shadow-lg relative">
+      <Card className={cn("h-full flex flex-col transform-gpu transition-all duration-200 ease-in-out hover:-translate-y-1 hover:shadow-lg relative", getCardClasses())}>
         <div className="absolute top-2 left-2 z-10">
           <Checkbox
             checked={isSelected}
@@ -137,7 +145,13 @@ export function EmployeeCard({ employee, isSelected, onSelect }: EmployeeCardPro
                 <Calendar className="h-4 w-4" />
                 <span>Selesai: {formatDate(employee.contractEndDate)}</span>
             </div>
+             {employee.contractWarningDays !== undefined && employee.contractWarningDays <= 12 && (
+                <div className="font-bold text-destructive-foreground mt-2 text-center w-full bg-destructive/80 rounded py-1">
+                    Kontrak berakhir dalam {employee.contractWarningDays} hari!
+                </div>
+            )}
         </CardFooter>
       </Card>
   );
 }
+
