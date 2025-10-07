@@ -15,7 +15,7 @@ import {
 import { Phone, Building, Calendar, User, FileText, Clock, Briefcase, AlertTriangle } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { useState, useEffect } from 'react';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, isValid } from 'date-fns';
 
 
 interface EmployeeCardProps {
@@ -66,8 +66,20 @@ export function EmployeeCard({ employee }: EmployeeCardProps) {
     
   const formatDate = (dateString: string | Date | undefined) => {
     if (!dateString || !isClient) return 'N/A';
+    
+    let date;
+    if (typeof dateString === 'string') {
+        date = parseISO(dateString);
+    } else {
+        date = dateString;
+    }
+
+    if (!isValid(date)) {
+        return 'N/A';
+    }
+
     try {
-      return format(parseISO(dateString as string), 'PP');
+      return format(date, 'PP');
     } catch {
       return 'Invalid Date';
     }
