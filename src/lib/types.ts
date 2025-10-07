@@ -5,6 +5,7 @@
 
 
 
+
 export type Allowance = {
   name: string;
   amount: number;
@@ -180,9 +181,6 @@ export type AttendanceRecord = {
 export type PurchaseRequestItem = {
     name: string;
     quantity: number;
-    unit: string;
-    estimatedPrice?: number;
-    actualPrice?: number;
 };
 
 export type PurchaseRequest = {
@@ -194,13 +192,9 @@ export type PurchaseRequest = {
     requestDate: Date | string;
     verifiedDate?: Date | string;
     approvedDate?: Date | string;
-    readyDate?: Date | string;
     items: PurchaseRequestItem[];
-    totalEstimatedPrice: number;
-    totalActualPrice?: number;
-    status: 'Pending' | 'Verified by Purchasing' | 'Processing' | 'Approved by Finance' | 'Rejected' | 'Ready for Pickup' | 'Completed';
-    purchasingNotes?: string;
-    financeNotes?: string;
+    proposedAmount?: number;
+    status: 'Pending' | 'Verified' | 'Approved' | 'Rejected';
     rejectionReason?: string;
 };
 

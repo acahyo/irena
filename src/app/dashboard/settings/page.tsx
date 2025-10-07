@@ -1,6 +1,5 @@
 
 
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -78,8 +77,8 @@ const allMenus = [
   { id: 'attendance', label: 'Input Absensi' },
   { id: 'payslip', label: 'Cetak Slip Gaji' },
   { id: 'payslip-collective', label: 'Slip Gaji Kolektif' },
-  { id: 'purchasing', label: 'Purchasing' },
-  { id: 'purchasing-items', label: 'Barang Koperasi' },
+  { id: 'purchasing', label: 'Pengajuan Barang' },
+  { id: 'koperasi-items', label: 'Barang Koperasi' },
   { id: 'koperasi-orders', label: 'Pesanan Koperasi' },
   { id: 'bpjs-id-simper', label: 'BPJS-ID-SIMPER' },
   { id: 'department', label: 'Departemen' },
@@ -101,7 +100,7 @@ const allMenus = [
 
 export default function SettingsPage() {
     const { toast } = useToast();
-    const [settings, setSettings] = useState<Omit<AppSettings, 'logo' | 'id'> | null>(null);
+    const [settings, setSettings] = useState<Omit<AppSettings, 'id'> | null>(null);
     const [logoPreview, setLogoPreview] = useState<string | undefined | null>(null);
     const [faviconPreview, setFaviconPreview] = useState<string | undefined | null>(null);
     const [loading, setLoading] = useState(false);

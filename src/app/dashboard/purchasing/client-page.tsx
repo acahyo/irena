@@ -2,7 +2,6 @@
 'use client';
 
 import { useState, useMemo, useTransition } from 'react';
-import Link from 'next/link';
 import { format } from 'date-fns';
 import {
   Card,
@@ -21,12 +20,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -35,13 +28,12 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { MoreHorizontal, Trash2, SquarePen, Eye, Loader2, CheckCircle, XCircle, Bot, CircleDollarSign, Download, ArrowLeft } from 'lucide-react';
+} from "@/components/ui/alert-dialog";
+import { Eye, Loader2, CheckCircle, XCircle, CircleDollarSign, Download } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import type { PurchaseRequest, PurchaseRequestItem, Site, User } from '@/lib/types';
-import { deletePurchaseRequest, updatePurchaseRequest } from '@/actions/purchasing';
+import type { PurchaseRequest, Site, User } from '@/lib/types';
+import { updatePurchaseRequest } from '@/actions/purchasing';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog,
@@ -50,9 +42,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-  DialogClose,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -72,10 +62,8 @@ const formatCurrency = (amount: number | undefined | null) => {
 const getStatusVariant = (status: string) => {
   switch (status) {
     case 'Pending': return 'secondary';
-    case 'Verified by Purchasing': return 'default';
-    case 'Processing': return 'default';
-    case 'Approved by Finance': return 'default';
-    case 'Completed': return 'default';
+    case 'Verified': return 'default';
+    case 'Approved': return 'default';
     case 'Rejected': return 'destructive';
     default: return 'outline';
   }
@@ -98,8 +86,7 @@ export default function PurchasingClientPage({
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<PurchaseRequest | null>(null);
-  const [editedItems, setEditedItems] = useState<PurchaseRequestItem[]>([]);
-  const [notes, setNotes] = useState('');
+  const [proposedAmount, setProposedAmount] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
 
   const filteredRequests = useMemo(() => {
@@ -112,20 +99,9 @@ export default function PurchasingClientPage({
   const handleOpenModal = (req: PurchaseRequest) => {
     if (!user) return;
     setSelectedRequest(req);
-    setEditedItems(JSON.parse(JSON.stringify(req.items))); // Deep copy
-    if (user.role === 'Purchasing') {
-        setNotes(req.purchasingNotes || '');
-    } else if (user.role === 'Finance') {
-        setNotes(req.financeNotes || '');
-    }
+    setProposedAmount(req.proposedAmount?.toString() || '');
     setRejectionReason(req.rejectionReason || '');
     setIsModalOpen(true);
-  };
-  
-  const handleItemChange = (index: number, field: keyof PurchaseRequestItem, value: string) => {
-    const newItems = [...editedItems];
-    (newItems[index] as any)[field] = value === '' ? undefined : Number(value);
-    setEditedItems(newItems);
   };
   
   const handleStatusUpdate = (status: PurchaseRequest['status']) => {
@@ -134,18 +110,21 @@ export default function PurchasingClientPage({
     startTransition(async () => {
         try {
             const updates: Partial<PurchaseRequest> = { status };
-            if (user.role === 'Purchasing') {
-                updates.items = editedItems;
-                updates.purchasingNotes = notes;
-            }
-            if (user.role === 'Finance') {
-                updates.financeNotes = notes;
+            if (user.role === 'Purchasing' && status === 'Verified') {
+                if (!proposedAmount || Number(proposedAmount) <= 0) {
+                    toast({ variant: 'destructive', title: 'Error', description: 'Nominal dana harus diisi.' });
+                    return;
+                }
+                updates.proposedAmount = Number(proposedAmount);
             }
             if (status === 'Rejected') {
                 updates.rejectionReason = rejectionReason;
             }
+            
             await updatePurchaseRequest(selectedRequest.id, updates);
-            setRequests(prev => prev.map(r => r.id === selectedRequest.id ? { ...r, ...updates } : r));
+            
+            const updatedRequest = { ...selectedRequest, ...updates };
+            setRequests(prev => prev.map(r => r.id === selectedRequest.id ? updatedRequest : r));
             toast({ title: 'Sukses!', description: `Status pengajuan telah diperbarui menjadi "${status}".`});
             setIsModalOpen(false);
         } catch (error) {
@@ -154,17 +133,6 @@ export default function PurchasingClientPage({
     });
   };
 
-  const handleDelete = async (id: string) => {
-    startTransition(async () => {
-      try {
-        await deletePurchaseRequest(id);
-        setRequests(prev => prev.filter(r => r.id !== id));
-        toast({ title: 'Sukses!', description: 'Pengajuan telah dihapus.' });
-      } catch (error) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Gagal menghapus pengajuan.' });
-      }
-    });
-  };
   
   const handleExport = () => {
     const dataToExport = filteredRequests.map(req => ({
@@ -173,11 +141,8 @@ export default function PurchasingClientPage({
       'Proyek': req.projectName,
       'Pemohon': req.requesterName,
       'Status': req.status,
-      'Total Estimasi Harga': req.totalEstimatedPrice,
-      'Total Harga Aktual': req.totalActualPrice || 0,
-      'Barang': req.items.map(item => `${item.name} (${item.quantity} ${item.unit})`).join(', '),
-      'Catatan Purchasing': req.purchasingNotes,
-      'Catatan Finance': req.financeNotes,
+      'Nominal Diajukan': req.proposedAmount,
+      'Barang': req.items.map(item => `${item.name} (${item.quantity})`).join(', '),
       'Alasan Penolakan': req.rejectionReason,
     }));
 
@@ -192,11 +157,8 @@ export default function PurchasingClientPage({
         { wch: 25 }, // Proyek
         { wch: 20 }, // Pemohon
         { wch: 25 }, // Status
-        { wch: 20 }, // Total Estimasi
-        { wch: 20 }, // Total Aktual
+        { wch: 20 }, // Nominal
         { wch: 50 }, // Barang
-        { wch: 30 }, // Catatan Purchasing
-        { wch: 30 }, // Catatan Finance
         { wch: 30 }, // Alasan Penolakan
     ];
 
@@ -208,11 +170,6 @@ export default function PurchasingClientPage({
     });
   };
 
-  const totalActualPrice = useMemo(() => {
-    if (!editedItems) return 0;
-    return editedItems.reduce((sum, item) => sum + ((item.actualPrice || 0) * item.quantity), 0);
-  }, [editedItems]);
-
   if (!user) {
     return <div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin"/></div>
   }
@@ -220,19 +177,11 @@ export default function PurchasingClientPage({
   return (
     <>
     <div className="space-y-6">
-        {user.role === 'Admin Proyek' && (
-            <Button asChild variant="outline" size="sm">
-                <Link href="/dashboard">
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Kembali ke Dasbor
-                </Link>
-            </Button>
-        )}
         <Card>
             <CardHeader>
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                 <div>
-                <CardTitle>Manajemen Purchasing</CardTitle>
+                <CardTitle>Manajemen Pengajuan Barang</CardTitle>
                 <CardDescription>Verifikasi dan setujui pengajuan barang dari berbagai proyek.</CardDescription>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
@@ -252,10 +201,8 @@ export default function PurchasingClientPage({
                     <SelectContent>
                     <SelectItem value="all">Semua Status</SelectItem>
                     <SelectItem value="Pending">Pending</SelectItem>
-                    <SelectItem value="Verified by Purchasing">Verified by Purchasing</SelectItem>
-                    <SelectItem value="Approved by Finance">Approved by Finance</SelectItem>
-                    <SelectItem value="Processing">Processing</SelectItem>
-                    <SelectItem value="Completed">Completed</SelectItem>
+                    <SelectItem value="Verified">Verified</SelectItem>
+                    <SelectItem value="Approved">Approved</SelectItem>
                     <SelectItem value="Rejected">Rejected</SelectItem>
                     </SelectContent>
                 </Select>
@@ -273,8 +220,7 @@ export default function PurchasingClientPage({
                     <TableHead>Tanggal</TableHead>
                     <TableHead>Proyek</TableHead>
                     <TableHead>Pemohon</TableHead>
-                    <TableHead>Total Estimasi</TableHead>
-                    <TableHead>Total Aktual</TableHead>
+                    <TableHead>Nominal Diajukan</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="w-[100px] text-right">Aksi</TableHead>
                 </TableRow>
@@ -286,8 +232,7 @@ export default function PurchasingClientPage({
                         <TableCell>{format(new Date(req.requestDate), 'PPP')}</TableCell>
                         <TableCell>{req.projectName}</TableCell>
                         <TableCell>{req.requesterName}</TableCell>
-                        <TableCell>{formatCurrency(req.totalEstimatedPrice)}</TableCell>
-                        <TableCell>{formatCurrency(req.totalActualPrice)}</TableCell>
+                        <TableCell>{formatCurrency(req.proposedAmount)}</TableCell>
                         <TableCell><Badge variant={getStatusVariant(req.status)}>{req.status}</Badge></TableCell>
                         <TableCell className="text-right">
                         <Button variant="ghost" size="icon" onClick={() => handleOpenModal(req)}>
@@ -298,7 +243,7 @@ export default function PurchasingClientPage({
                     ))
                 ) : (
                     <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center">
+                    <TableCell colSpan={6} className="h-24 text-center">
                         Tidak ada pengajuan ditemukan.
                     </TableCell>
                     </TableRow>
@@ -325,100 +270,99 @@ export default function PurchasingClientPage({
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Barang</TableHead>
-                                    <TableHead>Qty</TableHead>
-                                    <TableHead>Estimasi</TableHead>
-                                    <TableHead>Aktual</TableHead>
+                                    <TableHead className="text-right">Jumlah</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {editedItems.map((item, index) => (
+                                {selectedRequest.items.map((item, index) => (
                                     <TableRow key={index}>
                                         <TableCell>{item.name}</TableCell>
-                                        <TableCell>{item.quantity} {item.unit}</TableCell>
-                                        <TableCell>{formatCurrency(item.estimatedPrice)}</TableCell>
-                                        <TableCell>
-                                             {user.role === 'Purchasing' && selectedRequest.status === 'Pending' ? (
-                                                <Input 
-                                                    type="number" 
-                                                    value={item.actualPrice || ''}
-                                                    onChange={(e) => handleItemChange(index, 'actualPrice', e.target.value)}
-                                                    className="h-8"
-                                                />
-                                             ) : formatCurrency(item.actualPrice)}
-                                        </TableCell>
+                                        <TableCell className="text-right">{item.quantity}</TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
                         </Table>
-                         <div className="font-bold mt-2 text-right">
-                            Total Aktual: {formatCurrency(totalActualPrice)}
-                        </div>
                     </div>
                      <div>
-                        <h4 className="font-semibold mb-2">Catatan & Status</h4>
-                        {selectedRequest.purchasingNotes && (
-                            <div className="mb-4">
-                                <Label className="text-xs text-muted-foreground">Catatan Purchasing</Label>
-                                <p className="text-sm border p-2 rounded-md bg-muted/50">{selectedRequest.purchasingNotes}</p>
+                        <h4 className="font-semibold mb-2">Verifikasi & Aksi</h4>
+                        {user.role === 'Purchasing' && selectedRequest.status === 'Pending' && (
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="proposedAmount">Nominal Dana yang Diajukan (Rp)</Label>
+                                    <Input id="proposedAmount" type="number" value={proposedAmount} onChange={(e) => setProposedAmount(e.target.value)} placeholder="e.g. 5000000" />
+                                </div>
+                                 <div className="space-y-2">
+                                    <Label htmlFor="rejectionReason">Alasan Penolakan (jika ditolak)</Label>
+                                    <Textarea id="rejectionReason" value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} />
+                                </div>
                             </div>
                         )}
-                        {selectedRequest.financeNotes && (
-                            <div className="mb-4">
-                                <Label className="text-xs text-muted-foreground">Catatan Finance</Label>
-                                <p className="text-sm border p-2 rounded-md bg-muted/50">{selectedRequest.financeNotes}</p>
+
+                        {user.role === 'Finance' && selectedRequest.status === 'Verified' && (
+                            <div className="space-y-4">
+                                 <div className="space-y-2">
+                                    <Label>Nominal Diajukan oleh Purchasing</Label>
+                                    <Input value={formatCurrency(selectedRequest.proposedAmount)} readOnly disabled />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="rejectionReason">Alasan Penolakan (jika ditolak)</Label>
+                                    <Textarea id="rejectionReason" value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} />
+                                </div>
                             </div>
                         )}
-                         {selectedRequest.rejectionReason && (
-                            <div className="mb-4">
-                                <Label className="text-xs text-destructive">Alasan Penolakan</Label>
-                                <p className="text-sm border p-2 rounded-md border-destructive/50 bg-destructive/10">{selectedRequest.rejectionReason}</p>
-                            </div>
-                        )}
-                        {(user.role === 'Purchasing' || user.role === 'Finance') && (
-                            <div className="space-y-2 mb-4">
-                                <Label htmlFor="notes">Catatan Anda</Label>
-                                <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
-                            </div>
-                        )}
-                        {selectedRequest.status === 'Rejected' && (
-                             <div className="space-y-2 mb-4">
-                                <Label htmlFor="rejectionReason">Alasan Penolakan</Label>
-                                <Textarea id="rejectionReason" value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} />
+                        
+                        {(user.role === 'Admin Proyek' || selectedRequest.status !== 'Pending' && selectedRequest.status !== 'Verified') && (
+                            <div>
+                                <p className="text-sm text-muted-foreground">Status saat ini: <Badge variant={getStatusVariant(selectedRequest.status)}>{selectedRequest.status}</Badge></p>
+                                {selectedRequest.rejectionReason && (
+                                     <div className="mt-4">
+                                        <Label className="text-xs text-destructive">Alasan Penolakan</Label>
+                                        <p className="text-sm border p-2 rounded-md border-destructive/50 bg-destructive/10">{selectedRequest.rejectionReason}</p>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
                 </div>
                 <DialogFooter>
-                    <DialogClose asChild><Button variant="outline">Tutup</Button></DialogClose>
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                             <Button variant="destructive" className="mr-auto" disabled={user.role !== 'Purchasing' || isPending}>
+                                {isPending ? <Loader2 className="animate-spin"/> : <Trash2/>} Hapus
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Yakin ingin menghapus?</AlertDialogTitle>
+                                <AlertDialogDescription>Tindakan ini tidak dapat diurungkan.</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Batal</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => {}}>Hapus</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                    
+                    <Button variant="outline" onClick={() => setIsModalOpen(false)}>Tutup</Button>
                      {user.role === 'Purchasing' && selectedRequest.status === 'Pending' && (
                         <>
-                         <Button variant="destructive" onClick={() => handleStatusUpdate('Rejected')} disabled={isPending}>
+                         <Button variant="outline" onClick={() => handleStatusUpdate('Rejected')} disabled={isPending}>
                             {isPending ? <Loader2 className="animate-spin" /> : <XCircle />} Tolak
                          </Button>
-                         <Button onClick={() => handleStatusUpdate('Verified by Purchasing')} disabled={isPending}>
+                         <Button onClick={() => handleStatusUpdate('Verified')} disabled={isPending}>
                             {isPending ? <Loader2 className="animate-spin" /> : <CheckCircle />} Verifikasi
                          </Button>
                         </>
                     )}
-                    {user.role === 'Finance' && selectedRequest.status === 'Verified by Purchasing' && (
+                    {user.role === 'Finance' && selectedRequest.status === 'Verified' && (
                         <>
-                         <Button variant="destructive" onClick={() => handleStatusUpdate('Rejected')} disabled={isPending}>
+                         <Button variant="outline" onClick={() => handleStatusUpdate('Rejected')} disabled={isPending}>
                            {isPending ? <Loader2 className="animate-spin" /> : <XCircle />} Tolak
                          </Button>
-                         <Button onClick={() => handleStatusUpdate('Approved by Finance')} disabled={isPending}>
+                         <Button onClick={() => handleStatusUpdate('Approved')} disabled={isPending}>
                             {isPending ? <Loader2 className="animate-spin" /> : <CircleDollarSign />} Setujui Dana
                          </Button>
                         </>
-                    )}
-                     {user.role === 'Purchasing' && selectedRequest.status === 'Approved by Finance' && (
-                        <Button onClick={() => handleStatusUpdate('Processing')} disabled={isPending}>
-                            {isPending ? <Loader2 className="animate-spin" /> : <Bot />} Proses Pembelian
-                        </Button>
-                    )}
-                     {user.role === 'Purchasing' && selectedRequest.status === 'Processing' && (
-                        <Button onClick={() => handleStatusUpdate('Completed')} disabled={isPending}>
-                            {isPending ? <Loader2 className="animate-spin" /> : <CheckCircle />} Selesai
-                        </Button>
                     )}
                 </DialogFooter>
             </DialogContent>

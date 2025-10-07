@@ -83,7 +83,6 @@ export async function createPurchaseRequest(request: Omit<PurchaseRequest, 'id' 
       ...request,
       requestDate: new Date(),
       status: 'Pending',
-      totalEstimatedPrice: request.items.reduce((sum, item) => sum + ((item.estimatedPrice || 0) * item.quantity), 0),
   });
   return docRef.id;
 }
@@ -92,30 +91,38 @@ export async function createPurchaseRequest(request: Omit<PurchaseRequest, 'id' 
 // Update a purchase request status and other details (for Purchasing and Finance)
 export async function updatePurchaseRequest(id: string, updates: Partial<PurchaseRequest>): Promise<void> {
   const docRef = doc(db, 'purchaseRequests', id);
-  const updateData = { ...updates };
+  
+  if (updates.proposedAmount) {
+    updates.proposedAmount = Number(updates.proposedAmount);
+  }
 
-  // If items are being updated, recalculate the actual price
-  if (updateData.items) {
-      updateData.totalActualPrice = updateData.items.reduce((sum, item) => sum + ((item.actualPrice || 0) * item.quantity), 0);
+  // If status is being updated, add the corresponding date
+  if (updates.status) {
+    const now = new Date();
+    if (updates.status === 'Verified') {
+        updates.verifiedDate = now;
+    }
+    if (updates.status === 'Approved') {
+        updates.approvedDate = now;
+    }
   }
   
-  await updateDoc(docRef, updateData);
+  await updateDoc(docRef, updates);
 
   // If the status is 'Approved by Finance', create a corresponding finance record
-  if (updates.status === 'Approved by Finance') {
+  if (updates.status === 'Approved') {
     const requestSnap = await getDoc(docRef);
     const requestData = requestSnap.data() as PurchaseRequest;
     
-    // Ensure totalActualPrice is calculated if not already in updates
-    const finalPrice = updateData.totalActualPrice ?? requestData.totalActualPrice ?? requestData.totalEstimatedPrice;
+    const finalPrice = updates.proposedAmount ?? requestData.proposedAmount;
 
-    if (finalPrice > 0 && requestData.projectId && requestData.projectName) {
+    if (finalPrice && finalPrice > 0 && requestData.projectId && requestData.projectName) {
         await createFinanceRecord({
             projectId: requestData.projectId,
             projectName: requestData.projectName,
             type: 'expense',
             amount: finalPrice,
-            description: `Pembelian barang dari pengajuan #${requestData.id.substring(0, 6)}`,
+            description: `Pembelian barang dari pengajuan #${requestData.id.substring(0, 6)} oleh ${requestData.requesterName}`,
             date: new Date(),
             category: 'Purchasing',
         });

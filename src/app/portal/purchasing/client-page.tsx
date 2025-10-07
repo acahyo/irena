@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useMemo, useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { format } from 'date-fns';
 import {
   Card,
@@ -32,8 +32,6 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
-    DialogClose,
 } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -53,11 +51,8 @@ import { PlusCircle, Trash2, Loader2, Eye } from 'lucide-react';
 const getStatusVariant = (status: string) => {
   switch (status) {
     case 'Pending': return 'secondary';
-    case 'Verified by Purchasing': return 'default';
-    case 'Processing': return 'default';
-    case 'Approved by Finance': return 'default';
-    case 'Ready for Pickup': return 'default';
-    case 'Completed': return 'default';
+    case 'Verified': return 'default';
+    case 'Approved': return 'default';
     case 'Rejected': return 'destructive';
     default: return 'outline';
   }
@@ -95,7 +90,7 @@ export default function MyPurchasingClientPage({
 
 
   const NewRequestForm = () => {
-    const [items, setItems] = useState<Partial<PurchaseRequestItem>[]>([{ name: '', quantity: 1, unit: '' }]);
+    const [items, setItems] = useState<Partial<PurchaseRequestItem>[]>([{ name: '', quantity: 1 }]);
 
     const handleItemChange = (index: number, field: keyof PurchaseRequestItem, value: string) => {
       const newItems = [...items];
@@ -104,13 +99,13 @@ export default function MyPurchasingClientPage({
       setItems(newItems);
     };
 
-    const addItem = () => setItems([...items, { name: '', quantity: 1, unit: '' }]);
+    const addItem = () => setItems([...items, { name: '', quantity: 1 }]);
     const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       
-      const validItems = items.filter(item => item.name && item.quantity && item.unit);
+      const validItems = items.filter(item => item.name && item.quantity);
       if (validItems.length === 0) {
         toast({ variant: 'destructive', title: 'Error', description: 'Mohon isi setidaknya satu barang.' });
         return;
@@ -128,7 +123,6 @@ export default function MyPurchasingClientPage({
           await createPurchaseRequest(requestData);
           toast({ title: 'Sukses!', description: 'Pengajuan barang berhasil dikirim.' });
           setIsNewRequestDialogOpen(false);
-          router.push('/portal/purchasing');
           router.refresh();
         } catch (error) {
           toast({ variant: 'destructive', title: 'Error', description: 'Gagal mengirim pengajuan.' });
@@ -141,31 +135,27 @@ export default function MyPurchasingClientPage({
         <div className="space-y-4 max-h-[60vh] overflow-y-auto p-1">
             {items.map((item, index) => (
                 <div key={index} className="grid grid-cols-12 gap-2 items-end p-2 border rounded-md">
-                    <div className="col-span-7 space-y-1">
-                        <Label htmlFor={`name-${index}`} className="text-xs">Nama Barang</Label>
+                    <div className="col-span-9 space-y-1">
+                        <Label htmlFor={`name-${index}`} className="text-xs">Nama Barang & Kebutuhan</Label>
                         <Input id={`name-${index}`} value={item.name} onChange={e => handleItemChange(index, 'name', e.target.value)} required />
                     </div>
-                    <div className="col-span-2 space-y-1">
+                    <div className="col-span-3 space-y-1">
                         <Label htmlFor={`quantity-${index}`} className="text-xs">Jumlah</Label>
                         <Input id={`quantity-${index}`} type="number" value={item.quantity} onChange={e => handleItemChange(index, 'quantity', e.target.value)} required min={1} />
-                    </div>
-                     <div className="col-span-3 space-y-1">
-                        <Label htmlFor={`unit-${index}`} className="text-xs">Unit</Label>
-                        <Input id={`unit-${index}`} value={item.unit} onChange={e => handleItemChange(index, 'unit', e.target.value)} required placeholder="e.g. pcs, kg" />
                     </div>
                 </div>
             ))}
         </div>
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center mt-4">
             <Button type="button" variant="outline" size="sm" onClick={addItem}>
                 <PlusCircle className="mr-2 h-4 w-4" /> Tambah Barang
             </Button>
-            <DialogFooter>
+            <div className="flex gap-2">
                 <Button type="button" variant="outline" onClick={() => setIsNewRequestDialogOpen(false)}>Batal</Button>
                 <Button type="submit" disabled={isPending}>
                     {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Kirim Pengajuan
                 </Button>
-            </DialogFooter>
+            </div>
         </div>
       </form>
     );
@@ -176,7 +166,6 @@ export default function MyPurchasingClientPage({
         try {
             await deletePurchaseRequest(id);
             toast({ title: 'Sukses!', description: 'Pengajuan telah dibatalkan.' });
-            router.push('/portal/purchasing');
             router.refresh();
         } catch (error) {
             toast({ variant: 'destructive', title: 'Error', description: 'Gagal membatalkan pengajuan.' });
@@ -203,7 +192,7 @@ export default function MyPurchasingClientPage({
             <TableHeader>
               <TableRow>
                 <TableHead>Tanggal</TableHead>
-                <TableHead>Total Harga</TableHead>
+                <TableHead>Nominal Diajukan</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="w-[100px] text-right">Aksi</TableHead>
               </TableRow>
@@ -213,7 +202,7 @@ export default function MyPurchasingClientPage({
                 initialRequests.map((req) => (
                   <TableRow key={req.id}>
                     <TableCell>{format(new Date(req.requestDate), 'PPP')}</TableCell>
-                    <TableCell>{formatCurrency(req.totalActualPrice)}</TableCell>
+                    <TableCell>{formatCurrency(req.proposedAmount)}</TableCell>
                     <TableCell><Badge variant={getStatusVariant(req.status)}>{req.status}</Badge></TableCell>
                     <TableCell className="text-right">
                         <Button variant="ghost" size="icon" onClick={() => handleViewDetails(req)}>
@@ -258,7 +247,7 @@ export default function MyPurchasingClientPage({
       </Card>
       
       <Dialog open={isNewRequestDialogOpen} onOpenChange={setIsNewRequestDialogOpen}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Formulir Pengajuan Barang Baru</DialogTitle>
             <DialogDescription>Isi daftar barang yang dibutuhkan untuk proyek {site.name}.</DialogDescription>
@@ -283,24 +272,22 @@ export default function MyPurchasingClientPage({
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Barang</TableHead>
-                                    <TableHead>Jumlah</TableHead>
-                                    <TableHead className="text-right">Harga</TableHead>
+                                    <TableHead className="text-right">Jumlah</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {selectedRequest.items.map((item, index) => (
                                     <TableRow key={index}>
                                         <TableCell>{item.name}</TableCell>
-                                        <TableCell>{item.quantity} {item.unit}</TableCell>
-                                        <TableCell className="text-right">{formatCurrency(item.actualPrice)}</TableCell>
+                                        <TableCell className="text-right">{item.quantity}</TableCell>
                                     </TableRow>
                                 ))}
-                                <TableRow className="font-bold">
-                                    <TableCell colSpan={2}>Total</TableCell>
-                                    <TableCell className="text-right">{formatCurrency(selectedRequest.totalActualPrice)}</TableCell>
-                                </TableRow>
                             </TableBody>
                         </Table>
+                    </div>
+                     <div className="space-y-1">
+                        <h4 className="font-semibold">Nominal Diajukan Purchasing</h4>
+                        <p className="text-lg font-bold">{formatCurrency(selectedRequest.proposedAmount)}</p>
                     </div>
                     <div>
                         <h4 className="font-semibold mb-2">Histori Proses</h4>
@@ -308,22 +295,9 @@ export default function MyPurchasingClientPage({
                             <li className="flex justify-between"><span>Dibuat:</span> <span>{format(new Date(selectedRequest.requestDate), 'PPP')}</span></li>
                             <li className="flex justify-between"><span>Diverifikasi Purchasing:</span> <span>{selectedRequest.verifiedDate ? format(new Date(selectedRequest.verifiedDate), 'PPP') : '-'}</span></li>
                             <li className="flex justify-between"><span>Disetujui Finance:</span> <span>{selectedRequest.approvedDate ? format(new Date(selectedRequest.approvedDate), 'PPP') : '-'}</span></li>
-                             <li className="flex justify-between"><span>Siap Diambil/Kirim:</span> <span>{selectedRequest.readyDate ? format(new Date(selectedRequest.readyDate), 'PPP') : '-'}</span></li>
                         </ul>
                     </div>
 
-                    {selectedRequest.purchasingNotes && (
-                        <div>
-                            <h4 className="font-semibold">Catatan Purchasing</h4>
-                            <p className="text-sm text-muted-foreground p-2 border rounded-md">{selectedRequest.purchasingNotes}</p>
-                        </div>
-                    )}
-                    {selectedRequest.financeNotes && (
-                        <div>
-                            <h4 className="font-semibold">Catatan Finance</h4>
-                            <p className="text-sm text-muted-foreground p-2 border rounded-md">{selectedRequest.financeNotes}</p>
-                        </div>
-                    )}
                     {selectedRequest.rejectionReason && (
                          <div>
                             <h4 className="font-semibold text-destructive">Alasan Penolakan</h4>
