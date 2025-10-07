@@ -237,6 +237,17 @@ export async function deleteEmployee(id: string): Promise<void> {
   await deleteDoc(docRef);
 }
 
+// Delete multiple employees
+export async function deleteEmployees(ids: string[]): Promise<void> {
+  const batch = writeBatch(db);
+  ids.forEach(id => {
+    const docRef = doc(db, 'employees', id);
+    batch.delete(docRef);
+  });
+  await batch.commit();
+}
+
+
 // Update Koperasi Limit Periode for multiple employees
 export async function updateKoperasiLimitPeriode(
   employeeIds: string[],

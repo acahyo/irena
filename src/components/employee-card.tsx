@@ -16,10 +16,13 @@ import { Phone, Building, Calendar, User, FileText, Clock, Briefcase, AlertTrian
 import { Badge } from './ui/badge';
 import { useState, useEffect } from 'react';
 import { format, parseISO, isValid } from 'date-fns';
+import { Checkbox } from './ui/checkbox';
 
 
 interface EmployeeCardProps {
   employee: Employee;
+  isSelected: boolean;
+  onSelect: (id: string, isSelected: boolean) => void;
 }
 
 const getStatusBadge = (status?: string) => {
@@ -53,7 +56,7 @@ const getViolationBadgeClasses = (status: Employee['latestViolation']['status'])
 };
 
 
-export function EmployeeCard({ employee }: EmployeeCardProps) {
+export function EmployeeCard({ employee, isSelected, onSelect }: EmployeeCardProps) {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -84,14 +87,28 @@ export function EmployeeCard({ employee }: EmployeeCardProps) {
       return 'Invalid Date';
     }
   };
+  
+  const handleCheckboxClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault(); // Prevent card link navigation
+    onSelect(employee.id, !isSelected);
+  };
 
   return (
-    <Link href={`/dashboard/employees/${employee.id}`}>
       <Card className="h-full flex flex-col transform-gpu transition-all duration-200 ease-in-out hover:-translate-y-1 hover:shadow-lg relative">
+        <div className="absolute top-2 left-2 z-10">
+          <Checkbox
+            checked={isSelected}
+            onCheckedChange={(checked) => onSelect(employee.id, !!checked)}
+            onClick={(e) => e.stopPropagation()} // Prevent card link navigation
+            aria-label={`Select ${employee.name}`}
+            className="bg-white"
+          />
+        </div>
+
         {employee.onLeave ? getStatusBadge('onLeave') : getStatusBadge(employee.employeeStatus)}
         
         {employee.latestViolation && (
-          <div className="absolute top-2 left-2 text-center">
+          <div className="absolute top-10 left-2 text-center">
             <Badge className={getViolationBadgeClasses(employee.latestViolation.status)}>
               <AlertTriangle className="h-3 w-3 mr-1" />
               {employee.latestViolation.status}
@@ -101,15 +118,17 @@ export function EmployeeCard({ employee }: EmployeeCardProps) {
         )}
 
         <CardHeader className="items-center text-center pt-16">
-            <Avatar className="h-24 w-24 border-2 border-primary/20">
-              <AvatarImage src={employee.avatar} alt={employee.name} />
-              <AvatarFallback>{employee.name ? employee.name.charAt(0) : '?'}</AvatarFallback>
-            </Avatar>
-            <div className="w-full truncate pt-4">
-              <CardTitle className="truncate">{employee.name || 'No Name'}</CardTitle>
-              <CardDescription className="truncate">{displayPosition}</CardDescription>
-              <CardDescription className="truncate text-xs pt-1">{employee.idCardNumber || 'No ID Card'}</CardDescription>
-            </div>
+            <Link href={`/dashboard/employees/${employee.id}`} className="contents">
+                <Avatar className="h-24 w-24 border-2 border-primary/20">
+                <AvatarImage src={employee.avatar} alt={employee.name} />
+                <AvatarFallback>{employee.name ? employee.name.charAt(0) : '?'}</AvatarFallback>
+                </Avatar>
+                <div className="w-full truncate pt-4">
+                <CardTitle className="truncate">{employee.name || 'No Name'}</CardTitle>
+                <CardDescription className="truncate">{displayPosition}</CardDescription>
+                <CardDescription className="truncate text-xs pt-1">{employee.idCardNumber || 'No ID Card'}</CardDescription>
+                </div>
+            </Link>
         </CardHeader>
         <CardContent className="flex-grow space-y-2 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
@@ -132,6 +151,5 @@ export function EmployeeCard({ employee }: EmployeeCardProps) {
             </div>
         </CardFooter>
       </Card>
-    </Link>
   );
 }

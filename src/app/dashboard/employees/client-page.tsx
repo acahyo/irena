@@ -15,12 +15,24 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Search, Upload, Download, Loader2, ArrowLeft } from 'lucide-react';
+import { PlusCircle, Search, Upload, Download, Loader2, ArrowLeft, Trash2 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { createEmployee } from '@/actions/employees';
+import { createEmployee, deleteEmployees } from '@/actions/employees';
 import { useUser } from '@/contexts/user-context';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 
 export default function EmployeeDirectoryClientPage({ initialEmployees }: { initialEmployees: Employee[] }) {
@@ -33,6 +45,49 @@ export default function EmployeeDirectoryClientPage({ initialEmployees }: { init
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const user = useUser();
+  const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<Set<string>>(new Set());
+
+  const handleSelectEmployee = (id: string, isSelected: boolean) => {
+    setSelectedEmployeeIds(prev => {
+      const newSet = new Set(prev);
+      if (isSelected) {
+        newSet.add(id);
+      } else {
+        newSet.delete(id);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSelectAll = (isSelected: boolean) => {
+    if (isSelected) {
+      setSelectedEmployeeIds(new Set(filteredEmployees.map(e => e.id)));
+    } else {
+      setSelectedEmployeeIds(new Set());
+    }
+  };
+
+  const handleDeleteSelected = () => {
+    startTransition(async () => {
+      try {
+        await deleteEmployees(Array.from(selectedEmployeeIds));
+        toast({
+          title: 'Success!',
+          description: `${selectedEmployeeIds.size} employee(s) have been removed.`,
+        });
+        setSelectedEmployeeIds(new Set());
+        // Refresh data from server
+        router.refresh();
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Failed to remove employees.',
+        });
+      }
+    });
+  }
+
 
   useEffect(() => {
     setEmployees(initialEmployees);
@@ -56,6 +111,11 @@ export default function EmployeeDirectoryClientPage({ initialEmployees }: { init
       return matchesSearch && matchesDepartment && matchesStatus;
     });
   }, [searchTerm, departmentFilter, statusFilter, employees]);
+  
+  // When filters change, clear selection
+  useEffect(() => {
+    setSelectedEmployeeIds(new Set());
+  }, [searchTerm, departmentFilter, statusFilter]);
 
   const handleExport = () => {
     // Remove image data before exporting to prevent errors with long base64 strings
@@ -149,72 +209,125 @@ export default function EmployeeDirectoryClientPage({ initialEmployees }: { init
             </Link>
         </Button>
       )}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          <Input
-            placeholder="Search by name..."
-            className="pl-10"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center">
+            <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+                placeholder="Search by name..."
+                className="pl-10"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            </div>
+            <div className="flex flex-wrap gap-2">
+            <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Filter by department" />
+                </SelectTrigger>
+                <SelectContent>
+                <SelectItem value="all">Semua Departemen</SelectItem>
+                {departments.map((dept) => (
+                    <SelectItem key={dept} value={dept}>
+                    {dept}
+                    </SelectItem>
+                ))}
+                </SelectContent>
+            </Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                <SelectItem value="all">Semua Status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="nonaktif">Non-Aktif</SelectItem>
+                <SelectItem value="resign">Resign</SelectItem>
+                <SelectItem value="phk">PHK</SelectItem>
+                </SelectContent>
+            </Select>
+            <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                className="hidden"
+                accept=".xlsx, .xls"
+                disabled={isPending}
+            />
+            <Button variant="outline" onClick={handleImportClick} disabled={isPending}>
+                {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                Import
+            </Button>
+            <Button variant="outline" onClick={handleExport}>
+                <Download className="mr-2 h-4 w-4" />
+                Export
+            </Button>
+            <Button asChild>
+                <Link href="/dashboard/employees/new">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Employee
+                </Link>
+            </Button>
+            </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-            <SelectTrigger className="w-full sm:w-[180px]">
-              <SelectValue placeholder="Filter by department" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Departemen</SelectItem>
-              {departments.map((dept) => (
-                <SelectItem key={dept} value={dept}>
-                  {dept}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-[180px]">
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Status</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="nonaktif">Non-Aktif</SelectItem>
-              <SelectItem value="resign">Resign</SelectItem>
-              <SelectItem value="phk">PHK</SelectItem>
-            </SelectContent>
-          </Select>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            className="hidden"
-            accept=".xlsx, .xls"
-            disabled={isPending}
-          />
-          <Button variant="outline" onClick={handleImportClick} disabled={isPending}>
-            {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-            Import
-          </Button>
-          <Button variant="outline" onClick={handleExport}>
-            <Download className="mr-2 h-4 w-4" />
-            Export
-          </Button>
-          <Button asChild>
-            <Link href="/dashboard/employees/new">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add Employee
-            </Link>
-          </Button>
-        </div>
+        
+        {selectedEmployeeIds.size > 0 && (
+          <div className="flex items-center gap-4 bg-muted p-2 rounded-lg">
+             <div className="flex items-center gap-2">
+                <Checkbox
+                    id="select-all-filtered"
+                    checked={
+                        filteredEmployees.length > 0 &&
+                        selectedEmployeeIds.size === filteredEmployees.length
+                    }
+                    onCheckedChange={(checked) => handleSelectAll(!!checked)}
+                />
+                <label
+                    htmlFor="select-all-filtered"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                    Pilih Semua ({selectedEmployeeIds.size})
+                </label>
+            </div>
+
+            <AlertDialog>
+                <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="sm">
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Hapus yang Dipilih
+                    </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Anda yakin?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Aksi ini tidak dapat dibatalkan. Ini akan menghapus {selectedEmployeeIds.size} catatan karyawan secara permanen.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Batal</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeleteSelected} disabled={isPending}>
+                            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Lanjutkan
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        )}
+
       </div>
 
       {filteredEmployees.length > 0 ? (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredEmployees.map((employee) => (
-            <EmployeeCard key={employee.id} employee={employee} />
+            <EmployeeCard 
+                key={employee.id} 
+                employee={employee}
+                isSelected={selectedEmployeeIds.has(employee.id)}
+                onSelect={handleSelectEmployee}
+            />
           ))}
         </div>
       ) : (
