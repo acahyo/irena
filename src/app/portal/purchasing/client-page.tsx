@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useTransition } from 'react';
@@ -55,6 +56,7 @@ const getStatusVariant = (status: string) => {
     case 'Verified by Purchasing': return 'default';
     case 'Processing': return 'default';
     case 'Approved by Finance': return 'default';
+    case 'Ready for Pickup': return 'default';
     case 'Completed': return 'default';
     case 'Rejected': return 'destructive';
     default: return 'outline';
@@ -97,7 +99,7 @@ export default function MyPurchasingClientPage({
 
     const handleItemChange = (index: number, field: keyof PurchaseRequestItem, value: string) => {
       const newItems = [...items];
-      const numValue = ['quantity', 'estimatedPrice'].includes(field) ? Number(value) : value;
+      const numValue = ['quantity'].includes(field) ? Number(value) : value;
       (newItems[index] as any)[field] = numValue;
       setItems(newItems);
     };
@@ -139,39 +141,32 @@ export default function MyPurchasingClientPage({
         <div className="space-y-4 max-h-[60vh] overflow-y-auto p-1">
             {items.map((item, index) => (
                 <div key={index} className="grid grid-cols-12 gap-2 items-end p-2 border rounded-md">
-                    <div className="col-span-5 space-y-1">
+                    <div className="col-span-7 space-y-1">
                         <Label htmlFor={`name-${index}`} className="text-xs">Nama Barang</Label>
                         <Input id={`name-${index}`} value={item.name} onChange={e => handleItemChange(index, 'name', e.target.value)} required />
                     </div>
                     <div className="col-span-2 space-y-1">
                         <Label htmlFor={`quantity-${index}`} className="text-xs">Jumlah</Label>
-                        <Input id={`quantity-${index}`} type="number" value={item.quantity} onChange={e => handleItemChange(index, 'quantity', e.target.value)} required />
+                        <Input id={`quantity-${index}`} type="number" value={item.quantity} onChange={e => handleItemChange(index, 'quantity', e.target.value)} required min={1} />
                     </div>
-                     <div className="col-span-2 space-y-1">
+                     <div className="col-span-3 space-y-1">
                         <Label htmlFor={`unit-${index}`} className="text-xs">Unit</Label>
                         <Input id={`unit-${index}`} value={item.unit} onChange={e => handleItemChange(index, 'unit', e.target.value)} required placeholder="e.g. pcs, kg" />
-                    </div>
-                     <div className="col-span-2 space-y-1">
-                        <Label htmlFor={`price-${index}`} className="text-xs">Estimasi Harga</Label>
-                        <Input id={`price-${index}`} type="number" value={item.estimatedPrice || ''} onChange={e => handleItemChange(index, 'estimatedPrice', e.target.value)} placeholder="per unit" />
-                    </div>
-                    <div className="col-span-1">
-                        <Button type="button" variant="destructive" size="icon" onClick={() => removeItem(index)}>
-                            <Trash2 className="h-4 w-4" />
-                        </Button>
                     </div>
                 </div>
             ))}
         </div>
-        <Button type="button" variant="outline" size="sm" onClick={addItem}>
-            <PlusCircle className="mr-2 h-4 w-4" /> Tambah Barang
-        </Button>
-        <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setIsNewRequestDialogOpen(false)}>Batal</Button>
-            <Button type="submit" disabled={isPending}>
-                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Kirim Pengajuan
+        <div className="flex justify-between items-center">
+            <Button type="button" variant="outline" size="sm" onClick={addItem}>
+                <PlusCircle className="mr-2 h-4 w-4" /> Tambah Barang
             </Button>
-        </DialogFooter>
+            <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsNewRequestDialogOpen(false)}>Batal</Button>
+                <Button type="submit" disabled={isPending}>
+                    {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Kirim Pengajuan
+                </Button>
+            </DialogFooter>
+        </div>
       </form>
     );
   };
@@ -195,7 +190,7 @@ export default function MyPurchasingClientPage({
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Riwayat Pesanan</CardTitle>
+              <CardTitle>Riwayat Pengajuan Barang</CardTitle>
               <CardDescription>Proyek: {site.name}</CardDescription>
             </div>
             <Button onClick={() => setIsNewRequestDialogOpen(true)}>
@@ -208,7 +203,7 @@ export default function MyPurchasingClientPage({
             <TableHeader>
               <TableRow>
                 <TableHead>Tanggal</TableHead>
-                <TableHead>Total</TableHead>
+                <TableHead>Total Harga</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="w-[100px] text-right">Aksi</TableHead>
               </TableRow>
@@ -218,7 +213,7 @@ export default function MyPurchasingClientPage({
                 initialRequests.map((req) => (
                   <TableRow key={req.id}>
                     <TableCell>{format(new Date(req.requestDate), 'PPP')}</TableCell>
-                    <TableCell>{formatCurrency(req.totalEstimatedPrice)}</TableCell>
+                    <TableCell>{formatCurrency(req.totalActualPrice)}</TableCell>
                     <TableCell><Badge variant={getStatusVariant(req.status)}>{req.status}</Badge></TableCell>
                     <TableCell className="text-right">
                         <Button variant="ghost" size="icon" onClick={() => handleViewDetails(req)}>
@@ -289,8 +284,7 @@ export default function MyPurchasingClientPage({
                                 <TableRow>
                                     <TableHead>Barang</TableHead>
                                     <TableHead>Jumlah</TableHead>
-                                    <TableHead className="text-right">Estimasi</TableHead>
-                                    <TableHead className="text-right">Aktual</TableHead>
+                                    <TableHead className="text-right">Harga</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -298,18 +292,26 @@ export default function MyPurchasingClientPage({
                                     <TableRow key={index}>
                                         <TableCell>{item.name}</TableCell>
                                         <TableCell>{item.quantity} {item.unit}</TableCell>
-                                        <TableCell className="text-right">{formatCurrency(item.estimatedPrice)}</TableCell>
                                         <TableCell className="text-right">{formatCurrency(item.actualPrice)}</TableCell>
                                     </TableRow>
                                 ))}
                                 <TableRow className="font-bold">
                                     <TableCell colSpan={2}>Total</TableCell>
-                                    <TableCell className="text-right">{formatCurrency(selectedRequest.totalEstimatedPrice)}</TableCell>
                                     <TableCell className="text-right">{formatCurrency(selectedRequest.totalActualPrice)}</TableCell>
                                 </TableRow>
                             </TableBody>
                         </Table>
                     </div>
+                    <div>
+                        <h4 className="font-semibold mb-2">Histori Proses</h4>
+                        <ul className="space-y-2 text-sm">
+                            <li className="flex justify-between"><span>Dibuat:</span> <span>{format(new Date(selectedRequest.requestDate), 'PPP')}</span></li>
+                            <li className="flex justify-between"><span>Diverifikasi Purchasing:</span> <span>{selectedRequest.verifiedDate ? format(new Date(selectedRequest.verifiedDate), 'PPP') : '-'}</span></li>
+                            <li className="flex justify-between"><span>Disetujui Finance:</span> <span>{selectedRequest.approvedDate ? format(new Date(selectedRequest.approvedDate), 'PPP') : '-'}</span></li>
+                             <li className="flex justify-between"><span>Siap Diambil/Kirim:</span> <span>{selectedRequest.readyDate ? format(new Date(selectedRequest.readyDate), 'PPP') : '-'}</span></li>
+                        </ul>
+                    </div>
+
                     {selectedRequest.purchasingNotes && (
                         <div>
                             <h4 className="font-semibold">Catatan Purchasing</h4>
