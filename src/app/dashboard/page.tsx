@@ -27,7 +27,6 @@ import AttendanceAdminDashboard from './attendance-admin-dashboard';
 import { getSitesByIds } from '@/actions/sites';
 import { getViolationRecords } from '@/actions/violations';
 import { format, getMonth, getYear, differenceInDays } from 'date-fns';
-import { id } from 'date-fns/locale';
 import ViolationChart from './violation-chart';
 
 
@@ -101,7 +100,7 @@ async function getDashboardData({ siteIds }: { siteIds?: string[] }) {
     
     const violationHistory = violationRecords.reduce((acc, record) => {
         const recordDate = new Date(record.date);
-        const month = format(recordDate, 'MMM', { locale: id });
+        const month = format(recordDate, 'MMM');
         const year = getYear(recordDate);
         const key = `${year}-${month}`;
 
