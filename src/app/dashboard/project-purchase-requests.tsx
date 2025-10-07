@@ -1,3 +1,4 @@
+
 'use client';
 
 import { format } from 'date-fns';
@@ -10,10 +11,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 const getStatusVariant = (status: string) => {
   switch (status) {
     case 'Pending': return 'secondary';
-    case 'Verified by Purchasing': return 'default';
-    case 'Processing': return 'default';
-    case 'Approved by Finance': return 'default';
-    case 'Completed': return 'default';
+    case 'Verified': return 'default';
+    case 'Approved': return 'default';
     case 'Rejected': return 'destructive';
     default: return 'outline';
   }
@@ -40,7 +39,7 @@ export default function ProjectPurchaseRequests({ initialRequests }: { initialRe
             <TableHeader>
               <TableRow>
                 <TableHead>Tanggal</TableHead>
-                <TableHead>Total Estimasi</TableHead>
+                <TableHead>Nominal Diajukan</TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
@@ -49,7 +48,7 @@ export default function ProjectPurchaseRequests({ initialRequests }: { initialRe
                 initialRequests.map((req) => (
                   <TableRow key={req.id}>
                     <TableCell>{format(new Date(req.requestDate), 'PPP')}</TableCell>
-                    <TableCell>{formatCurrency(req.totalEstimatedPrice)}</TableCell>
+                    <TableCell>{formatCurrency(req.proposedAmount)}</TableCell>
                     <TableCell>
                       <Badge variant={getStatusVariant(req.status)}>{req.status}</Badge>
                     </TableCell>
