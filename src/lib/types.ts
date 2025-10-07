@@ -2,6 +2,7 @@
 
 
 
+
 export type Allowance = {
   name: string;
   amount: number;
@@ -48,6 +49,7 @@ export type Employee = {
   workEquipment?: string;
   contractStartDate?: Date | string;
   contractEndDate?: Date | string;
+  contractDurationMonths?: number;
   positions?: string[]; // Changed from position: string
   shift?: 'Regular' | 'Shift A' | 'Shift B';
   siteLocation?: string;
@@ -185,10 +187,13 @@ export type PurchaseRequest = {
     requesterId: string;
     requesterName: string;
     requestDate: Date | string;
+    verifiedDate?: Date | string;
+    approvedDate?: Date | string;
+    readyDate?: Date | string;
     items: PurchaseRequestItem[];
     totalEstimatedPrice: number;
     totalActualPrice?: number;
-    status: 'Pending' | 'Verified by Purchasing' | 'Processing' | 'Approved by Finance' | 'Rejected' | 'Completed';
+    status: 'Pending' | 'Verified by Purchasing' | 'Processing' | 'Approved by Finance' | 'Rejected' | 'Ready for Pickup' | 'Completed';
     purchasingNotes?: string;
     financeNotes?: string;
     rejectionReason?: string;

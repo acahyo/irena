@@ -5,7 +5,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { format } from 'date-fns';
+import { format, addMonths } from 'date-fns';
 import { ArrowLeft, Calendar as CalendarIcon, Upload, Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -58,6 +58,7 @@ export default function NewEmployeePage() {
   const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>();
   const [messEntryDate, setMessEntryDate] = useState<Date | undefined>();
   const [contractStartDate, setContractStartDate] = useState<Date | undefined>();
+  const [contractDurationMonths, setContractDurationMonths] = useState<number | undefined>();
   const [contractEndDate, setContractEndDate] = useState<Date | undefined>();
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [ktpPreview, setKtpPreview] = useState<string | null>(null);
@@ -133,6 +134,15 @@ export default function NewEmployeePage() {
   const removePosition = (positionId: string) => {
       setSelectedPositions(selectedPositions.filter(p => p.id !== positionId));
   };
+  
+  useEffect(() => {
+    if (contractStartDate && contractDurationMonths !== undefined && contractDurationMonths > 0) {
+      const newEndDate = addMonths(contractStartDate, contractDurationMonths);
+      setContractEndDate(newEndDate);
+    } else {
+      setContractEndDate(undefined);
+    }
+  }, [contractStartDate, contractDurationMonths]);
 
 
   const handleFileChange = (
@@ -204,6 +214,7 @@ export default function NewEmployeePage() {
         messEntryDate: messEntryDate,
         contractStartDate: contractStartDate,
         contractEndDate: contractEndDate,
+        contractDurationMonths: contractDurationMonths,
         avatar: photoPreview,
         ktpPhoto: ktpPreview,
         simPhoto: simPreview,
@@ -587,9 +598,22 @@ export default function NewEmployeePage() {
                 <Label htmlFor="contractStartDate">Tanggal Awal Kontrak</Label>
                 <DatePicker date={contractStartDate} setDate={setContractStartDate} />
               </div>
+              
               <div className="space-y-2">
-                <Label htmlFor="contractEndDate">Tanggal Akhir Kontrak</Label>
-                <DatePicker date={contractEndDate} setDate={setContractEndDate} />
+                <Label htmlFor="contractDurationMonths">Masa Kontrak (bulan)</Label>
+                <Input 
+                  id="contractDurationMonths" 
+                  name="contractDurationMonths" 
+                  type="number" 
+                  placeholder="e.g. 12"
+                  value={contractDurationMonths || ''}
+                  onChange={(e) => setContractDurationMonths(e.target.value ? Number(e.target.value) : undefined)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Tanggal Akhir Kontrak</Label>
+                <Input value={contractEndDate ? format(contractEndDate, 'PPP') : 'Akan terisi otomatis'} readOnly disabled />
               </div>
               
                <div className="space-y-2 md:col-span-3">
