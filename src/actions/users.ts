@@ -110,6 +110,12 @@ export async function updateUser(id: string, user: Partial<User>): Promise<void>
   // Remove projectAccess if the role is Admin Proyek
   if (user.role === 'Admin Proyek') {
     userData.projectAccess = null;
+    if(user.shiftAccess === 'all') {
+      userData.shiftName = null;
+    }
+  } else {
+    userData.shiftAccess = null;
+    userData.shiftName = null;
   }
   
   if (user.role !== 'Admin Absensi') {

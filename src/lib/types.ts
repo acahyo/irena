@@ -4,6 +4,7 @@
 
 
 
+
 export type Allowance = {
   name: string;
   amount: number;
@@ -100,6 +101,8 @@ export type User = {
     siteIds?: string[];
     positionName?: string;
     projectAccess?: 'all' | 'assigned';
+    shiftAccess?: 'all' | 'assigned';
+    shiftName?: 'Regular' | 'Shift A' | 'Shift B';
 };
 
 export type Role = {
@@ -361,4 +364,3 @@ export type ViolationRecord = {
   fileUrl?: string;
   fileName?: string;
 };
-

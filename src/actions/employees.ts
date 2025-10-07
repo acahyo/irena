@@ -44,17 +44,17 @@ async function uploadFileAndGetURL(base64Data: string, employeeId: string, field
 
 
 // Get all employees
-export async function getEmployees({ siteId, siteIds }: { siteId?: string, siteIds?: string[] } = {}): Promise<Employee[]> {
+export async function getEmployees({ siteId, siteIds, shiftName }: { siteId?: string, siteIds?: string[], shiftName?: string } = {}): Promise<Employee[]> {
   try {
     const employeesRef = collection(db, 'employees');
-    let q = query(employeesRef);
+    let conditions: any[] = [];
     
     // Handle single siteId
     if (siteId) {
         const siteDoc = await getDoc(doc(db, 'sites', siteId));
         if (siteDoc.exists()) {
             const siteName = siteDoc.data().name;
-            q = query(employeesRef, where('siteLocation', '==', siteName));
+            conditions.push(where('siteLocation', '==', siteName));
         } else {
             return [];
         }
@@ -64,11 +64,17 @@ export async function getEmployees({ siteId, siteIds }: { siteId?: string, siteI
         const sites = await getSitesByIds(siteIds);
         if (sites.length > 0) {
             const siteNames = sites.map(s => s.name);
-            q = query(employeesRef, where('siteLocation', 'in', siteNames));
+            conditions.push(where('siteLocation', 'in', siteNames));
         } else {
             return [];
         }
     }
+    
+    if (shiftName) {
+        conditions.push(where('shift', '==', shiftName));
+    }
+
+    const q = conditions.length > 0 ? query(employeesRef, ...conditions) : query(employeesRef);
     
     const querySnapshot = await getDocs(q);
     if (querySnapshot.empty) {

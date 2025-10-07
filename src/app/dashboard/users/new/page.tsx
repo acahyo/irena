@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -44,6 +43,7 @@ export default function NewUserPage() {
     const [projectAccess, setProjectAccess] = useState<'all' | 'assigned'>('all');
     const [selectedSiteIds, setSelectedSiteIds] = useState<string[]>([]);
     const [siteToAdd, setSiteToAdd] = useState('');
+    const [shiftAccess, setShiftAccess] = useState<'all' | 'assigned'>('all');
 
     const selectedEmployee = employees.find(emp => emp.id === selectedEmployeeId);
 
@@ -107,6 +107,7 @@ export default function NewUserPage() {
         const role = formData.get('role') as string;
         const password = formData.get('password') as string;
         const positionName = formData.get('positionName') as string;
+        const shiftName = formData.get('shiftName') as User['shiftName'];
 
         const userData: Omit<User, 'id'> = { 
             name: selectedEmployee?.name || '', 
@@ -115,6 +116,8 @@ export default function NewUserPage() {
             password,
             projectAccess: role !== 'Admin Proyek' ? projectAccess : undefined,
             siteIds: (role === 'Admin Proyek' || projectAccess === 'assigned') ? selectedSiteIds : undefined,
+            shiftAccess: role === 'Admin Proyek' ? shiftAccess : undefined,
+            shiftName: role === 'Admin Proyek' && shiftAccess === 'assigned' ? shiftName : undefined,
         };
 
         if (role === 'Admin Absensi') {
@@ -218,6 +221,39 @@ export default function NewUserPage() {
                             </RadioGroup>
                         </div>
                     )}
+                    
+                    {selectedRole === 'Admin Proyek' && (
+                        <>
+                         <div className="space-y-3 md:col-span-2">
+                            <Label>Akses Data Shift</Label>
+                            <RadioGroup name="shiftAccess" defaultValue={shiftAccess} onValueChange={(value) => setShiftAccess(value as any)} className="flex gap-4">
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="all" id="shift-access-all" />
+                                    <Label htmlFor="shift-access-all">Lihat Semua Shift</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="assigned" id="shift-access-assigned" />
+                                    <Label htmlFor="shift-access-assigned">Berdasarkan Shift Tertentu</Label>
+                                </div>
+                            </RadioGroup>
+                        </div>
+                        {shiftAccess === 'assigned' && (
+                            <div className="space-y-2">
+                                <Label htmlFor="shiftName">Pilih Shift</Label>
+                                <Select name="shiftName" required>
+                                    <SelectTrigger id="shiftName">
+                                        <SelectValue placeholder="Select a shift" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Regular">Regular</SelectItem>
+                                        <SelectItem value="Shift A">Shift A</SelectItem>
+                                        <SelectItem value="Shift B">Shift B</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+                        </>
+                    )}
 
 
                     {showSiteSelector && (
@@ -284,4 +320,3 @@ export default function NewUserPage() {
     </div>
   );
 }
-

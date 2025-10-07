@@ -28,14 +28,14 @@ type DashboardData = {
     leaveRecommendation: (Employee & { daysActive: number })[];
 }
 
-async function getProjectDashboardData(siteId?: string): Promise<DashboardData> {
+async function getProjectDashboardData(siteId?: string, shiftName?: string): Promise<DashboardData> {
     if (!siteId) {
         return { site: null, employees: [], purchaseRequests: [], employeesByPosition: [], leaveRecommendation: [] };
     }
     
     const [site, employees, purchaseRequests, leaveRequests] = await Promise.all([
         getSite(siteId),
-        getEmployees({ siteId }),
+        getEmployees({ siteId, shiftName }),
         getPurchaseRequests({ siteId }),
         getLeaveRequests({ siteId }),
     ]);
@@ -89,7 +89,8 @@ export default function AdminProjectDashboard({ user, assignedSites, currentProj
     useEffect(() => {
         const fetchData = async () => {
             if (selectedProjectId) {
-                const dashboardData = await getProjectDashboardData(selectedProjectId);
+                const shiftFilter = user.shiftAccess === 'assigned' ? user.shiftName : undefined;
+                const dashboardData = await getProjectDashboardData(selectedProjectId, shiftFilter);
                 setData(dashboardData);
             } else {
                 setData({ site: null, employees: [], purchaseRequests: [], employeesByPosition: [], leaveRecommendation: [] });
@@ -97,7 +98,7 @@ export default function AdminProjectDashboard({ user, assignedSites, currentProj
         };
 
         fetchData();
-    }, [selectedProjectId]);
+    }, [selectedProjectId, user]);
 
     const handleProjectChange = (projectId: string) => {
         setSelectedProjectId(projectId);
