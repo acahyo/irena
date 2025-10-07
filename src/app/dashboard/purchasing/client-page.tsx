@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useTransition } from 'react';
@@ -28,12 +29,13 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Eye, Loader2, CheckCircle, XCircle, CircleDollarSign, Download } from 'lucide-react';
+import { Eye, Loader2, CheckCircle, XCircle, CircleDollarSign, Download, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import type { PurchaseRequest, Site, User } from '@/lib/types';
-import { updatePurchaseRequest } from '@/actions/purchasing';
+import { updatePurchaseRequest, deletePurchaseRequest } from '@/actions/purchasing';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog,
@@ -129,6 +131,19 @@ export default function PurchasingClientPage({
             setIsModalOpen(false);
         } catch (error) {
             toast({ variant: 'destructive', title: 'Error', description: 'Gagal memperbarui status.' });
+        }
+    });
+  };
+
+  const handleDelete = async (id: string) => {
+    startTransition(async () => {
+        try {
+            await deletePurchaseRequest(id);
+            setRequests(prev => prev.filter(r => r.id !== id));
+            setIsModalOpen(false);
+            toast({ title: 'Sukses!', description: 'Pengajuan telah dihapus.' });
+        } catch(error) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Gagal menghapus pengajuan.' });
         }
     });
   };
@@ -338,7 +353,7 @@ export default function PurchasingClientPage({
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                                 <AlertDialogCancel>Batal</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => {}}>Hapus</AlertDialogAction>
+                                <AlertDialogAction onClick={() => handleDelete(selectedRequest.id)}>Hapus</AlertDialogAction>
                             </AlertDialogFooter>
                         </AlertDialogContent>
                     </AlertDialog>
