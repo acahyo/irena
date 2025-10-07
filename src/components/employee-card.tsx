@@ -55,20 +55,8 @@ const getViolationBadgeClasses = (status: Employee['latestViolation']['status'])
   }
 };
 
-
-export function EmployeeCard({ employee, isSelected, onSelect }: EmployeeCardProps) {
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  const displayPosition = employee.positions && employee.positions.length > 0
-    ? employee.positions.join(', ')
-    : 'No position';
-    
-  const formatDate = (dateString: string | Date | undefined) => {
-    if (!dateString || !isClient) return 'N/A';
+const formatDate = (dateString: string | Date | undefined) => {
+    if (!dateString) return 'N/A';
     
     let date;
     if (typeof dateString === 'string') {
@@ -86,13 +74,13 @@ export function EmployeeCard({ employee, isSelected, onSelect }: EmployeeCardPro
     } catch {
       return 'Invalid Date';
     }
-  };
-  
-  const handleCheckboxClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault(); // Prevent card link navigation
-    onSelect(employee.id, !isSelected);
-  };
+};
 
+export function EmployeeCard({ employee, isSelected, onSelect }: EmployeeCardProps) {
+  const displayPosition = employee.positions && employee.positions.length > 0
+    ? employee.positions.join(', ')
+    : 'No position';
+    
   return (
       <Card className="h-full flex flex-col transform-gpu transition-all duration-200 ease-in-out hover:-translate-y-1 hover:shadow-lg relative">
         <div className="absolute top-2 left-2 z-10">
