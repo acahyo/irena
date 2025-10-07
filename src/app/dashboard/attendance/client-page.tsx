@@ -82,8 +82,8 @@ export default function AttendanceClientPage({
       import: lang === 'id' ? 'Impor' : 'Import',
       export: lang === 'id' ? 'Ekspor' : 'Export',
       employee: lang === 'id' ? 'Karyawan' : 'Employee',
-      attendance: lang === 'id' ? 'Kehadiran (Harian)' : 'Attendance (Daily)',
-      overtime: lang === 'id' ? 'Lembur (Harian)' : 'Overtime (Daily)',
+      attendance: lang === 'id' ? 'Kehadiran' : 'Attendance',
+      overtime: lang === 'id' ? 'Lembur' : 'Overtime',
       totalOvertime: lang === 'id' ? 'Total Lembur' : 'Total Overtime',
       bonus: lang === 'id' ? 'Bonus' : 'Bonus',
       idCardDeduction: lang === 'id' ? 'Potongan ID Card' : 'ID Card Deduction',
@@ -373,7 +373,8 @@ export default function AttendanceClientPage({
                 const totalOvertime = Object.values(attendanceData[emp.id]?.overtimeByPosition || {}).reduce((sum, hours) => sum + (hours || 0), 0);
                 
                 const dailyPositions = emp.positionDetails?.filter(p => p.salaryType === 'harian') || [];
-                const hasDailyPositions = dailyPositions.length > 0;
+                const monthlyPositions = emp.positionDetails?.filter(p => p.salaryType === 'bulanan' || p.salaryType === 'direksi') || [];
+                const hasAnyPositions = dailyPositions.length > 0 || monthlyPositions.length > 0;
                 
                 return (
                 <TableRow key={emp.id} className="align-top">
@@ -387,8 +388,23 @@ export default function AttendanceClientPage({
                       </div>
                   </TableCell>
                   <TableCell>
-                    {hasDailyPositions ? (
+                    {hasAnyPositions ? (
                       <div className="space-y-2">
+                        {monthlyPositions.map(posDetail => (
+                          <div key={posDetail.id} className="space-y-1">
+                            <Label htmlFor={`${emp.id}-${posDetail.name}-attendance`} className="text-xs font-normal">{posDetail.name} (hari)</Label>
+                            <Input
+                              id={`${emp.id}-${posDetail.name}-attendance`}
+                              type="number"
+                              placeholder="e.g. 26"
+                              max="30"
+                              value={attendanceData[emp.id]?.attendanceByPosition?.[posDetail.name] ?? ''}
+                              onChange={(e) => handlePerPositionInputChange(emp.id, posDetail.name, 'attendanceByPosition', e.target.value)}
+                              onBlur={() => handleInputBlur(emp.id)}
+                              className="h-8 w-24"
+                            />
+                          </div>
+                        ))}
                         {dailyPositions.map(posDetail => (
                           <div key={posDetail.id} className="space-y-1">
                             <Label htmlFor={`${emp.id}-${posDetail.name}-attendance`} className="text-xs font-normal">{posDetail.name} (hari)</Label>
@@ -409,7 +425,7 @@ export default function AttendanceClientPage({
                     )}
                   </TableCell>
                   <TableCell>
-                    {hasDailyPositions ? (
+                    {dailyPositions.length > 0 ? (
                       <div className="space-y-2">
                         {dailyPositions.map(posDetail => (
                           <div key={posDetail.id} className="space-y-1">
