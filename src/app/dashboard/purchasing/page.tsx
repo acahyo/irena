@@ -5,7 +5,7 @@ import { getSites } from '@/actions/sites';
 import PurchasingClientPage from './client-page';
 import { getAdminSession } from '@/actions/auth';
 import { redirect } from 'next/navigation';
-import type { User } from '@/lib/types';
+import type { User, PurchaseRequest } from '@/lib/types';
 
 export default async function PurchasingPage() {
     const sessionUser = await getAdminSession();
@@ -13,19 +13,19 @@ export default async function PurchasingPage() {
         redirect('/');
     }
 
+    // Purchasing and Admin can see all requests. Admin Proyek can only see their own.
+    const isFullAccess = sessionUser.role === 'Purchasing' || sessionUser.role === 'Administrator';
+    const siteIdForFilter = !isFullAccess ? sessionUser.siteIds?.[0] : undefined;
+
+
     const [requests, sites] = await Promise.all([
-        getPurchaseRequests({}), // Fetch all, filtering is done on client for this role
+        getPurchaseRequests({ siteId: siteIdForFilter }),
         getSites(),
     ]);
     
-    // If Admin Proyek, filter requests for their sites
-    const finalRequests = (sessionUser.role === 'Admin Proyek' && sessionUser.siteIds)
-        ? requests.filter(req => sessionUser.siteIds!.includes(req.projectId))
-        : requests;
-
     return (
         <PurchasingClientPage 
-            initialRequests={finalRequests} 
+            initialRequests={requests} 
             sites={sites} 
         />
     );

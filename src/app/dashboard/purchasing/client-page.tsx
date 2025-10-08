@@ -167,6 +167,20 @@ export default function PurchasingClientPage({
     });
   };
 
+  const handleFinalApprove = () => {
+    if (!selectedRequest || !user) return;
+    startTransition(async () => {
+        try {
+            await updatePurchaseRequest(selectedRequest.id, { status: 'Approved' });
+            toast({ title: 'Sukses!', description: 'Pengajuan barang telah ditandai selesai.' });
+            setRequests(prev => prev.map(r => r.id === selectedRequest.id ? {...r, status: 'Approved'} : r));
+            setIsModalOpen(false);
+        } catch(error) {
+             toast({ variant: 'destructive', title: 'Error', description: 'Gagal memperbarui status.' });
+        }
+    });
+  };
+
   const handleExport = () => {
     const dataToExport = filteredRequests.map(req => ({
       'ID Pengajuan': req.id,
@@ -376,6 +390,11 @@ export default function PurchasingClientPage({
                             {isPending ? <Loader2 className="animate-spin" /> : <CheckCircle />} Setujui (Stok Ada)
                          </Button>
                         </>
+                    )}
+                    {user.role === 'Purchasing' && selectedRequest.status === 'Forwarded to Finance' && (
+                         <Button onClick={handleFinalApprove} disabled={isPending}>
+                            {isPending ? <Loader2 className="animate-spin" /> : <CheckCircle />} Tandai Selesai (Approved)
+                         </Button>
                     )}
                 </DialogFooter>
             </DialogContent>
