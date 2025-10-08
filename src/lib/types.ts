@@ -3,6 +3,7 @@
 
 
 
+
 export type Allowance = {
   name: string;
   amount: number;
@@ -157,6 +158,7 @@ export type AppSettings = {
   accentColor?: string;
   language?: 'id' | 'en';
   employeePayslipAccess?: boolean;
+  menuOrder?: MenuOrderItem[];
 }
 
 export type AttendanceRecord = {

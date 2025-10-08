@@ -16,9 +16,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, Upload, Download, ShieldCheck, Archive } from 'lucide-react';
+import { Loader2, Upload, Download, ShieldCheck, Archive, ArrowUp, ArrowDown } from 'lucide-react';
 import { getSettings, saveSettings } from '@/actions/settings';
-import type { AppSettings, Role } from '@/lib/types';
+import type { AppSettings, Role, MenuOrderItem } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
@@ -116,6 +116,8 @@ export default function SettingsPage() {
     const [permissions, setPermissions] = useState<Record<string, string[]>>({});
     const [savingPermissions, setSavingPermissions] = useState(false);
     const [employeePayslipAccess, setEmployeePayslipAccess] = useState(true);
+    const [menuOrder, setMenuOrder] = useState<MenuOrderItem[]>([]);
+    const [savingMenu, setSavingMenu] = useState(false);
 
 
     useEffect(() => {
@@ -124,12 +126,18 @@ export default function SettingsPage() {
             try {
                 const [settingsData, rolesData] = await Promise.all([getSettings(), getRoles()]);
                 
-                const { logo, favicon, id, ...rest } = settingsData;
+                const { logo, favicon, id, menuOrder: initialMenuOrder, ...rest } = settingsData;
                 setSettings(rest);
                 setLogoPreview(logo);
                 setFaviconPreview(favicon);
                 setEmployeePayslipAccess(settingsData.employeePayslipAccess ?? true);
                 
+                // Initialize menu order
+                const allMenuIds = allMenus.map(m => m.id);
+                const currentMenuOrder = initialMenuOrder && initialMenuOrder.length > 0 ? initialMenuOrder : allMenuIds.map(id => ({ id }));
+                const ordered = currentMenuOrder.map(item => allMenus.find(m => m.id === item.id)).filter(Boolean) as {id: string, label: string}[];
+                setMenuOrder(ordered.map(m => ({ id: m.id })));
+
                 setRoles(rolesData);
                 const initialPermissions: Record<string, string[]> = {};
                 rolesData.forEach(role => {
@@ -156,6 +164,27 @@ export default function SettingsPage() {
                 : currentMenus.filter(id => id !== menuId);
             return { ...prev, [roleId]: newMenus };
         });
+    };
+    
+    const moveMenuItem = (index: number, direction: 'up' | 'down') => {
+        const newOrder = [...menuOrder];
+        const newIndex = direction === 'up' ? index - 1 : index + 1;
+        if (newIndex >= 0 && newIndex < newOrder.length) {
+            [newOrder[index], newOrder[newIndex]] = [newOrder[newIndex], newOrder[index]];
+            setMenuOrder(newOrder);
+        }
+    };
+    
+    const handleSaveMenuOrder = async () => {
+        setSavingMenu(true);
+        try {
+            await saveSettings({ ...settings, menuOrder: menuOrder });
+            toast({ title: 'Success!', description: 'Menu order has been saved.' });
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Failed to save menu order.' });
+        } finally {
+            setSavingMenu(false);
+        }
     };
 
     const handleSavePermissions = async () => {
@@ -214,6 +243,7 @@ export default function SettingsPage() {
                 logo: logoPreview || '',
                 favicon: faviconPreview || '',
                 employeePayslipAccess,
+                menuOrder,
             };
 
             await saveSettings(settingsToSave);
@@ -463,6 +493,41 @@ export default function SettingsPage() {
                         </Card>
                     </CardContent>
                 </Card>
+                
+                <Card>
+                    <CardHeader>
+                         <CardTitle>Pengaturan Urutan Menu</CardTitle>
+                        <CardDescription>Seret dan lepas untuk mengatur ulang urutan menu di sidebar.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="border rounded-md">
+                          {menuOrder.map((item, index) => {
+                            const menuItem = allMenus.find(m => m.id === item.id);
+                            if (!menuItem) return null;
+                            return (
+                                <div key={item.id} className="flex items-center justify-between p-2 border-b last:border-b-0">
+                                    <span className="font-medium">{menuItem.label}</span>
+                                    <div className="flex gap-1">
+                                        <Button type="button" variant="ghost" size="icon" onClick={() => moveMenuItem(index, 'up')} disabled={index === 0}>
+                                            <ArrowUp className="h-4 w-4" />
+                                        </Button>
+                                        <Button type="button" variant="ghost" size="icon" onClick={() => moveMenuItem(index, 'down')} disabled={index === menuOrder.length - 1}>
+                                            <ArrowDown className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            );
+                          })}
+                        </div>
+                        <div className="flex justify-end">
+                            <Button type="button" onClick={handleSaveMenuOrder} disabled={savingMenu}>
+                                {savingMenu && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Simpan Urutan Menu
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+
 
                 <Card>
                     <CardHeader>
@@ -518,7 +583,7 @@ export default function SettingsPage() {
                 </Card>
                 
                 <div className="flex justify-end pt-4 sticky bottom-0 bg-background/80 py-4 backdrop-blur-sm">
-                    <Button type="submit" disabled={loading || savingPermissions}>
+                    <Button type="submit" disabled={loading || savingPermissions || savingMenu}>
                         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         {lang === 'id' ? 'Simpan Semua Pengaturan' : 'Save All Settings'}
                     </Button>
@@ -528,5 +593,3 @@ export default function SettingsPage() {
         </div>
     );
 }
-
-    

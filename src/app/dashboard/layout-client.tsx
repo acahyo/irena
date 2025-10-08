@@ -178,7 +178,7 @@ export default function DashboardClientLayout({
   }, [lang]);
 
   const orderedNavItems = useMemo(() => {
-    const menuOrder = settings.menuOrder || staticMenuOrder;
+    const menuOrder = settings.menuOrder && settings.menuOrder.length > 0 ? settings.menuOrder : staticMenuOrder;
     return menuOrder.map(orderItem => allNavItemsMap.get(orderItem.id)).filter(Boolean);
   }, [allNavItemsMap, settings.menuOrder]);
   

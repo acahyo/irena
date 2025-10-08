@@ -23,6 +23,7 @@ export async function getSettings(): Promise<AppSettings> {
       accentColor: '#877795',
       language: 'id',
       employeePayslipAccess: true,
+      menuOrder: [],
   };
   
   if (querySnapshot.empty) {
@@ -48,5 +49,5 @@ export async function saveSettings(settings: Omit<AppSettings, 'id'>): Promise<v
   // We use setDoc with a fixed ID to ensure there's only one settings document.
   // The id property must be removed before saving.
   const { id, ...settingsData } = settings as AppSettings;
-  await setDoc(settingsRef, settingsData);
+  await setDoc(settingsRef, settingsData, { merge: true });
 }
