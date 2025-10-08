@@ -160,7 +160,7 @@ export default function DashboardClientLayout({
     return staticMenuOrder.map(orderItem => {
         return allNavItemsMap.get(orderItem.id);
     }).filter(Boolean);
-  }, [allNavItemsMap, lang]);
+  }, [allNavItemsMap]);
   
   const navItems = useMemo(() => {
     if (!role) return [];

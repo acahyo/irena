@@ -89,6 +89,7 @@ const allMenus = [
   { id: 'koperasi-limit', label: 'Limit Koperasi' },
   { id: 'hse', label: 'Dasbor HSE' },
   { id: 'hse-fines', label: 'Pengaturan Denda' },
+  { id: 'vehicles', label: 'Kendaraan'},
   { id: 'driver-attendance', label: 'Absensi Driver' },
   { id: 'pj-attendance', label: 'Absensi PJ' },
   { id: 'users', label: 'Users' },
