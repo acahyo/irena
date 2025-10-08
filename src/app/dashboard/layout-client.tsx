@@ -59,35 +59,53 @@ import { logout } from "@/actions/auth";
 
 const allNavItemsList = (lang: 'id' | 'en') => [
   { id: 'dashboard', href: "/dashboard", icon: LayoutDashboard, label: lang === 'id' ? "Dasbor" : "Dashboard", exact: true },
-  { id: 'employees', href: "/dashboard/employees", icon: Users, label: lang === 'id' ? "Karyawan" : "Employees" },
+  
+  // Kepegawaian
+  { id: 'employees', href: "/dashboard/employees", icon: Users, label: lang === 'id' ? "Daftar Karyawan" : "Employees" },
   { id: 'employee-register', href: "/dashboard/employees/register", icon: UserPlus, label: "Registrasi Karyawan" },
   { id: 'employee-review', href: "/dashboard/employees/review", icon: UserCheckIcon, label: "Tinjau Registrasi" },
-  { id: 'violations', href: "/dashboard/violations", icon: AlertTriangle, label: "Catatan Pelanggaran" },
   { id: 'leave-schedule', href: "/dashboard/leave-schedule", icon: CalendarCheck, label: lang === 'id' ? "Jadwal Cuti" : "Leave Schedule" },
-  { id: 'payroll', href: "/dashboard/payroll", icon: Wallet, label: "Payroll" },
-  { id: 'payroll-history', href: "/dashboard/payroll/history", icon: History, label: "Riwayat Payroll" },
+  { id: 'bpjs-id-simper', href: "/dashboard/bpjs-id-simper", icon: Database, label: "BPJS, ID & SIMPER" },
+  { id: 'violations', href: "/dashboard/violations", icon: AlertTriangle, label: "Catatan Pelanggaran" },
+  
+  // Payroll & Absensi
   { id: 'attendance', href: "/dashboard/attendance", icon: ClipboardCheck, label: lang === 'id' ? "Input Absensi" : "Attendance Input" },
+  { id: 'payroll', href: "/dashboard/payroll", icon: Wallet, label: "Payroll" },
   { id: 'payslip', href: "/dashboard/payslip", icon: Printer, label: lang === 'id' ? "Cetak Slip Gaji" : "Print Payslip" },
   { id: 'payslip-collective', href: "/dashboard/payslip-collective", icon: Printer, label: lang === 'id' ? "Slip Gaji Kolektif" : "Collective Payslip" },
+  { id: 'payroll-history', href: "/dashboard/payroll/history", icon: History, label: "Riwayat Payroll" },
+
+  // Purchasing & Gudang
   { id: 'purchasing', href: "/dashboard/purchasing", icon: ShoppingCart, label: "Pengajuan Barang" },
-  { id: 'warehouse', href: "/dashboard/warehouse", icon: Archive, label: "Stok Gudang" },
-  { id: 'fuel-requests', href: "/dashboard/fuel-requests", icon: Fuel, label: "Pengajuan BBM" },
-  { id: 'payment-requests', href: "/dashboard/payment-requests", icon: CircleDollarSign, label: "Pengajuan Pembayaran" },
-  { id: 'koperasi-orders', href: "/dashboard/koperasi/orders", icon: ShoppingCart, label: "Pesanan Koperasi" },
-  { id: 'koperasi-items', href: "/dashboard/koperasi/items", icon: Store, label: "Barang Koperasi" },
-  { id: 'bpjs-id-simper', href: "/dashboard/bpjs-id-simper", icon: Database, label: "BPJS-ID-SIMPER" },
-  { id: 'department', href: "/dashboard/department", icon: Briefcase, label: lang === 'id' ? "Departemen" : "Department" },
-  { id: 'position', href: "/dashboard/position", icon: WalletCards, label: lang === 'id' ? "Jabatan & Gaji" : "Position & Salary" },
-  { id: 'project', href: "/dashboard/project", icon: Briefcase, label: "Proyek" },
+  { id: 'warehouse', href: "/dashboard/warehouse", icon: Archive, label: "Gudang" },
+  
+  // Keuangan
   { id: 'finance', href: "/dashboard/finance", icon: Landmark, label: lang === 'id' ? "Keuangan" : "Finance" },
+  { id: 'payment-requests', href: "/dashboard/payment-requests", icon: CircleDollarSign, label: "Pengajuan Pembayaran" },
+  { id: 'fuel-requests', href: "/dashboard/fuel-requests", icon: Fuel, label: "Pengajuan BBM" },
   { id: 'koperasi-limit', href: "/dashboard/finance/koperasi-limit", icon: Wallet, label: "Limit Koperasi" },
-  { id: 'hse', href: "/dashboard/hse", icon: ShieldCheck, label: "Dasbor HSE" },
-  { id: 'hse-fines', href: "/dashboard/hse/fines", icon: CircleDollarSign, label: "Pengaturan Denda" },
+  
+  // Koperasi
+  { id: 'koperasi-items', href: "/dashboard/koperasi/items", icon: Store, label: "Barang Koperasi" },
+  { id: 'koperasi-orders', href: "/dashboard/koperasi/orders", icon: ShoppingCart, label: "Pesanan Koperasi" },
+  
+  // Operasional & Driver
   { id: 'vehicles', href: "/dashboard/vehicles", icon: Truck, label: "Kendaraan" },
   { id: 'driver-attendance', href: "/dashboard/driver-attendance", icon: ClipboardList, label: "Absensi Driver" },
   { id: 'pj-attendance', href: "/dashboard/pj-attendance", icon: ClipboardList, label: "Absensi PJ" },
+
+  // HSE
+  { id: 'hse', href: "/dashboard/hse", icon: ShieldCheck, label: "Dasbor HSE" },
+  { id: 'hse-fines', href: "/dashboard/hse/fines", icon: CircleDollarSign, label: "Pengaturan Denda" },
+
+  // Pengaturan & Master Data
+  { id: 'department', href: "/dashboard/department", icon: Briefcase, label: lang === 'id' ? "Departemen" : "Department" },
+  { id: 'position', href: "/dashboard/position", icon: WalletCards, label: lang === 'id' ? "Jabatan & Gaji" : "Position & Salary" },
+  { id: 'project', href: "/dashboard/project", icon: Briefcase, label: "Proyek" },
+  
+  // Administrasi Sistem
   { id: 'users', href: "/dashboard/users", icon: UsersRound, label: "Users" },
-  { id: 'roles', href: "/dashboard/roles", icon: ShieldCheck, label: "Roles" },
+  { id: 'roles', href: "/dashboard/roles", icon: ShieldCheck, label: "Roles & Hak Akses" },
   { id: 'driver-access', href: "/dashboard/driver-access", icon: Car, label: "Hak Akses Driver" },
   { id: 'pj-access', href: "/dashboard/pj-access", icon: Contact, label: "Hak Akses PJ" },
   { id: 'settings', href: "/dashboard/settings", icon: Settings, label: lang === 'id' ? "Pengaturan" : "Settings" },
@@ -95,39 +113,49 @@ const allNavItemsList = (lang: 'id' | 'en') => [
 
 const staticMenuOrder: MenuOrderItem[] = [
     { id: 'dashboard' },
+    // Kepegawaian
     { id: 'employees' },
     { id: 'employee-register' },
     { id: 'employee-review' },
-    { id: 'violations' },
     { id: 'leave-schedule' },
-    { id: 'payroll' },
-    { id: 'payroll-history' },
+    { id: 'bpjs-id-simper' },
+    { id: 'violations' },
+    // Payroll & Absensi
     { id: 'attendance' },
+    { id: 'payroll' },
     { id: 'payslip' },
     { id: 'payslip-collective' },
+    { id: 'payroll-history' },
+    // Purchasing & Gudang
     { id: 'purchasing' },
     { id: 'warehouse' },
-    { id: 'fuel-requests' },
+    // Keuangan
+    { id: 'finance' },
     { id: 'payment-requests' },
+    { id: 'fuel-requests' },
+    { id: 'koperasi-limit' },
+    // Koperasi
     { id: 'koperasi-items' },
     { id: 'koperasi-orders' },
-    { id: 'bpjs-id-simper' },
-    { id: 'department' },
-    { id: 'position' },
-    { id: 'project' },
-    { id: 'finance' },
-    { id: 'koperasi-limit' },
-    { id: 'hse' },
-    { id: 'hse-fines' },
+    // Operasional & Driver
     { id: 'vehicles' },
     { id: 'driver-attendance' },
     { id: 'pj-attendance' },
+    // HSE
+    { id: 'hse' },
+    { id: 'hse-fines' },
+    // Pengaturan & Master Data
+    { id: 'department' },
+    { id: 'position' },
+    { id: 'project' },
+    // Administrasi Sistem
     { id: 'users' },
     { id: 'roles' },
     { id: 'driver-access' },
     { id: 'pj-access' },
     { id: 'settings' },
 ];
+
 
 export default function DashboardClientLayout({
   children,
