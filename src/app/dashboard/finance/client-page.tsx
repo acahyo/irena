@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -43,6 +44,10 @@ const getStatusVariant = (status: string) => {
   }
 };
 
+const calculateItemTotal = (items: PurchaseRequest['items']) => {
+    return items.reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0);
+};
+
 export default function FinanceClientPage({
   paymentRequests,
   purchaseRequests,
@@ -77,15 +82,21 @@ export default function FinanceClientPage({
                         </TableHeader>
                         <TableBody>
                         {purchaseRequests.length > 0 ? (
-                            purchaseRequests.map((req) => (
-                            <TableRow key={req.id}>
-                                <TableCell>{format(new Date(req.requestDate), 'PPP')}</TableCell>
-                                <TableCell>{req.projectName}</TableCell>
-                                <TableCell>{req.requesterName}</TableCell>
-                                <TableCell>{formatCurrency(req.proposedAmount)}</TableCell>
-                                <TableCell><Badge variant={getStatusVariant(req.status)}>{req.status}</Badge></TableCell>
-                            </TableRow>
-                            ))
+                            purchaseRequests.map((req) => {
+                                const approvedAmount = req.status === 'Approved by Purchasing'
+                                    ? calculateItemTotal(req.items)
+                                    : req.proposedAmount;
+                                
+                                return (
+                                <TableRow key={req.id}>
+                                    <TableCell>{format(new Date(req.requestDate), 'PPP')}</TableCell>
+                                    <TableCell>{req.projectName}</TableCell>
+                                    <TableCell>{req.requesterName}</TableCell>
+                                    <TableCell>{formatCurrency(approvedAmount)}</TableCell>
+                                    <TableCell><Badge variant={getStatusVariant(req.status)}>{req.status}</Badge></TableCell>
+                                </TableRow>
+                                );
+                            })
                         ) : (
                             <TableRow>
                             <TableCell colSpan={5} className="h-24 text-center">
