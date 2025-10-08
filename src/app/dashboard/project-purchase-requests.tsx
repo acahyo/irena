@@ -59,7 +59,8 @@ export default function ProjectPurchaseRequests({ initialRequests }: { initialRe
             <TableHeader>
               <TableRow>
                 <TableHead>Tanggal</TableHead>
-                <TableHead>Nominal Diajukan</TableHead>
+                <TableHead>Nama Barang</TableHead>
+                <TableHead>Harga Barang</TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
@@ -68,7 +69,11 @@ export default function ProjectPurchaseRequests({ initialRequests }: { initialRe
                 initialRequests.map((req) => (
                   <TableRow key={req.id} onClick={() => handleViewDetails(req)} className="cursor-pointer">
                     <TableCell>{format(new Date(req.requestDate), 'PPP')}</TableCell>
-                    <TableCell>{formatCurrency(req.proposedAmount)}</TableCell>
+                     <TableCell>
+                      {req.items[0]?.name}
+                      {req.items.length > 1 && ` (+${req.items.length - 1} lainnya)`}
+                    </TableCell>
+                    <TableCell>{formatCurrency(req.items.reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0))}</TableCell>
                     <TableCell>
                       <Badge variant={getStatusVariant(req.status)}>{req.status}</Badge>
                     </TableCell>
@@ -76,7 +81,7 @@ export default function ProjectPurchaseRequests({ initialRequests }: { initialRe
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={3} className="h-24 text-center">
+                  <TableCell colSpan={4} className="h-24 text-center">
                     Belum ada riwayat pengajuan.
                   </TableCell>
                 </TableRow>
