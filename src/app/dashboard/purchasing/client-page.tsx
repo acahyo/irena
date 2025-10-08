@@ -35,7 +35,7 @@ import { Eye, Loader2, CheckCircle, XCircle, CircleDollarSign, Download, Trash2,
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import type { PurchaseRequest, Site, User } from '@/lib/types';
-import { updatePurchaseRequest, deletePurchaseRequest, forwardToFinance } from '@/actions/purchasing';
+import { updatePurchaseRequest, deletePurchaseRequest, forwardToFinance, approvePurchaseRequestFromWarehouse } from '@/actions/purchasing';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog,
@@ -103,23 +103,25 @@ export default function PurchasingClientPage({
   const handleOpenModal = (req: PurchaseRequest) => {
     if (!user) return;
     setSelectedRequest(req);
-    setProposedAmount(req.proposedAmount?.toString() || '');
+    // Calculate total price from items as a default for proposed amount
+    const totalItemPrice = req.items.reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0);
+    setProposedAmount(req.proposedAmount?.toString() || totalItemPrice.toString());
     setRejectionReason(req.rejectionReason || '');
     setIsModalOpen(true);
   };
   
   const handleApproveAvailable = () => {
-      if (!selectedRequest || !user) return;
-      startTransition(async () => {
-          try {
-              await updatePurchaseRequest(selectedRequest.id, { status: 'Approved by Purchasing', verifiedDate: new Date() });
-              toast({ title: 'Sukses!', description: 'Pengajuan telah disetujui (barang tersedia).' });
-              setRequests(prev => prev.map(r => r.id === selectedRequest.id ? {...r, status: 'Approved by Purchasing'} : r));
-              setIsModalOpen(false);
-          } catch(error) {
-               toast({ variant: 'destructive', title: 'Error', description: 'Gagal memperbarui status.' });
-          }
-      });
+    if (!selectedRequest || !user) return;
+    startTransition(async () => {
+        const result = await approvePurchaseRequestFromWarehouse(selectedRequest);
+        if (result.success) {
+            toast({ title: 'Sukses!', description: result.message });
+            setRequests(prev => prev.map(r => r.id === selectedRequest.id ? {...r, status: 'Approved by Purchasing' } : r));
+            setIsModalOpen(false);
+        } else {
+            toast({ variant: 'destructive', title: 'Error', description: result.message });
+        }
+    });
   }
   
   const handleForwardToFinance = () => {

@@ -14,10 +14,12 @@ import {
   query,
   where,
   orderBy,
+  writeBatch,
+  getDoc
 } from 'firebase/firestore';
 import type { PurchaseRequest, PurchaseRequestItem } from '@/lib/types';
 import { createPaymentRequest } from './payment-requests';
-import { getWarehouseItems } from './warehouse';
+import { getWarehouseItems, updateStockForPurchase } from './warehouse';
 
 // Helper to convert Firestore Timestamps to Dates in a document
 function convertTimestampsToDates(docData: any) {
@@ -131,6 +133,39 @@ export async function updatePurchaseRequest(id: string, updates: Partial<Purchas
   
   await updateDoc(docRef, updateData);
 }
+
+// New function to approve from warehouse stock
+export async function approvePurchaseRequestFromWarehouse(request: PurchaseRequest): Promise<{ success: boolean; message: string }> {
+  try {
+    const warehouseItems = await getWarehouseItems();
+    
+    // 1. Verify stock for all items
+    for (const item of request.items) {
+      const warehouseItem = warehouseItems.find(wi => wi.name.toLowerCase() === item.name.toLowerCase());
+      if (!warehouseItem || warehouseItem.stock < item.quantity) {
+        return { success: false, message: `Stok tidak mencukupi untuk barang: ${item.name}. Stok tersedia: ${warehouseItem?.stock || 0}, dibutuhkan: ${item.quantity}.` };
+      }
+    }
+
+    // 2. Update warehouse stock
+    await updateStockForPurchase(request.items);
+
+    // 3. Update purchase request status
+    const docRef = doc(db, 'purchaseRequests', request.id);
+    await updateDoc(docRef, { 
+      status: 'Approved by Purchasing',
+      verifiedDate: new Date(),
+    });
+
+    return { success: true, message: 'Pengajuan telah disetujui dan stok gudang telah diperbarui.' };
+
+  } catch (error) {
+    console.error("Error approving from warehouse:", error);
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+    return { success: false, message: `Gagal menyetujui pengajuan: ${errorMessage}` };
+  }
+}
+
 
 // Forward purchase request to finance as a payment request
 export async function forwardToFinance(

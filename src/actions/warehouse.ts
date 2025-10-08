@@ -11,8 +11,9 @@ import {
   deleteDoc,
   query,
   orderBy,
+  runTransaction,
 } from 'firebase/firestore';
-import type { WarehouseItem } from '@/lib/types';
+import type { WarehouseItem, PurchaseRequestItem } from '@/lib/types';
 
 // Get all warehouse items
 export async function getWarehouseItems(): Promise<WarehouseItem[]> {
@@ -61,4 +62,33 @@ export async function updateWarehouseItem(id: string, updates: Partial<Warehouse
 export async function deleteWarehouseItem(id: string): Promise<void> {
   const docRef = doc(db, 'warehouseItems', id);
   await deleteDoc(docRef);
+}
+
+
+// New function to update stock based on an approved purchase
+export async function updateStockForPurchase(purchasedItems: PurchaseRequestItem[]): Promise<void> {
+  await runTransaction(db, async (transaction) => {
+    // 1. Get all warehouse item documents that need updating in a single query if possible
+    // For simplicity with name matching, we'll fetch them all first. This is less efficient for very large warehouses.
+    const warehouseItemsSnapshot = await getDocs(collection(db, 'warehouseItems'));
+    const warehouseItemsMap = new Map(warehouseItemsSnapshot.docs.map(d => [d.data().name.toLowerCase(), d]));
+
+    // 2. Perform reads and prepare writes
+    for (const item of purchasedItems) {
+      const warehouseDoc = warehouseItemsMap.get(item.name.toLowerCase());
+
+      if (warehouseDoc) {
+        const warehouseRef = doc(db, 'warehouseItems', warehouseDoc.id);
+        const warehouseData = warehouseDoc.data() as WarehouseItem;
+        const newStock = warehouseData.stock - item.quantity;
+        
+        if (newStock < 0) {
+          throw new Error(`Stok tidak mencukupi untuk barang: ${item.name}. Stok saat ini: ${warehouseData.stock}, dibutuhkan: ${item.quantity}`);
+        }
+        transaction.update(warehouseRef, { stock: newStock });
+      } else {
+        throw new Error(`Barang gudang tidak ditemukan: ${item.name}`);
+      }
+    }
+  });
 }
