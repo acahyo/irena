@@ -160,15 +160,18 @@ export default function NewProjectPage() {
                 </Button>
               </div>
                <div className="flex flex-wrap gap-2 p-2 border rounded-md min-h-[40px]">
-                {supervisors.map(s => (
-                  <Badge key={s.id} variant="secondary" className="flex items-center gap-2">
-                    {s.name}
-                    <button type="button" onClick={() => removeSupervisor(s.id)} className="ml-1 rounded-full hover:bg-destructive/20 p-0.5">
-                       <Trash2 className="h-3 w-3 text-destructive" />
-                    </button>
-                  </Badge>
-                ))}
-                {supervisors.length === 0 && <p className="text-sm text-muted-foreground">Belum ada pengawas ditambahkan.</p>}
+                {supervisors.length > 0 ? (
+                  supervisors.map(s => (
+                    <Badge key={s.id} variant="secondary" className="flex items-center gap-2">
+                      {s.name}
+                      <button type="button" onClick={() => removeSupervisor(s.id)} className="ml-1 rounded-full hover:bg-destructive/20 p-0.5">
+                        <Trash2 className="h-3 w-3 text-destructive" />
+                      </button>
+                    </Badge>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground p-1">Belum ada pengawas ditambahkan.</p>
+                )}
               </div>
             </div>
 
