@@ -10,6 +10,7 @@
 
 
 
+
 export type Allowance = {
   name: string;
   amount: number;
@@ -379,4 +380,32 @@ export type FuelRequest = {
   approvedById?: string;
   approvedByName?: string;
   approvedDate?: Date | string;
+};
+
+export type PaymentRequestCategory = 'ID CARD' | 'SIMPER' | 'Denda' | 'Sewa' | 'BPJS';
+
+export type PaymentRequest = {
+    id: string;
+    requesterId: string;
+    requesterName: string;
+    requestDate: Date | string;
+    category: PaymentRequestCategory;
+    paymentName: string;
+    amount: number;
+    status: 'Pending' | 'Approved' | 'Rejected';
+    
+    // Optional fields based on category
+    paymentType?: 'Cash' | 'Transfer';
+    accountNumber?: string;
+    accountName?: string;
+    documentUrl?: string;
+    documentName?: string;
+    paymentPeriod?: string; // For BPJS
+    billingCode?: string; // For BPJS
+
+    // Approval/Rejection fields
+    processedById?: string;
+    processedByName?: string;
+    processedDate?: Date | string;
+    rejectionReason?: string;
 };
