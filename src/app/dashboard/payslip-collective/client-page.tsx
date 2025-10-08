@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, Settings2 } from 'lucide-react';
-import type { EmployeeWithPosition, AppSettings, AttendanceRecord, Position, KoperasiOrder, HseRecord } from '@/lib/types';
+import type { EmployeeWithPosition, AppSettings, AttendanceRecord, Position, KoperasiOrder, HseRecord, Site } from '@/lib/types';
 import PayslipViewer, { type PayslipData, type PayslipOptions } from '@/components/payslip-viewer';
 import { useToast } from '@/hooks/use-toast';
 import { getAttendanceByPeriod } from '@/actions/attendance';
@@ -41,12 +41,17 @@ const BPJS_RATES: Record<string, number> = {
 export default function PayslipCollectiveClientPage({
   initialEmployees,
   settings,
+  sites,
+  positions,
 }: {
   initialEmployees: EmployeeWithPosition[];
   settings: AppSettings;
+  sites: Site[];
+  positions: Position[];
 }) {
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<Set<string>>(new Set());
   const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7));
+  const [siteFilter, setSiteFilter] = useState('all');
   const [positionFilter, setPositionFilter] = useState('all');
   const [payslipsData, setPayslipsData] = useState<PayslipData[]>([]);
   const [keterangan, setKeterangan] = useState('');
@@ -64,26 +69,30 @@ export default function PayslipCollectiveClientPage({
   const handleOptionChange = (option: keyof PayslipOptions, value: boolean) => {
     setPayslipOptions(prev => ({ ...prev, [option]: value }));
   };
-
-  const positions = useMemo(() => {
-    const allPositions = new Map<string, { id: string, name: string }>();
-    initialEmployees.forEach(emp => {
-      (emp.positionDetails || []).forEach(pos => {
-        if (!allPositions.has(pos.id)) {
-          allPositions.set(pos.id, { id: pos.id, name: pos.name });
-        }
-      });
-    });
-    return [{ id: 'all', name: 'Semua Jabatan' }, ...Array.from(allPositions.values())];
-  }, [initialEmployees]);
+  
+  const handleSiteFilterChange = (value: string) => {
+    setSiteFilter(value);
+    setPositionFilter('all');
+    setSelectedEmployeeIds(new Set()); // Clear selection when project changes
+  }
 
   const filteredEmployees = useMemo(() => {
-    let employees = initialEmployees.filter(emp => emp.canGeneratePayslip !== false);
-    if (positionFilter === 'all') {
-      return employees;
-    }
-    return employees.filter((emp) => emp.positions?.includes(positionFilter));
-  }, [initialEmployees, positionFilter]);
+    return initialEmployees.filter(emp => {
+      const matchesSite = siteFilter === 'all' || emp.siteLocation === sites.find(s => s.id === siteFilter)?.name;
+      const matchesPosition = positionFilter === 'all' || emp.positions?.includes(positionFilter);
+      return matchesSite && matchesPosition && emp.canGeneratePayslip !== false;
+    });
+  }, [initialEmployees, siteFilter, positionFilter, sites]);
+  
+  const positionsForFilter = useMemo(() => {
+    if (siteFilter === 'all') return [];
+    
+    const selectedSiteName = sites.find(s => s.id === siteFilter)?.name;
+    if (!selectedSiteName) return [];
+
+    return positions.filter(p => !p.projectName || p.projectName === selectedSiteName);
+  }, [positions, siteFilter, sites]);
+
 
   useEffect(() => {
     const fetchPeriodData = async () => {
@@ -319,13 +328,24 @@ export default function PayslipCollectiveClientPage({
                 />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="siteFilter">Lokasi Proyek</Label>
+              <Select value={siteFilter} onValueChange={handleSiteFilterChange}>
+                  <SelectTrigger id="siteFilter"><SelectValue placeholder="Semua Proyek" /></SelectTrigger>
+                  <SelectContent>
+                      <SelectItem value="all">Semua Proyek</SelectItem>
+                      {sites.map((s) => (<SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>))}
+                  </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
                 <Label htmlFor="position-filter">Jabatan</Label>
-                <Select value={positionFilter} onValueChange={setPositionFilter} disabled={isGenerating}>
+                <Select value={positionFilter} onValueChange={setPositionFilter} disabled={isGenerating || siteFilter === 'all'}>
                     <SelectTrigger id="position-filter">
-                        <SelectValue placeholder="Filter by position" />
+                        <SelectValue placeholder={siteFilter === 'all' ? 'Pilih proyek dulu' : "Semua Jabatan"} />
                     </SelectTrigger>
                     <SelectContent>
-                        {positions.map((pos) => (
+                       <SelectItem value="all">Semua Jabatan</SelectItem>
+                        {positionsForFilter.map((pos) => (
                             <SelectItem key={pos.id} value={pos.name}>
                                 {pos.name}
                             </SelectItem>
