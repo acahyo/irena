@@ -19,7 +19,6 @@ import {
 } from 'firebase/firestore';
 import type { PurchaseRequest, PurchaseRequestItem } from '@/lib/types';
 import { getEmployees } from './employees';
-import { createFinanceRecord } from './finance';
 
 // Helper to convert Firestore Timestamps to Dates in a document
 function convertTimestampsToDates(docData: any) {
@@ -122,31 +121,6 @@ export async function updatePurchaseRequest(id: string, updates: Partial<Purchas
   }
   
   await updateDoc(docRef, updateData);
-
-  // If the status is 'Approved', create a corresponding finance record
-  if (updates.status === 'Approved') {
-    const requestSnap = await getDoc(docRef);
-    if (!requestSnap.exists()) {
-        throw new Error("Purchase request not found after update.");
-    }
-    const requestData = requestSnap.data() as PurchaseRequest;
-    
-    // The final price is the proposedAmount set by Purchasing
-    const finalPrice = requestData.proposedAmount;
-
-    if (finalPrice && finalPrice > 0 && requestData.projectId && requestData.projectName) {
-        const itemNames = requestData.items.map(item => item.name).join(', ');
-        await createFinanceRecord({
-            projectId: requestData.projectId,
-            projectName: requestData.projectName,
-            type: 'expense',
-            amount: finalPrice,
-            description: `Pembelian: ${itemNames}`,
-            date: new Date(),
-            category: 'Purchasing',
-        });
-    }
-  }
 }
 
 

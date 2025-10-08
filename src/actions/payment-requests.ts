@@ -17,7 +17,6 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from "firebase/storage";
 import type { PaymentRequest } from '@/lib/types';
-import { createFinanceRecord } from './finance';
 
 
 // Helper to upload base64 file to Firebase Storage and get URL
@@ -73,7 +72,7 @@ export async function getPaymentRequests({ status }: { status?: PaymentRequest['
     if(status) {
         q = query(collection(db, 'paymentRequests'), where('status', '==', status));
     } else {
-        q = query(collection(db, 'paymentRequests'), orderBy('requestDate', 'desc'));
+        q = query(collection(db, 'paymentRequests'));
     }
 
     const querySnapshot = await getDocs(q);
@@ -87,7 +86,8 @@ export async function getPaymentRequests({ status }: { status?: PaymentRequest['
         processedDate: data.processedDate ? (data.processedDate as Timestamp).toDate() : undefined,
       } as PaymentRequest);
     });
-    return requests;
+     // Sort in application code to avoid composite index
+    return requests.sort((a,b) => new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime());
   } catch (error) {
     console.error("Error fetching payment requests:", error);
     return [];
@@ -110,23 +110,6 @@ export async function updatePaymentRequestStatus(
         processedByName: processorName,
         processedDate,
     });
-    
-    // If approved, create a finance record
-    if (status === 'Approved') {
-      const requestSnap = await getDoc(docRef);
-      if (requestSnap.exists()) {
-        const requestData = requestSnap.data() as PaymentRequest;
-        await createFinanceRecord({
-          projectId: 'OFFICE', // Payment requests are from office roles
-          projectName: 'Office Operational',
-          type: 'expense',
-          amount: requestData.amount,
-          description: `Pembayaran: ${requestData.paymentName} (${requestData.category})`,
-          date: processedDate,
-          category: 'Payment Request',
-        });
-      }
-    }
     
     return { success: true, message: 'Status pengajuan berhasil diperbarui.' };
   } catch (error) {
