@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useTransition } from 'react';
@@ -84,6 +85,10 @@ export default function FinanceClientPage({
       netTotal: income - expense,
     };
   }, [financeLog]);
+  
+  const sortedRequests = useMemo(() => {
+    return requests.sort((a, b) => new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime());
+  }, [requests]);
 
   return (
     <div className="space-y-6">
@@ -133,8 +138,8 @@ export default function FinanceClientPage({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {requests.length > 0 ? (
-                requests.map((req) => (
+              {sortedRequests.length > 0 ? (
+                sortedRequests.map((req) => (
                   <TableRow key={req.id}>
                     <TableCell>{format(new Date(req.requestDate), 'PPP')}</TableCell>
                     <TableCell>{req.requesterName}</TableCell>

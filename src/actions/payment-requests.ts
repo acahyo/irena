@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { db, storage } from '@/lib/firebase';
@@ -70,7 +71,7 @@ export async function getPaymentRequests({ status }: { status?: PaymentRequest['
     let q;
     
     if(status) {
-        q = query(collection(db, 'paymentRequests'), where('status', '==', status), orderBy('requestDate', 'desc'));
+        q = query(collection(db, 'paymentRequests'), where('status', '==', status));
     } else {
         q = query(collection(db, 'paymentRequests'), orderBy('requestDate', 'desc'));
     }
