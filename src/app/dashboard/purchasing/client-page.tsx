@@ -31,11 +31,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Eye, Loader2, CheckCircle, XCircle, CircleDollarSign, Download, Trash2 } from 'lucide-react';
+import { Eye, Loader2, CheckCircle, XCircle, CircleDollarSign, Download, Trash2, Send } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import type { PurchaseRequest, Site, User } from '@/lib/types';
-import { updatePurchaseRequest, deletePurchaseRequest } from '@/actions/purchasing';
+import { updatePurchaseRequest, deletePurchaseRequest, forwardToFinance } from '@/actions/purchasing';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog,
@@ -64,7 +64,9 @@ const formatCurrency = (amount: number | undefined | null) => {
 const getStatusVariant = (status: string) => {
   switch (status) {
     case 'Pending': return 'secondary';
-    case 'Verified': return 'default';
+    case 'Verified':
+    case 'Approved by Purchasing':
+    case 'Forwarded to Finance':
     case 'Approved': return 'default';
     case 'Rejected': return 'destructive';
     default: return 'outline';
@@ -106,34 +108,51 @@ export default function PurchasingClientPage({
     setIsModalOpen(true);
   };
   
-  const handleStatusUpdate = (status: PurchaseRequest['status']) => {
+  const handleApproveAvailable = () => {
+      if (!selectedRequest || !user) return;
+      startTransition(async () => {
+          try {
+              await updatePurchaseRequest(selectedRequest.id, { status: 'Approved by Purchasing', verifiedDate: new Date() });
+              toast({ title: 'Sukses!', description: 'Pengajuan telah disetujui (barang tersedia).' });
+              setRequests(prev => prev.map(r => r.id === selectedRequest.id ? {...r, status: 'Approved by Purchasing'} : r));
+              setIsModalOpen(false);
+          } catch(error) {
+               toast({ variant: 'destructive', title: 'Error', description: 'Gagal memperbarui status.' });
+          }
+      });
+  }
+  
+  const handleForwardToFinance = () => {
+       if (!selectedRequest || !user) return;
+       if (!proposedAmount || Number(proposedAmount) <= 0) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Mohon masukkan nominal dana yang akan diajukan ke Finance.' });
+            return;
+       }
+       startTransition(async () => {
+           const result = await forwardToFinance(selectedRequest, Number(proposedAmount), user.id, user.name);
+           if (result.success) {
+               toast({ title: 'Sukses!', description: result.message });
+               setRequests(prev => prev.map(r => r.id === selectedRequest.id ? {...r, status: 'Forwarded to Finance', proposedAmount: Number(proposedAmount)} : r));
+               setIsModalOpen(false);
+           } else {
+               toast({ variant: 'destructive', title: 'Error', description: result.message });
+           }
+       });
+  }
+
+  const handleReject = () => {
     if (!selectedRequest || !user) return;
-    
     startTransition(async () => {
         try {
-            const updates: Partial<PurchaseRequest> = { status };
-            if (user.role === 'Purchasing' && status === 'Verified') {
-                if (!proposedAmount || Number(proposedAmount) <= 0) {
-                    toast({ variant: 'destructive', title: 'Error', description: 'Nominal dana harus diisi.' });
-                    return;
-                }
-                updates.proposedAmount = Number(proposedAmount);
-            }
-            if (status === 'Rejected') {
-                updates.rejectionReason = rejectionReason;
-            }
-            
-            await updatePurchaseRequest(selectedRequest.id, updates);
-            
-            const updatedRequest = { ...selectedRequest, ...updates };
-            setRequests(prev => prev.map(r => r.id === selectedRequest.id ? updatedRequest : r));
-            toast({ title: 'Sukses!', description: `Status pengajuan telah diperbarui menjadi "${status}".`});
+            await updatePurchaseRequest(selectedRequest.id, { status: 'Rejected', rejectionReason });
+            toast({ title: 'Sukses!', description: 'Pengajuan telah ditolak.' });
+            setRequests(prev => prev.map(r => r.id === selectedRequest.id ? {...r, status: 'Rejected', rejectionReason} : r));
             setIsModalOpen(false);
-        } catch (error) {
-            toast({ variant: 'destructive', title: 'Error', description: 'Gagal memperbarui status.' });
+        } catch(error) {
+             toast({ variant: 'destructive', title: 'Error', description: 'Gagal memperbarui status.' });
         }
     });
-  };
+  }
 
   const handleDelete = async (id: string) => {
     startTransition(async () => {
@@ -148,7 +167,6 @@ export default function PurchasingClientPage({
     });
   };
 
-  
   const handleExport = () => {
     const dataToExport = filteredRequests.map(req => ({
       'ID Pengajuan': req.id,
@@ -197,7 +215,7 @@ export default function PurchasingClientPage({
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                 <div>
                 <CardTitle>Manajemen Pengajuan Barang</CardTitle>
-                <CardDescription>Verifikasi dan setujui pengajuan barang dari berbagai proyek.</CardDescription>
+                <CardDescription>Verifikasi dan proses pengajuan barang dari berbagai proyek.</CardDescription>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
                 <Select value={projectFilter} onValueChange={setProjectFilter}>
@@ -214,11 +232,12 @@ export default function PurchasingClientPage({
                     <SelectValue placeholder="Filter Status" />
                     </SelectTrigger>
                     <SelectContent>
-                    <SelectItem value="all">Semua Status</SelectItem>
-                    <SelectItem value="Pending">Pending</SelectItem>
-                    <SelectItem value="Verified">Verified</SelectItem>
-                    <SelectItem value="Approved">Approved</SelectItem>
-                    <SelectItem value="Rejected">Rejected</SelectItem>
+                        <SelectItem value="all">Semua Status</SelectItem>
+                        <SelectItem value="Pending">Pending</SelectItem>
+                        <SelectItem value="Approved by Purchasing">Approved (Stok Ada)</SelectItem>
+                        <SelectItem value="Forwarded to Finance">Diteruskan ke Finance</SelectItem>
+                        <SelectItem value="Approved">Approved (Finance)</SelectItem>
+                        <SelectItem value="Rejected">Rejected</SelectItem>
                     </SelectContent>
                 </Select>
                 <Button variant="outline" onClick={handleExport}>
@@ -235,7 +254,7 @@ export default function PurchasingClientPage({
                     <TableHead>Tanggal</TableHead>
                     <TableHead>Proyek</TableHead>
                     <TableHead>Pemohon</TableHead>
-                    <TableHead>Nominal Diajukan</TableHead>
+                    <TableHead>Nominal</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="w-[100px] text-right">Aksi</TableHead>
                 </TableRow>
@@ -300,34 +319,19 @@ export default function PurchasingClientPage({
                     </div>
                      <div>
                         <h4 className="font-semibold mb-2">Verifikasi & Aksi</h4>
-                        {user.role === 'Purchasing' && selectedRequest.status === 'Pending' && (
-                            <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="proposedAmount">Nominal Dana yang Diajukan (Rp)</Label>
-                                    <Input id="proposedAmount" type="number" value={proposedAmount} onChange={(e) => setProposedAmount(e.target.value)} placeholder="e.g. 5000000" />
-                                </div>
-                                 <div className="space-y-2">
-                                    <Label htmlFor="rejectionReason">Alasan Penolakan (jika ditolak)</Label>
-                                    <Textarea id="rejectionReason" value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} />
-                                </div>
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="proposedAmount">Nominal Dana Pengajuan (Rp)</Label>
+                                <Input id="proposedAmount" type="number" value={proposedAmount} onChange={(e) => setProposedAmount(e.target.value)} placeholder="e.g. 5000000" disabled={selectedRequest.status !== 'Pending' || isPending} />
                             </div>
-                        )}
-
-                        {user.role === 'Finance' && selectedRequest.status === 'Verified' && (
-                            <div className="space-y-4">
-                                 <div className="space-y-2">
-                                    <Label>Nominal Diajukan oleh Purchasing</Label>
-                                    <Input value={formatCurrency(selectedRequest.proposedAmount)} readOnly disabled />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="rejectionReason">Alasan Penolakan (jika ditolak)</Label>
-                                    <Textarea id="rejectionReason" value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} />
-                                </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="rejectionReason">Alasan Penolakan (jika ditolak)</Label>
+                                <Textarea id="rejectionReason" value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} disabled={selectedRequest.status !== 'Pending' || isPending}/>
                             </div>
-                        )}
+                        </div>
                         
-                        {(user.role === 'Admin Proyek' || selectedRequest.status !== 'Pending' && selectedRequest.status !== 'Verified') && (
-                            <div>
+                        {selectedRequest.status !== 'Pending' && (
+                            <div className="mt-4">
                                 <p className="text-sm text-muted-foreground">Status saat ini: <Badge variant={getStatusVariant(selectedRequest.status)}>{selectedRequest.status}</Badge></p>
                                 {selectedRequest.rejectionReason && (
                                      <div className="mt-4">
@@ -359,23 +363,17 @@ export default function PurchasingClientPage({
                     </AlertDialog>
                     
                     <Button variant="outline" onClick={() => setIsModalOpen(false)}>Tutup</Button>
-                     {user.role === 'Purchasing' && selectedRequest.status === 'Pending' && (
+                    
+                    {user.role === 'Purchasing' && selectedRequest.status === 'Pending' && (
                         <>
-                         <Button variant="outline" onClick={() => handleStatusUpdate('Rejected')} disabled={isPending}>
+                         <Button variant="outline" onClick={handleReject} disabled={isPending}>
                             {isPending ? <Loader2 className="animate-spin" /> : <XCircle />} Tolak
                          </Button>
-                         <Button onClick={() => handleStatusUpdate('Verified')} disabled={isPending}>
-                            {isPending ? <Loader2 className="animate-spin" /> : <CheckCircle />} Verifikasi
+                         <Button onClick={handleForwardToFinance} disabled={isPending}>
+                            {isPending ? <Loader2 className="animate-spin" /> : <Send />} Ajukan ke Finance
                          </Button>
-                        </>
-                    )}
-                    {user.role === 'Finance' && selectedRequest.status === 'Verified' && (
-                        <>
-                         <Button variant="outline" onClick={() => handleStatusUpdate('Rejected')} disabled={isPending}>
-                           {isPending ? <Loader2 className="animate-spin" /> : <XCircle />} Tolak
-                         </Button>
-                         <Button onClick={() => handleStatusUpdate('Approved')} disabled={isPending}>
-                            {isPending ? <Loader2 className="animate-spin" /> : <CircleDollarSign />} Setujui Dana
+                          <Button onClick={handleApproveAvailable} disabled={isPending}>
+                            {isPending ? <Loader2 className="animate-spin" /> : <CheckCircle />} Setujui (Stok Ada)
                          </Button>
                         </>
                     )}

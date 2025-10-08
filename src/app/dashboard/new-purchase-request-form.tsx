@@ -73,11 +73,11 @@ export default function NewPurchaseRequestForm({ user, site }: { user: User; sit
           <div className="space-y-4 max-h-[60vh] overflow-y-auto p-1">
             {items.map((item, index) => (
               <div key={index} className="grid grid-cols-12 gap-2 items-end p-2 border rounded-md">
-                <div className="col-span-9 space-y-1">
-                  <Label htmlFor={`name-${index}`} className="text-xs">Nama Barang</Label>
+                <div className="col-span-8 space-y-1">
+                  <Label htmlFor={`name-${index}`} className="text-xs">Nama Barang & Kebutuhan</Label>
                   <Input id={`name-${index}`} value={item.name} onChange={e => handleItemChange(index, 'name', e.target.value)} required />
                 </div>
-                <div className="col-span-2 space-y-1">
+                <div className="col-span-3 space-y-1">
                   <Label htmlFor={`quantity-${index}`} className="text-xs">Jumlah</Label>
                   <Input id={`quantity-${index}`} type="number" value={item.quantity} onChange={e => handleItemChange(index, 'quantity', e.target.value)} required min={1} />
                 </div>

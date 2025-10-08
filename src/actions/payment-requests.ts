@@ -11,8 +11,6 @@ import {
   updateDoc,
   Timestamp,
   query,
-  orderBy,
-  getDoc,
   where,
 } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from "firebase/storage";

@@ -1,16 +1,4 @@
 
-
-
-
-
-
-
-
-
-
-
-
-
 export type Allowance = {
   name: string;
   amount: number;
@@ -200,8 +188,9 @@ export type PurchaseRequest = {
     approvedDate?: Date | string;
     items: PurchaseRequestItem[];
     proposedAmount?: number;
-    status: 'Pending' | 'Verified' | 'Approved' | 'Rejected';
+    status: 'Pending' | 'Verified' | 'Approved by Purchasing' | 'Forwarded to Finance' | 'Approved' | 'Rejected';
     rejectionReason?: string;
+    paymentRequestId?: string; // Link to the generated payment request
 };
 
 
@@ -382,7 +371,7 @@ export type FuelRequest = {
   approvedDate?: Date | string;
 };
 
-export type PaymentRequestCategory = 'ID CARD' | 'SIMPER' | 'Denda' | 'Sewa' | 'BPJS';
+export type PaymentRequestCategory = 'ID CARD' | 'SIMPER' | 'Denda' | 'Sewa' | 'BPJS' | 'Pengadaan Barang';
 
 export type PaymentRequest = {
     id: string;

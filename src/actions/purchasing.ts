@@ -7,7 +7,6 @@ import {
   collection,
   getDocs,
   doc,
-  getDoc,
   addDoc,
   updateDoc,
   deleteDoc,
@@ -15,10 +14,9 @@ import {
   query,
   where,
   orderBy,
-  writeBatch
 } from 'firebase/firestore';
 import type { PurchaseRequest, PurchaseRequestItem } from '@/lib/types';
-import { getEmployees } from './employees';
+import { createPaymentRequest } from './payment-requests';
 
 // Helper to convert Firestore Timestamps to Dates in a document
 function convertTimestampsToDates(docData: any) {
@@ -100,7 +98,7 @@ export async function createPurchaseRequest(request: Omit<PurchaseRequest, 'id' 
 }
 
 
-// Update a purchase request status and other details (for Purchasing and Finance)
+// Update a purchase request status and other details
 export async function updatePurchaseRequest(id: string, updates: Partial<PurchaseRequest>): Promise<void> {
   const docRef = doc(db, 'purchaseRequests', id);
   const updateData: { [key: string]: any } = { ...updates };
@@ -112,7 +110,7 @@ export async function updatePurchaseRequest(id: string, updates: Partial<Purchas
   // If status is being updated, add the corresponding date
   if (updateData.status) {
     const now = new Date();
-    if (updateData.status === 'Verified') {
+    if (updateData.status === 'Verified' || updateData.status === 'Approved by Purchasing') {
         updateData.verifiedDate = now;
     }
     if (updateData.status === 'Approved') {
@@ -121,6 +119,46 @@ export async function updatePurchaseRequest(id: string, updates: Partial<Purchas
   }
   
   await updateDoc(docRef, updateData);
+}
+
+// Forward purchase request to finance as a payment request
+export async function forwardToFinance(
+  purchaseRequest: PurchaseRequest,
+  proposedAmount: number,
+  purchasingOfficerId: string,
+  purchasingOfficerName: string
+): Promise<{ success: boolean; message: string; }> {
+  try {
+    if (!proposedAmount || proposedAmount <= 0) {
+      return { success: false, message: 'Proposed amount must be greater than zero.' };
+    }
+
+    const paymentName = `Pengadaan Barang: ${purchaseRequest.projectName} - ${purchaseRequest.items.map(i => i.name).join(', ')}`;
+
+    const paymentResult = await createPaymentRequest({
+      requesterId: purchasingOfficerId,
+      requesterName: purchasingOfficerName,
+      category: 'Pengadaan Barang',
+      paymentName: paymentName,
+      amount: proposedAmount,
+    });
+
+    if (paymentResult.success && paymentResult.newRequest) {
+      await updateDoc(doc(db, 'purchaseRequests', purchaseRequest.id), {
+        status: 'Forwarded to Finance',
+        proposedAmount: proposedAmount,
+        paymentRequestId: paymentResult.newRequest.id,
+        verifiedDate: new Date(),
+      });
+      return { success: true, message: 'Pengajuan berhasil diteruskan ke Finance.' };
+    } else {
+      throw new Error(paymentResult.message || 'Gagal membuat pengajuan pembayaran.');
+    }
+  } catch (error) {
+    console.error("Error forwarding to finance:", error);
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+    return { success: false, message: `Gagal meneruskan ke Finance: ${errorMessage}` };
+  }
 }
 
 
