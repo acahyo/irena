@@ -186,12 +186,10 @@ export default function DashboardClientLayout({
         accessibleItems = orderedNavItems.map(item => {
             if (item.subItems) {
                 const filteredSubItems = item.subItems.filter((sub:any) => accessibleMenus.has(sub.id));
-                if (filteredSubItems.length > 0) {
+                // Show parent if parent itself is accessible OR if it has any visible sub-items
+                if (accessibleMenus.has(item.id) || filteredSubItems.length > 0) {
                     return { ...item, subItems: filteredSubItems };
                 }
-                 if(accessibleMenus.has(item.id)) {
-                    return { ...item, subItems: []};
-                 }
                 return null;
             }
             return accessibleMenus.has(item.id) ? item : null;
