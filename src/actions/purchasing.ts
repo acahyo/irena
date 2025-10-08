@@ -135,12 +135,13 @@ export async function updatePurchaseRequest(id: string, updates: Partial<Purchas
     const finalPrice = requestData.proposedAmount;
 
     if (finalPrice && finalPrice > 0 && requestData.projectId && requestData.projectName) {
+        const itemNames = requestData.items.map(item => item.name).join(', ');
         await createFinanceRecord({
             projectId: requestData.projectId,
             projectName: requestData.projectName,
             type: 'expense',
             amount: finalPrice,
-            description: `Pembelian barang dari pengajuan #${requestData.id.substring(0, 6)} oleh ${requestData.requesterName}`,
+            description: `Pembelian: ${itemNames}`,
             date: new Date(),
             category: 'Purchasing',
         });
