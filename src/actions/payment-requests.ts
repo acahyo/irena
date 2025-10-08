@@ -11,9 +11,11 @@ import {
   Timestamp,
   query,
   orderBy,
+  getDoc,
 } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from "firebase/storage";
 import type { PaymentRequest } from '@/lib/types';
+import { createFinanceRecord } from './finance';
 
 
 // Helper to upload base64 file to Firebase Storage and get URL
@@ -36,6 +38,7 @@ export async function createPaymentRequest(
         
         const finalData: Omit<PaymentRequest, 'id'> = {
             ...rest,
+            amount: Number(rest.amount) || 0,
             requestDate: new Date(),
             status: 'Pending',
         };
@@ -61,9 +64,14 @@ export async function createPaymentRequest(
 }
 
 
-export async function getPaymentRequests(): Promise<PaymentRequest[]> {
+export async function getPaymentRequests({ status }: { status?: PaymentRequest['status'] } = {}): Promise<PaymentRequest[]> {
   try {
-    const q = query(collection(db, 'paymentRequests'), orderBy('requestDate', 'desc'));
+    let q = query(collection(db, 'paymentRequests'), orderBy('requestDate', 'desc'));
+    
+    if(status) {
+        q = query(collection(db, 'paymentRequests'), where('status', '==', status), orderBy('requestDate', 'desc'));
+    }
+
     const querySnapshot = await getDocs(q);
     const requests: PaymentRequest[] = [];
     querySnapshot.forEach((doc) => {
@@ -90,12 +98,32 @@ export async function updatePaymentRequestStatus(
 ): Promise<{ success: boolean; message: string }> {
   try {
     const docRef = doc(db, 'paymentRequests', requestId);
+    const processedDate = new Date();
+    
     await updateDoc(docRef, {
         status,
         processedById: processorId,
         processedByName: processorName,
-        processedDate: new Date(),
+        processedDate,
     });
+    
+    // If approved, create a finance record
+    if (status === 'Approved') {
+      const requestSnap = await getDoc(docRef);
+      if (requestSnap.exists()) {
+        const requestData = requestSnap.data() as PaymentRequest;
+        await createFinanceRecord({
+          projectId: 'OFFICE', // Payment requests are from office roles
+          projectName: 'Office Operational',
+          type: 'expense',
+          amount: requestData.amount,
+          description: `Pembayaran: ${requestData.paymentName} (${requestData.category})`,
+          date: processedDate,
+          category: 'Payment Request',
+        });
+      }
+    }
+    
     return { success: true, message: 'Status pengajuan berhasil diperbarui.' };
   } catch (error) {
     console.error("Error updating payment request:", error);

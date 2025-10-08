@@ -1,7 +1,7 @@
+
 'use client';
 
-import { useState, useMemo } from 'react';
-import Link from 'next/link';
+import { useState, useMemo, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import {
@@ -21,28 +21,20 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { MoreHorizontal, PlusCircle, Trash2, Pencil, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import type { FinanceRecord, Site } from '@/lib/types';
-import { deleteFinanceRecord } from '@/actions/finance';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import type { FinanceRecord, PaymentRequest, User } from '@/lib/types';
+import { Check, X, Eye, Loader2, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+import { useUser } from '@/contexts/user-context';
+import { updatePaymentRequestStatus } from '@/actions/payment-requests';
+import Link from 'next/link';
 
 const formatCurrency = (amount: number | undefined | null) => {
   if (amount === undefined || amount === null) return 'N/A';
@@ -54,55 +46,44 @@ const formatCurrency = (amount: number | undefined | null) => {
 };
 
 export default function FinanceClientPage({
-  initialRecords,
-  projects,
+  pendingRequests,
+  financeLog,
 }: {
-  initialRecords: FinanceRecord[];
-  projects: Site[];
+  pendingRequests: PaymentRequest[];
+  financeLog: FinanceRecord[];
 }) {
-  const [records, setRecords] = useState(initialRecords);
-  const [projectFilter, setProjectFilter] = useState('all');
-  const router = useRouter();
+  const [requests, setRequests] = useState(pendingRequests);
+  const [selectedRequest, setSelectedRequest] = useState<PaymentRequest | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+  const user = useUser();
+  const router = useRouter();
 
-  const filteredRecords = useMemo(() => {
-    let filtered = records;
-    if (projectFilter !== 'all') {
-      filtered = filtered.filter(record => record.projectId === projectFilter);
-    }
-    return filtered;
-  }, [records, projectFilter]);
-
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteFinanceRecord(id);
-      setRecords(prev => prev.filter(r => r.id !== id));
-      toast({
-        title: 'Sukses!',
-        description: 'Catatan keuangan telah dihapus.',
+  const handleStatusUpdate = (status: 'Approved' | 'Rejected') => {
+      if(!selectedRequest || !user) return;
+      startTransition(async () => {
+          const result = await updatePaymentRequestStatus(selectedRequest.id, status, user.id, user.name);
+          if (result.success) {
+              toast({ title: 'Sukses', description: `Status pengajuan berhasil diubah menjadi ${status}` });
+              setRequests(prev => prev.filter(r => r.id !== selectedRequest.id));
+              setIsDetailOpen(false);
+              router.refresh(); // Refresh to see the new record in finance log
+          } else {
+              toast({ variant: 'destructive', title: 'Error', description: 'Gagal memperbarui status.' });
+          }
       });
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Gagal menghapus catatan keuangan.',
-      });
-    }
-  };
+  }
 
-  const totalIncome = useMemo(() => {
-    return filteredRecords
-      .filter(r => r.type === 'income')
-      .reduce((sum, r) => sum + r.amount, 0);
-  }, [filteredRecords]);
-
-  const totalExpense = useMemo(() => {
-    return filteredRecords
-      .filter(r => r.type === 'expense')
-      .reduce((sum, r) => sum + r.amount, 0);
-  }, [filteredRecords]);
-
-  const netTotal = totalIncome - totalExpense;
+  const { totalIncome, totalExpense, netTotal } = useMemo(() => {
+    const income = financeLog.filter(r => r.type === 'income').reduce((sum, r) => sum + r.amount, 0);
+    const expense = financeLog.filter(r => r.type === 'expense').reduce((sum, r) => sum + r.amount, 0);
+    return {
+      totalIncome: income,
+      totalExpense: expense,
+      netTotal: income - expense,
+    };
+  }, [financeLog]);
 
   return (
     <div className="space-y-6">
@@ -134,31 +115,51 @@ export default function FinanceClientPage({
           </CardContent>
         </Card>
       </div>
+
+       <Card>
+        <CardHeader>
+          <CardTitle>Persetujuan Pembayaran</CardTitle>
+          <CardDescription>Tinjau dan setujui pengajuan pembayaran yang masuk.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Tanggal</TableHead>
+                <TableHead>Pemohon</TableHead>
+                <TableHead>Deskripsi</TableHead>
+                <TableHead>Jumlah</TableHead>
+                <TableHead className="text-right">Aksi</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {requests.length > 0 ? (
+                requests.map((req) => (
+                  <TableRow key={req.id}>
+                    <TableCell>{format(new Date(req.requestDate), 'PPP')}</TableCell>
+                    <TableCell>{req.requesterName}</TableCell>
+                    <TableCell className="font-medium">{req.paymentName} <Badge variant="outline">{req.category}</Badge></TableCell>
+                    <TableCell>{formatCurrency(req.amount)}</TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="icon" onClick={() => { setSelectedRequest(req); setIsDetailOpen(true); }}><Eye className="h-4 w-4" /></Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="h-24 text-center">Tidak ada pengajuan yang menunggu persetujuan.</TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Manajemen Keuangan</CardTitle>
-              <CardDescription>Catat semua pemasukan dan pengeluaran proyek.</CardDescription>
-            </div>
-            <div className="flex items-center gap-2">
-              <Select value={projectFilter} onValueChange={setProjectFilter}>
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Filter by Project" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Semua Proyek</SelectItem>
-                  {projects.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <Button asChild>
-                <Link href="/dashboard/finance/new">
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Tambah Catatan
-                </Link>
-              </Button>
-            </div>
-          </div>
+          <CardTitle>Rekapitulasi Pengeluaran</CardTitle>
+          <CardDescription>Semua transaksi pengeluaran yang telah disetujui.</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -167,77 +168,57 @@ export default function FinanceClientPage({
                 <TableHead>Tanggal</TableHead>
                 <TableHead>Proyek</TableHead>
                 <TableHead>Deskripsi</TableHead>
-                <TableHead>Tipe</TableHead>
+                <TableHead>Kategori</TableHead>
                 <TableHead className="text-right">Jumlah</TableHead>
-                <TableHead className="w-[100px] text-right">Aksi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredRecords.length > 0 ? (
-                filteredRecords.map((record) => (
+              {financeLog.filter(r => r.type === 'expense').length > 0 ? (
+                financeLog.filter(r => r.type === 'expense').map((record) => (
                   <TableRow key={record.id}>
                     <TableCell>{format(new Date(record.date), 'PPP')}</TableCell>
                     <TableCell>{record.projectName}</TableCell>
                     <TableCell className="font-medium">{record.description}</TableCell>
-                    <TableCell>
-                      <Badge variant={record.type === 'income' ? 'default' : 'destructive'} className="capitalize">
-                        {record.type === 'income' ? 'Pemasukan' : 'Pengeluaran'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className={`text-right font-semibold ${record.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                      {formatCurrency(record.amount)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Buka menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem asChild>
-                            <Link href={`/dashboard/finance/${record.id}/edit`}>
-                              <Pencil className="mr-2 h-4 w-4" /> Edit
-                            </Link>
-                          </DropdownMenuItem>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
-                                <Trash2 className="mr-2 h-4 w-4" /> Hapus
-                              </DropdownMenuItem>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Apakah Anda yakin?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Aksi ini tidak dapat dibatalkan. Ini akan menghapus catatan keuangan secara permanen.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Batal</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDelete(record.id)}>
-                                  Lanjutkan
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+                    <TableCell><Badge variant="secondary">{record.category}</Badge></TableCell>
+                    <TableCell className='text-right font-semibold text-red-600'>{formatCurrency(record.amount)}</TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center">
-                    Tidak ada catatan keuangan ditemukan.
-                  </TableCell>
+                  <TableCell colSpan={5} className="h-24 text-center">Belum ada catatan pengeluaran.</TableCell>
                 </TableRow>
               )}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+        <DialogContent>
+            <DialogHeader><DialogTitle>Detail Pengajuan Pembayaran</DialogTitle></DialogHeader>
+            {selectedRequest && (
+              <div className="space-y-2 py-4">
+                  <p><strong>Pemohon:</strong> {selectedRequest.requesterName}</p>
+                  <p><strong>Tanggal:</strong> {format(new Date(selectedRequest.requestDate), 'dd MMM yyyy')}</p>
+                  <p><strong>Kategori:</strong> {selectedRequest.category}</p>
+                  <p><strong>Nama:</strong> {selectedRequest.paymentName}</p>
+                  <p><strong>Total:</strong> {formatCurrency(selectedRequest.amount)}</p>
+                  {selectedRequest.paymentType && <p><strong>Tipe Bayar:</strong> {selectedRequest.paymentType}</p>}
+                  {selectedRequest.accountNumber && <p><strong>No. Rek:</strong> {selectedRequest.accountNumber} (a/n {selectedRequest.accountName})</p>}
+                  {selectedRequest.documentUrl && <p><strong>Dokumen:</strong> <Link href={selectedRequest.documentUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline">Lihat Dokumen</Link></p>}
+              </div>
+            )}
+            <DialogFooter>
+                <Button variant="outline" onClick={() => setIsDetailOpen(false)}>Tutup</Button>
+                <Button variant="destructive" onClick={() => handleStatusUpdate('Rejected')} disabled={isPending}>
+                  {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} <X className="mr-2 h-4 w-4" /> Tolak
+                </Button>
+                <Button onClick={() => handleStatusUpdate('Approved')} disabled={isPending}>
+                  {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} <Check className="mr-2 h-4 w-4" /> Setujui
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

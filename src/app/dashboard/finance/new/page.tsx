@@ -1,12 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { useState, useMemo, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
-import { ArrowLeft, Loader2, Calendar as CalendarIcon } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -14,176 +10,214 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { createFinanceRecord } from '@/actions/finance';
-import { getSites } from '@/actions/sites';
-import type { Site } from '@/lib/types';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { Textarea } from '@/components/ui/textarea';
-import { cn } from '@/lib/utils';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
+import type { FinanceRecord, PaymentRequest, User } from '@/lib/types';
+import { Check, X, Eye, Loader2, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+import { useUser } from '@/contexts/user-context';
+import { updatePaymentRequestStatus } from '@/actions/payment-requests';
+import Link from 'next/link';
 
-export default function NewFinanceRecordPage() {
-  const router = useRouter();
+const formatCurrency = (amount: number | undefined | null) => {
+  if (amount === undefined || amount === null) return 'N/A';
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+  }).format(amount);
+};
+
+export default function FinanceClientPage({
+  pendingRequests,
+  financeLog,
+}: {
+  pendingRequests: PaymentRequest[];
+  financeLog: FinanceRecord[];
+}) {
+  const [requests, setRequests] = useState(pendingRequests);
+  const [selectedRequest, setSelectedRequest] = useState<PaymentRequest | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
-  const [projects, setProjects] = useState<Site[]>([]);
-  const [date, setDate] = useState<Date | undefined>(new Date());
+  const user = useUser();
+  const router = useRouter();
 
-  useEffect(() => {
-    const fetchProjects = async () => {
-      const siteData = await getSites();
-      setProjects(siteData);
+  const handleStatusUpdate = (status: 'Approved' | 'Rejected') => {
+      if(!selectedRequest || !user) return;
+      startTransition(async () => {
+          const result = await updatePaymentRequestStatus(selectedRequest.id, status, user.id, user.name);
+          if (result.success) {
+              toast({ title: 'Sukses', description: `Status pengajuan berhasil diubah menjadi ${status}` });
+              setRequests(prev => prev.filter(r => r.id !== selectedRequest.id));
+              setIsDetailOpen(false);
+              router.refresh(); // Refresh to see the new record in finance log
+          } else {
+              toast({ variant: 'destructive', title: 'Error', description: 'Gagal memperbarui status.' });
+          }
+      });
+  }
+
+  const { totalIncome, totalExpense, netTotal } = useMemo(() => {
+    const income = financeLog.filter(r => r.type === 'income').reduce((sum, r) => sum + r.amount, 0);
+    const expense = financeLog.filter(r => r.type === 'expense').reduce((sum, r) => sum + r.amount, 0);
+    return {
+      totalIncome: income,
+      totalExpense: expense,
+      netTotal: income - expense,
     };
-    fetchProjects();
-  }, []);
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setLoading(true);
-
-    const formData = new FormData(event.currentTarget);
-    const projectId = formData.get('projectId') as string;
-    const project = projects.find(p => p.id === projectId);
-
-    if (!project || !date) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Project dan Tanggal harus diisi.',
-      });
-      setLoading(false);
-      return;
-    }
-
-    const recordData = {
-      projectId: project.id,
-      projectName: project.name,
-      type: formData.get('type') as 'income' | 'expense',
-      amount: parseFloat(formData.get('amount') as string),
-      description: formData.get('description') as string,
-      date,
-    };
-
-    try {
-      await createFinanceRecord(recordData);
-      toast({
-        title: 'Sukses!',
-        description: 'Catatan keuangan baru telah ditambahkan.',
-      });
-      router.push('/dashboard/finance');
-      router.refresh();
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Gagal menambahkan catatan keuangan baru.',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [financeLog]);
 
   return (
     <div className="space-y-6">
-      <Button asChild variant="outline" size="sm">
-        <Link href="/dashboard/finance">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Kembali ke Keuangan
-        </Link>
-      </Button>
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Pemasukan</CardTitle>
+            <ArrowUpCircle className="h-4 w-4 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">{formatCurrency(totalIncome)}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Pengeluaran</CardTitle>
+            <ArrowDownCircle className="h-4 w-4 text-red-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">{formatCurrency(totalExpense)}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Bersih</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className={`text-2xl font-bold ${netTotal >= 0 ? 'text-blue-600' : 'text-destructive'}`}>{formatCurrency(netTotal)}</div>
+          </CardContent>
+        </Card>
+      </div>
+
+       <Card>
+        <CardHeader>
+          <CardTitle>Persetujuan Pembayaran</CardTitle>
+          <CardDescription>Tinjau dan setujui pengajuan pembayaran yang masuk.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Tanggal</TableHead>
+                <TableHead>Pemohon</TableHead>
+                <TableHead>Deskripsi</TableHead>
+                <TableHead>Jumlah</TableHead>
+                <TableHead className="text-right">Aksi</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {requests.length > 0 ? (
+                requests.map((req) => (
+                  <TableRow key={req.id}>
+                    <TableCell>{format(new Date(req.requestDate), 'PPP')}</TableCell>
+                    <TableCell>{req.requesterName}</TableCell>
+                    <TableCell className="font-medium">{req.paymentName} <Badge variant="outline">{req.category}</Badge></TableCell>
+                    <TableCell>{formatCurrency(req.amount)}</TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="icon" onClick={() => { setSelectedRequest(req); setIsDetailOpen(true); }}><Eye className="h-4 w-4" /></Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="h-24 text-center">Tidak ada pengajuan yang menunggu persetujuan.</TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
 
       <Card>
         <CardHeader>
-          <CardTitle>Tambah Catatan Keuangan Baru</CardTitle>
-          <CardDescription>
-            Isi formulir untuk menambah catatan pemasukan atau pengeluaran.
-          </CardDescription>
+          <CardTitle>Rekapitulasi Pengeluaran</CardTitle>
+          <CardDescription>Semua transaksi pengeluaran yang telah disetujui.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="projectId">Proyek</Label>
-                <Select name="projectId" required>
-                  <SelectTrigger id="projectId">
-                    <SelectValue placeholder="Pilih Proyek" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {projects.map((proj) => (
-                      <SelectItem key={proj.id} value={proj.id}>{proj.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="date">Tanggal</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={'outline'}
-                      className={cn(
-                        'w-full justify-start text-left font-normal',
-                        !date && 'text-muted-foreground'
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {date ? format(date, 'PPP') : <span>Pilih tanggal</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Tipe Transaksi</Label>
-                <RadioGroup name="type" defaultValue="expense" className="flex gap-4">
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="expense" id="type-expense" />
-                    <Label htmlFor="type-expense">Pengeluaran</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="income" id="type-income" />
-                    <Label htmlFor="type-income">Pemasukan</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="amount">Jumlah (Rp)</Label>
-                <Input id="amount" name="amount" type="number" placeholder="e.g. 500000" required />
-              </div>
-              
-              <div className="space-y-2 md:col-span-2">
-                 <Label htmlFor="description">Deskripsi</Label>
-                <Textarea id="description" name="description" placeholder="e.g. Pembelian material" required />
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => router.back()} disabled={loading}>
-                Batal
-              </Button>
-              <Button type="submit" disabled={loading}>
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Simpan Catatan
-              </Button>
-            </div>
-          </form>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Tanggal</TableHead>
+                <TableHead>Proyek</TableHead>
+                <TableHead>Deskripsi</TableHead>
+                <TableHead>Kategori</TableHead>
+                <TableHead className="text-right">Jumlah</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {financeLog.filter(r => r.type === 'expense').length > 0 ? (
+                financeLog.filter(r => r.type === 'expense').map((record) => (
+                  <TableRow key={record.id}>
+                    <TableCell>{format(new Date(record.date), 'PPP')}</TableCell>
+                    <TableCell>{record.projectName}</TableCell>
+                    <TableCell className="font-medium">{record.description}</TableCell>
+                    <TableCell><Badge variant="secondary">{record.category}</Badge></TableCell>
+                    <TableCell className='text-right font-semibold text-red-600'>{formatCurrency(record.amount)}</TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="h-24 text-center">Belum ada catatan pengeluaran.</TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+        <DialogContent>
+            <DialogHeader><DialogTitle>Detail Pengajuan Pembayaran</DialogTitle></DialogHeader>
+            {selectedRequest && (
+              <div className="space-y-2 py-4">
+                  <p><strong>Pemohon:</strong> {selectedRequest.requesterName}</p>
+                  <p><strong>Tanggal:</strong> {format(new Date(selectedRequest.requestDate), 'dd MMM yyyy')}</p>
+                  <p><strong>Kategori:</strong> {selectedRequest.category}</p>
+                  <p><strong>Nama:</strong> {selectedRequest.paymentName}</p>
+                  <p><strong>Total:</strong> {formatCurrency(selectedRequest.amount)}</p>
+                  {selectedRequest.paymentType && <p><strong>Tipe Bayar:</strong> {selectedRequest.paymentType}</p>}
+                  {selectedRequest.accountNumber && <p><strong>No. Rek:</strong> {selectedRequest.accountNumber} (a/n {selectedRequest.accountName})</p>}
+                  {selectedRequest.documentUrl && <p><strong>Dokumen:</strong> <Link href={selectedRequest.documentUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline">Lihat Dokumen</Link></p>}
+              </div>
+            )}
+            <DialogFooter>
+                <Button variant="outline" onClick={() => setIsDetailOpen(false)}>Tutup</Button>
+                <Button variant="destructive" onClick={() => handleStatusUpdate('Rejected')} disabled={isPending}>
+                  {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} <X className="mr-2 h-4 w-4" /> Tolak
+                </Button>
+                <Button onClick={() => handleStatusUpdate('Approved')} disabled={isPending}>
+                  {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} <Check className="mr-2 h-4 w-4" /> Setujui
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

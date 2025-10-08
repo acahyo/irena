@@ -1,3 +1,4 @@
+
 'use server';
 
 import { db } from '@/lib/firebase';
@@ -5,14 +6,12 @@ import {
   collection,
   getDocs,
   doc,
-  getDoc,
   addDoc,
-  updateDoc,
-  deleteDoc,
   Timestamp,
   query,
   orderBy,
-  where
+  where,
+  deleteDoc
 } from 'firebase/firestore';
 import type { FinanceRecord } from '@/lib/types';
 
@@ -28,13 +27,13 @@ function convertTimestampsToDates(docData: any) {
     return data;
 }
 
-// Get all finance records
-export async function getFinanceRecords({ siteId }: { siteId?: string } = {}): Promise<FinanceRecord[]> {
+// Get all finance records, optionally filtered by projectId
+export async function getFinanceRecords({ projectId }: { projectId?: string } = {}): Promise<FinanceRecord[]> {
   try {
     let q = query(collection(db, 'finance'), orderBy('date', 'desc'));
 
-    if (siteId) {
-        q = query(collection(db, 'finance'), where('projectId', '==', siteId), orderBy('date', 'desc'));
+    if (projectId) {
+        q = query(collection(db, 'finance'), where('projectId', '==', projectId), orderBy('date', 'desc'));
     }
     
     const querySnapshot = await getDocs(q);
@@ -50,25 +49,8 @@ export async function getFinanceRecords({ siteId }: { siteId?: string } = {}): P
   }
 }
 
-// Get a single finance record by ID
-export async function getFinanceRecord(id: string): Promise<FinanceRecord | null> {
-  try {
-    const docRef = doc(db, 'finance', id);
-    const docSnap = await getDoc(docRef);
 
-    if (docSnap.exists()) {
-      const data = convertTimestampsToDates(docSnap.data());
-      return { id: docSnap.id, ...data } as FinanceRecord;
-    } else {
-      return null;
-    }
-  } catch (error) {
-    console.error(`Error fetching finance record ${id}:`, error);
-    return null;
-  }
-}
-
-// Create a new finance record
+// This function is now only used internally by other actions (purchasing, payment-requests)
 export async function createFinanceRecord(record: Omit<FinanceRecord, 'id'>): Promise<string> {
     const recordData = {
         ...record,
@@ -77,23 +59,4 @@ export async function createFinanceRecord(record: Omit<FinanceRecord, 'id'>): Pr
     };
     const docRef = await addDoc(collection(db, 'finance'), recordData);
     return docRef.id;
-}
-
-// Update an existing finance record
-export async function updateFinanceRecord(id: string, record: Partial<Omit<FinanceRecord, 'id'>>): Promise<void> {
-  const docRef = doc(db, 'finance', id);
-  const recordData = { ...record };
-  if (recordData.amount) {
-      recordData.amount = Number(recordData.amount) || 0;
-  }
-  if (recordData.date) {
-      recordData.date = new Date(recordData.date);
-  }
-  await updateDoc(docRef, recordData);
-}
-
-// Delete a finance record
-export async function deleteFinanceRecord(id: string): Promise<void> {
-  const docRef = doc(db, 'finance', id);
-  await deleteDoc(docRef);
 }
