@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { db } from '@/lib/firebase';
@@ -92,23 +93,24 @@ export async function createPurchaseRequest(request: Omit<PurchaseRequest, 'id' 
 // Update a purchase request status and other details (for Purchasing and Finance)
 export async function updatePurchaseRequest(id: string, updates: Partial<PurchaseRequest>): Promise<void> {
   const docRef = doc(db, 'purchaseRequests', id);
-  
-  if (updates.proposedAmount) {
-    updates.proposedAmount = Number(updates.proposedAmount);
+  const updateData: { [key: string]: any } = { ...updates };
+
+  if (updateData.proposedAmount) {
+    updateData.proposedAmount = Number(updateData.proposedAmount);
   }
 
   // If status is being updated, add the corresponding date
-  if (updates.status) {
+  if (updateData.status) {
     const now = new Date();
-    if (updates.status === 'Verified') {
-        updates.verifiedDate = now;
+    if (updateData.status === 'Verified') {
+        updateData.verifiedDate = now;
     }
-    if (updates.status === 'Approved') {
-        updates.approvedDate = now;
+    if (updateData.status === 'Approved') {
+        updateData.approvedDate = now;
     }
   }
   
-  await updateDoc(docRef, updates);
+  await updateDoc(docRef, updateData);
 
   // If the status is 'Approved', create a corresponding finance record
   if (updates.status === 'Approved') {

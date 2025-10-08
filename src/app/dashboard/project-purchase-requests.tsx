@@ -1,12 +1,22 @@
 
 'use client';
 
+import { useState } from 'react';
 import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import type { PurchaseRequest } from '@/lib/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from '@/components/ui/button';
 
 const getStatusVariant = (status: string) => {
   switch (status) {
@@ -28,7 +38,17 @@ const formatCurrency = (amount: number | undefined | null) => {
 };
 
 export default function ProjectPurchaseRequests({ initialRequests }: { initialRequests: PurchaseRequest[] }) {
+    const [selectedRequest, setSelectedRequest] = useState<PurchaseRequest | null>(null);
+    const [isDetailOpen, setIsDetailOpen] = useState(false);
+
+    const handleViewDetails = (request: PurchaseRequest) => {
+        setSelectedRequest(request);
+        setIsDetailOpen(true);
+    };
+
+
   return (
+    <>
     <Card>
       <CardHeader>
         <CardTitle>Status Pengajuan</CardTitle>
@@ -46,7 +66,7 @@ export default function ProjectPurchaseRequests({ initialRequests }: { initialRe
             <TableBody>
               {initialRequests.length > 0 ? (
                 initialRequests.map((req) => (
-                  <TableRow key={req.id}>
+                  <TableRow key={req.id} onClick={() => handleViewDetails(req)} className="cursor-pointer">
                     <TableCell>{format(new Date(req.requestDate), 'PPP')}</TableCell>
                     <TableCell>{formatCurrency(req.proposedAmount)}</TableCell>
                     <TableCell>
@@ -66,5 +86,62 @@ export default function ProjectPurchaseRequests({ initialRequests }: { initialRe
         </ScrollArea>
       </CardContent>
     </Card>
+
+    <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+        {selectedRequest && (
+            <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle>Detail Pengajuan #{selectedRequest.id.substring(0, 6)}</DialogTitle>
+                    <DialogDescription>
+                        Status Saat Ini: <Badge variant={getStatusVariant(selectedRequest.status)}>{selectedRequest.status}</Badge>
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
+                    <div>
+                        <h4 className="font-semibold mb-2">Item yang Diajukan</h4>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Barang</TableHead>
+                                    <TableHead className="text-right">Jumlah</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {selectedRequest.items.map((item, index) => (
+                                    <TableRow key={index}>
+                                        <TableCell>{item.name}</TableCell>
+                                        <TableCell className="text-right">{item.quantity}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+                     <div className="space-y-1">
+                        <h4 className="font-semibold">Nominal Diajukan oleh Purchasing</h4>
+                        <p className="text-lg font-bold">{formatCurrency(selectedRequest.proposedAmount)}</p>
+                    </div>
+                    <div>
+                        <h4 className="font-semibold mb-2">Riwayat Proses</h4>
+                        <ul className="space-y-2 text-sm">
+                            <li className="flex justify-between"><span>Dibuat:</span> <span>{format(new Date(selectedRequest.requestDate), 'PPP, HH:mm')}</span></li>
+                            <li className="flex justify-between"><span>Diverifikasi Purchasing:</span> <span>{selectedRequest.verifiedDate ? format(new Date(selectedRequest.verifiedDate), 'PPP, HH:mm') : '-'}</span></li>
+                            <li className="flex justify-between"><span>Disetujui Finance:</span> <span>{selectedRequest.approvedDate ? format(new Date(selectedRequest.approvedDate), 'PPP, HH:mm') : '-'}</span></li>
+                        </ul>
+                    </div>
+
+                    {selectedRequest.status === 'Rejected' && selectedRequest.rejectionReason && (
+                         <div>
+                            <h4 className="font-semibold text-destructive">Alasan Penolakan</h4>
+                            <p className="text-sm text-destructive p-2 border border-destructive/50 bg-destructive/10 rounded-md">{selectedRequest.rejectionReason}</p>
+                        </div>
+                    )}
+                </div>
+                <DialogFooter>
+                    <Button onClick={() => setIsDetailOpen(false)}>Tutup</Button>
+                </DialogFooter>
+            </DialogContent>
+        )}
+    </Dialog>
+    </>
   );
 }
