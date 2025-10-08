@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -234,7 +235,7 @@ export default function AdminProjectDashboard({ user, assignedSites, currentProj
                                 ) : (
                                      <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-8">
                                         <UserRound className="h-8 w-8 mb-2" />
-                                        <p className="text-sm">Tidak ada karyawan yang memenuhi kriteria saat ini.</p>
+                                        <div className="text-sm">Tidak ada karyawan yang memenuhi kriteria saat ini.</div>
                                     </div>
                                 )}
                             </div>
@@ -245,3 +246,5 @@ export default function AdminProjectDashboard({ user, assignedSites, currentProj
         </div>
     )
 }
+
+    

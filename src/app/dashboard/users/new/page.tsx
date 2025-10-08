@@ -180,7 +180,7 @@ export default function NewUserPage() {
                                 {employees.map((emp) => (
                                     <SelectItem key={emp.id} value={emp.id}>{emp.name} ({emp.email})</SelectItem>
                                 ))}
-                                {employees.length === 0 && <p className="p-2 text-sm text-muted-foreground">No available employees found.</p>}
+                                {employees.length === 0 && <div className="p-2 text-sm text-muted-foreground">No available employees found.</div>}
                             </SelectContent>
                         </Select>
                     </div>
@@ -284,7 +284,7 @@ export default function NewUserPage() {
                                         </Badge>
                                     );
                                 }) : (
-                                    <p className="text-sm text-muted-foreground">Belum ada proyek dipilih.</p>
+                                    <div className="text-sm text-muted-foreground p-1">Belum ada proyek dipilih.</div>
                                 )}
                             </div>
                             <input type="hidden" name="siteIds" value={selectedSiteIds.join(',')} />
@@ -321,3 +321,5 @@ export default function NewUserPage() {
     </div>
   );
 }
+
+    
