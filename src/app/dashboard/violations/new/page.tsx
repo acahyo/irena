@@ -32,8 +32,8 @@ import {
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import type { HseCategory, Employee, Department, Position, Site } from '@/lib/types';
-import { createHseRecord } from '@/actions/hse';
+import type { HseCategory, Employee, Department, Position, Site, ViolationRecord } from '@/lib/types';
+import { createViolationRecord } from '@/actions/violations';
 import { getEmployees } from '@/actions/employees';
 import { getDepartments } from '@/actions/departments';
 import { getPositions } from '@/actions/positions';
@@ -46,22 +46,13 @@ import { getSites } from '@/actions/sites';
 import { useUser } from '@/contexts/user-context';
 
 
-const categoryTitles: Record<HseCategory, string> = {
-    incident: 'Laporan Insiden Baru',
-    inspection: 'Dokumentasi Inspeksi Baru',
-    risk: 'Data Manajemen Risiko Baru',
-    plan: 'Rencana Kerja K3 Baru'
-};
-
-
-export default function NewHseRecordPage() {
+export default function NewViolationRecordPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [filePreview, setFilePreview] = useState<string | null>(null);
-  const [fineFilePreview, setFineFilePreview] = useState<string | null>(null);
   const user = useUser();
   
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -73,37 +64,32 @@ export default function NewHseRecordPage() {
   
   const [positionFilter, setPositionFilter] = useState('all');
   const [siteFilter, setSiteFilter] = useState('all');
-  const [hasFine, setHasFine] = useState(false);
   
-  const category = searchParams.get('category') as HseCategory | null;
-
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      if (category === 'incident') {
-        try {
-          const userSiteIds = (user?.role === 'Admin Proyek' && user.siteIds) ? user.siteIds : undefined;
+      try {
+        const userSiteIds = (user?.role === 'Admin Proyek' && user.siteIds) ? user.siteIds : undefined;
 
-          const [empData, vioData, posData, siteData] = await Promise.all([
-            getEmployees({ siteIds: userSiteIds }),
-            getViolationRecords(),
-            getPositions(),
-            getSites(),
-          ]);
-          setEmployees(empData);
-          setAllViolations(vioData);
-          setPositions(posData);
-          setSites(siteData);
-        } catch (error) {
-           toast({ variant: 'destructive', title: 'Error', description: 'Gagal memuat data.'});
-        }
+        const [empData, vioData, posData, siteData] = await Promise.all([
+          getEmployees({ siteIds: userSiteIds }),
+          getViolationRecords(),
+          getPositions(),
+          getSites(),
+        ]);
+        setEmployees(empData);
+        setAllViolations(vioData);
+        setPositions(posData);
+        setSites(siteData);
+      } catch (error) {
+          toast({ variant: 'destructive', title: 'Error', description: 'Gagal memuat data.'});
       }
       setLoading(false);
     };
     if (user) {
         fetchData();
     }
-  }, [category, toast, user]);
+  }, [toast, user]);
   
   const filteredEmployees = useMemo(() => {
       return employees.filter(emp => 
@@ -160,15 +146,6 @@ export default function NewHseRecordPage() {
   }, [lastViolation]);
 
 
-  if (!category || !categoryTitles[category]) {
-      return (
-          <div>
-              <p>Kategori tidak valid. Silakan kembali ke halaman HSE dan coba lagi.</p>
-              <Button asChild variant="link"><Link href="/dashboard/hse">Kembali</Link></Button>
-          </div>
-      );
-  }
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, setter: React.Dispatch<React.SetStateAction<string | null>>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -191,29 +168,22 @@ export default function NewHseRecordPage() {
 
     const formData = new FormData(event.currentTarget);
     
-    
     const recordData: Omit<ViolationRecord, 'id'> = {
         employeeId: selectedEmployee.id,
         employeeName: selectedEmployee.name,
         employeePosition: selectedEmployee.positions?.join(', ') || 'N/A',
         siteLocation: selectedEmployee.siteLocation || 'N/A',
-        category,
-        title: formData.get('title') as string,
-        description: formData.get('description') as string,
         date,
         fileUrl: filePreview || undefined,
         status: formData.get('status') as 'SP1' | 'SP2' | 'SP3' | 'SPPT',
-        // Incident-specific fields
-        hasFine: hasFine,
-        fineAmount: formData.get('fineAmount') ? Number(formData.get('fineAmount')) : undefined,
-        fineAttachmentUrl: fineFilePreview || undefined,
+        description: formData.get('description') as string,
     };
     
     try {
-        await createHseRecord(recordData as any); // Cast to any to bypass type mismatch on server
+        await createViolationRecord(recordData);
         toast({
             title: 'Sukses!',
-            description: 'Data HSE baru telah ditambahkan.',
+            description: 'Catatan pelanggaran baru telah ditambahkan.',
         });
         router.push('/dashboard/violations');
         router.refresh();
@@ -222,7 +192,7 @@ export default function NewHseRecordPage() {
         toast({
             variant: 'destructive',
             title: 'Error',
-            description: 'Gagal menambahkan data HSE baru.',
+            description: 'Gagal menambahkan data pelanggaran baru.',
         });
     } finally {
         setLoading(false);
@@ -238,17 +208,17 @@ export default function NewHseRecordPage() {
   return (
     <div className="space-y-6">
       <Button asChild variant="outline" size="sm">
-        <Link href="/dashboard/hse">
+        <Link href="/dashboard/violations">
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Kembali ke HSE
+          Kembali ke Daftar Pelanggaran
         </Link>
       </Button>
 
       <Card>
         <CardHeader>
-          <CardTitle>{categoryTitles[category]}</CardTitle>
+          <CardTitle>Tambah Catatan Pelanggaran</CardTitle>
           <CardDescription>
-            Isi formulir untuk menambah data HSE baru.
+            Isi formulir untuk menambah data pelanggaran karyawan.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -276,9 +246,15 @@ export default function NewHseRecordPage() {
                 </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-               <div className="space-y-2">
-                <Label htmlFor="title">Judul</Label>
-                <Input id="title" name="title" placeholder="e.g. Investigasi Kecelakaan Ringan" required />
+
+              <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="employeeId">Nama Karyawan</Label>
+                  <Select name="employeeId" onValueChange={handleEmployeeChange}>
+                        <SelectTrigger id="employeeId"><SelectValue placeholder="Pilih Karyawan" /></SelectTrigger>
+                      <SelectContent>
+                          {filteredEmployees.map(emp => <SelectItem key={emp.id} value={emp.id}>{emp.name}</SelectItem>)}
+                      </SelectContent>
+                  </Select>
               </div>
 
                <div className="space-y-2">
@@ -302,19 +278,8 @@ export default function NewHseRecordPage() {
                 </Popover>
               </div>
 
-              {category === 'incident' && (
                 <>
-                    <div className="space-y-2 md:col-span-2">
-                        <Label htmlFor="employeeId">Nama Karyawan</Label>
-                        <Select name="employeeId" onValueChange={handleEmployeeChange}>
-                             <SelectTrigger id="employeeId"><SelectValue placeholder="Pilih Karyawan" /></SelectTrigger>
-                            <SelectContent>
-                                {filteredEmployees.map(emp => <SelectItem key={emp.id} value={emp.id}>{emp.name}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                     {selectedEmployee && (
+                      {selectedEmployee && (
                           <div className="md:col-span-2">
                               <Alert>
                                 <AlertTriangle className="h-4 w-4" />
@@ -338,50 +303,16 @@ export default function NewHseRecordPage() {
                           </SelectContent>
                         </Select>
                       </div>
-
-                     <div className="space-y-2 flex items-center gap-2 pt-2">
-                        <Checkbox id="hasFine" name="hasFine" checked={hasFine} onCheckedChange={(checked) => setHasFine(!!checked)} />
-                        <Label htmlFor="hasFine">Ada Denda Terkait Insiden Ini?</Label>
-                    </div>
                 </>
-              )}
-
-             {category === 'incident' && hasFine && (
-                <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 border-l-4 border-destructive pl-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="fineAmount">Nominal Denda (Rp)</Label>
-                        <Input id="fineAmount" name="fineAmount" type="number" placeholder="e.g. 50000" required={hasFine} />
-                    </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="fineAttachment">Lampiran Bukti Denda</Label>
-                         <div className="flex items-center gap-4">
-                            {fineFilePreview && (
-                                <div className="flex items-center gap-2 border p-2 rounded-md bg-muted">
-                                   <FileIcon className="h-6 w-6" />
-                                   <span className="text-sm text-muted-foreground">File dipilih</span>
-                                </div>
-                            )}
-                            <Input
-                                id="fineAttachment"
-                                name="fineAttachment"
-                                type="file"
-                                onChange={(e) => handleFileChange(e, setFineFilePreview)}
-                                className="max-w-sm"
-                                required={hasFine}
-                            />
-                        </div>
-                    </div>
-                </div>
-             )}
 
 
               <div className="space-y-2 md:col-span-2">
-                 <Label htmlFor="description">Deskripsi / Ringkasan</Label>
-                <Textarea id="description" name="description" placeholder="Jelaskan detail laporan atau dokumen di sini..." required />
+                 <Label htmlFor="description">Deskripsi / Ringkasan Pelanggaran</Label>
+                <Textarea id="description" name="description" placeholder="Jelaskan detail pelanggaran di sini..." required />
               </div>
 
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="file">Lampiran File (Wajib)</Label>
+                <Label htmlFor="file">Lampiran File (Bukti Pelanggaran)</Label>
                  <div className="flex items-center gap-4">
                     {filePreview && (
                         <div className="flex items-center gap-2 border p-2 rounded-md bg-muted">
