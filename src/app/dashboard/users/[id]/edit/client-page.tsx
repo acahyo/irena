@@ -221,7 +221,7 @@ export default function EditUserClientPage({ user, roles, sites, positions }: { 
                                         </Badge>
                                     );
                                 }) : (
-                                    <p className="text-sm text-muted-foreground">Belum ada proyek dipilih.</p>
+                                    <div className="text-sm text-muted-foreground p-1">Belum ada proyek dipilih.</div>
                                 )}
                             </div>
                             <input type="hidden" name="siteIds" value={selectedSiteIds.join(',')} />
