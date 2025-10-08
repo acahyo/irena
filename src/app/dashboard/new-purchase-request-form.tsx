@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useTransition } from 'react';
@@ -14,12 +13,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import type { PurchaseRequestItem, User, Site } from '@/lib/types';
+import type { PurchaseRequestItem, User, Site, WarehouseItem } from '@/lib/types';
 import { createPurchaseRequest } from '@/actions/purchasing';
 import { PlusCircle, Trash2, Loader2 } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
-export default function NewPurchaseRequestForm({ user, site }: { user: User; site: Site }) {
-  const [items, setItems] = useState<Partial<PurchaseRequestItem>[]>([{ name: '', quantity: 1 }]);
+export default function NewPurchaseRequestForm({ user, site, warehouseItems }: { user: User; site: Site, warehouseItems: WarehouseItem[] }) {
+  const [items, setItems] = useState<Partial<PurchaseRequestItem> & { isOther?: boolean }>([{ name: '', quantity: 1, isOther: false }]);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const router = useRouter();
@@ -30,8 +36,18 @@ export default function NewPurchaseRequestForm({ user, site }: { user: User; sit
     (newItems[index] as any)[field] = numValue;
     setItems(newItems);
   };
+  
+  const handleItemSelect = (index: number, value: string) => {
+    const newItems = [...items];
+    if (value === 'other') {
+      newItems[index] = { ...newItems[index], name: '', isOther: true };
+    } else {
+      newItems[index] = { ...newItems[index], name: value, isOther: false };
+    }
+    setItems(newItems);
+  };
 
-  const addItem = () => setItems([...items, { name: '', quantity: 1 }]);
+  const addItem = () => setItems([...items, { name: '', quantity: 1, isOther: false }]);
   const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -54,7 +70,7 @@ export default function NewPurchaseRequestForm({ user, site }: { user: User; sit
         };
         await createPurchaseRequest(requestData);
         toast({ title: 'Sukses!', description: 'Pengajuan barang berhasil dikirim.' });
-        setItems([{ name: '', quantity: 1 }]); // Reset form
+        setItems([{ name: '', quantity: 1, isOther: false }]); // Reset form
         router.refresh(); // Refresh dashboard to show new request
       } catch (error) {
         toast({ variant: 'destructive', title: 'Error', description: 'Gagal mengirim pengajuan.' });
@@ -75,7 +91,21 @@ export default function NewPurchaseRequestForm({ user, site }: { user: User; sit
               <div key={index} className="grid grid-cols-12 gap-2 items-end p-2 border rounded-md">
                 <div className="col-span-8 space-y-1">
                   <Label htmlFor={`name-${index}`} className="text-xs">Nama Barang & Kebutuhan</Label>
-                  <Input id={`name-${index}`} value={item.name} onChange={e => handleItemChange(index, 'name', e.target.value)} required />
+                  {item.isOther ? (
+                     <Input id={`name-${index}`} value={item.name} onChange={e => handleItemChange(index, 'name', e.target.value)} required placeholder="Ketik nama barang baru..." />
+                  ) : (
+                    <Select onValueChange={(value) => handleItemSelect(index, value)} value={item.name}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih dari stok gudang..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {warehouseItems.map(whItem => (
+                          <SelectItem key={whItem.id} value={whItem.name}>{whItem.name}</SelectItem>
+                        ))}
+                         <SelectItem value="other">Lainnya...</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
                 <div className="col-span-3 space-y-1">
                   <Label htmlFor={`quantity-${index}`} className="text-xs">Jumlah</Label>
