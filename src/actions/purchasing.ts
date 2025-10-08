@@ -38,21 +38,32 @@ function convertTimestampsToDates(docData: any) {
 }
 
 // Get all purchase requests, optionally filtered by site
-export async function getPurchaseRequests({ siteId }: { siteId?: string } = {}): Promise<PurchaseRequest[]> {
+export async function getPurchaseRequests({ siteId, status }: { siteId?: string, status?: PurchaseRequest['status'] } = {}): Promise<PurchaseRequest[]> {
   try {
-    const q = query(collection(db, 'purchaseRequests'), orderBy('requestDate', 'desc'));
+    const q = collection(db, 'purchaseRequests');
     
-    const querySnapshot = await getDocs(q);
+    let conditions: any[] = [];
+    if(siteId) {
+        conditions.push(where('projectId', '==', siteId));
+    }
+    if (status) {
+        conditions.push(where('status', '==', status));
+    }
+    
+    const finalQuery = conditions.length > 0 ? query(q, ...conditions) : query(q, orderBy('requestDate', 'desc'));
+
+    const querySnapshot = await getDocs(finalQuery);
     const requests: PurchaseRequest[] = [];
     querySnapshot.forEach((doc) => {
         const data = convertTimestampsToDates(doc.data());
         requests.push({ id: doc.id, ...data } as PurchaseRequest);
     });
-
-    if (siteId) {
-        return requests.filter(req => req.projectId === siteId);
-    }
     
+    // Manual sort if no specific ordering is done by Firestore
+    if(conditions.length > 0) {
+        requests.sort((a,b) => new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime());
+    }
+
     return requests;
   } catch (error) {
     console.error("Error fetching purchase requests:", error);
