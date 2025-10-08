@@ -20,6 +20,7 @@ export interface PayslipData {
   employee: EmployeeWithPosition;
   position: Position;
   period: string;
+  paymentDate?: Date;
   earnings: Record<string, number>;
   deductions: Record<string, number>;
   totalEarnings: number;

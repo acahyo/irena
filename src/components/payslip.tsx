@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import type { Employee, AppSettings, Position } from '@/lib/types';
@@ -27,6 +28,7 @@ export default function Payslip({
   const {
     employee,
     period,
+    paymentDate,
     earnings,
     deductions,
     totalEarnings,
@@ -186,7 +188,7 @@ export default function Payslip({
               <div>
                   <h3 className="text-lg font-semibold text-gray-700 mb-2">{T.paymentInfo}</h3>
                   <div className="grid grid-cols-2 gap-4">
-                      <DetailRow label={T.paymentDate} value={format(new Date(), 'dd MMMM yyyy', { locale })} />
+                      <DetailRow label={T.paymentDate} value={paymentDate ? format(paymentDate, 'dd MMMM yyyy', { locale }) : format(new Date(), 'dd MMMM yyyy', { locale })} />
                       <DetailRow label={T.bank} value={employee.bankName} />
                       <DetailRow label={T.accountNumber} value={employee.accountNumber} />
                       <DetailRow label={T.accountHolder} value={employee.accountHolderName} />
@@ -256,7 +258,7 @@ export default function Payslip({
 
         <footer className="mt-12 text-center text-xs text-gray-400">
           <div className="whitespace-pre-wrap">{T.footer}</div>
-          <div>{settings.appName} &copy; {new Date().getFullYear()}</div>
+          <div>{settings.appName} &amp;copy; {new Date().getFullYear()}</div>
         </footer>
       </div>
     </div>

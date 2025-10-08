@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Settings2 } from 'lucide-react';
+import { Loader2, Settings2, Calendar as CalendarIcon } from 'lucide-react';
 import type { EmployeeWithPosition, AppSettings, AttendanceRecord, Position, KoperasiOrder, HseRecord, Site } from '@/lib/types';
 import PayslipViewer, { type PayslipData, type PayslipOptions } from '@/components/payslip-viewer';
 import { useToast } from '@/hooks/use-toast';
@@ -30,8 +30,11 @@ import {
 } from "@/components/ui/collapsible"
 import { format, parse, getMonth, getYear } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { savePayrollRecord } from '@/actions/payroll';
+import { savePayrollHistoryBatch } from '@/actions/payroll';
 import { getHseRecords } from '@/actions/hse';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
 
 const BPJS_RATES: Record<string, number> = {
     miki: 280000,
@@ -51,6 +54,7 @@ export default function PayslipCollectiveClientPage({
 }) {
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<Set<string>>(new Set());
   const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7));
+  const [paymentDate, setPaymentDate] = useState<Date | undefined>(new Date());
   const [siteFilter, setSiteFilter] = useState('all');
   const [positionFilter, setPositionFilter] = useState('all');
   const [payslipsData, setPayslipsData] = useState<PayslipData[]>([]);
@@ -154,21 +158,21 @@ export default function PayslipCollectiveClientPage({
       });
       return;
     }
-    if (!period) {
+    if (!period || !paymentDate) {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Please select a valid period.',
+        description: 'Periode dan Tanggal Pembayaran wajib diisi.',
       });
       return;
     }
 
     startTransition(async () => {
         const generatedPayslips: PayslipData[] = [];
+        const recordsToSave: Omit<PayrollRecord, 'id'>[] = [];
         const periodDate = parse(period, 'yyyy-MM', new Date());
         const periodString = format(periodDate, 'MMMM yyyy', { locale: id });
-        let savedCount = 0;
-
+        
         for (const employeeId of selectedEmployeeIds) {
             const employee = initialEmployees.find(e => e.id === employeeId);
             if (!employee || !employee.positionDetails || employee.positionDetails.length === 0) continue;
@@ -259,9 +263,11 @@ export default function PayslipCollectiveClientPage({
             
             const mainPosition = employee.positionDetails![0];
             
-            const payslipRecord: Omit<PayslipData, 'employee'> = {
+            const payslipRecordForView: PayslipData = {
                 id: employee.id,
+                employee: employee,
                 period: periodString,
+                paymentDate: paymentDate,
                 earnings,
                 deductions,
                 totalEarnings,
@@ -273,35 +279,45 @@ export default function PayslipCollectiveClientPage({
                 keterangan: keterangan,
                 options: payslipOptions,
             };
+            
+            const payrollHistoryRecord: Omit<PayrollRecord, 'id'> = {
+                employeeId: employee.id,
+                employeeName: employee.name,
+                period: period,
+                paymentDate: paymentDate,
+                generationDate: new Date(),
+                earnings,
+                deductions,
+                totalEarnings,
+                totalDeductions,
+                netSalary,
+                bankName: employee.bankName,
+                accountNumber: employee.accountNumber,
+                keterangan: keterangan,
+            };
 
-            generatedPayslips.push({ ...payslipRecord, employee });
-
-            // Save to history
-            try {
-                await savePayrollRecord({
-                    ...payslipRecord,
-                    period: period,
-                    employeeId: employee.id,
-                    employeeName: employee.name,
-                    bankName: employee.bankName,
-                    accountNumber: employee.accountNumber,
-                });
-                savedCount++;
-            } catch (err) {
-                 // Log error but continue
-                console.error(`Failed to save payroll record for ${employee.name}`, err);
-            }
+            generatedPayslips.push(payslipRecordForView);
+            recordsToSave.push(payrollHistoryRecord);
         }
+
+        const result = await savePayrollHistoryBatch(recordsToSave);
 
         if (generatedPayslips.length !== selectedEmployeeIds.size) {
-            toast({ variant: 'destructive', title: 'Warning', description: 'Some payslips could not be generated due to missing salary details.' });
+            toast({ variant: 'destructive', title: 'Warning', description: 'Beberapa slip gaji tidak dapat dibuat karena detail gaji tidak lengkap.' });
         }
         
-        toast({
-            title: 'Success!',
-            description: `${generatedPayslips.length} payslips generated and ${savedCount} history records saved.`,
-        });
-
+        if (result.success) {
+            toast({
+                title: 'Sukses!',
+                description: `${generatedPayslips.length} slip gaji dibuat dan ${result.count} catatan riwayat disimpan.`,
+            });
+        } else {
+             toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'Gagal menyimpan riwayat payroll, namun slip gaji tetap ditampilkan.',
+            });
+        }
         setPayslipsData(generatedPayslips);
     });
   };
@@ -327,6 +343,25 @@ export default function PayslipCollectiveClientPage({
                     disabled={isGenerating}
                 />
             </div>
+            <div className="space-y-2">
+                <Label htmlFor="paymentDate">Tanggal Pembayaran</Label>
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button
+                        id="paymentDate"
+                        variant={'outline'}
+                        className={cn('w-full justify-start text-left font-normal', !paymentDate && 'text-muted-foreground')}
+                        >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {paymentDate ? format(paymentDate, 'PPP') : <span>Pilih tanggal</span>}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                        <Calendar mode="single" selected={paymentDate} onSelect={setPaymentDate} initialFocus />
+                    </PopoverContent>
+                </Popover>
+            </div>
+            <div/>
             <div className="space-y-2">
               <Label htmlFor="siteFilter">Lokasi Proyek</Label>
               <Select value={siteFilter} onValueChange={handleSiteFilterChange}>

@@ -24,11 +24,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Download, Loader2, Save } from 'lucide-react';
+import { Download, Loader2, Save, Calendar as CalendarIcon } from 'lucide-react';
 import type { EmployeeWithDetails } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import * as XLSX from 'xlsx';
 import { savePayrollHistoryBatch } from '@/actions/payroll';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
+import { Label } from '@/components/ui/label';
 
 const formatCurrency = (amount: number | undefined | null) => {
     if (amount === undefined || amount === null) return 'N/A';
@@ -42,6 +47,7 @@ const formatCurrency = (amount: number | undefined | null) => {
 export default function PayrollClientPage({ employees, period }: { employees: EmployeeWithDetails[], period: string }) {
   const { toast } = useToast();
   const [bankFilter, setBankFilter] = useState('all');
+  const [paymentDate, setPaymentDate] = useState<Date | undefined>();
   const [isSaving, startSaving] = useTransition();
 
   const banks = useMemo(() => {
@@ -86,12 +92,17 @@ export default function PayrollClientPage({ employees, period }: { employees: Em
           toast({ variant: 'destructive', title: 'Tidak ada data', description: 'Tidak ada data karyawan untuk disimpan.' });
           return;
       }
+      if (!paymentDate) {
+          toast({ variant: 'destructive', title: 'Tanggal Pembayaran Wajib Diisi', description: 'Silakan pilih tanggal pembayaran sebelum menyimpan.' });
+          return;
+      }
       
       startSaving(async () => {
           const recordsToSave = filteredEmployees.map(emp => ({
               employeeId: emp.id,
               employeeName: emp.name,
               period,
+              paymentDate,
               earnings: emp.earnings,
               deductions: emp.deductions,
               totalEarnings: emp.totalEarnings,
@@ -120,7 +131,7 @@ export default function PayrollClientPage({ employees, period }: { employees: Em
               Ringkasan gaji bersih karyawan yang siap ditransfer.
             </CardDescription>
           </div>
-           <div className="flex flex-wrap items-center gap-2">
+           <div className="flex flex-wrap items-end gap-2">
                  <Select value={bankFilter} onValueChange={setBankFilter}>
                     <SelectTrigger className="w-full md:w-[180px]">
                         <SelectValue placeholder="Filter by Bank" />
@@ -137,6 +148,24 @@ export default function PayrollClientPage({ employees, period }: { employees: Em
                     <Download className="mr-2 h-4 w-4" />
                     Export
                 </Button>
+                <div className="space-y-1">
+                    <Label htmlFor="paymentDate" className="text-xs">Tanggal Pembayaran (Wajib)</Label>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button
+                            id="paymentDate"
+                            variant={'outline'}
+                            className={cn('w-[240px] justify-start text-left font-normal', !paymentDate && 'text-muted-foreground')}
+                            >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {paymentDate ? format(paymentDate, 'PPP') : <span>Pilih tanggal</span>}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                            <Calendar mode="single" selected={paymentDate} onSelect={setPaymentDate} initialFocus />
+                        </PopoverContent>
+                    </Popover>
+                </div>
                 <Button onClick={handleVerifyAndSave} disabled={isSaving}>
                   {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                   Verifikasi &amp; Simpan

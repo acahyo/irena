@@ -22,6 +22,7 @@ export async function savePayrollRecord(record: Omit<PayrollRecord, 'id'>): Prom
     const recordData = {
         ...record,
         generationDate: new Date(),
+        paymentDate: record.paymentDate ? new Date(record.paymentDate) : new Date(),
     };
     const docRef = await addDoc(collection(db, 'payrollHistory'), recordData);
     return docRef.id;
@@ -40,6 +41,7 @@ export async function savePayrollHistoryBatch(records: Omit<PayrollRecord, 'id'>
         const recordData = {
             ...record,
             generationDate: new Date(),
+            paymentDate: record.paymentDate ? new Date(record.paymentDate) : new Date(),
         };
         batch.set(docRef, recordData);
     });

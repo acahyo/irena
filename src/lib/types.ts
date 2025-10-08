@@ -9,6 +9,7 @@
 
 
 
+
 export type Allowance = {
   name: string;
   amount: number;
@@ -267,6 +268,7 @@ export type PayrollRecord = {
     employeeName: string;
     period: string; // YYYY-MM
     generationDate: Date | string;
+    paymentDate?: Date | string;
     earnings: Record<string, number>;
     deductions: Record<string, number>;
     totalEarnings: number;

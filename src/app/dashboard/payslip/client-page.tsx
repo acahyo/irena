@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Printer, Loader2, Settings2, Search } from 'lucide-react';
+import { Printer, Loader2, Settings2, Search, Calendar as CalendarIcon } from 'lucide-react';
 import type { EmployeeWithPosition, AppSettings, Position, AttendanceRecord, KoperasiOrder, HseRecord, Site } from '@/lib/types';
 import PayslipViewer, { type PayslipData, type PayslipOptions } from '@/components/payslip-viewer';
 import { useToast } from '@/hooks/use-toast';
@@ -37,6 +37,9 @@ import { format, parse, getMonth, getYear } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { savePayrollRecord } from '@/actions/payroll';
 import { getHseRecords } from '@/actions/hse';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
 
 
 const BPJS_RATES: Record<string, number> = {
@@ -59,6 +62,7 @@ export default function PayslipClientPage({
 }) {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
   const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7));
+  const [paymentDate, setPaymentDate] = useState<Date | undefined>(new Date());
   const [payslipData, setPayslipData] = useState<PayslipData | null>(null);
   const [attendanceRecord, setAttendanceRecord] = useState<AttendanceRecord | null>(null);
   const [koperasiOrders, setKoperasiOrders] = useState<KoperasiOrder[]>([]);
@@ -90,7 +94,7 @@ export default function PayslipClientPage({
   
   const employeesBySite = useMemo(() => {
     if (siteFilter === 'all') {
-      return initialEmployees;
+      return []; // Don't show any employee if no project is selected
     }
     const selectedSite = sites.find(s => s.id === siteFilter);
     if (!selectedSite) return initialEmployees;
@@ -137,8 +141,6 @@ export default function PayslipClientPage({
   useEffect(() => {
     // If the selected employee is no longer in the displayed list (due to filters), deselect it.
     if (selectedEmployeeId && !employeeListToDisplay.find(e => e.id === selectedEmployeeId)) {
-        // This line can be disruptive if the user is searching. Let's disable it for now.
-        // If search is active, we don't want to clear selection.
         if (!searchFilter) {
             setSelectedEmployeeId(null);
             setPayslipData(null);
@@ -201,6 +203,14 @@ export default function PayslipClientPage({
         variant: 'destructive',
         title: 'Error',
         description: 'Please select an employee and a period.',
+      });
+      return;
+    }
+    if (!paymentDate) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Tanggal Pembayaran wajib diisi.',
       });
       return;
     }
@@ -302,7 +312,7 @@ export default function PayslipClientPage({
     }
     
     const hseFineDeduction = hseRecords
-      .filter(record => record.fineDeductionPeriods && record.fineDeductionPeriods > 0)
+      .filter(record => record.employeeId === selectedEmployeeId && record.hasFine)
       .reduce((sum, record) => {
           const monthlyDeduction = (record.fineAmount || 0) / (record.fineDeductionPeriods || 1);
           return sum + monthlyDeduction;
@@ -322,6 +332,7 @@ export default function PayslipClientPage({
       id: selectedEmployee.id,
       employee: selectedEmployee,
       period: periodString,
+      paymentDate: paymentDate,
       earnings,
       deductions,
       totalEarnings,
@@ -342,6 +353,7 @@ export default function PayslipClientPage({
             employeeId: selectedEmployee.id,
             employeeName: selectedEmployee.name,
             period: period,
+            paymentDate: paymentDate,
             generationDate: new Date(),
             earnings,
             deductions,
@@ -379,7 +391,7 @@ export default function PayslipClientPage({
              <div className="space-y-2">
                 <Label htmlFor="siteFilter">Lokasi Proyek</Label>
                 <Select value={siteFilter} onValueChange={handleSiteFilterChange}>
-                    <SelectTrigger id="siteFilter"><SelectValue /></SelectTrigger>
+                    <SelectTrigger id="siteFilter"><SelectValue placeholder="Pilih Proyek" /></SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">Semua Proyek</SelectItem>
                         {sites.map((s) => (<SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>))}
@@ -430,7 +442,25 @@ export default function PayslipClientPage({
                     onChange={(e) => setPeriod(e.target.value)}
                 />
             </div>
-             <div className="space-y-2">
+            <div className="space-y-2">
+                <Label htmlFor="paymentDate">Tanggal Pembayaran</Label>
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button
+                        id="paymentDate"
+                        variant={'outline'}
+                        className={cn('w-full justify-start text-left font-normal', !paymentDate && 'text-muted-foreground')}
+                        >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {paymentDate ? format(paymentDate, 'PPP') : <span>Pilih tanggal</span>}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                        <Calendar mode="single" selected={paymentDate} onSelect={setPaymentDate} initialFocus />
+                    </PopoverContent>
+                </Popover>
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="attendance">Jumlah Kehadiran (hari)</Label>
               <Input
                 id="attendance"
@@ -508,5 +538,3 @@ export default function PayslipClientPage({
     </div>
   );
 }
-
-    
