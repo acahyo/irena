@@ -56,6 +56,8 @@ export async function createFinanceRecord(record: Omit<FinanceRecord, 'id'>): Pr
         ...record,
         amount: Number(record.amount) || 0,
         date: new Date(record.date),
+        projectId: record.projectId,
+        projectName: record.projectName,
     };
     const docRef = await addDoc(collection(db, 'finance'), recordData);
     return docRef.id;
