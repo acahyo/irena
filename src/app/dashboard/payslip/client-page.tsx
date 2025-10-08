@@ -1,6 +1,5 @@
 
 
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -86,7 +85,6 @@ export default function PayslipClientPage({
     setSiteFilter(value);
     setPositionFilter('all');
     setSelectedEmployeeId(null);
-    setSearchFilter('');
     setPayslipData(null);
   }
   
@@ -109,13 +107,27 @@ export default function PayslipClientPage({
   }, [employeesBySite]);
 
 
-  const filteredEmployees = useMemo(() => {
+  // Employees for dropdowns, filtered by project and position
+  const dropdownEmployees = useMemo(() => {
     return employeesBySite.filter(emp => {
       const matchesPosition = positionFilter === 'all' || emp.positions?.includes(positionFilter);
-      const matchesSearch = searchFilter === '' || emp.name.toLowerCase().includes(searchFilter.toLowerCase()) || emp.nik?.includes(searchFilter);
-      return matchesPosition && matchesSearch && emp.canGeneratePayslip !== false;
+      return matchesPosition && emp.canGeneratePayslip !== false;
     });
-  }, [employeesBySite, positionFilter, searchFilter]);
+  }, [employeesBySite, positionFilter]);
+  
+  // Employees for search, unfiltered by project/position
+  const searchedEmployees = useMemo(() => {
+      if (!searchFilter) {
+          return [];
+      }
+      return initialEmployees.filter(emp => {
+          const matchesSearch = emp.name.toLowerCase().includes(searchFilter.toLowerCase()) || emp.nik?.includes(searchFilter);
+          return matchesSearch && emp.canGeneratePayslip !== false;
+      })
+  }, [initialEmployees, searchFilter]);
+  
+  const employeeListToDisplay = searchFilter ? searchedEmployees : dropdownEmployees;
+
 
   const selectedEmployee = useMemo(() => {
     if (!selectedEmployeeId) return null;
@@ -123,11 +135,16 @@ export default function PayslipClientPage({
   }, [selectedEmployeeId, initialEmployees]);
   
   useEffect(() => {
-    if (selectedEmployeeId && !filteredEmployees.find(e => e.id === selectedEmployeeId)) {
-        setSelectedEmployeeId(null);
-        setPayslipData(null);
+    // If the selected employee is no longer in the displayed list (due to filters), deselect it.
+    if (selectedEmployeeId && !employeeListToDisplay.find(e => e.id === selectedEmployeeId)) {
+        // This line can be disruptive if the user is searching. Let's disable it for now.
+        // If search is active, we don't want to clear selection.
+        if (!searchFilter) {
+            setSelectedEmployeeId(null);
+            setPayslipData(null);
+        }
     }
-  }, [filteredEmployees, selectedEmployeeId]);
+  }, [employeeListToDisplay, selectedEmployeeId, searchFilter]);
 
 
   const handleOptionChange = (option: keyof PayslipOptions, value: boolean) => {
@@ -383,7 +400,7 @@ export default function PayslipClientPage({
                 <Label htmlFor="searchFilter">Cari Nama / NIK</Label>
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input id="searchFilter" value={searchFilter} onChange={(e) => setSearchFilter(e.target.value)} placeholder="Ketik untuk mencari..." className="pl-10" />
+                    <Input id="searchFilter" value={searchFilter} onChange={(e) => setSearchFilter(e.target.value)} placeholder="Ketik untuk mencari di semua karyawan..." className="pl-10" />
                 </div>
             </div>
             <div className="space-y-2">
@@ -396,7 +413,7 @@ export default function PayslipClientPage({
                   <SelectValue placeholder="Pilih Karyawan" />
                 </SelectTrigger>
                 <SelectContent>
-                  {filteredEmployees.map((emp) => (
+                  {employeeListToDisplay.map((emp) => (
                     <SelectItem key={emp.id} value={emp.id}>
                       {emp.name} ({emp.nik})
                     </SelectItem>
@@ -491,3 +508,5 @@ export default function PayslipClientPage({
     </div>
   );
 }
+
+    
