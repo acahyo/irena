@@ -162,10 +162,18 @@ export default function DashboardClientLayout({
   }, [lang]);
 
   const orderedNavItems = useMemo(() => {
-    return staticMenuOrder.map(orderItem => {
-        return allNavItemsMap.get(orderItem.id);
+    const menuOrder = settings.menuOrder || staticMenuOrder;
+    return menuOrder.map(orderItem => {
+        const item = allNavItemsMap.get(orderItem.id);
+        if (item && orderItem.subItems && orderItem.subItems.length > 0) {
+            return {
+                ...item,
+                subItems: orderItem.subItems.map(subId => allNavItemsMap.get(subId.id)).filter(Boolean),
+            };
+        }
+        return item;
     }).filter(Boolean);
-  }, [allNavItemsMap]);
+  }, [allNavItemsMap, settings.menuOrder]);
   
   const navItems = useMemo(() => {
     if (!role) return [];
@@ -176,6 +184,16 @@ export default function DashboardClientLayout({
     } else {
         const accessibleMenus = new Set(role.accessibleMenus || []);
         accessibleItems = orderedNavItems.map(item => {
+            if (item.subItems) {
+                const filteredSubItems = item.subItems.filter((sub:any) => accessibleMenus.has(sub.id));
+                if (filteredSubItems.length > 0) {
+                    return { ...item, subItems: filteredSubItems };
+                }
+                 if(accessibleMenus.has(item.id)) {
+                    return { ...item, subItems: []};
+                 }
+                return null;
+            }
             return accessibleMenus.has(item.id) ? item : null;
         }).filter(Boolean);
     }

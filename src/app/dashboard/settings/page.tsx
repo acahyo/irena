@@ -74,6 +74,7 @@ const allMenus = [
   { id: 'violations', label: 'Catatan Pelanggaran' },
   { id: 'leave-schedule', label: 'Jadwal Cuti' },
   { id: 'payroll', label: 'Payroll' },
+  { id: 'payroll-history', label: 'Riwayat Payroll' },
   { id: 'attendance', label: 'Input Absensi' },
   { id: 'payslip', label: 'Cetak Slip Gaji' },
   { id: 'payslip-collective', label: 'Slip Gaji Kolektif' },
