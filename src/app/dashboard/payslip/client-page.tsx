@@ -50,7 +50,7 @@ export default function PayslipClientPage({
   settings,
   initialAttendance,
   sites,
-  positions,
+  positions: allPositions,
 }: {
   initialEmployees: EmployeeWithPosition[];
   settings: AppSettings;
@@ -82,19 +82,40 @@ export default function PayslipClientPage({
     setIsClient(true);
   }, []);
 
+  const handleSiteFilterChange = (value: string) => {
+    setSiteFilter(value);
+    setPositionFilter('all');
+    setSelectedEmployeeId(null);
+    setSearchFilter('');
+    setPayslipData(null);
+  }
+  
+  const employeesBySite = useMemo(() => {
+    if (siteFilter === 'all') {
+      return initialEmployees;
+    }
+    const selectedSite = sites.find(s => s.id === siteFilter);
+    if (!selectedSite) return initialEmployees;
 
-  const handleOptionChange = (option: keyof PayslipOptions, value: boolean) => {
-    setPayslipOptions(prev => ({ ...prev, [option]: value }));
-  };
+    return initialEmployees.filter(emp => emp.siteLocation === selectedSite.name);
+  }, [initialEmployees, siteFilter, sites]);
+
+  const positionsForFilter = useMemo(() => {
+    const positionNames = new Set<string>();
+    employeesBySite.forEach(emp => {
+      emp.positions?.forEach(pos => positionNames.add(pos));
+    });
+    return Array.from(positionNames).sort();
+  }, [employeesBySite]);
+
 
   const filteredEmployees = useMemo(() => {
-    return initialEmployees.filter(emp => {
-      const matchesSite = siteFilter === 'all' || emp.siteLocation === siteFilter;
+    return employeesBySite.filter(emp => {
       const matchesPosition = positionFilter === 'all' || emp.positions?.includes(positionFilter);
       const matchesSearch = searchFilter === '' || emp.name.toLowerCase().includes(searchFilter.toLowerCase()) || emp.nik?.includes(searchFilter);
-      return matchesSite && matchesPosition && matchesSearch && emp.canGeneratePayslip !== false;
+      return matchesPosition && matchesSearch && emp.canGeneratePayslip !== false;
     });
-  }, [initialEmployees, siteFilter, positionFilter, searchFilter]);
+  }, [employeesBySite, positionFilter, searchFilter]);
 
   const selectedEmployee = useMemo(() => {
     if (!selectedEmployeeId) return null;
@@ -107,6 +128,12 @@ export default function PayslipClientPage({
         setPayslipData(null);
     }
   }, [filteredEmployees, selectedEmployeeId]);
+
+
+  const handleOptionChange = (option: keyof PayslipOptions, value: boolean) => {
+    setPayslipOptions(prev => ({ ...prev, [option]: value }));
+  };
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -334,21 +361,21 @@ export default function PayslipClientPage({
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
              <div className="space-y-2">
                 <Label htmlFor="siteFilter">Lokasi Proyek</Label>
-                <Select value={siteFilter} onValueChange={setSiteFilter}>
+                <Select value={siteFilter} onValueChange={handleSiteFilterChange}>
                     <SelectTrigger id="siteFilter"><SelectValue /></SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">Semua Proyek</SelectItem>
-                        {sites.map((s) => (<SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>))}
+                        {sites.map((s) => (<SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>))}
                     </SelectContent>
                 </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="positionFilter">Jabatan</Label>
-              <Select value={positionFilter} onValueChange={setPositionFilter}>
-                  <SelectTrigger id="positionFilter"><SelectValue /></SelectTrigger>
+              <Select value={positionFilter} onValueChange={setPositionFilter} disabled={siteFilter === 'all'}>
+                  <SelectTrigger id="positionFilter"><SelectValue placeholder={siteFilter === 'all' ? "Pilih proyek dulu" : "Semua Jabatan"} /></SelectTrigger>
                   <SelectContent>
                       <SelectItem value="all">Semua Jabatan</SelectItem>
-                      {positions.map((p) => (<SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>))}
+                      {positionsForFilter.map((p) => (<SelectItem key={p} value={p}>{p}</SelectItem>))}
                   </SelectContent>
               </Select>
             </div>
