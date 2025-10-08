@@ -157,7 +157,7 @@ export const roles: Role[] = [
     { id: '2', name: 'HR', description: 'Access to employee management features', accessibleMenus: ['violations', 'pj-access', 'driver-access'] },
     { id: '3', name: 'Employee', description: 'Basic access to their own profile', accessibleMenus: [] },
     { id: '4', name: 'Admin Proyek', description: 'Project-specific administrative access', accessibleMenus: [] },
-    { id: '5', name: 'Purchasing', description: 'Manages purchase requests', accessibleMenus: [] },
+    { id: '5', name: 'Purchasing', description: 'Manages purchase requests', accessibleMenus: ['vehicles'] },
     { id: '6', name: 'Finance', description: 'Manages finances and approves requests', accessibleMenus: [] },
     { id: '7', name: 'Admin Absensi', description: 'Manages attendance for a specific position', accessibleMenus: [] },
     { id: '8', name: 'Driver LV Office', description: 'Access to driver-specific dashboard', accessibleMenus: [] },
