@@ -21,8 +21,6 @@ import {
   SidebarMenuButton,
   SidebarFooter,
   SidebarInset,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
 import {
   FolderKanban,
@@ -38,7 +36,6 @@ import {
   ClipboardCheck,
   Wallet,
   WalletCards,
-  ChevronDown,
   MapPin,
   Landmark,
   Database,
@@ -83,7 +80,7 @@ const allNavItemsList = (lang: 'id' | 'en') => [
   { id: 'position', href: "/dashboard/position", icon: WalletCards, label: lang === 'id' ? "Jabatan & Gaji" : "Position & Salary" },
   { id: 'project', href: "/dashboard/project", icon: Briefcase, label: "Proyek" },
   { id: 'finance', href: "/dashboard/finance", icon: Landmark, label: lang === 'id' ? "Keuangan" : "Finance" },
-  { id: 'koperasi-limit', href: "/dashboard/koperasi-limit", icon: Wallet, label: "Limit Koperasi" },
+  { id: 'koperasi-limit', href: "/dashboard/finance/koperasi-limit", icon: Wallet, label: "Limit Koperasi" },
   { id: 'hse', href: "/dashboard/hse", icon: ShieldCheck, label: "Dasbor HSE" },
   { id: 'hse-fines', href: "/dashboard/hse/fines", icon: CircleDollarSign, label: "Pengaturan Denda" },
   { id: 'vehicles', href: "/dashboard/vehicles", icon: Truck, label: "Kendaraan" },
@@ -174,20 +171,8 @@ export default function DashboardClientLayout({
     }
 
     const accessibleMenus = new Set(role.accessibleMenus || []);
-    const accessibleItems = orderedNavItems.filter(item => accessibleMenus.has(item.id));
-    
-    // Ensure dashboard is always present for logged-in users if they have access to any other page
-    const hasDashboard = accessibleItems.some(item => item.id === 'dashboard');
-    if (!hasDashboard && accessibleItems.length > 0) {
-      const dashboardItem = allNavItemsMap.get('dashboard');
-      if (dashboardItem) {
-        return [dashboardItem, ...accessibleItems];
-      }
-    }
-    
-    return accessibleItems;
-
-  }, [orderedNavItems, role, allNavItemsMap]);
+    return orderedNavItems.filter(item => accessibleMenus.has(item.id));
+  }, [orderedNavItems, role]);
 
 
   const getActiveLabel = () => {
