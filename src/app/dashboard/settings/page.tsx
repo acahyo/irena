@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, Upload, Download, ShieldCheck, Archive, ArrowUp, ArrowDown } from 'lucide-react';
+import { Loader2, Upload, Download, ShieldCheck, Archive, ArrowUp, ArrowDown, PlusCircle } from 'lucide-react';
 import { getSettings, saveSettings } from '@/actions/settings';
 import type { AppSettings, Role, MenuOrderItem } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -118,6 +118,7 @@ export default function SettingsPage() {
     const [employeePayslipAccess, setEmployeePayslipAccess] = useState(true);
     const [menuOrder, setMenuOrder] = useState<MenuOrderItem[]>([]);
     const [savingMenu, setSavingMenu] = useState(false);
+    const [menuToAdd, setMenuToAdd] = useState('');
 
 
     useEffect(() => {
@@ -132,12 +133,17 @@ export default function SettingsPage() {
                 setFaviconPreview(favicon);
                 setEmployeePayslipAccess(settingsData.employeePayslipAccess ?? true);
                 
-                // Initialize menu order
                 const allMenuIds = allMenus.map(m => m.id);
-                const currentMenuOrder = initialMenuOrder && initialMenuOrder.length > 0 ? initialMenuOrder : allMenuIds.map(id => ({ id }));
-                const ordered = currentMenuOrder.map(item => allMenus.find(m => m.id === item.id)).filter(Boolean) as {id: string, label: string}[];
-                setMenuOrder(ordered.map(m => ({ id: m.id })));
+                const currentMenuOrder = initialMenuOrder && initialMenuOrder.length > 0 
+                    ? initialMenuOrder 
+                    : allMenuIds.map(id => ({ id }));
+                
+                const ordered = currentMenuOrder
+                    .map(item => allMenus.find(m => m.id === item.id))
+                    .filter(Boolean) as {id: string, label: string}[];
 
+                setMenuOrder(ordered.map(m => ({ id: m.id })));
+                
                 setRoles(rolesData);
                 const initialPermissions: Record<string, string[]> = {};
                 rolesData.forEach(role => {
@@ -155,6 +161,18 @@ export default function SettingsPage() {
     }, [toast]);
     
     const lang = settings?.language || 'id';
+
+    const availableMenusToAdd = useMemo(() => {
+        const currentMenuIds = new Set(menuOrder.map(item => item.id));
+        return allMenus.filter(menu => !currentMenuIds.has(menu.id));
+    }, [menuOrder]);
+    
+    const handleAddMenu = () => {
+        if (menuToAdd) {
+            setMenuOrder(prev => [...prev, { id: menuToAdd }]);
+            setMenuToAdd('');
+        }
+    };
 
     const handlePermissionChange = (roleId: string, menuId: string, checked: boolean) => {
         setPermissions(prev => {
@@ -519,6 +537,24 @@ export default function SettingsPage() {
                             );
                           })}
                         </div>
+                         {availableMenusToAdd.length > 0 && (
+                            <div className="flex items-center gap-2 pt-4">
+                                <Select value={menuToAdd} onValueChange={setMenuToAdd}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Pilih menu untuk ditambahkan..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {availableMenusToAdd.map(menu => (
+                                            <SelectItem key={menu.id} value={menu.id}>{menu.label}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <Button type="button" onClick={handleAddMenu} disabled={!menuToAdd}>
+                                    <PlusCircle className="mr-2 h-4 w-4" />
+                                    Tambah Menu
+                                </Button>
+                            </div>
+                        )}
                         <div className="flex justify-end">
                             <Button type="button" onClick={handleSaveMenuOrder} disabled={savingMenu}>
                                 {savingMenu && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
