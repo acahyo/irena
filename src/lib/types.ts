@@ -6,6 +6,7 @@
 
 
 
+
 export type Allowance = {
   name: string;
   amount: number;
@@ -357,4 +358,20 @@ export type ViolationRecord = {
   description: string;
   fileUrl?: string;
   fileName?: string;
+};
+
+export type FuelRequest = {
+  id: string;
+  driverId: string;
+  driverName: string;
+  requestDate: Date | string;
+  vehicleId: string;
+  odometer: number;
+  amount: number;
+  status: 'Pending' | 'Approved' | 'Rejected';
+  approvedAmount?: number;
+  rejectionReason?: string;
+  approvedById?: string;
+  approvedByName?: string;
+  approvedDate?: Date | string;
 };

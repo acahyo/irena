@@ -78,6 +78,7 @@ const allMenus = [
   { id: 'payslip', label: 'Cetak Slip Gaji' },
   { id: 'payslip-collective', label: 'Slip Gaji Kolektif' },
   { id: 'purchasing', label: 'Pengajuan Barang' },
+  { id: 'fuel-requests', label: 'Pengajuan BBM' },
   { id: 'koperasi-items', label: 'Barang Koperasi' },
   { id: 'koperasi-orders', label: 'Pesanan Koperasi' },
   { id: 'bpjs-id-simper', label: 'BPJS-ID-SIMPER' },

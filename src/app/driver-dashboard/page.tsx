@@ -1,9 +1,10 @@
 
+
 import { getEmployeeSession } from '@/actions/auth';
 import { notFound, redirect } from 'next/navigation';
 import DriverDashboardClient from './client-page';
-import { getDriverAttendanceHistory } from '@/actions/driver';
-import type { DriverAttendance, Vehicle } from '@/lib/types';
+import { getDriverAttendanceHistory, getFuelRequestsByDriver } from '@/actions/driver';
+import type { DriverAttendance, Vehicle, FuelRequest } from '@/lib/types';
 import { getVehicles } from '@/actions/vehicles';
 
 
@@ -25,9 +26,10 @@ export default async function DriverDashboardPage() {
         )
     }
 
-    const [attendanceHistory, vehicles] = await Promise.all([
+    const [attendanceHistory, vehicles, fuelRequests] = await Promise.all([
         getDriverAttendanceHistory(employee.id),
-        getVehicles()
+        getVehicles(),
+        getFuelRequestsByDriver(employee.id)
     ]);
 
 
@@ -36,7 +38,12 @@ export default async function DriverDashboardPage() {
         ...rec,
         timestamp: rec.timestamp.toISOString() as any,
     }));
+    
+    const serializedFuelRequests: FuelRequest[] = fuelRequests.map(rec => ({
+        ...rec,
+        requestDate: rec.requestDate.toISOString() as any,
+    }));
 
 
-    return <DriverDashboardClient employee={employee} initialHistory={serializedHistory} vehicles={vehicles} />;
+    return <DriverDashboardClient employee={employee} initialHistory={serializedHistory} vehicles={vehicles} initialFuelRequests={serializedFuelRequests} />;
 }

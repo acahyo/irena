@@ -1,10 +1,11 @@
 
+
 'use server';
 
 import { db, storage } from '@/lib/firebase';
 import { collection, addDoc, query, where, getDocs, orderBy, Timestamp } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from "firebase/storage";
-import type { DriverAttendance, P2hReport, UnitConditionReport } from '@/lib/types';
+import type { DriverAttendance, P2hReport, UnitConditionReport, FuelRequest } from '@/lib/types';
 
 
 // Helper to upload base64 file to Firebase Storage and get URL
@@ -73,7 +74,7 @@ export async function submitUnitConditionReport(reportData: Omit<UnitConditionRe
 
 export async function getDriverAttendanceHistory(driverId: string): Promise<DriverAttendance[]> {
     try {
-        const q = query(collection(db, 'driverAttendance'), where('driverId', '==', driverId));
+        const q = query(collection(db, 'driverAttendance'), where('driverId', '==', driverId), orderBy('timestamp', 'desc'));
         const querySnapshot = await getDocs(q);
         const history: DriverAttendance[] = [];
         querySnapshot.forEach((doc) => {
@@ -85,8 +86,7 @@ export async function getDriverAttendanceHistory(driverId: string): Promise<Driv
             } as DriverAttendance);
         });
         
-        // Sort in application code to avoid needing a composite index
-        return history.sort((a, b) => (b.timestamp as any) - (a.timestamp as any));
+        return history;
 
     } catch (error) {
         console.error("Error fetching driver attendance history:", error);
@@ -152,4 +152,46 @@ export async function getUnitConditionReports(): Promise<UnitConditionReport[]> 
     console.error("Error fetching unit condition reports:", error);
     return [];
   }
+}
+
+// Fuel Requests
+export async function createFuelRequest(requestData: Omit<FuelRequest, 'id' | 'requestDate' | 'status'>): Promise<{ success: boolean; message: string; newRequest?: FuelRequest; }> {
+    try {
+        const finalData = {
+            ...requestData,
+            requestDate: new Date(),
+            status: 'Pending',
+        };
+        const docRef = await addDoc(collection(db, 'fuelRequests'), finalData);
+        
+        const newRequest: FuelRequest = {
+            id: docRef.id,
+            ...finalData,
+        }
+
+        return { success: true, message: 'Pengajuan BBM berhasil dikirim.', newRequest };
+    } catch (error) {
+        console.error("Error submitting fuel request:", error);
+        return { success: false, message: 'Gagal mengirim pengajuan BBM.' };
+    }
+}
+
+export async function getFuelRequestsByDriver(driverId: string): Promise<FuelRequest[]> {
+    try {
+        const q = query(collection(db, 'fuelRequests'), where('driverId', '==', driverId), orderBy('requestDate', 'desc'));
+        const querySnapshot = await getDocs(q);
+        const requests: FuelRequest[] = [];
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            requests.push({
+                id: doc.id,
+                ...data,
+                requestDate: (data.requestDate as Timestamp).toDate(),
+            } as FuelRequest);
+        });
+        return requests;
+    } catch (error) {
+        console.error("Error fetching fuel requests for driver:", error);
+        return [];
+    }
 }

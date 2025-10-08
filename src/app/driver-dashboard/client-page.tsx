@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useRef, useEffect, useTransition } from 'react';
@@ -21,9 +22,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Camera, MapPin, Send, Loader2, Clock } from 'lucide-react';
-import type { Employee, DriverAttendance, Vehicle } from '@/lib/types';
-import { submitDriverAttendance, submitP2hReport, submitUnitConditionReport } from '@/actions/driver';
+import { Camera, MapPin, Send, Loader2, Clock, Fuel } from 'lucide-react';
+import type { Employee, DriverAttendance, Vehicle, FuelRequest } from '@/lib/types';
+import { submitDriverAttendance, submitP2hReport, submitUnitConditionReport, createFuelRequest } from '@/actions/driver';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
@@ -31,7 +32,7 @@ import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 
 
-export default function DriverDashboardClient({ employee, initialHistory, vehicles }: { employee: Employee, initialHistory: DriverAttendance[], vehicles: Vehicle[] }) {
+export default function DriverDashboardClient({ employee, initialHistory, vehicles, initialFuelRequests }: { employee: Employee, initialHistory: DriverAttendance[], vehicles: Vehicle[], initialFuelRequests: FuelRequest[] }) {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
 
@@ -52,6 +53,13 @@ export default function DriverDashboardClient({ employee, initialHistory, vehicl
   // Unit Condition state
   const [conditionUnit, setConditionUnit] = useState('');
   const [conditionNotes, setConditionNotes] = useState('');
+  
+  // Fuel Request state
+  const [fuelVehicleId, setFuelVehicleId] = useState('');
+  const [fuelOdometer, setFuelOdometer] = useState('');
+  const [fuelAmount, setFuelAmount] = useState('');
+  const [fuelRequests, setFuelRequests] = useState(initialFuelRequests);
+
 
    useEffect(() => {
     setIsClient(true);
@@ -144,6 +152,33 @@ export default function DriverDashboardClient({ employee, initialHistory, vehicl
       }
     });
   };
+  
+  const handleFuelRequestSubmit = () => {
+    if (!fuelVehicleId || !fuelOdometer || !fuelAmount) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Semua kolom pengajuan BBM wajib diisi.' });
+        return;
+    }
+    
+    startTransition(async () => {
+        const result = await createFuelRequest({
+            driverId: employee.id,
+            driverName: employee.name,
+            vehicleId: fuelVehicleId,
+            odometer: Number(fuelOdometer),
+            amount: Number(fuelAmount),
+        });
+        
+        if (result.success && result.newRequest) {
+            toast({ title: 'Sukses', description: 'Pengajuan BBM berhasil dikirim.' });
+            setFuelRequests(prev => [result.newRequest!, ...prev]);
+            setFuelVehicleId('');
+            setFuelOdometer('');
+            setFuelAmount('');
+        } else {
+            toast({ variant: 'destructive', title: 'Error', description: result.message });
+        }
+    });
+  };
 
   const handleP2hPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -203,6 +238,16 @@ export default function DriverDashboardClient({ employee, initialHistory, vehicl
         }
     });
   };
+  
+    const getStatusVariant = (status: string) => {
+      switch (status) {
+        case 'Pending': return 'secondary';
+        case 'Approved': return 'default';
+        case 'Rejected': return 'destructive';
+        default: return 'outline';
+      }
+    };
+
 
   return (
     <div className="space-y-6">
@@ -268,6 +313,38 @@ export default function DriverDashboardClient({ employee, initialHistory, vehicl
 
         {/* Forms Card */}
         <div className="lg:col-span-2 space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Pengajuan BBM</CardTitle>
+                    <CardDescription>Isi form untuk mengajukan pengisian bahan bakar.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                            <Label>Unit Kendaraan</Label>
+                            <Select value={fuelVehicleId} onValueChange={setFuelVehicleId}>
+                                <SelectTrigger><SelectValue placeholder="Pilih Unit" /></SelectTrigger>
+                                <SelectContent>
+                                    {vehicles.map(vehicle => <SelectItem key={vehicle.id} value={vehicle.fleetNumber}>{vehicle.fleetNumber} ({vehicle.category})</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Odometer (KM)</Label>
+                            <Input type="number" placeholder="e.g. 150234" value={fuelOdometer} onChange={e => setFuelOdometer(e.target.value)} />
+                        </div>
+                         <div className="space-y-2">
+                            <Label>Jumlah Pengajuan (Rp)</Label>
+                            <Input type="number" placeholder="e.g. 250000" value={fuelAmount} onChange={e => setFuelAmount(e.target.value)} />
+                        </div>
+                    </div>
+                     <Button className="w-full sm:w-auto" onClick={handleFuelRequestSubmit} disabled={isPending}>
+                        {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Fuel className="mr-2 h-4 w-4" />}
+                        Kirim Pengajuan BBM
+                    </Button>
+                </CardContent>
+            </Card>
+        
             <Card>
                 <CardHeader>
                     <CardTitle>Laporan P2H</CardTitle>
@@ -366,6 +443,46 @@ export default function DriverDashboardClient({ employee, initialHistory, vehicl
                                 <TableRow>
                                     <TableCell colSpan={4} className="h-24 text-center">
                                         Belum ada riwayat absensi.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+            
+            <Card>
+                <CardHeader>
+                    <CardTitle>Riwayat Pengajuan BBM</CardTitle>
+                </CardHeader>
+                 <CardContent>
+                     <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Tanggal</TableHead>
+                                <TableHead>Unit</TableHead>
+                                <TableHead>Jumlah</TableHead>
+                                <TableHead>Status</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {fuelRequests.length > 0 ? (
+                                fuelRequests.map(req => (
+                                    <TableRow key={req.id}>
+                                        <TableCell>{format(new Date(req.requestDate as any), 'dd MMM yyyy')}</TableCell>
+                                        <TableCell>{req.vehicleId}</TableCell>
+                                        <TableCell>Rp {req.amount.toLocaleString('id-ID')}</TableCell>
+                                        <TableCell>
+                                            <Badge variant={getStatusVariant(req.status)}>
+                                                {req.status}
+                                            </Badge>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={4} className="h-24 text-center">
+                                        Belum ada riwayat pengajuan.
                                     </TableCell>
                                 </TableRow>
                             )}
