@@ -1,5 +1,6 @@
 
 
+
 export type Allowance = {
   name: string;
   amount: number;
@@ -176,6 +177,7 @@ export type AttendanceRecord = {
 export type PurchaseRequestItem = {
     name: string;
     quantity: number;
+    price?: number;
 };
 
 export type PurchaseRequest = {
@@ -407,4 +409,5 @@ export type WarehouseItem = {
     stock: number;
     unit: string; // e.g., pcs, liter, kg, box
     location?: string;
+    price?: number;
 };

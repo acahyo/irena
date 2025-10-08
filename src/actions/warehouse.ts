@@ -35,6 +35,7 @@ export async function createWarehouseItem(item: Omit<WarehouseItem, 'id'>): Prom
   const itemData = {
     ...item,
     stock: Number(item.stock) || 0,
+    price: Number(item.price) || 0,
   };
   const docRef = await addDoc(collection(db, 'warehouseItems'), itemData);
   return docRef.id;
@@ -49,6 +50,10 @@ export async function updateWarehouseItem(id: string, updates: Partial<Warehouse
     updateData.stock = Number(updates.stock);
   }
   
+  if (updates.price !== undefined) {
+    updateData.price = Number(updates.price);
+  }
+
   await updateDoc(docRef, updateData);
 }
 

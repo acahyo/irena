@@ -17,6 +17,7 @@ import {
 } from 'firebase/firestore';
 import type { PurchaseRequest, PurchaseRequestItem } from '@/lib/types';
 import { createPaymentRequest } from './payment-requests';
+import { getWarehouseItems } from './warehouse';
 
 // Helper to convert Firestore Timestamps to Dates in a document
 function convertTimestampsToDates(docData: any) {
@@ -89,8 +90,18 @@ export async function getPurchaseRequestsByEmployee(employeeId: string): Promise
 
 // Create a new purchase request
 export async function createPurchaseRequest(request: Omit<PurchaseRequest, 'id' | 'status' | 'requestDate'>): Promise<string> {
+  const warehouseItems = await getWarehouseItems();
+  const itemsWithPrice = request.items.map(item => {
+    const warehouseItem = warehouseItems.find(wi => wi.name.toLowerCase() === item.name.toLowerCase());
+    return {
+        ...item,
+        price: warehouseItem?.price || 0,
+    };
+  });
+    
   const docRef = await addDoc(collection(db, 'purchaseRequests'), {
       ...request,
+      items: itemsWithPrice,
       requestDate: new Date(),
       status: 'Pending',
   });

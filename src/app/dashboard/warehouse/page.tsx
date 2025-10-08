@@ -1,8 +1,10 @@
 
+
 import { getAdminSession } from '@/actions/auth';
 import { redirect } from 'next/navigation';
 import { getWarehouseItems } from '@/actions/warehouse';
 import WarehouseClientPage from './client-page';
+import { getPurchaseRequests } from '@/actions/purchasing';
 
 export default async function WarehousePage() {
     const user = await getAdminSession();
@@ -11,7 +13,13 @@ export default async function WarehousePage() {
         redirect('/dashboard');
     }
 
-    const items = await getWarehouseItems();
+    const [items, stockOutRequests] = await Promise.all([
+        getWarehouseItems(),
+        getPurchaseRequests({ status: 'Approved by Purchasing' })
+    ]);
 
-    return <WarehouseClientPage initialItems={items} />;
+    return <WarehouseClientPage 
+              initialItems={items} 
+              stockOutRequests={stockOutRequests} 
+           />;
 }

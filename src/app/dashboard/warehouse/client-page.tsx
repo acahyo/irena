@@ -26,7 +26,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogClose,
 } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -38,18 +37,29 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+} from "@/components/ui/alert-dialog"
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MoreHorizontal, PlusCircle, Trash2, Pencil, Loader2, Archive } from 'lucide-react';
+import { PlusCircle, Trash2, Pencil, Loader2, Archive, ArrowUp, ArrowDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import type { WarehouseItem } from '@/lib/types';
+import type { WarehouseItem, PurchaseRequest } from '@/lib/types';
 import { createWarehouseItem, updateWarehouseItem, deleteWarehouseItem } from '@/actions/warehouse';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
+const formatCurrency = (amount?: number) => {
+  if (amount === undefined || amount === null) return 'N/A';
+  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(amount);
+}
 
-export default function WarehouseClientPage({ initialItems }: { initialItems: WarehouseItem[] }) {
+export default function WarehouseClientPage({ 
+  initialItems,
+  stockOutRequests
+}: { 
+  initialItems: WarehouseItem[],
+  stockOutRequests: PurchaseRequest[] 
+}) {
   const [items, setItems] = useState(initialItems);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Partial<WarehouseItem> | null>(null);
@@ -68,6 +78,28 @@ export default function WarehouseClientPage({ initialItems }: { initialItems: Wa
     if (categoryFilter === 'all') return items;
     return items.filter(item => item.category === categoryFilter);
   }, [items, categoryFilter]);
+
+  const { totalStockValue, stockOutSummary, totalStockOutValue } = useMemo(() => {
+    const totalStock = initialItems.reduce((sum, item) => sum + (item.stock * (item.price || 0)), 0);
+
+    const stockOut = stockOutRequests.flatMap(req => req.items);
+    const totalOut = stockOut.reduce((sum, item) => sum + (item.quantity * (item.price || 0)), 0);
+    
+    const summary = stockOut.reduce((acc, item) => {
+        if (!acc[item.name]) {
+            acc[item.name] = { name: item.name, quantity: 0, totalValue: 0 };
+        }
+        acc[item.name].quantity += item.quantity;
+        acc[item.name].totalValue += item.quantity * (item.price || 0);
+        return acc;
+    }, {} as Record<string, { name: string, quantity: number, totalValue: number }>);
+    
+    return {
+        totalStockValue: totalStock,
+        stockOutSummary: Object.values(summary).sort((a,b) => b.totalValue - a.totalValue),
+        totalStockOutValue: totalOut
+    }
+  }, [initialItems, stockOutRequests]);
   
   const handleOpenDialog = (item: Partial<WarehouseItem> | null = null) => {
     setEditingItem(item);
@@ -84,7 +116,8 @@ export default function WarehouseClientPage({ initialItems }: { initialItems: Wa
       category: data.category,
       stock: Number(data.stock),
       unit: data.unit,
-      location: data.location
+      location: data.location,
+      price: Number(data.price),
     };
     
     startTransition(async () => {
@@ -117,12 +150,57 @@ export default function WarehouseClientPage({ initialItems }: { initialItems: Wa
   };
 
   return (
-    <>
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><ArrowUp className="text-green-500" /> Nilai Stok Gudang</CardTitle>
+            <CardDescription className="text-2xl font-bold">{formatCurrency(totalStockValue)}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-48">
+              <Table>
+                <TableHeader><TableRow><TableHead>Nama Barang</TableHead><TableHead className="text-right">Total Nilai</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {initialItems.filter(item => item.stock > 0).map(item => (
+                    <TableRow key={item.id}>
+                      <TableCell>{item.name} <span className="text-muted-foreground">({item.stock} {item.unit})</span></TableCell>
+                      <TableCell className="text-right font-medium">{formatCurrency(item.stock * (item.price || 0))}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+         <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><ArrowDown className="text-red-500" /> Rekap Barang Keluar</CardTitle>
+            <CardDescription className="text-2xl font-bold">{formatCurrency(totalStockOutValue)}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-48">
+              <Table>
+                <TableHeader><TableRow><TableHead>Nama Barang</TableHead><TableHead className="text-right">Total Nilai</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {stockOutSummary.map(item => (
+                    <TableRow key={item.name}>
+                      <TableCell>{item.name} <span className="text-muted-foreground">({item.quantity})</span></TableCell>
+                      <TableCell className="text-right font-medium">{formatCurrency(item.totalValue)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="flex items-center gap-2"><Archive /> Stok Gudang</CardTitle>
+              <CardTitle className="flex items-center gap-2"><Archive /> Daftar Barang Gudang</CardTitle>
               <CardDescription>Kelola inventaris barang yang tersedia di gudang.</CardDescription>
             </div>
             <div className="flex items-center gap-2">
@@ -147,6 +225,7 @@ export default function WarehouseClientPage({ initialItems }: { initialItems: Wa
                 <TableHead>Kategori</TableHead>
                 <TableHead>Stok</TableHead>
                 <TableHead>Satuan</TableHead>
+                <TableHead>Harga Satuan</TableHead>
                 <TableHead>Lokasi</TableHead>
                 <TableHead className="text-right">Aksi</TableHead>
               </TableRow>
@@ -158,6 +237,7 @@ export default function WarehouseClientPage({ initialItems }: { initialItems: Wa
                   <TableCell><Badge variant="outline">{item.category}</Badge></TableCell>
                   <TableCell className="font-semibold">{item.stock}</TableCell>
                   <TableCell>{item.unit}</TableCell>
+                  <TableCell>{formatCurrency(item.price)}</TableCell>
                   <TableCell>{item.location || '-'}</TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(item)}><Pencil className="h-4 w-4" /></Button>
@@ -177,7 +257,7 @@ export default function WarehouseClientPage({ initialItems }: { initialItems: Wa
                 </TableRow>
               ))}
               {filteredItems.length === 0 && (
-                <TableRow><TableCell colSpan={6} className="h-24 text-center">Belum ada barang di kategori ini.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} className="h-24 text-center">Belum ada barang di kategori ini.</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
@@ -206,15 +286,19 @@ export default function WarehouseClientPage({ initialItems }: { initialItems: Wa
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="unit">Satuan</Label>
-                    <Input id="unit" name="unit" defaultValue={editingItem?.unit} required placeholder="e.g., pcs, box, liter"/>
+                    <Input id="unit" name="unit" defaultValue={editingItem?.unit} required placeholder="e.g., pcs, liter, kg, box"/>
                 </div>
                 <div className="space-y-2">
+                    <Label htmlFor="price">Harga Satuan (Rp)</Label>
+                    <Input id="price" name="price" type="number" defaultValue={editingItem?.price || ''} placeholder="e.g., 50000"/>
+                </div>
+                <div className="col-span-2 space-y-2">
                     <Label htmlFor="location">Lokasi (Opsional)</Label>
                     <Input id="location" name="location" defaultValue={editingItem?.location || ''} placeholder="e.g., Rak A1"/>
                 </div>
             </div>
             <DialogFooter>
-              <DialogClose asChild><Button type="button" variant="outline">Batal</Button></DialogClose>
+              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Batal</Button>
               <Button type="submit" disabled={isPending}>
                 {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Simpan
