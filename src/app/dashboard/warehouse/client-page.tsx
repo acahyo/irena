@@ -307,6 +307,6 @@ export default function WarehouseClientPage({
           </form>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }
