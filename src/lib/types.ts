@@ -1,4 +1,5 @@
 
+
 export type Allowance = {
   name: string;
   amount: number;
@@ -211,8 +212,8 @@ export type EmployeeWithDetails = Employee & {
 
 export type FinanceRecord = {
   id: string;
-  projectId: string;
-  projectName: string;
+  projectId?: string;
+  projectName?: string;
   type: 'income' | 'expense';
   amount: number;
   description: string;
@@ -381,7 +382,7 @@ export type PaymentRequest = {
     category: PaymentRequestCategory;
     paymentName: string;
     amount: number;
-    status: 'Pending' | 'Approved' | 'Rejected';
+    status: 'Pending' | 'Approved' | 'Rejected' | 'Verified';
     
     // Optional fields based on category
     paymentType?: 'Cash' | 'Transfer';
@@ -397,4 +398,13 @@ export type PaymentRequest = {
     processedByName?: string;
     processedDate?: Date | string;
     rejectionReason?: string;
+};
+
+export type WarehouseItem = {
+    id: string;
+    name: string;
+    category: string;
+    stock: number;
+    unit: string; // e.g., pcs, liter, kg, box
+    location?: string;
 };

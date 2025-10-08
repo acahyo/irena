@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, Upload, Download, ShieldCheck } from 'lucide-react';
+import { Loader2, Upload, Download, ShieldCheck, Archive } from 'lucide-react';
 import { getSettings, saveSettings } from '@/actions/settings';
 import type { AppSettings, Role } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -78,6 +78,7 @@ const allMenus = [
   { id: 'payslip', label: 'Cetak Slip Gaji' },
   { id: 'payslip-collective', label: 'Slip Gaji Kolektif' },
   { id: 'purchasing', label: 'Pengajuan Barang' },
+  { id: 'warehouse', label: 'Stok Gudang' },
   { id: 'fuel-requests', label: 'Pengajuan BBM' },
   { id: 'payment-requests', label: 'Pengajuan Pembayaran' },
   { id: 'koperasi-items', label: 'Barang Koperasi' },

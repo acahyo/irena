@@ -53,7 +53,8 @@ import {
   ClipboardList,
   Contact,
   AlertTriangle,
-  Fuel
+  Fuel,
+  Archive,
 } from "lucide-react";
 import type { AppSettings, User, Role, MenuOrderItem } from "@/lib/types";
 import { logout } from "@/actions/auth";
@@ -72,6 +73,7 @@ const allNavItemsList = (lang: 'id' | 'en') => [
   { id: 'payslip', href: "/dashboard/payslip", icon: Printer, label: lang === 'id' ? "Cetak Slip Gaji" : "Print Payslip" },
   { id: 'payslip-collective', href: "/dashboard/payslip-collective", icon: Printer, label: lang === 'id' ? "Slip Gaji Kolektif" : "Collective Payslip" },
   { id: 'purchasing', href: "/dashboard/purchasing", icon: ShoppingCart, label: "Pengajuan Barang" },
+  { id: 'warehouse', href: "/dashboard/warehouse", icon: Archive, label: "Stok Gudang" },
   { id: 'fuel-requests', href: "/dashboard/fuel-requests", icon: Fuel, label: "Pengajuan BBM" },
   { id: 'payment-requests', href: "/dashboard/payment-requests", icon: CircleDollarSign, label: "Pengajuan Pembayaran" },
   { id: 'koperasi-orders', href: "/dashboard/koperasi/orders", icon: ShoppingCart, label: "Pesanan Koperasi" },
@@ -107,6 +109,7 @@ const staticMenuOrder: MenuOrderItem[] = [
     { id: 'payslip' },
     { id: 'payslip-collective' },
     { id: 'purchasing' },
+    { id: 'warehouse' },
     { id: 'fuel-requests' },
     { id: 'payment-requests' },
     { id: 'koperasi-items' },
