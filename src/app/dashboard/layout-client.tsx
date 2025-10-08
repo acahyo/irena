@@ -113,42 +113,33 @@ const allNavItemsList = (lang: 'id' | 'en') => [
 
 const staticMenuOrder: MenuOrderItem[] = [
     { id: 'dashboard' },
-    // Kepegawaian
     { id: 'employees' },
     { id: 'employee-register' },
     { id: 'employee-review' },
     { id: 'leave-schedule' },
     { id: 'bpjs-id-simper' },
     { id: 'violations' },
-    // Payroll & Absensi
     { id: 'attendance' },
     { id: 'payroll' },
     { id: 'payslip' },
     { id: 'payslip-collective' },
     { id: 'payroll-history' },
-    // Purchasing & Gudang
     { id: 'purchasing' },
     { id: 'warehouse' },
-    // Keuangan
     { id: 'finance' },
     { id: 'payment-requests' },
     { id: 'fuel-requests' },
     { id: 'koperasi-limit' },
-    // Koperasi
     { id: 'koperasi-items' },
     { id: 'koperasi-orders' },
-    // Operasional & Driver
     { id: 'vehicles' },
     { id: 'driver-attendance' },
     { id: 'pj-attendance' },
-    // HSE
     { id: 'hse' },
     { id: 'hse-fines' },
-    // Pengaturan & Master Data
     { id: 'department' },
     { id: 'position' },
     { id: 'project' },
-    // Administrasi Sistem
     { id: 'users' },
     { id: 'roles' },
     { id: 'driver-access' },
