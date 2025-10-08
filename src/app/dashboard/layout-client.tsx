@@ -83,7 +83,7 @@ const allNavItemsList = (lang: 'id' | 'en') => [
   { id: 'position', href: "/dashboard/position", icon: WalletCards, label: lang === 'id' ? "Jabatan & Gaji" : "Position & Salary" },
   { id: 'project', href: "/dashboard/project", icon: Briefcase, label: "Proyek" },
   { id: 'finance', href: "/dashboard/finance", icon: Landmark, label: lang === 'id' ? "Keuangan" : "Finance" },
-  { id: 'koperasi-limit', href: "/dashboard/finance/koperasi-limit", icon: Wallet, label: "Limit Koperasi" },
+  { id: 'koperasi-limit', href: "/dashboard/koperasi-limit", icon: Wallet, label: "Limit Koperasi" },
   { id: 'hse', href: "/dashboard/hse", icon: ShieldCheck, label: "Dasbor HSE" },
   { id: 'hse-fines', href: "/dashboard/hse/fines", icon: CircleDollarSign, label: "Pengaturan Denda" },
   { id: 'vehicles', href: "/dashboard/vehicles", icon: Truck, label: "Kendaraan" },
@@ -297,3 +297,5 @@ export default function DashboardClientLayout({
     </SidebarProvider>
   );
 }
+
+    
