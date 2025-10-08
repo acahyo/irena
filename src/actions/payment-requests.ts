@@ -12,6 +12,7 @@ import {
   query,
   orderBy,
   getDoc,
+  where,
 } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from "firebase/storage";
 import type { PaymentRequest } from '@/lib/types';
@@ -66,10 +67,12 @@ export async function createPaymentRequest(
 
 export async function getPaymentRequests({ status }: { status?: PaymentRequest['status'] } = {}): Promise<PaymentRequest[]> {
   try {
-    let q = query(collection(db, 'paymentRequests'), orderBy('requestDate', 'desc'));
+    let q;
     
     if(status) {
         q = query(collection(db, 'paymentRequests'), where('status', '==', status), orderBy('requestDate', 'desc'));
+    } else {
+        q = query(collection(db, 'paymentRequests'), orderBy('requestDate', 'desc'));
     }
 
     const querySnapshot = await getDocs(q);
