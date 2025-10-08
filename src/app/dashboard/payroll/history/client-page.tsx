@@ -138,8 +138,8 @@ export default function PayrollHistoryClientPage({ initialHistory }: { initialHi
           </TableHeader>
           <TableBody>
             {history.length > 0 ? (
-              history.map((rec) => (
-                <TableRow key={`${rec.id}-${rec.employeeId}`}>
+              history.map((rec, index) => (
+                <TableRow key={`${rec.id}-${rec.employeeId}-${index}`}>
                   <TableCell className="font-medium">{rec.employeeName}</TableCell>
                   <TableCell>{rec.period}</TableCell>
                   <TableCell>{formatCurrency(rec.totalEarnings)}</TableCell>
