@@ -8,6 +8,7 @@
 
 
 
+
 export type Allowance = {
   name: string;
   amount: number;
@@ -15,7 +16,7 @@ export type Allowance = {
 
 export type Employee = {
   id: string;
-  name: string;
+  name:string;
   avatar?: string;
   role?: string;
   department?: string;
@@ -55,7 +56,8 @@ export type Employee = {
   contractStartDate?: Date | string;
   contractEndDate?: Date | string;
   contractDurationMonths?: number;
-  positions?: string[]; // Changed from position: string
+  position?: string;
+  positions?: string[]; 
   shift?: 'Regular' | 'Shift A' | 'Shift B';
   siteLocation?: string;
   password?: string;

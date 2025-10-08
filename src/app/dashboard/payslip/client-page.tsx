@@ -1,5 +1,6 @@
 
 
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -20,8 +21,8 @@ import {
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Printer, Loader2, Settings2 } from 'lucide-react';
-import type { EmployeeWithPosition, AppSettings, Department, AttendanceRecord, Position, KoperasiOrder, HseRecord } from '@/lib/types';
+import { Printer, Loader2, Settings2, Search } from 'lucide-react';
+import type { EmployeeWithPosition, AppSettings, Position, AttendanceRecord, KoperasiOrder, HseRecord, Site } from '@/lib/types';
 import PayslipViewer, { type PayslipData, type PayslipOptions } from '@/components/payslip-viewer';
 import { useToast } from '@/hooks/use-toast';
 import { getAttendanceByPeriod } from '@/actions/attendance';
@@ -48,12 +49,14 @@ export default function PayslipClientPage({
   initialEmployees,
   settings,
   initialAttendance,
-  departments,
+  sites,
+  positions,
 }: {
   initialEmployees: EmployeeWithPosition[];
   settings: AppSettings;
   initialAttendance: AttendanceRecord[];
-  departments: Department[];
+  sites: Site[];
+  positions: Position[];
 }) {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
   const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7));
@@ -64,7 +67,10 @@ export default function PayslipClientPage({
   const [keterangan, setKeterangan] = useState('');
   const { toast } = useToast();
   const [isFetching, setIsFetching] = useState(false);
-  const [departmentFilter, setDepartmentFilter] = useState('all');
+  const [siteFilter, setSiteFilter] = useState('all');
+  const [positionFilter, setPositionFilter] = useState('all');
+  const [searchFilter, setSearchFilter] = useState('');
+
   const [payslipOptions, setPayslipOptions] = useState<PayslipOptions>({
     showEmployeeInfo: true,
     showPaymentInfo: true,
@@ -82,12 +88,13 @@ export default function PayslipClientPage({
   };
 
   const filteredEmployees = useMemo(() => {
-    let employees = initialEmployees.filter(emp => emp.canGeneratePayslip !== false);
-    if (departmentFilter === 'all') {
-        return employees;
-    }
-    return employees.filter(emp => emp.department === departmentFilter);
-  }, [initialEmployees, departmentFilter]);
+    return initialEmployees.filter(emp => {
+      const matchesSite = siteFilter === 'all' || emp.siteLocation === siteFilter;
+      const matchesPosition = positionFilter === 'all' || emp.positions?.includes(positionFilter);
+      const matchesSearch = searchFilter === '' || emp.name.toLowerCase().includes(searchFilter.toLowerCase()) || emp.nik?.includes(searchFilter);
+      return matchesSite && matchesPosition && matchesSearch && emp.canGeneratePayslip !== false;
+    });
+  }, [initialEmployees, siteFilter, positionFilter, searchFilter]);
 
   const selectedEmployee = useMemo(() => {
     if (!selectedEmployeeId) return null;
@@ -324,20 +331,33 @@ export default function PayslipClientPage({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
              <div className="space-y-2">
-                <Label htmlFor="department">Departemen</Label>
-                <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-                    <SelectTrigger id="department-filter">
-                        <SelectValue placeholder="Filter by Department" />
-                    </SelectTrigger>
+                <Label htmlFor="siteFilter">Lokasi Proyek</Label>
+                <Select value={siteFilter} onValueChange={setSiteFilter}>
+                    <SelectTrigger id="siteFilter"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="all">Semua Departemen</SelectItem>
-                        {departments.map((dept) => (
-                            <SelectItem key={dept.id} value={dept.name}>{dept.name}</SelectItem>
-                        ))}
+                        <SelectItem value="all">Semua Proyek</SelectItem>
+                        {sites.map((s) => (<SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>))}
                     </SelectContent>
                 </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="positionFilter">Jabatan</Label>
+              <Select value={positionFilter} onValueChange={setPositionFilter}>
+                  <SelectTrigger id="positionFilter"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                      <SelectItem value="all">Semua Jabatan</SelectItem>
+                      {positions.map((p) => (<SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>))}
+                  </SelectContent>
+              </Select>
+            </div>
+             <div className="space-y-2 lg:col-span-2">
+                <Label htmlFor="searchFilter">Cari Nama / NIK</Label>
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input id="searchFilter" value={searchFilter} onChange={(e) => setSearchFilter(e.target.value)} placeholder="Ketik untuk mencari..." className="pl-10" />
+                </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="employee">Karyawan</Label>
@@ -388,7 +408,7 @@ export default function PayslipClientPage({
                 />
               </div>
             )}
-             <div className="space-y-2 md:col-span-full">
+             <div className="space-y-2 lg:col-span-full">
               <Label htmlFor="keterangan">Keterangan (Opsional)</Label>
               <Textarea 
                 id="keterangan"
