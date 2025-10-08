@@ -301,7 +301,7 @@ export default async function DashboardPage({ searchParams, userSiteIds }: { sea
                                             </Avatar>
                                             <div className="ml-4 space-y-1">
                                                 <Link href={`/dashboard/employees/${emp.id}`} className="text-sm font-medium leading-none hover:underline">{emp.name}</Link>
-                                                <p className="text-xs text-muted-foreground">{emp.position}</p>
+                                                <div className="text-xs text-muted-foreground">{emp.position}</div>
                                             </div>
                                             <div className="ml-auto font-medium text-xs">{emp.daysActive} {T.days}</div>
                                         </div>
@@ -309,7 +309,7 @@ export default async function DashboardPage({ searchParams, userSiteIds }: { sea
                                 ) : (
                                     <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-8">
                                         <UserRound className="h-8 w-8 mb-2" />
-                                        <p className="text-sm">{T.noRecommendation}</p>
+                                        <div className="text-sm">{T.noRecommendation}</div>
                                     </div>
                                 )}
                             </div>
