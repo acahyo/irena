@@ -24,11 +24,11 @@ async function getDashboardData() {
     }, {} as Record<string, number>);
 
     const statusCounts = requests.reduce((acc, req) => {
-        if (req.status === 'Verified by Purchasing' || req.status === 'Approved by Finance') {
+        if (req.status === 'Verified' || req.status === 'Approved') {
             acc[req.status] = (acc[req.status] || 0) + 1;
         }
         return acc;
-    }, {} as Record<'Verified by Purchasing' | 'Approved by Finance', number>);
+    }, {} as Record<'Verified' | 'Approved', number>);
 
     return {
         totalThisMonth: requestsThisMonth.length,
@@ -50,10 +50,8 @@ const formatCurrency = (amount: number | undefined | null) => {
 const getStatusVariant = (status: string) => {
   switch (status) {
     case 'Pending': return 'secondary';
-    case 'Verified by Purchasing': return 'default';
-    case 'Processing': return 'default';
-    case 'Approved by Finance': return 'default';
-    case 'Completed': return 'default';
+    case 'Verified': return 'default';
+    case 'Approved': return 'default';
     case 'Rejected': return 'destructive';
     default: return 'outline';
   }
@@ -85,11 +83,11 @@ export default async function PurchasingDashboard({ user }: { user: User }) {
                         <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
                                 <span>Diverifikasi Purchasing:</span>
-                                <Badge variant="secondary">{data.statusCounts['Verified by Purchasing'] || 0}</Badge>
+                                <Badge variant="secondary">{data.statusCounts['Verified'] || 0}</Badge>
                             </div>
                              <div className="flex justify-between">
                                 <span>Disetujui Finance:</span>
-                                 <Badge variant="default">{data.statusCounts['Approved by Finance'] || 0}</Badge>
+                                 <Badge variant="default">{data.statusCounts['Approved'] || 0}</Badge>
                             </div>
                         </div>
                     </CardContent>
@@ -137,7 +135,7 @@ export default async function PurchasingDashboard({ user }: { user: User }) {
                                 <TableRow>
                                     <TableHead>Tanggal</TableHead>
                                     <TableHead>Proyek</TableHead>
-                                    <TableHead>Total Estimasi</TableHead>
+                                    <TableHead>Total Diajukan</TableHead>
                                     <TableHead>Status</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -147,7 +145,7 @@ export default async function PurchasingDashboard({ user }: { user: User }) {
                                     <TableRow key={req.id}>
                                         <TableCell>{format(new Date(req.requestDate), 'PPP')}</TableCell>
                                         <TableCell>{req.projectName}</TableCell>
-                                        <TableCell>{formatCurrency(req.totalEstimatedPrice)}</TableCell>
+                                        <TableCell>{formatCurrency(req.proposedAmount)}</TableCell>
                                         <TableCell><Badge variant={getStatusVariant(req.status)}>{req.status}</Badge></TableCell>
                                     </TableRow>
                                     ))
