@@ -163,41 +163,22 @@ export default function DashboardClientLayout({
 
   const orderedNavItems = useMemo(() => {
     const menuOrder = settings.menuOrder || staticMenuOrder;
-    return menuOrder.map(orderItem => {
-        const item = allNavItemsMap.get(orderItem.id);
-        if (item && orderItem.subItems && orderItem.subItems.length > 0) {
-            return {
-                ...item,
-                subItems: orderItem.subItems.map(subId => allNavItemsMap.get(subId.id)).filter(Boolean),
-            };
-        }
-        return item;
-    }).filter(Boolean);
+    return menuOrder.map(orderItem => allNavItemsMap.get(orderItem.id)).filter(Boolean);
   }, [allNavItemsMap, settings.menuOrder]);
   
   const navItems = useMemo(() => {
     if (!role) return [];
 
-    let accessibleItems;
     if (role.name.toLowerCase() === 'administrator') {
-      accessibleItems = orderedNavItems;
-    } else {
-        const accessibleMenus = new Set(role.accessibleMenus || []);
-        accessibleItems = orderedNavItems.map(item => {
-            if (item.subItems) {
-                const filteredSubItems = item.subItems.filter((sub:any) => accessibleMenus.has(sub.id));
-                // Show parent if parent itself is accessible OR if it has any visible sub-items
-                if (accessibleMenus.has(item.id) || filteredSubItems.length > 0) {
-                    return { ...item, subItems: filteredSubItems };
-                }
-                return null;
-            }
-            return accessibleMenus.has(item.id) ? item : null;
-        }).filter(Boolean);
+      return orderedNavItems;
     }
+
+    const accessibleMenus = new Set(role.accessibleMenus || []);
+    const accessibleItems = orderedNavItems.filter(item => accessibleMenus.has(item.id));
     
+    // Ensure dashboard is always present for logged-in users if they have access to any other page
     const hasDashboard = accessibleItems.some(item => item.id === 'dashboard');
-    if (!hasDashboard) {
+    if (!hasDashboard && accessibleItems.length > 0) {
       const dashboardItem = allNavItemsMap.get('dashboard');
       if (dashboardItem) {
         return [dashboardItem, ...accessibleItems];
@@ -210,7 +191,7 @@ export default function DashboardClientLayout({
 
 
   const getActiveLabel = () => {
-    for (const item of allNavItemsList(lang).flatMap(i => (i as any).subItems ? (i as any).subItems : i)) {
+    for (const item of allNavItemsList(lang)) {
         if (item.href && (item.exact ? pathname === item.href : pathname.startsWith(item.href))) {
             return item.label;
         }
@@ -295,5 +276,3 @@ export default function DashboardClientLayout({
     </SidebarProvider>
   );
 }
-
-    
