@@ -82,7 +82,7 @@ const allNavItemsList = (lang: 'id' | 'en') => [
   { id: 'warehouse', href: "/dashboard/warehouse", icon: Archive, label: "Gudang" },
   
   // Keuangan
-  { id: 'finance', href: "/dashboard/finance", icon: Landmark, label: lang === 'id' ? "Laporan Keuangan" : "Finance Report" },
+  { id: 'finance', href: "/dashboard/finance", icon: Landmark, label: lang === 'id' ? "Laporan Transaksi" : "Transaction Report" },
   { id: 'payment-requests', href: "/dashboard/payment-requests", icon: CircleDollarSign, label: "Pengajuan Pembayaran" },
   { id: 'fuel-requests', href: "/dashboard/fuel-requests", icon: Fuel, label: "Pengajuan BBM" },
   { id: 'koperasi-limit', href: "/dashboard/finance/koperasi-limit", icon: Wallet, label: "Limit Koperasi" },
