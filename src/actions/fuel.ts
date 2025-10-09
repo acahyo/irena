@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { db } from '@/lib/firebase';
@@ -81,6 +82,7 @@ export async function processFuelRequest(
         return { success: true, message: `Disetujui dari stok gudang. Stok BBM Solar diperbarui.` };
     } else {
         // Stock not available, forward to finance
+        // For Solar without stock, Purchasing must also input an amount.
         if (!requestUpdates.approvedAmount || requestUpdates.approvedAmount <= 0) {
             return { success: false, message: 'Stok tidak cukup. Nominal dana untuk Finance wajib diisi.' };
         }
@@ -119,18 +121,6 @@ export async function updateFuelRequestStatus(
   try {
     const docRef = doc(db, 'fuelRequests', requestId);
     await updateDoc(docRef, updates);
-
-    // If approved by finance, create finance record
-    if (updates.status === 'Approved' && updates.approvedAmount) {
-      await createPaymentRequest({
-        requesterId: updates.approvedById || 'system',
-        requesterName: updates.approvedByName || 'System',
-        category: 'Pengadaan Barang',
-        paymentName: `BBM: ${updates.fuelType} untuk ${updates.vehicleId}`,
-        amount: updates.approvedAmount,
-        status: 'Approved' // Mark as approved since this is the final step
-      });
-    }
     
     return { success: true, message: 'Status pengajuan berhasil diperbarui.' };
   } catch (error) {

@@ -128,6 +128,8 @@ export default function FuelRequestsClientPage({ initialRequests, vehicles }: { 
       });
   }
 
+  const isPurchasingOrAdmin = user?.role === 'Purchasing' || user?.role === 'Administrator';
+
   return (
     <>
       <Card>
@@ -213,14 +215,14 @@ export default function FuelRequestsClientPage({ initialRequests, vehicles }: { 
                         </div>
                     </div>
                     {selectedRequest.isFromStock && <Badge>Diproses dari stok gudang</Badge>}
-
-                    {(user?.role === 'Purchasing' || user?.role === 'Administrator') && selectedRequest.status === 'Pending' && selectedRequest.fuelType !== 'Solar' && (
+                    
+                    {isPurchasingOrAdmin && selectedRequest.status === 'Pending' && selectedRequest.fuelType !== 'Solar' && (
                         <div className="space-y-2 pt-4 border-t">
-                            <Label htmlFor="approvedAmount">Nominal Dana (Rp)</Label>
+                            <Label htmlFor="approvedAmount">Nominal Dana untuk Finance (Rp)</Label>
                             <Input id="approvedAmount" type="number" value={approvedAmount} onChange={e => setApprovedAmount(e.target.value)} placeholder="Jumlah yang akan diajukan ke Finance" />
                         </div>
                     )}
-                    
+
                     {(user?.role === 'Finance' || user?.role === 'Administrator') && selectedRequest.status === 'Forwarded to Finance' && (
                          <div className="space-y-4 pt-4 border-t">
                             <div><Label>Nominal Diajukan Purchasing</Label><p className="font-bold text-lg">{formatCurrency(selectedRequest.approvedAmount)}</p></div>
@@ -233,14 +235,14 @@ export default function FuelRequestsClientPage({ initialRequests, vehicles }: { 
                 </div>
                 <DialogFooter>
                     <Button variant="outline" onClick={() => setIsModalOpen(false)}>Tutup</Button>
-                    {(user?.role === 'Purchasing' || user?.role === 'Administrator') && selectedRequest.status === 'Pending' && (
+                    {isPurchasingOrAdmin && selectedRequest.status === 'Pending' && (
                        <>
                         {selectedRequest.fuelType === 'Solar' ? (
                           <Button onClick={handleProcessRequest} disabled={isPending}>
                             {isPending ? <Loader2 className="animate-spin mr-2" /> : <Package className="mr-2 h-4 w-4" />} Proses Pengajuan Solar
                           </Button>
                         ) : (
-                          <Button onClick={handleProcessRequest} disabled={isPending}>
+                          <Button onClick={handleProcessRequest} disabled={isPending || !approvedAmount}>
                             {isPending ? <Loader2 className="animate-spin mr-2" /> : <Send className="mr-2 h-4 w-4" />} Ajukan ke Finance
                           </Button>
                         )}
@@ -263,5 +265,3 @@ export default function FuelRequestsClientPage({ initialRequests, vehicles }: { 
     </>
   );
 }
-
-    
