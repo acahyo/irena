@@ -178,7 +178,7 @@ export async function createFuelRequest(requestData: Omit<FuelRequest, 'id' | 'r
 
 export async function getFuelRequestsByDriver(driverId: string): Promise<FuelRequest[]> {
     try {
-        const q = query(collection(db, 'fuelRequests'), where('driverId', '==', driverId), orderBy('requestDate', 'desc'));
+        const q = query(collection(db, 'fuelRequests'), where('driverId', '==', driverId));
         const querySnapshot = await getDocs(q);
         const requests: FuelRequest[] = [];
         querySnapshot.forEach((doc) => {
@@ -189,7 +189,8 @@ export async function getFuelRequestsByDriver(driverId: string): Promise<FuelReq
                 requestDate: (data.requestDate as Timestamp).toDate(),
             } as FuelRequest);
         });
-        return requests;
+        // Sort in application code to avoid composite index
+        return requests.sort((a,b) => new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime());
     } catch (error) {
         console.error("Error fetching fuel requests for driver:", error);
         return [];
