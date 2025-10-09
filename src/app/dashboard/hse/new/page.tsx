@@ -53,7 +53,7 @@ export default function NewHseRecordPage() {
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [date, setDate] = useState<Date | undefined>();
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [fineFilePreview, setFineFilePreview] = useState<string | null>(null);
   
@@ -67,6 +67,9 @@ export default function NewHseRecordPage() {
   const category = searchParams.get('category') as HseCategory | null;
 
   useEffect(() => {
+    // Set initial date on client mount to avoid hydration mismatch
+    setDate(new Date());
+
     const fetchData = async () => {
       if (category === 'incident') {
         const [empData, deptData, posData] = await Promise.all([

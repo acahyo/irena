@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useEffect, useTransition } from 'react';
@@ -274,8 +275,8 @@ export default function PjDashboardClient({ employee, initialHistory }: { employ
                         {history.length > 0 ? (
                             history.map(rec => (
                                 <TableRow key={rec.id}>
-                                    <TableCell>{format(new Date(rec.timestamp as any), 'dd MMM yyyy')}</TableCell>
-                                    <TableCell>{format(new Date(rec.timestamp as any), 'HH:mm:ss')}</TableCell>
+                                    <TableCell>{isClient ? format(new Date(rec.timestamp as any), 'dd MMM yyyy') : 'Loading...'}</TableCell>
+                                    <TableCell>{isClient ? format(new Date(rec.timestamp as any), 'HH:mm:ss'): '...'}</TableCell>
                                     <TableCell>
                                         <Badge variant={getTypeVariant(rec.type)}>
                                             {rec.type}
