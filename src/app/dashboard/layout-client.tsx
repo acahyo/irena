@@ -52,6 +52,7 @@ import {
   AlertTriangle,
   Fuel,
   Archive,
+  Book,
 } from "lucide-react";
 import type { AppSettings, User, Role, MenuOrderItem } from "@/lib/types";
 import { logout } from "@/actions/auth";
@@ -87,6 +88,9 @@ const allNavItemsList = (lang: 'id' | 'en') => [
   { id: 'koperasi-limit', href: "/dashboard/finance/koperasi-limit", icon: Wallet, label: "Limit Koperasi" },
   { id: 'finance', href: "/dashboard/finance", icon: Landmark, label: "Laporan Transaksi" },
   
+  // Laporan
+  { id: 'reports', href: "/dashboard/reports", icon: Book, label: "Laporan" },
+
   // Koperasi
   { id: 'koperasi-items', href: "/dashboard/koperasi/items", icon: Store, label: "Barang Koperasi" },
   { id: 'koperasi-orders', href: "/dashboard/koperasi/orders", icon: ShoppingCart, label: "Pesanan Koperasi" },
@@ -134,6 +138,7 @@ const staticMenuOrder: MenuOrderItem[] = [
     { id: 'payment-requests' },
     { id: 'fuel-requests' },
     { id: 'koperasi-limit' },
+    { id: 'reports' },
     { id: 'koperasi-items' },
     { id: 'koperasi-orders' },
     { id: 'vehicles' },
