@@ -159,7 +159,7 @@ export const roles: Role[] = [
     { id: '3', name: 'Employee', description: 'Basic access to their own profile', accessibleMenus: [] },
     { id: '4', name: 'Admin Proyek', description: 'Project-specific administrative access', accessibleMenus: [] },
     { id: '5', name: 'Purchasing', description: 'Manages purchase requests', accessibleMenus: ['vehicles', 'warehouse'] },
-    { id: '6', name: 'Finance', description: 'Manages finances and approves requests', accessibleMenus: ['payroll-history', 'koperasi-limit', 'finance', 'warehouse'] },
+    { id: '6', name: 'Finance', description: 'Manages finances and approves requests', accessibleMenus: ['finance-dashboard', 'finance', 'payroll-history', 'koperasi-limit', 'warehouse'] },
     { id: '7', name: 'Admin Absensi', description: 'Manages attendance for a specific position', accessibleMenus: [] },
     { id: '8', name: 'Driver LV Office', description: 'Access to driver-specific dashboard', accessibleMenus: [] },
     { id: '9', name: 'HSE', description: 'Manages HSE reports and violations', accessibleMenus: ['hse', 'hse-fines', 'violations', 'vehicles'] },
