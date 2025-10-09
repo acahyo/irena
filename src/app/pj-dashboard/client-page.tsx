@@ -1,7 +1,7 @@
-
 'use client';
 
 import { useState, useRef, useEffect, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -30,7 +30,6 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { useRouter } from 'next/navigation';
 import { logout } from '@/actions/auth';
 
 export default function PjDashboardClient({ employee, initialHistory }: { employee: Employee, initialHistory: PjAttendance[] }) {
@@ -181,7 +180,8 @@ export default function PjDashboardClient({ employee, initialHistory }: { employ
                     <CardDescription>Silakan rekam absensi Anda di sini.</CardDescription>
                 </div>
                 <Button variant="outline" size="sm" onClick={handleLogout} disabled={isPending}>
-                    {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
+                    {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogOut className="mr-2 h-4 w-4" />}
+                    Keluar
                 </Button>
             </div>
         </CardHeader>

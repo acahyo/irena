@@ -1,8 +1,7 @@
-
-
 'use client';
 
 import { useState, useRef, useEffect, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -22,7 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Camera, MapPin, Send, Loader2, Clock, Fuel } from 'lucide-react';
+import { Camera, MapPin, Send, Loader2, Clock, Fuel, LogOut } from 'lucide-react';
 import type { Employee, DriverAttendance, Vehicle, FuelRequest } from '@/lib/types';
 import { submitDriverAttendance, submitP2hReport, submitUnitConditionReport, createFuelRequest } from '@/actions/driver';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -30,11 +29,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
+import { logout } from '@/actions/auth';
 
 
 export default function DriverDashboardClient({ employee, initialHistory, vehicles, initialFuelRequests }: { employee: Employee, initialHistory: DriverAttendance[], vehicles: Vehicle[], initialFuelRequests: FuelRequest[] }) {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   // Attendance state
   const [attendanceType, setAttendanceType] = useState<'check-in' | 'check-out'>('check-in');
@@ -247,14 +248,27 @@ export default function DriverDashboardClient({ employee, initialHistory, vehicl
         default: return 'outline';
       }
     };
+    
+  const handleLogout = async () => {
+    startTransition(async () => {
+        await logout('employee');
+        router.push('/login/driver');
+    });
+  };
 
 
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle>Selamat Datang, {employee.name}</CardTitle>
-          <CardDescription>Dasbor khusus untuk Driver.</CardDescription>
+        <CardHeader className="flex flex-row justify-between items-start">
+          <div>
+            <CardTitle>Selamat Datang, {employee.name}</CardTitle>
+            <CardDescription>Dasbor khusus untuk Driver.</CardDescription>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleLogout} disabled={isPending}>
+            {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogOut className="mr-2 h-4 w-4" />}
+            Keluar
+          </Button>
         </CardHeader>
       </Card>
       

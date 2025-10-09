@@ -74,7 +74,8 @@ export async function submitUnitConditionReport(reportData: Omit<UnitConditionRe
 
 export async function getDriverAttendanceHistory(driverId: string): Promise<DriverAttendance[]> {
     try {
-        const q = query(collection(db, 'driverAttendance'), where('driverId', '==', driverId), orderBy('timestamp', 'desc'));
+        // Remove orderBy to avoid composite index requirement, sort in application code instead.
+        const q = query(collection(db, 'driverAttendance'), where('driverId', '==', driverId));
         const querySnapshot = await getDocs(q);
         const history: DriverAttendance[] = [];
         querySnapshot.forEach((doc) => {
@@ -86,7 +87,7 @@ export async function getDriverAttendanceHistory(driverId: string): Promise<Driv
             } as DriverAttendance);
         });
         
-        return history;
+        return history.sort((a,b) => new Date(b.timestamp as string).getTime() - new Date(a.timestamp as string).getTime());
 
     } catch (error) {
         console.error("Error fetching driver attendance history:", error);
