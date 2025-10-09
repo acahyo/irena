@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { db, storage } from '@/lib/firebase';
@@ -183,7 +184,7 @@ export async function updateEmployee(id: string, employee: Partial<Employee>): P
    // Convert numeric fields from string to number
   const numericFields: (keyof Employee)[] = [
     'basicSalary', 'mealAllowance', 'transportAllowance', 'dailyWage', 'overtimeRate',
-    'monthlySalary', 'otAllowance', 'locationAllowance', 'otherAllowances'
+    'monthlySalary', 'otAllowance', 'locationAllowance', 'otherAllowances', 'koperasiLimit'
   ];
   const employeeData: { [key: string]: any } = { ...employee };
 

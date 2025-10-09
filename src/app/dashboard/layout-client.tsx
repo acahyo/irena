@@ -59,7 +59,7 @@ import { logout } from "@/actions/auth";
 
 const allNavItemsList = (lang: 'id' | 'en') => [
   { id: 'dashboard', href: "/dashboard", icon: LayoutDashboard, label: lang === 'id' ? "Dasbor" : "Dashboard", exact: true },
-  { id: 'finance-dashboard', href: "/dashboard/finance", icon: Landmark, label: "Dasbor Keuangan" },
+  { id: 'finance', href: "/dashboard/finance", icon: Landmark, label: "Laporan Transaksi" },
   { id: 'hse-dashboard', href: "/dashboard/hse", icon: ShieldCheck, label: "Dasbor HSE" },
   
   // Kepegawaian
@@ -82,7 +82,6 @@ const allNavItemsList = (lang: 'id' | 'en') => [
   { id: 'warehouse', href: "/dashboard/warehouse", icon: Archive, label: "Gudang" },
   
   // Keuangan
-  { id: 'finance', href: "/dashboard/finance", icon: Landmark, label: lang === 'id' ? "Laporan Transaksi" : "Transaction Report" },
   { id: 'payment-requests', href: "/dashboard/payment-requests", icon: CircleDollarSign, label: "Pengajuan Pembayaran" },
   { id: 'fuel-requests', href: "/dashboard/fuel-requests", icon: Fuel, label: "Pengajuan BBM" },
   { id: 'koperasi-limit', href: "/dashboard/finance/koperasi-limit", icon: Wallet, label: "Limit Koperasi" },
@@ -115,7 +114,7 @@ const allNavItemsList = (lang: 'id' | 'en') => [
 
 const staticMenuOrder: MenuOrderItem[] = [
     { id: 'dashboard' },
-    { id: 'finance-dashboard' },
+    { id: 'finance' },
     { id: 'hse-dashboard' },
     { id: 'employees' },
     { id: 'employee-register' },
@@ -130,7 +129,6 @@ const staticMenuOrder: MenuOrderItem[] = [
     { id: 'payroll-history' },
     { id: 'purchasing' },
     { id: 'warehouse' },
-    { id: 'finance' },
     { id: 'payment-requests' },
     { id: 'fuel-requests' },
     { id: 'koperasi-limit' },
