@@ -28,12 +28,12 @@ export default function PjLoginPageClient({ settings }: { settings: AppSettings 
     const lang = settings.language || 'id';
 
     const T = useMemo(() => ({
-        welcome: lang === 'id' ? 'Selamat datang! Silakan masuk ke akun PJ Anda.' : 'Selamat datang! Silakan masuk ke akun Anda.',
+        welcome: lang === 'id' ? 'Selamat datang! Silakan masuk ke akun PJ Anda.' : 'Welcome! Please sign in to your PJ account.',
         emailLabel: lang === 'id' ? 'Email' : 'Email',
         passwordLabel: lang === 'id' ? 'Kata Sandi' : 'Password',
-        signInButton: lang === 'id' ? 'Masuk' : 'Masuk',
-        signingInButton: lang === 'id' ? 'Sedang Masuk...' : 'Sedang Masuk...',
-        defaultError: lang === 'id' ? 'Terjadi kesalahan tak terduga. Silakan coba lagi.' : 'Terjadi kesalahan tak terduga. Silakan coba lagi.',
+        signInButton: lang === 'id' ? 'Masuk' : 'Sign In',
+        signingInButton: lang === 'id' ? 'Sedang Masuk...' : 'Signing In...',
+        defaultError: lang === 'id' ? 'Terjadi kesalahan tak terduga. Silakan coba lagi.' : 'An unexpected error occurred. Please try again.',
         notPj: lang === 'id' ? 'Bukan PJ? Masuk sebagai Admin' : 'Not a PJ? Sign in as Admin',
         authError: (msg: string) => {
             if (lang === 'id') {
@@ -77,7 +77,7 @@ export default function PjLoginPageClient({ settings }: { settings: AppSettings 
             </Avatar>
             </div>
             <CardTitle className="text-3xl font-bold tracking-tight">
-              Irena Binajasa Abadikarya
+              Portal PJ
             </CardTitle>
             <CardDescription>
               {T.welcome}
@@ -99,7 +99,7 @@ export default function PjLoginPageClient({ settings }: { settings: AppSettings 
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="pj@irena.com"
+                  placeholder="pj@example.com"
                   required
                   defaultValue=""
                   disabled={loading}

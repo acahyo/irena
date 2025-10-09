@@ -39,24 +39,14 @@ export async function middleware(request: NextRequest) {
             const sessionData = JSON.parse(employeeSessionCookie.value);
             const roles = sessionData.roles || [];
             
-            if (pathname.startsWith('/login/driver') && roles.includes('Driver LV Office')) {
+            if (roles.includes('Driver LV Office')) {
                 return NextResponse.redirect(new URL('/driver-dashboard', request.url));
             }
-             if (pathname.startsWith('/login/pj') && roles.includes('PJ')) {
+            if (roles.includes('PJ')) {
                 return NextResponse.redirect(new URL('/pj-dashboard', request.url));
             }
-             if (pathname.startsWith('/login/employee') && !roles.includes('Driver LV Office') && !roles.includes('PJ')) {
-                return NextResponse.redirect(new URL('/portal', request.url));
-            }
-             if (pathname === '/') {
-                 if (roles.includes('Driver LV Office')) {
-                    return NextResponse.redirect(new URL('/driver-dashboard', request.url));
-                } else if (roles.includes('PJ')) {
-                    return NextResponse.redirect(new URL('/pj-dashboard', request.url));
-                } else {
-                    return NextResponse.redirect(new URL('/portal', request.url));
-                }
-             }
+            // General employee
+            return NextResponse.redirect(new URL('/portal', request.url));
 
         } catch (e) {
              // Invalid cookie, let it proceed to be handled by page logic (which will redirect)

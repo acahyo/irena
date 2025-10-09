@@ -77,6 +77,7 @@ export async function authenticateUser(
                     if (userType === 'pj') {
                         return { success: true, message: 'PJ login successful.', userType: 'pj' };
                     }
+                    // This case handles general employee login if needed, or can be tightened
                     if (userType === 'employee') {
                         return { success: true, message: 'Employee login successful.', userType: 'employee' };
                     }
