@@ -28,7 +28,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Eye, Loader2, Check, X, Send, Package } from 'lucide-react';
+import { Eye, Loader2, Check, X, Send, Package, ExternalLink } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Link from 'next/link';
 
@@ -199,9 +199,12 @@ export default function FuelRequestsClientPage({ initialRequests, vehicles }: { 
                        <div><Label>Jumlah Diajukan</Label><p className="font-bold">{selectedRequest.liters} Liter</p></div>
                        <div className="col-span-2">
                            <Label>Foto Odometer</Label>
-                           <Link href={selectedRequest.odometerPhotoUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-sm flex items-center gap-1">
-                                Lihat Foto
+                           {selectedRequest.odometerPhotoUrl ? (
+                            <Link href={selectedRequest.odometerPhotoUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-sm flex items-center gap-1">
+                                Lihat Foto <ExternalLink className="h-3 w-3" />
                            </Link>
+                           ) : <p className="text-sm text-muted-foreground">Tidak ada foto.</p>
+                           }
                         </div>
                     </div>
                     {selectedRequest.isFromStock && <Badge>Diproses dari stok gudang</Badge>}
