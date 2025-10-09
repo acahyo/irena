@@ -68,6 +68,8 @@ const hexToHslString = (hex: string | undefined): string | undefined => {
 
 const allMenus = [
   { id: 'dashboard', label: 'Dasbor' },
+  { id: 'finance-dashboard', label: 'Dasbor Keuangan' },
+  { id: 'hse-dashboard', label: 'Dasbor HSE' },
   { id: 'employees', label: 'Daftar Karyawan' },
   { id: 'employee-register', label: "Registrasi Karyawan" },
   { id: 'employee-review', label: "Tinjau Registrasi" },
@@ -81,10 +83,11 @@ const allMenus = [
   { id: 'payroll-history', label: 'Riwayat Payroll' },
   { id: 'purchasing', label: "Pengajuan Barang" },
   { id: 'warehouse', label: "Gudang" },
-  { id: 'finance', label: 'Keuangan' },
+  { id: 'finance', label: 'Laporan Transaksi' },
   { id: 'payment-requests', label: "Pengajuan Pembayaran" },
   { id: 'fuel-requests', label: "Pengajuan BBM" },
   { id: 'koperasi-limit', label: "Limit Koperasi" },
+  { id: 'reports', label: "Laporan" },
   { id: 'koperasi-items', label: "Barang Koperasi" },
   { id: 'koperasi-orders', label: "Pesanan Koperasi" },
   { id: 'vehicles', label: 'Kendaraan' },
