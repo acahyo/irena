@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useState, useTransition } from 'react';
@@ -12,10 +10,6 @@ import jsPDF from 'jspdf';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import type { Employee, PayrollRecord, PaymentRequest, PurchaseRequest } from '@/lib/types';
-
-interface ExtendedJsPDF extends jsPDF {
-  autoTable: (options: any) => jsPDF;
-}
 
 const formatCurrency = (amount: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(amount);
 
@@ -37,10 +31,12 @@ export default function ReportsClientPage({
   const handleDownloadFinancialReport = () => {
     startDownload(async () => {
       try {
-        const { default: autoTable } = await import('jspdf-autotable');
-        const doc = new jsPDF() as ExtendedJsPDF;
+        const jsPDF = (await import('jspdf')).default;
+        const autoTable = (await import('jspdf-autotable')).default;
+        
+        const doc = new jsPDF();
         const reportDate = format(new Date(), 'dd MMMM yyyy');
-        const reportPeriod = format(new Date(period), 'MMMM yyyy');
+        const reportPeriod = format(new Date(period + '-02'), 'MMMM yyyy');
 
         // Header
         doc.setFontSize(18);
@@ -57,14 +53,14 @@ export default function ReportsClientPage({
           doc.setFontSize(14);
           doc.text('Pengeluaran Gaji', 14, finalY);
           finalY += 5;
-          doc.autoTable({
+          autoTable(doc, {
             startY: finalY,
             head: [['Karyawan', 'Bank', 'No. Rekening', 'Gaji Bersih']],
             body: payrollForPeriod.map(p => [p.employeeName, p.bankName || '-', p.accountNumber || '-', formatCurrency(p.netSalary)]),
             theme: 'striped',
             headStyles: { fillColor: [22, 163, 74] },
           });
-          finalY = (doc as any).autoTable.previous.finalY + 10;
+          finalY = (doc as any).lastAutoTable.finalY + 10;
         }
 
         // Payment Requests
@@ -73,14 +69,14 @@ export default function ReportsClientPage({
           doc.setFontSize(14);
           doc.text('Pengajuan Pembayaran', 14, finalY);
           finalY += 5;
-          doc.autoTable({
+          autoTable(doc, {
             startY: finalY,
             head: [['Pemohon', 'Kategori', 'Nama Pembayaran', 'Jumlah']],
             body: paymentsForPeriod.map(p => [p.requesterName, p.category, p.paymentName, formatCurrency(p.amount)]),
             theme: 'striped',
             headStyles: { fillColor: [22, 163, 74] },
           });
-          finalY = (doc as any).autoTable.previous.finalY + 10;
+          finalY = (doc as any).lastAutoTable.finalY + 10;
         }
 
         // Purchase Requests
@@ -89,19 +85,19 @@ export default function ReportsClientPage({
           doc.setFontSize(14);
           doc.text('Pengadaan Barang', 14, finalY);
           finalY += 5;
-          doc.autoTable({
+          autoTable(doc, {
             startY: finalY,
             head: [['Proyek', 'Pemohon', 'Status', 'Nominal']],
             body: purchasesForPeriod.map(p => [p.projectName, p.requesterName, p.status, formatCurrency(p.proposedAmount || 0)]),
             theme: 'striped',
             headStyles: { fillColor: [22, 163, 74] },
           });
-          finalY = (doc as any).autoTable.previous.finalY + 10;
         }
         
         doc.save(`Laporan_Keuangan_${period}.pdf`);
         toast({ title: 'Sukses!', description: 'Laporan keuangan berhasil diunduh.' });
       } catch (error) {
+        console.error(error)
         toast({ variant: 'destructive', title: 'Error', description: 'Gagal membuat laporan keuangan.' });
       }
     });
@@ -110,8 +106,10 @@ export default function ReportsClientPage({
   const handleDownloadManpowerReport = () => {
      startDownload(async () => {
       try {
-        const { default: autoTable } = await import('jspdf-autotable');
-        const doc = new jsPDF() as ExtendedJsPDF;
+        const jsPDF = (await import('jspdf')).default;
+        const autoTable = (await import('jspdf-autotable')).default;
+
+        const doc = new jsPDF();
         const reportDate = format(new Date(), 'dd MMMM yyyy');
         
         // Header
@@ -139,17 +137,17 @@ export default function ReportsClientPage({
         doc.setFontSize(14);
         doc.text('Rekapitulasi per Proyek', 14, finalY);
         finalY += 5;
-        doc.autoTable({
+        autoTable(doc, {
           startY: finalY,
           head: [['Proyek', 'Jumlah Karyawan']],
           body: Object.entries(manpowerByProject).map(([project, count]) => [project, count]),
         });
-        finalY = (doc as any).autoTable.previous.finalY + 10;
+        finalY = (doc as any).lastAutoTable.finalY + 10;
 
         doc.setFontSize(14);
         doc.text('Rekapitulasi per Jabatan', 14, finalY);
         finalY += 5;
-        doc.autoTable({
+        autoTable(doc, {
           startY: finalY,
           head: [['Jabatan', 'Jumlah Karyawan']],
           body: Object.entries(manpowerByPosition).map(([position, count]) => [position, count]),
@@ -158,6 +156,7 @@ export default function ReportsClientPage({
         doc.save(`Laporan_Manpower_${reportDate}.pdf`);
         toast({ title: 'Sukses!', description: 'Laporan manpower berhasil diunduh.' });
       } catch (error) {
+        console.error(error);
         toast({ variant: 'destructive', title: 'Error', description: 'Gagal membuat laporan manpower.' });
       }
     });
