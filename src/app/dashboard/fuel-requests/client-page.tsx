@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useTransition, useEffect } from 'react';
@@ -22,7 +23,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import type { FuelRequest, Vehicle, User } from '@/lib/types';
-import { processFuelRequest, updateFuelRequestStatus } from '@/actions/fuel';
+import { processFuelRequest, updateFuelRequestStatus, forwardFuelRequestToFinance } from '@/actions/fuel';
 import { useUser } from '@/contexts/user-context';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -77,14 +78,13 @@ export default function FuelRequestsClientPage({ initialRequests, vehicles }: { 
     setIsModalOpen(true);
   };
   
-  const handleProcessRequest = () => {
+  const handleProcessSolar = () => {
     if (!selectedRequest || !user) return;
     
     startTransition(async () => {
       const updates = {
-        approvedById: user.id,
-        approvedByName: user.name,
-        approvedDate: new Date(),
+        processorId: user.id,
+        processorName: user.name,
         rejectionReason: rejectionReason,
         approvedAmount: approvedAmount ? Number(approvedAmount) : undefined,
       };
@@ -94,12 +94,35 @@ export default function FuelRequestsClientPage({ initialRequests, vehicles }: { 
       if (result.success) {
         toast({ title: 'Sukses!', description: result.message });
         setIsModalOpen(false);
-        // This is tricky because the status can change in multiple ways.
-        // A full refresh is safer.
         location.reload();
       } else {
         toast({ variant: 'destructive', title: 'Error', description: result.message });
       }
+    });
+  }
+
+  const handleForwardToFinance = () => {
+    if (!selectedRequest || !user) return;
+
+    if (!approvedAmount || Number(approvedAmount) <= 0) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Nominal dana yang akan diajukan ke Finance wajib diisi.' });
+        return;
+    }
+
+    startTransition(async () => {
+        const result = await forwardFuelRequestToFinance(selectedRequest, {
+            processorId: user.id,
+            processorName: user.name,
+            approvedAmount: Number(approvedAmount),
+        });
+
+        if (result.success) {
+            toast({ title: 'Sukses!', description: result.message });
+            setRequests(prev => prev.map(r => r.id === selectedRequest.id ? {...r, status: 'Forwarded to Finance', approvedAmount: Number(approvedAmount)} : r));
+            setIsModalOpen(false);
+        } else {
+            toast({ variant: 'destructive', title: 'Error', description: result.message });
+        }
     });
   }
   
@@ -222,6 +245,15 @@ export default function FuelRequestsClientPage({ initialRequests, vehicles }: { 
                             <Input id="approvedAmount" type="number" value={approvedAmount} onChange={e => setApprovedAmount(e.target.value)} placeholder="Jumlah yang akan diajukan ke Finance" />
                         </div>
                     )}
+                    
+                    {isPurchasingOrAdmin && selectedRequest.status === 'Pending' && selectedRequest.fuelType === 'Solar' && (
+                        <Alert>
+                            <AlertDescription>
+                                Aplikasi akan mengecek stok gudang. Jika stok tidak mencukupi, Anda perlu menginput nominal dana untuk diajukan ke Finance.
+                            </AlertDescription>
+                        </Alert>
+                    )}
+
 
                     {(user?.role === 'Finance' || user?.role === 'Administrator') && selectedRequest.status === 'Forwarded to Finance' && (
                          <div className="space-y-4 pt-4 border-t">
@@ -238,11 +270,11 @@ export default function FuelRequestsClientPage({ initialRequests, vehicles }: { 
                     {isPurchasingOrAdmin && selectedRequest.status === 'Pending' && (
                        <>
                         {selectedRequest.fuelType === 'Solar' ? (
-                          <Button onClick={handleProcessRequest} disabled={isPending}>
+                          <Button onClick={handleProcessSolar} disabled={isPending}>
                             {isPending ? <Loader2 className="animate-spin mr-2" /> : <Package className="mr-2 h-4 w-4" />} Proses Pengajuan Solar
                           </Button>
                         ) : (
-                          <Button onClick={handleProcessRequest} disabled={isPending || !approvedAmount}>
+                          <Button onClick={handleForwardToFinance} disabled={isPending || !approvedAmount}>
                             {isPending ? <Loader2 className="animate-spin mr-2" /> : <Send className="mr-2 h-4 w-4" />} Ajukan ke Finance
                           </Button>
                         )}
