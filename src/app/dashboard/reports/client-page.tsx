@@ -8,10 +8,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Download, Loader2 } from 'lucide-react';
-import jsPDF from 'jspdf';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import type { Employee, PayrollRecord, PaymentRequest, PurchaseRequest } from '@/lib/types';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 const formatCurrency = (amount: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(amount);
 
@@ -31,72 +32,49 @@ export default function ReportsClientPage({
   const { toast } = useToast();
 
   const handleDownloadFinancialReport = () => {
-    startDownload(async () => {
+    startDownload(() => {
       try {
-        const jsPDF = (await import('jspdf')).default;
-        const autoTable = (await import('jspdf-autotable')).default;
-        
-        const doc = new jsPDF();
-        const reportDate = format(new Date(), 'dd MMMM yyyy');
         const reportPeriod = format(new Date(period + '-02'), 'MMMM yyyy');
-
-        // Header
-        doc.setFontSize(18);
-        doc.text('Laporan Keuangan Profesional', 14, 22);
-        doc.setFontSize(11);
-        doc.text(`Periode: ${reportPeriod}`, 14, 30);
-        doc.text(`Tanggal Cetak: ${reportDate}`, 14, 36);
-
-        let finalY = 45;
-
-        // Payroll
-        const payrollForPeriod = payrollHistory.filter(p => p.period === period);
-        if (payrollForPeriod.length > 0) {
-          doc.setFontSize(14);
-          doc.text('Pengeluaran Gaji', 14, finalY);
-          finalY += 5;
-          autoTable(doc, {
-            startY: finalY,
-            head: [['Karyawan', 'Bank', 'No. Rekening', 'Gaji Bersih']],
-            body: payrollForPeriod.map(p => [p.employeeName, p.bankName || '-', p.accountNumber || '-', formatCurrency(p.netSalary)]),
-            theme: 'striped',
-            headStyles: { fillColor: [22, 163, 74] },
-          });
-          finalY = (doc as any).lastAutoTable.finalY + 10;
-        }
-
-        // Payment Requests
-        const paymentsForPeriod = paymentRequests.filter(p => p.requestDate.toString().startsWith(period));
-        if (paymentsForPeriod.length > 0) {
-          doc.setFontSize(14);
-          doc.text('Pengajuan Pembayaran', 14, finalY);
-          finalY += 5;
-          autoTable(doc, {
-            startY: finalY,
-            head: [['Pemohon', 'Kategori', 'Nama Pembayaran', 'Jumlah']],
-            body: paymentsForPeriod.map(p => [p.requesterName, p.category, p.paymentName, formatCurrency(p.amount)]),
-            theme: 'striped',
-            headStyles: { fillColor: [22, 163, 74] },
-          });
-          finalY = (doc as any).lastAutoTable.finalY + 10;
-        }
-
-        // Purchase Requests
-        const purchasesForPeriod = purchaseRequests.filter(p => p.requestDate.toString().startsWith(period));
-        if (purchasesForPeriod.length > 0) {
-          doc.setFontSize(14);
-          doc.text('Pengadaan Barang', 14, finalY);
-          finalY += 5;
-          autoTable(doc, {
-            startY: finalY,
-            head: [['Proyek', 'Pemohon', 'Status', 'Nominal']],
-            body: purchasesForPeriod.map(p => [p.projectName, p.requesterName, p.status, formatCurrency(p.proposedAmount || 0)]),
-            theme: 'striped',
-            headStyles: { fillColor: [22, 163, 74] },
-          });
-        }
         
-        doc.save(`Laporan_Keuangan_${period}.pdf`);
+        // Payroll Data
+        const payrollForPeriod = payrollHistory.filter(p => p.period === period);
+        const payrollData = payrollForPeriod.map(p => ({
+          'Karyawan': p.employeeName,
+          'Bank': p.bankName || '-',
+          'No. Rekening': p.accountNumber || '-',
+          'Gaji Bersih': p.netSalary,
+        }));
+        
+        // Payment Requests Data
+        const paymentsForPeriod = paymentRequests.filter(p => p.requestDate.toString().startsWith(period));
+        const paymentData = paymentsForPeriod.map(p => ({
+          'Pemohon': p.requesterName,
+          'Kategori': p.category,
+          'Nama Pembayaran': p.paymentName,
+          'Jumlah': p.amount,
+        }));
+
+        // Purchase Requests Data
+        const purchasesForPeriod = purchaseRequests.filter(p => p.requestDate.toString().startsWith(period));
+        const purchaseData = purchasesForPeriod.map(p => ({
+          'Proyek': p.projectName,
+          'Pemohon': p.requesterName,
+          'Status': p.status,
+          'Nominal': p.proposedAmount || 0,
+        }));
+        
+        const wb = XLSX.utils.book_new();
+        const wsPayroll = XLSX.utils.json_to_sheet(payrollData);
+        const wsPayments = XLSX.utils.json_to_sheet(paymentData);
+        const wsPurchases = XLSX.utils.json_to_sheet(purchaseData);
+
+        XLSX.utils.book_append_sheet(wb, wsPayroll, 'Gaji');
+        XLSX.utils.book_append_sheet(wb, wsPayments, 'Pengajuan Pembayaran');
+        XLSX.utils.book_append_sheet(wb, wsPurchases, 'Pengadaan Barang');
+        
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        saveAs(new Blob([wbout], { type: 'application/octet-stream' }), `Laporan_Keuangan_${reportPeriod}.xlsx`);
+
         toast({ title: 'Sukses!', description: 'Laporan keuangan berhasil diunduh.' });
       } catch (error) {
         console.error(error)
@@ -106,19 +84,9 @@ export default function ReportsClientPage({
   };
 
   const handleDownloadManpowerReport = () => {
-     startDownload(async () => {
+     startDownload(() => {
       try {
-        const jsPDF = (await import('jspdf')).default;
-        const autoTable = (await import('jspdf-autotable')).default;
-
-        const doc = new jsPDF();
-        const reportDate = format(new Date(), 'dd MMMM yyyy');
-        
-        // Header
-        doc.setFontSize(18);
-        doc.text('Laporan Manpower Profesional', 14, 22);
-        doc.setFontSize(11);
-        doc.text(`Tanggal Cetak: ${reportDate}`, 14, 30);
+        const reportDate = format(new Date(), 'yyyy-MM-dd');
 
         const manpowerByProject = employees.reduce((acc, emp) => {
           const project = emp.siteLocation || 'Unassigned';
@@ -134,28 +102,19 @@ export default function ReportsClientPage({
           return acc;
         }, {} as Record<string, number>);
 
-        let finalY = 40;
+        const projectData = Object.entries(manpowerByProject).map(([project, count]) => ({ 'Proyek': project, 'Jumlah Karyawan': count }));
+        const positionData = Object.entries(manpowerByPosition).map(([position, count]) => ({ 'Jabatan': position, 'Jumlah Karyawan': count }));
 
-        doc.setFontSize(14);
-        doc.text('Rekapitulasi per Proyek', 14, finalY);
-        finalY += 5;
-        autoTable(doc, {
-          startY: finalY,
-          head: [['Proyek', 'Jumlah Karyawan']],
-          body: Object.entries(manpowerByProject).map(([project, count]) => [project, count]),
-        });
-        finalY = (doc as any).lastAutoTable.finalY + 10;
+        const wb = XLSX.utils.book_new();
+        const wsProject = XLSX.utils.json_to_sheet(projectData);
+        const wsPosition = XLSX.utils.json_to_sheet(positionData);
 
-        doc.setFontSize(14);
-        doc.text('Rekapitulasi per Jabatan', 14, finalY);
-        finalY += 5;
-        autoTable(doc, {
-          startY: finalY,
-          head: [['Jabatan', 'Jumlah Karyawan']],
-          body: Object.entries(manpowerByPosition).map(([position, count]) => [position, count]),
-        });
-
-        doc.save(`Laporan_Manpower_${reportDate}.pdf`);
+        XLSX.utils.book_append_sheet(wb, wsProject, 'Per Proyek');
+        XLSX.utils.book_append_sheet(wb, wsPosition, 'Per Jabatan');
+        
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        saveAs(new Blob([wbout], { type: 'application/octet-stream' }), `Laporan_Manpower_${reportDate}.xlsx`);
+        
         toast({ title: 'Sukses!', description: 'Laporan manpower berhasil diunduh.' });
       } catch (error) {
         console.error(error);
@@ -169,7 +128,7 @@ export default function ReportsClientPage({
       <Card>
         <CardHeader>
           <CardTitle>Laporan Keuangan</CardTitle>
-          <CardDescription>Unduh ringkasan semua pengeluaran dalam satu periode.</CardDescription>
+          <CardDescription>Unduh ringkasan semua pengeluaran dalam satu periode dalam format Excel.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -178,20 +137,20 @@ export default function ReportsClientPage({
           </div>
           <Button onClick={handleDownloadFinancialReport} className="w-full" disabled={isDownloading}>
             {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-            Unduh Laporan Keuangan
+            Unduh Laporan Keuangan (Excel)
           </Button>
         </CardContent>
       </Card>
       <Card>
         <CardHeader>
           <CardTitle>Laporan Manpower</CardTitle>
-          <CardDescription>Unduh rekapitulasi data karyawan berdasarkan proyek dan jabatan.</CardDescription>
+          <CardDescription>Unduh rekapitulasi data karyawan dalam format Excel.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">Laporan ini akan berisi data karyawan dari semua proyek yang terdaftar saat ini.</p>
           <Button onClick={handleDownloadManpowerReport} className="w-full" disabled={isDownloading}>
             {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-            Unduh Laporan Manpower
+            Unduh Laporan Manpower (Excel)
           </Button>
         </CardContent>
       </Card>
