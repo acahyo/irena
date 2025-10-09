@@ -29,6 +29,7 @@ import { getViolationRecords } from '@/actions/violations';
 import { format, getMonth, getYear, differenceInDays } from 'date-fns';
 import ViolationChart from './violation-chart';
 import FinanceDashboard from './finance-dashboard';
+import HseDashboard from './hse-dashboard';
 
 
 async function getDashboardData({ siteIds }: { siteIds?: string[] }) {
@@ -136,6 +137,10 @@ export default async function DashboardPage({ searchParams, userSiteIds }: { sea
     const user = await getAdminSession();
     if (!user) {
         redirect('/');
+    }
+
+    if (user.role === 'HSE') {
+        return <HseDashboard user={user} />;
     }
 
     if (user.role === 'Finance') {

@@ -60,6 +60,7 @@ import { logout } from "@/actions/auth";
 const allNavItemsList = (lang: 'id' | 'en') => [
   { id: 'dashboard', href: "/dashboard", icon: LayoutDashboard, label: lang === 'id' ? "Dasbor" : "Dashboard", exact: true },
   { id: 'finance-dashboard', href: "/dashboard/finance", icon: Landmark, label: "Dasbor Keuangan" },
+  { id: 'hse-dashboard', href: "/dashboard/hse", icon: ShieldCheck, label: "Dasbor HSE" },
   
   // Kepegawaian
   { id: 'employees', href: "/dashboard/employees", icon: Users, label: lang === 'id' ? "Daftar Karyawan" : "Employees" },
@@ -96,7 +97,6 @@ const allNavItemsList = (lang: 'id' | 'en') => [
   { id: 'pj-attendance', href: "/dashboard/pj-attendance", icon: ClipboardList, label: "Absensi PJ" },
 
   // HSE
-  { id: 'hse', href: "/dashboard/hse", icon: ShieldCheck, label: "Report HSE" },
   { id: 'hse-fines', href: "/dashboard/hse/fines", icon: CircleDollarSign, label: "Pengaturan Denda" },
 
   // Pengaturan & Master Data
@@ -115,6 +115,7 @@ const allNavItemsList = (lang: 'id' | 'en') => [
 const staticMenuOrder: MenuOrderItem[] = [
     { id: 'dashboard' },
     { id: 'finance-dashboard' },
+    { id: 'hse-dashboard' },
     { id: 'employees' },
     { id: 'employee-register' },
     { id: 'employee-review' },
@@ -137,7 +138,6 @@ const staticMenuOrder: MenuOrderItem[] = [
     { id: 'vehicles' },
     { id: 'driver-attendance' },
     { id: 'pj-attendance' },
-    { id: 'hse' },
     { id: 'hse-fines' },
     { id: 'department' },
     { id: 'position' },
@@ -198,6 +198,9 @@ export default function DashboardClientLayout({
         // Add finance dashboard for finance role
         if (role.name === 'Finance') {
             accessibleMenus.add('finance-dashboard');
+        }
+        if (role.name === 'HSE') {
+            accessibleMenus.add('hse-dashboard');
         }
     }
 

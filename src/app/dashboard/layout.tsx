@@ -25,6 +25,14 @@ export default async function DashboardLayout({
   }
 
   const currentUserRole = roles.find(r => r.name === currentUser.role) || null;
+  // Fallback for roles that might not be in the DB but exist as strings on users
+  if (!currentUserRole && currentUser.role) {
+      const existingRole = roles.find(r => r.name === 'HSE');
+      if (existingRole) {
+          currentUser.role = 'HSE'
+      }
+  }
+
 
   return (
     <UserProvider user={currentUser}>
