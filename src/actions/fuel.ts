@@ -12,7 +12,7 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import type { FuelRequest, WarehouseItem, PaymentRequest } from '@/lib/types';
-import { createPaymentRequest } from '@/actions/payment-requests';
+import { createPaymentRequest } from './payment-requests';
 import { getWarehouseItems, updateWarehouseItemStock } from './warehouse';
 
 export async function getAllFuelRequests(): Promise<FuelRequest[]> {
