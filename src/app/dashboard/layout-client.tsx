@@ -59,6 +59,7 @@ import { logout } from "@/actions/auth";
 
 const allNavItemsList = (lang: 'id' | 'en') => [
   { id: 'dashboard', href: "/dashboard", icon: LayoutDashboard, label: lang === 'id' ? "Dasbor" : "Dashboard", exact: true },
+  { id: 'finance-dashboard', href: "/dashboard/finance", icon: Landmark, label: "Dasbor Keuangan" },
   
   // Kepegawaian
   { id: 'employees', href: "/dashboard/employees", icon: Users, label: lang === 'id' ? "Daftar Karyawan" : "Employees" },
@@ -80,7 +81,7 @@ const allNavItemsList = (lang: 'id' | 'en') => [
   { id: 'warehouse', href: "/dashboard/warehouse", icon: Archive, label: "Gudang" },
   
   // Keuangan
-  { id: 'finance', href: "/dashboard/finance", icon: Landmark, label: lang === 'id' ? "Keuangan" : "Finance" },
+  { id: 'finance', href: "/dashboard/finance", icon: Landmark, label: lang === 'id' ? "Laporan Keuangan" : "Finance Report" },
   { id: 'payment-requests', href: "/dashboard/payment-requests", icon: CircleDollarSign, label: "Pengajuan Pembayaran" },
   { id: 'fuel-requests', href: "/dashboard/fuel-requests", icon: Fuel, label: "Pengajuan BBM" },
   { id: 'koperasi-limit', href: "/dashboard/finance/koperasi-limit", icon: Wallet, label: "Limit Koperasi" },
@@ -113,6 +114,7 @@ const allNavItemsList = (lang: 'id' | 'en') => [
 
 const staticMenuOrder: MenuOrderItem[] = [
     { id: 'dashboard' },
+    { id: 'finance-dashboard' },
     { id: 'employees' },
     { id: 'employee-register' },
     { id: 'employee-review' },
@@ -190,6 +192,16 @@ export default function DashboardClientLayout({
     }
 
     const accessibleMenus = new Set(role.accessibleMenus || []);
+    // Ensure dashboard is always accessible if a user has any other menu access
+    if (accessibleMenus.size > 0) {
+        accessibleMenus.add('dashboard');
+        // Add finance dashboard for finance role
+        if (role.name === 'Finance') {
+            accessibleMenus.add('finance-dashboard');
+        }
+    }
+
+
     return orderedNavItems.filter(item => accessibleMenus.has(item.id));
   }, [orderedNavItems, role]);
 
