@@ -97,6 +97,7 @@ const allNavItemsList = (lang: 'id' | 'en') => [
   { id: 'pj-attendance', href: "/dashboard/pj-attendance", icon: ClipboardList, label: "Absensi PJ" },
 
   // HSE
+  { id: 'hse', href: "/dashboard/hse", icon: ShieldCheck, label: "Report HSE" },
   { id: 'hse-fines', href: "/dashboard/hse/fines", icon: CircleDollarSign, label: "Pengaturan Denda" },
 
   // Pengaturan & Master Data
@@ -138,6 +139,7 @@ const staticMenuOrder: MenuOrderItem[] = [
     { id: 'vehicles' },
     { id: 'driver-attendance' },
     { id: 'pj-attendance' },
+    { id: 'hse' },
     { id: 'hse-fines' },
     { id: 'department' },
     { id: 'position' },
