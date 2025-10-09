@@ -2,24 +2,36 @@
 
 import { BarChart, Bar, Rectangle, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from '@/components/ui/chart';
 
-const formatCurrency = (amount: number) => {
-  if (amount >= 1_000_000_000) {
-    return `${(amount / 1_000_000_000).toFixed(1)} Miliar`;
+const formatCurrency = (value: number) => {
+  if (value >= 1_000_000_000) {
+    return `${(value / 1_000_000_000).toFixed(1)} Miliar`;
   }
-  if (amount >= 1_000_000) {
-    return `${(amount / 1_000_000).toFixed(1)} Juta`;
+  if (value >= 1_000_000) {
+    return `${(value / 1_000_000).toFixed(1)} Jt`;
   }
-  if (amount >= 1_000) {
-    return `${(amount / 1_000).toFixed(1)} Ribu`;
+  if (value >= 1_000) {
+    return `${(value / 1_000).toFixed(0)} Rb`;
   }
-  return amount.toString();
+  return value.toString();
 };
 
 export default function FinanceCharts({ expenseData }: { expenseData: { name: string; total: number }[] }) {
   if (!expenseData || expenseData.length === 0) {
     return null; // Don't render the chart if there's no data
   }
+
+  const chartConfig = {
+    total: {
+      label: 'Total Pengeluaran',
+      color: 'hsl(var(--primary))',
+    },
+  };
 
   return (
     <Card>
@@ -28,18 +40,41 @@ export default function FinanceCharts({ expenseData }: { expenseData: { name: st
         <CardDescription>Visualisasi total pengeluaran yang telah disetujui untuk setiap proyek.</CardDescription>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={350}>
-          <BarChart data={expenseData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} interval={0} />
-            <YAxis tickFormatter={formatCurrency} />
-            <Tooltip
-              formatter={(value: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(value)}
+        <ChartContainer config={chartConfig} className="min-h-[350px] w-full">
+          <BarChart accessibilityLayer data={expenseData}>
+            <CartesianGrid vertical={false} />
+            <XAxis
+              dataKey="name"
+              tickLine={false}
+              tickMargin={10}
+              axisLine={false}
+              angle={-45}
+              textAnchor="end"
+              height={80}
+              interval={0}
             />
-            <Legend />
-            <Bar dataKey="total" fill="hsl(var(--primary))" name="Total Pengeluaran" activeBar={<Rectangle fill="var(--primary-focus)" stroke="var(--primary-stroke)" />} />
+            <YAxis
+              tickFormatter={(value) => formatCurrency(Number(value))}
+              label={{ value: 'IDR (Juta)', angle: -90, position: 'insideLeft', offset: -5 }}
+            />
+            <ChartTooltip
+              cursor={false}
+              content={
+                <ChartTooltipContent
+                  labelFormatter={(label) => `Proyek: ${label}`}
+                  formatter={(value) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(Number(value))}
+                  indicator="dot"
+                />
+              }
+            />
+            <Bar
+              dataKey="total"
+              fill="var(--color-total)"
+              radius={4}
+              activeBar={<Rectangle fill="hsl(var(--primary) / 0.8)" />}
+            />
           </BarChart>
-        </ResponsiveContainer>
+        </ChartContainer>
       </CardContent>
     </Card>
   );
