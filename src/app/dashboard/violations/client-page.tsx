@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useTransition } from 'react';
+import { useState, useMemo, useTransition, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Card,
@@ -65,6 +65,12 @@ export default function ViolationsClientPage({
   
   const [nameFilter, setNameFilter] = useState('');
   const [siteFilter, setSiteFilter] = useState('all');
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
 
   const filteredRecords = useMemo(() => {
     return records.filter(rec => {
@@ -153,7 +159,7 @@ export default function ViolationsClientPage({
                   <TableCell className="font-medium">{rec.employeeName}</TableCell>
                   <TableCell>{rec.employeePosition}</TableCell>
                   <TableCell>{rec.siteLocation}</TableCell>
-                  <TableCell>{format(new Date(rec.date), 'PPP')}</TableCell>
+                  <TableCell>{isClient ? format(new Date(rec.date), 'PPP') : 'Loading...'}</TableCell>
                   <TableCell><Badge variant={getStatusVariant(rec.status)}>{rec.status}</Badge></TableCell>
                   <TableCell>
                     {rec.fileUrl ? (

@@ -180,7 +180,7 @@ export default function VehiclesClientPage({
                                   <div className="flex justify-between items-start">
                                       <div>
                                           <p className="font-semibold">{report.driverName}</p>
-                                          {isClient && <p className="text-xs text-muted-foreground">{report.unitId} - {format(new Date(report.timestamp as any), 'dd MMM yyyy, HH:mm')}</p>}
+                                          {isClient ? <p className="text-xs text-muted-foreground">{report.unitId} - {format(new Date(report.timestamp as any), 'dd MMM yyyy, HH:mm')}</p> : <p className="text-xs text-muted-foreground">Loading...</p>}
                                       </div>
                                       <a href={report.photoUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">Lihat Foto</a>
                                   </div>
@@ -206,7 +206,7 @@ export default function VehiclesClientPage({
                           initialConditionReports.slice(0, 5).map(report => (
                                <div key={report.id} className="p-3 border rounded-md text-sm">
                                   <p className="font-semibold">{report.driverName}</p>
-                                  {isClient && <p className="text-xs text-muted-foreground">{report.unitId} - {format(new Date(report.timestamp as any), 'dd MMM yyyy, HH:mm')}</p>}
+                                  {isClient ? <p className="text-xs text-muted-foreground">{report.unitId} - {format(new Date(report.timestamp as any), 'dd MMM yyyy, HH:mm')}</p> : <p className="text-xs text-muted-foreground">Loading...</p>}
                                   <p className="mt-2 text-xs italic">"{report.notes}"</p>
                               </div>
                           ))

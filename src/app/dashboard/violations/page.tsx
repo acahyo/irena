@@ -5,6 +5,7 @@ import { getEmployees } from '@/actions/employees';
 import { getSites } from '@/actions/sites';
 import { getAdminSession } from '@/actions/auth';
 import { redirect } from 'next/navigation';
+import { ViolationRecord } from '@/lib/types';
 
 export default async function ViolationsPage() {
   const user = await getAdminSession();
@@ -18,5 +19,10 @@ export default async function ViolationsPage() {
     getSites(),
   ]);
 
-  return <ViolationsClientPage initialRecords={records} employees={employees} sites={sites} />;
+  const serializedRecords: ViolationRecord[] = records.map(rec => ({
+    ...rec,
+    date: (rec.date as Date).toISOString(),
+  }));
+
+  return <ViolationsClientPage initialRecords={serializedRecords} employees={employees} sites={sites} />;
 }
