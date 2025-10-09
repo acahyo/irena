@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useEffect, useTransition } from 'react';
@@ -58,7 +59,9 @@ export default function DriverDashboardClient({ employee, initialHistory, vehicl
   // Fuel Request state
   const [fuelVehicleId, setFuelVehicleId] = useState('');
   const [fuelOdometer, setFuelOdometer] = useState('');
-  const [fuelAmount, setFuelAmount] = useState('');
+  const [fuelLiters, setFuelLiters] = useState('');
+  const [fuelType, setFuelType] = useState<'Solar' | 'Dexlite' | 'Pertalite' | 'Pertamax' | ''>('');
+  const [odometerPhoto, setOdometerPhoto] = useState<string | null>(null);
   const [fuelRequests, setFuelRequests] = useState(initialFuelRequests);
 
 
@@ -154,8 +157,17 @@ export default function DriverDashboardClient({ employee, initialHistory, vehicl
     });
   };
   
+    const handleOdometerPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => setOdometerPhoto(reader.result as string);
+            reader.readAsDataURL(file);
+        }
+    };
+  
   const handleFuelRequestSubmit = () => {
-    if (!fuelVehicleId || !fuelOdometer || !fuelAmount) {
+    if (!fuelVehicleId || !fuelOdometer || !fuelLiters || !fuelType || !odometerPhoto) {
         toast({ variant: 'destructive', title: 'Error', description: 'Semua kolom pengajuan BBM wajib diisi.' });
         return;
     }
@@ -166,15 +178,21 @@ export default function DriverDashboardClient({ employee, initialHistory, vehicl
             driverName: employee.name,
             vehicleId: fuelVehicleId,
             odometer: Number(fuelOdometer),
-            amount: Number(fuelAmount),
+            odometerPhotoDataUri: odometerPhoto,
+            fuelType: fuelType as any,
+            liters: Number(fuelLiters),
         });
         
         if (result.success && result.newRequest) {
             toast({ title: 'Sukses', description: 'Pengajuan BBM berhasil dikirim.' });
             setFuelRequests(prev => [result.newRequest!, ...prev]);
+            // Reset form
             setFuelVehicleId('');
             setFuelOdometer('');
-            setFuelAmount('');
+            setFuelLiters('');
+            setFuelType('');
+            setOdometerPhoto(null);
+
         } else {
             toast({ variant: 'destructive', title: 'Error', description: result.message });
         }
@@ -243,6 +261,7 @@ export default function DriverDashboardClient({ employee, initialHistory, vehicl
     const getStatusVariant = (status: string) => {
       switch (status) {
         case 'Pending': return 'secondary';
+        case 'Approved by Purchasing': return 'outline';
         case 'Approved': return 'default';
         case 'Rejected': return 'destructive';
         default: return 'outline';
@@ -333,7 +352,7 @@ export default function DriverDashboardClient({ employee, initialHistory, vehicl
                     <CardDescription>Isi form untuk mengajukan pengisian bahan bakar.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label>Unit Kendaraan</Label>
                             <Select value={fuelVehicleId} onValueChange={setFuelVehicleId}>
@@ -347,9 +366,30 @@ export default function DriverDashboardClient({ employee, initialHistory, vehicl
                             <Label>Odometer (KM)</Label>
                             <Input type="number" placeholder="e.g. 150234" value={fuelOdometer} onChange={e => setFuelOdometer(e.target.value)} />
                         </div>
+                        <div className="space-y-2">
+                            <Label>Jenis BBM</Label>
+                             <Select value={fuelType} onValueChange={(v) => setFuelType(v as any)}>
+                                <SelectTrigger><SelectValue placeholder="Pilih Jenis BBM" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Solar">Solar</SelectItem>
+                                    <SelectItem value="Dexlite">Dexlite</SelectItem>
+                                    <SelectItem value="Pertalite">Pertalite</SelectItem>
+                                    <SelectItem value="Pertamax">Pertamax</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                          <div className="space-y-2">
-                            <Label>Jumlah Pengajuan (Rp)</Label>
-                            <Input type="number" placeholder="e.g. 250000" value={fuelAmount} onChange={e => setFuelAmount(e.target.value)} />
+                            <Label>Jumlah Pengajuan (Liter)</Label>
+                            <Input type="number" placeholder="e.g. 50" value={fuelLiters} onChange={e => setFuelLiters(e.target.value)} />
+                        </div>
+                        <div className="space-y-2 sm:col-span-2">
+                            <Label>Foto Odometer</Label>
+                            <Input type="file" accept="image/*" onChange={handleOdometerPhotoChange} />
+                            {odometerPhoto && (
+                                <div className="mt-2 relative w-32 aspect-video">
+                                    <Image src={odometerPhoto} alt="Odometer Preview" layout="fill" className="object-cover rounded-md" />
+                                </div>
+                            )}
                         </div>
                     </div>
                      <Button className="w-full sm:w-auto" onClick={handleFuelRequestSubmit} disabled={isPending}>
@@ -475,7 +515,7 @@ export default function DriverDashboardClient({ employee, initialHistory, vehicl
                             <TableRow>
                                 <TableHead>Tanggal</TableHead>
                                 <TableHead>Unit</TableHead>
-                                <TableHead>Jumlah</TableHead>
+                                <TableHead>Jenis & Jumlah</TableHead>
                                 <TableHead>Status</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -485,7 +525,7 @@ export default function DriverDashboardClient({ employee, initialHistory, vehicl
                                     <TableRow key={req.id}>
                                         <TableCell>{format(new Date(req.requestDate as any), 'dd MMM yyyy')}</TableCell>
                                         <TableCell>{req.vehicleId}</TableCell>
-                                        <TableCell>Rp {req.amount.toLocaleString('id-ID')}</TableCell>
+                                        <TableCell>{req.fuelType} ({req.liters} L)</TableCell>
                                         <TableCell>
                                             <Badge variant={getStatusVariant(req.status)}>
                                                 {req.status}

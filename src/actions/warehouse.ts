@@ -12,6 +12,7 @@ import {
   query,
   orderBy,
   runTransaction,
+  writeBatch
 } from 'firebase/firestore';
 import type { WarehouseItem, PurchaseRequestItem } from '@/lib/types';
 
@@ -58,6 +59,11 @@ export async function updateWarehouseItem(id: string, updates: Partial<Warehouse
   await updateDoc(docRef, updateData);
 }
 
+export async function updateWarehouseItemStock(id: string, newStock: number): Promise<void> {
+    const docRef = doc(db, 'warehouseItems', id);
+    await updateDoc(docRef, { stock: newStock });
+}
+
 // Delete a warehouse item
 export async function deleteWarehouseItem(id: string): Promise<void> {
   const docRef = doc(db, 'warehouseItems', id);
@@ -67,28 +73,23 @@ export async function deleteWarehouseItem(id: string): Promise<void> {
 
 // New function to update stock based on an approved purchase
 export async function updateStockForPurchase(purchasedItems: PurchaseRequestItem[]): Promise<void> {
-  await runTransaction(db, async (transaction) => {
-    // 1. Get all warehouse item documents that need updating in a single query if possible
-    // For simplicity with name matching, we'll fetch them all first. This is less efficient for very large warehouses.
-    const warehouseItemsSnapshot = await getDocs(collection(db, 'warehouseItems'));
-    const warehouseItemsMap = new Map(warehouseItemsSnapshot.docs.map(d => [d.data().name.toLowerCase(), d]));
-
-    // 2. Perform reads and prepare writes
-    for (const item of purchasedItems) {
-      const warehouseDoc = warehouseItemsMap.get(item.name.toLowerCase());
-
-      if (warehouseDoc) {
-        const warehouseRef = doc(db, 'warehouseItems', warehouseDoc.id);
-        const warehouseData = warehouseDoc.data() as WarehouseItem;
-        const newStock = warehouseData.stock - item.quantity;
-        
-        if (newStock < 0) {
-          throw new Error(`Stok tidak mencukupi untuk barang: ${item.name}. Stok saat ini: ${warehouseData.stock}, dibutuhkan: ${item.quantity}`);
-        }
-        transaction.update(warehouseRef, { stock: newStock });
+  const batch = writeBatch(db);
+  const warehouseItemsSnapshot = await getDocs(collection(db, 'warehouseItems'));
+  const warehouseItemsMap = new Map(warehouseItemsSnapshot.docs.map(d => [d.data().name.toLowerCase(), { id: d.id, ...d.data() } as WarehouseItem]));
+  
+  for (const item of purchasedItems) {
+      const warehouseItem = warehouseItemsMap.get(item.name.toLowerCase());
+      if (warehouseItem) {
+          const warehouseRef = doc(db, 'warehouseItems', warehouseItem.id);
+          const newStock = warehouseItem.stock - item.quantity;
+          if (newStock < 0) {
+              throw new Error(`Stok tidak mencukupi untuk barang: ${item.name}. Stok saat ini: ${warehouseItem.stock}, dibutuhkan: ${item.quantity}`);
+          }
+          batch.update(warehouseRef, { stock: newStock });
       } else {
-        throw new Error(`Barang gudang tidak ditemukan: ${item.name}`);
+           throw new Error(`Barang gudang tidak ditemukan: ${item.name}`);
       }
-    }
-  });
+  }
+
+  await batch.commit();
 }

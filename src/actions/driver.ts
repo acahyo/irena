@@ -156,10 +156,18 @@ export async function getUnitConditionReports(): Promise<UnitConditionReport[]> 
 }
 
 // Fuel Requests
-export async function createFuelRequest(requestData: Omit<FuelRequest, 'id' | 'requestDate' | 'status'>): Promise<{ success: boolean; message: string; newRequest?: FuelRequest; }> {
+export async function createFuelRequest(
+    requestData: Omit<FuelRequest, 'id' | 'requestDate' | 'status' | 'odometerPhotoUrl'> & { odometerPhotoDataUri: string }
+): Promise<{ success: boolean; message: string; newRequest?: FuelRequest; }> {
     try {
-        const finalData = {
-            ...requestData,
+        const { driverId, odometerPhotoDataUri, ...rest } = requestData;
+
+        const odometerPhotoUrl = await uploadFileAndGetURL(odometerPhotoDataUri, `fuel-requests/${driverId}/${Date.now()}_odometer.jpg`);
+
+        const finalData: Omit<FuelRequest, 'id'> = {
+            ...rest,
+            driverId,
+            odometerPhotoUrl,
             requestDate: new Date(),
             status: 'Pending',
         };

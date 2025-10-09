@@ -5,6 +5,8 @@
 
 
 
+
+
 export type Allowance = {
   name: string;
   amount: number;
@@ -370,13 +372,17 @@ export type FuelRequest = {
   requestDate: Date | string;
   vehicleId: string;
   odometer: number;
-  amount: number;
-  status: 'Pending' | 'Approved' | 'Rejected';
-  approvedAmount?: number;
+  odometerPhotoUrl: string;
+  fuelType: 'Solar' | 'Dexlite' | 'Pertalite' | 'Pertamax';
+  liters: number;
+  status: 'Pending' | 'Approved by Purchasing' | 'Forwarded to Finance' | 'Approved' | 'Rejected';
+  approvedAmount?: number; // Rupiah amount approved by Finance
   rejectionReason?: string;
   approvedById?: string;
   approvedByName?: string;
   approvedDate?: Date | string;
+  isFromStock?: boolean; // Flag to indicate if filled from warehouse stock
+  paymentRequestId?: string;
 };
 
 export type PaymentRequestCategory = 'ID CARD' | 'SIMPER' | 'Denda' | 'Sewa' | 'BPJS' | 'Pengadaan Barang';
