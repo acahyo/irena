@@ -32,6 +32,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Eye, Loader2, Check, X, Send, Package, ExternalLink } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Link from 'next/link';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const formatCurrency = (amount?: number) => {
   if (amount === undefined) return 'N/A';
