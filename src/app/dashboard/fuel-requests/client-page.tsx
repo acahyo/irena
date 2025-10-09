@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useTransition } from 'react';
+import { useState, useMemo, useTransition, useEffect } from 'react';
 import { format } from 'date-fns';
 import {
   Card,
@@ -58,6 +58,11 @@ export default function FuelRequestsClientPage({ initialRequests, vehicles }: { 
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const user = useUser();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const filteredRequests = useMemo(() => {
     return requests.filter(req => 
@@ -162,7 +167,7 @@ export default function FuelRequestsClientPage({ initialRequests, vehicles }: { 
             <TableBody>
               {filteredRequests.map(req => (
                 <TableRow key={req.id}>
-                  <TableCell>{format(new Date(req.requestDate), 'dd MMM yyyy, HH:mm')}</TableCell>
+                  <TableCell>{isClient ? format(new Date(req.requestDate), 'dd MMM yyyy, HH:mm') : 'Loading...'}</TableCell>
                   <TableCell>{req.driverName}</TableCell>
                   <TableCell>{req.vehicleId}</TableCell>
                   <TableCell>{req.fuelType} ({req.liters} L)</TableCell>
@@ -188,7 +193,7 @@ export default function FuelRequestsClientPage({ initialRequests, vehicles }: { 
                 <DialogHeader>
                     <DialogTitle>Detail Pengajuan BBM</DialogTitle>
                     <DialogDescription>
-                        Oleh {selectedRequest.driverName} pada {format(new Date(selectedRequest.requestDate), 'dd MMM yyyy, HH:mm')}
+                        Oleh {selectedRequest.driverName} pada {isClient ? format(new Date(selectedRequest.requestDate), 'dd MMM yyyy, HH:mm') : 'Loading...'}
                     </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
@@ -258,3 +263,5 @@ export default function FuelRequestsClientPage({ initialRequests, vehicles }: { 
     </>
   );
 }
+
+    

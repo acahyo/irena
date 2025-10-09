@@ -481,8 +481,8 @@ export default function DriverDashboardClient({ employee, initialHistory, vehicl
                             {history.length > 0 ? (
                                 history.map(rec => (
                                     <TableRow key={rec.id}>
-                                        <TableCell>{format(new Date(rec.timestamp as any), 'dd MMM yyyy')}</TableCell>
-                                        <TableCell>{format(new Date(rec.timestamp as any), 'HH:mm:ss')}</TableCell>
+                                        <TableCell>{isClient ? format(new Date(rec.timestamp as any), 'dd MMM yyyy') : "Loading..."}</TableCell>
+                                        <TableCell>{isClient ? format(new Date(rec.timestamp as any), 'HH:mm:ss') : "..."}</TableCell>
                                         <TableCell>
                                             <Badge variant={rec.type === 'check-in' ? 'default' : 'secondary'}>
                                                 {rec.type === 'check-in' ? 'Masuk' : 'Pulang'}
@@ -523,7 +523,7 @@ export default function DriverDashboardClient({ employee, initialHistory, vehicl
                             {fuelRequests.length > 0 ? (
                                 fuelRequests.map(req => (
                                     <TableRow key={req.id}>
-                                        <TableCell>{format(new Date(req.requestDate as any), 'dd MMM yyyy')}</TableCell>
+                                        <TableCell>{isClient ? format(new Date(req.requestDate as any), 'dd MMM yyyy') : "Loading..."}</TableCell>
                                         <TableCell>{req.vehicleId}</TableCell>
                                         <TableCell>{req.fuelType} ({req.liters} L)</TableCell>
                                         <TableCell>
@@ -549,3 +549,5 @@ export default function DriverDashboardClient({ employee, initialHistory, vehicl
     </div>
   );
 }
+
+    
