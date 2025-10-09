@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useTransition } from 'react';
@@ -7,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Download, Loader2 } from 'lucide-react';
 import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import type { Employee, PayrollRecord, PaymentRequest, PurchaseRequest } from '@/lib/types';
