@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useTransition } from 'react';
@@ -8,7 +9,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Download, Loader2 } from 'lucide-react';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import type { Employee, PayrollRecord, PaymentRequest, PurchaseRequest } from '@/lib/types';
@@ -35,8 +35,9 @@ export default function ReportsClientPage({
   const { toast } = useToast();
 
   const handleDownloadFinancialReport = () => {
-    startDownload(() => {
+    startDownload(async () => {
       try {
+        const { default: autoTable } = await import('jspdf-autotable');
         const doc = new jsPDF() as ExtendedJsPDF;
         const reportDate = format(new Date(), 'dd MMMM yyyy');
         const reportPeriod = format(new Date(period), 'MMMM yyyy');
@@ -63,7 +64,7 @@ export default function ReportsClientPage({
             theme: 'striped',
             headStyles: { fillColor: [22, 163, 74] },
           });
-          finalY = doc.autoTable.previous.finalY + 10;
+          finalY = (doc as any).autoTable.previous.finalY + 10;
         }
 
         // Payment Requests
@@ -79,7 +80,7 @@ export default function ReportsClientPage({
             theme: 'striped',
             headStyles: { fillColor: [22, 163, 74] },
           });
-          finalY = doc.autoTable.previous.finalY + 10;
+          finalY = (doc as any).autoTable.previous.finalY + 10;
         }
 
         // Purchase Requests
@@ -95,7 +96,7 @@ export default function ReportsClientPage({
             theme: 'striped',
             headStyles: { fillColor: [22, 163, 74] },
           });
-          finalY = doc.autoTable.previous.finalY + 10;
+          finalY = (doc as any).autoTable.previous.finalY + 10;
         }
         
         doc.save(`Laporan_Keuangan_${period}.pdf`);
@@ -107,8 +108,9 @@ export default function ReportsClientPage({
   };
 
   const handleDownloadManpowerReport = () => {
-     startDownload(() => {
+     startDownload(async () => {
       try {
+        const { default: autoTable } = await import('jspdf-autotable');
         const doc = new jsPDF() as ExtendedJsPDF;
         const reportDate = format(new Date(), 'dd MMMM yyyy');
         
@@ -142,7 +144,7 @@ export default function ReportsClientPage({
           head: [['Proyek', 'Jumlah Karyawan']],
           body: Object.entries(manpowerByProject).map(([project, count]) => [project, count]),
         });
-        finalY = doc.autoTable.previous.finalY + 10;
+        finalY = (doc as any).autoTable.previous.finalY + 10;
 
         doc.setFontSize(14);
         doc.text('Rekapitulasi per Jabatan', 14, finalY);
