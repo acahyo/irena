@@ -32,7 +32,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Eye, Loader2, Check, X, Send, Package, ExternalLink } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Link from 'next/link';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const formatCurrency = (amount?: number) => {
   if (amount === undefined) return 'N/A';
@@ -248,11 +248,17 @@ export default function FuelRequestsClientPage({ initialRequests, vehicles }: { 
                     )}
                     
                     {isPurchasingOrAdmin && selectedRequest.status === 'Pending' && selectedRequest.fuelType === 'Solar' && (
-                        <Alert>
-                            <AlertDescription>
-                                Aplikasi akan mengecek stok gudang. Jika stok tidak mencukupi, Anda perlu menginput nominal dana untuk diajukan ke Finance.
-                            </AlertDescription>
-                        </Alert>
+                        <div className="space-y-4 pt-4 border-t">
+                            <Alert>
+                                <AlertDescription>
+                                    Aplikasi akan mengecek stok gudang. Jika stok tidak mencukupi, Anda perlu menginput nominal dana untuk diajukan ke Finance.
+                                </AlertDescription>
+                            </Alert>
+                             <div className="space-y-2">
+                                <Label htmlFor="approvedAmount">Nominal Dana (jika stok tidak cukup)</Label>
+                                <Input id="approvedAmount" type="number" value={approvedAmount} onChange={e => setApprovedAmount(e.target.value)} placeholder="e.g. 500000" />
+                            </div>
+                        </div>
                     )}
 
 

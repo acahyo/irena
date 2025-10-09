@@ -103,7 +103,7 @@ export async function processFuelRequest(
 
     // For Solar, check warehouse stock
     const warehouseItems = await getWarehouseItems();
-    const solarItem = warehouseItems.find(item => item.name.toLowerCase() === 'bbm solar');
+    const solarItem = warehouseItems.find(item => item.name.toLowerCase() === 'solar');
     
     if (solarItem && solarItem.stock >= request.liters) {
         // Stock is available, approve from stock
