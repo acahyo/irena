@@ -1,3 +1,4 @@
+
 import { getPaymentRequests } from '@/actions/payment-requests';
 import { getPurchaseRequests } from '@/actions/purchasing';
 import FinanceClientPage from './client-page';
