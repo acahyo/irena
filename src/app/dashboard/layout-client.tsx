@@ -96,7 +96,7 @@ const allNavItemsList = (lang: 'id' | 'en') => [
   { id: 'pj-attendance', href: "/dashboard/pj-attendance", icon: ClipboardList, label: "Absensi PJ" },
 
   // HSE
-  { id: 'hse', href: "/dashboard/hse", icon: ShieldCheck, label: "Dasbor HSE" },
+  { id: 'hse', href: "/dashboard/hse", icon: ShieldCheck, label: "Report HSE" },
   { id: 'hse-fines', href: "/dashboard/hse/fines", icon: CircleDollarSign, label: "Pengaturan Denda" },
 
   // Pengaturan & Master Data

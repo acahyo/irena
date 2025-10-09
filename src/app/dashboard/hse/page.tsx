@@ -52,7 +52,7 @@ export default async function HsePage() {
     <div className="space-y-6">
        <Card>
         <CardHeader>
-            <CardTitle>Dasbor HSE (Kesehatan, Keselamatan, dan Lingkungan Kerja)</CardTitle>
+            <CardTitle>Report HSE (Kesehatan, Keselamatan, dan Lingkungan Kerja)</CardTitle>
             <CardDescription>
             Pusat informasi untuk semua data terkait K3 di lingkungan kerja.
             </CardDescription>

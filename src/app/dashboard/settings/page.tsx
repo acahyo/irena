@@ -90,7 +90,7 @@ const allMenus = [
   { id: 'vehicles', label: 'Kendaraan' },
   { id: 'driver-attendance', label: 'Absensi Driver' },
   { id: 'pj-attendance', label: 'Absensi PJ' },
-  { id: 'hse', label: 'Dasbor HSE' },
+  { id: 'hse', label: 'Report HSE' },
   { id: 'hse-fines', label: 'Pengaturan Denda' },
   { id: 'department', label: 'Departemen' },
   { id: 'position', label: 'Jabatan & Gaji' },

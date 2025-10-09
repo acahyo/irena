@@ -1,4 +1,5 @@
 
+
 import { getVehicles } from '@/actions/vehicles';
 import VehiclesClientPage from './client-page';
 import { getAdminSession } from '@/actions/auth';
@@ -9,8 +10,8 @@ import type { P2hReport, UnitConditionReport } from '@/lib/types';
 
 export default async function VehiclesPage() {
     const user = await getAdminSession();
-    if (!user || (user.role !== 'Administrator' && user.role !== 'Purchasing')) {
-        // Example authorization, adjust as needed
+    if (!user || (user.role !== 'Administrator' && user.role !== 'Purchasing' && user.role !== 'HSE')) {
+        // Example authorization, adjust roles as needed
         redirect('/dashboard');
     }
     
