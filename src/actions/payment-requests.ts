@@ -15,10 +15,11 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from "firebase/storage";
 import type { PaymentRequest } from '@/lib/types';
+import { createPaymentRequest as createPaymentRequestFromFuel } from './fuel'; // Renaming to avoid conflict
 
 
 // Helper to upload base64 file to Firebase Storage and get URL
-async function uploadFileAndGetURL(base64Data: string, path: string): Promise<{ downloadURL: string, fileName: string }> {
+async function uploadFileAndGetURL(path: string, base64Data: string): Promise<{ downloadURL: string, fileName: string }> {
     if (!base64Data || !base64Data.startsWith('data:')) {
         throw new Error('Invalid file data provided.');
     }
@@ -32,34 +33,7 @@ async function uploadFileAndGetURL(base64Data: string, path: string): Promise<{ 
 export async function createPaymentRequest(
     data: Omit<PaymentRequest, 'id' | 'status' | 'requestDate'> & { documentDataUri?: string }
 ): Promise<{ success: boolean; message: string; newRequest?: PaymentRequest; }> {
-    try {
-        const { documentDataUri, ...rest } = data;
-        
-        const finalData: Omit<PaymentRequest, 'id'> = {
-            ...rest,
-            amount: Number(rest.amount) || 0,
-            requestDate: new Date(),
-            status: 'Pending',
-        };
-
-        if (documentDataUri) {
-            const { downloadURL, fileName } = await uploadFileAndGetURL(documentDataUri, `payment-requests/${data.requesterId}`);
-            finalData.documentUrl = downloadURL;
-            finalData.documentName = fileName;
-        }
-
-        const docRef = await addDoc(collection(db, 'paymentRequests'), finalData);
-        
-        const newRequest: PaymentRequest = {
-            id: docRef.id,
-            ...finalData,
-        }
-
-        return { success: true, message: 'Pengajuan berhasil dikirim.', newRequest };
-    } catch (error) {
-        console.error("Error creating payment request:", error);
-        return { success: false, message: 'Gagal mengirim pengajuan.' };
-    }
+    return createPaymentRequestFromFuel(data); // Defer to the implementation in fuel.ts
 }
 
 

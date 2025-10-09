@@ -2,7 +2,7 @@
 
 'use server';
 
-import { db } from '@/lib/firebase';
+import { db, storage } from '@/lib/firebase';
 import {
   collection,
   getDocs,
@@ -12,10 +12,60 @@ import {
   orderBy,
   Timestamp,
   writeBatch,
+  addDoc,
 } from 'firebase/firestore';
 import type { FuelRequest, WarehouseItem, PaymentRequest } from '@/lib/types';
-import { createPaymentRequest } from './payment-requests';
 import { getWarehouseItems, updateWarehouseItemStock } from './warehouse';
+import { ref, uploadString, getDownloadURL } from 'firebase/storage';
+
+// Helper to upload base64 file to Firebase Storage and get URL
+async function uploadFileAndGetURL(base64Data: string, path: string): Promise<string> {
+    if (!base64Data || !base64Data.startsWith('data:')) {
+        throw new Error('Invalid file data provided.');
+    }
+    const storageRef = ref(storage, path);
+    const uploadResult = await uploadString(storageRef, base64Data, 'data_url');
+    const downloadURL = await getDownloadURL(uploadResult.ref);
+    return downloadURL;
+}
+
+// Moved from payment-requests.ts to break circular dependency
+export async function createPaymentRequest(
+    data: Omit<PaymentRequest, 'id' | 'status' | 'requestDate'> & { documentDataUri?: string }
+): Promise<{ success: boolean; message: string; newRequest?: PaymentRequest; }> {
+    try {
+        const { documentDataUri, ...rest } = data;
+        
+        const finalData: Omit<PaymentRequest, 'id'> = {
+            ...rest,
+            amount: Number(rest.amount) || 0,
+            requestDate: new Date(),
+            status: 'Pending',
+        };
+
+        if (documentDataUri) {
+            const path = `payment-requests/${data.requesterId}`;
+            const storageRef = ref(storage, `${path}/doc-${Date.now()}`);
+            const uploadResult = await uploadString(storageRef, documentDataUri, 'data_url');
+            const downloadURL = await getDownloadURL(uploadResult.ref);
+            finalData.documentUrl = downloadURL;
+            finalData.documentName = `doc-${Date.now()}`;
+        }
+
+        const docRef = await addDoc(collection(db, 'paymentRequests'), finalData);
+        
+        const newRequest: PaymentRequest = {
+            id: docRef.id,
+            ...finalData,
+        }
+
+        return { success: true, message: 'Pengajuan berhasil dikirim.', newRequest };
+    } catch (error) {
+        console.error("Error creating payment request:", error);
+        return { success: false, message: 'Gagal mengirim pengajuan.' };
+    }
+}
+
 
 export async function getAllFuelRequests(): Promise<FuelRequest[]> {
   try {

@@ -9,7 +9,7 @@ import { getPurchaseRequests } from '@/actions/purchasing';
 export default async function WarehousePage() {
     const user = await getAdminSession();
     // Example authorization, adjust roles as needed
-    if (!user || (user.role !== 'Administrator' && user.role !== 'Purchasing')) {
+    if (!user || (user.role !== 'Administrator' && user.role !== 'Purchasing' && user.role !== 'Finance')) {
         redirect('/dashboard');
     }
 

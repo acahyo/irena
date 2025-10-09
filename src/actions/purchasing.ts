@@ -18,7 +18,7 @@ import {
   getDoc
 } from 'firebase/firestore';
 import type { PurchaseRequest, PurchaseRequestItem } from '@/lib/types';
-import { createPaymentRequest } from './payment-requests';
+import { createPaymentRequest } from './fuel';
 import { getWarehouseItems, updateStockForPurchase } from './warehouse';
 
 // Helper to convert Firestore Timestamps to Dates in a document
