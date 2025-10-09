@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -20,6 +21,7 @@ import { getViolationRecords, updateViolationRecord } from '@/actions/violations
 import { getEmployees } from '@/actions/employees';
 import type { Employee, ViolationRecord } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getAdminSession } from '@/actions/auth';
 
 export default function EditViolationPage() {
   const router = useRouter();
@@ -37,6 +39,12 @@ export default function EditViolationPage() {
     const fetchRecord = async () => {
       setPageLoading(true);
       try {
+        const user = await getAdminSession();
+        if (!user || (user.role !== 'Administrator' && user.role !== 'HR' && user.role !== 'HSE')) {
+            router.push('/dashboard');
+            return;
+        }
+        
         const records = await getViolationRecords();
         const foundRecord = records.find(r => r.id === id);
         if (foundRecord) {

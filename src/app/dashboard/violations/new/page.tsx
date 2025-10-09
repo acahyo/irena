@@ -32,7 +32,7 @@ import {
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import type { HseCategory, Employee, Department, Position, Site, ViolationRecord } from '@/lib/types';
+import type { HseCategory, Employee, Department, Position, Site, ViolationRecord, User } from '@/lib/types';
 import { createViolationRecord } from '@/actions/violations';
 import { getEmployees } from '@/actions/employees';
 import { getDepartments } from '@/actions/departments';
@@ -69,6 +69,11 @@ export default function NewViolationRecordPage() {
     const fetchData = async () => {
       setLoading(true);
       try {
+        if (!user || (user.role !== 'Administrator' && user.role !== 'HR' && user.role !== 'HSE')) {
+            router.push('/dashboard');
+            return;
+        }
+
         const userSiteIds = (user?.role === 'Admin Proyek' && user.siteIds) ? user.siteIds : undefined;
 
         const [empData, vioData, posData, siteData] = await Promise.all([
@@ -89,7 +94,7 @@ export default function NewViolationRecordPage() {
     if (user) {
         fetchData();
     }
-  }, [toast, user]);
+  }, [toast, user, router]);
   
   const filteredEmployees = useMemo(() => {
       return employees.filter(emp => 

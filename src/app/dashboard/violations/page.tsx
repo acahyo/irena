@@ -9,7 +9,7 @@ import { ViolationRecord } from '@/lib/types';
 
 export default async function ViolationsPage() {
   const user = await getAdminSession();
-  if (!user || (user.role !== 'Administrator' && user.role !== 'HR')) {
+  if (!user || (user.role !== 'Administrator' && user.role !== 'HR' && user.role !== 'HSE')) {
     redirect('/dashboard');
   }
 
