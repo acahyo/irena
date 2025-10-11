@@ -53,6 +53,7 @@ import {
   Fuel,
   Archive,
   Book,
+  UserCog,
 } from "lucide-react";
 import type { AppSettings, User, Role, MenuOrderItem } from "@/lib/types";
 import { logout } from "@/actions/auth";
@@ -62,6 +63,7 @@ const allNavItemsList = (lang: 'id' | 'en') => [
   { id: 'dashboard', href: "/dashboard", icon: LayoutDashboard, label: lang === 'id' ? "Dasbor" : "Dashboard", exact: true },
   { id: 'finance-dashboard', href: "/dashboard/finance-dashboard", icon: Landmark, label: "Dasbor Keuangan" },
   { id: 'hse-dashboard', href: "/dashboard/hse", icon: ShieldCheck, label: "Dasbor HSE" },
+  { id: 'disciplinary-dashboard', href: "/dashboard", icon: UserCog, label: "Dasbor Disipliner" },
   
   // Kepegawaian
   { id: 'employees', href: "/dashboard/employees", icon: Users, label: lang === 'id' ? "Daftar Karyawan" : "Employees" },
@@ -120,8 +122,9 @@ const allNavItemsList = (lang: 'id' | 'en') => [
 const staticMenuOrder: MenuOrderItem[] = [
     { id: 'dashboard' },
     { id: 'finance-dashboard' },
-    { id: 'finance' },
     { id: 'hse-dashboard' },
+    { id: 'disciplinary-dashboard' },
+    { id: 'finance' },
     { id: 'employees' },
     { id: 'employee-register' },
     { id: 'employee-review' },
@@ -208,6 +211,9 @@ export default function DashboardClientLayout({
         }
         if (role.name === 'HSE') {
             accessibleMenus.add('hse-dashboard');
+        }
+        if (role.name === 'Disipliner') {
+            accessibleMenus.add('disciplinary-dashboard');
         }
     }
 

@@ -30,6 +30,7 @@ import { format, getMonth, getYear, differenceInDays } from 'date-fns';
 import ViolationChart from './violation-chart';
 import FinanceDashboard from './finance-dashboard';
 import HseDashboard from './hse-dashboard';
+import DisciplinaryDashboard from './disciplinary-dashboard';
 
 
 async function getDashboardData({ siteIds }: { siteIds?: string[] }) {
@@ -145,6 +146,10 @@ export default async function DashboardPage({ searchParams, userSiteIds }: { sea
 
     if (user.role === 'Finance') {
         return <FinanceDashboard user={user} />;
+    }
+    
+    if (user.role === 'Disipliner') {
+        return <DisciplinaryDashboard user={user} />;
     }
 
     // If user is Admin Proyek, show their specific dashboard
