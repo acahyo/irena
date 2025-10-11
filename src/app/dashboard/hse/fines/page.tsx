@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 
 export default async function IncidentFinesPage() {
     const user = await getAdminSession();
-    if (!user || (user.role !== 'Administrator' && user.role !== 'HR' && user.role !== 'Finance')) {
+    if (!user || !['Administrator', 'HSE', 'Disipliner'].includes(user.role)) {
         redirect('/dashboard');
     }
 

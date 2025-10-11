@@ -1,5 +1,3 @@
-
-
 import type { Employee, CalendarEvent, Department, Position, User, Role, Site } from './types';
 
 export const employees: Employee[] = [
@@ -163,7 +161,7 @@ export const roles: Role[] = [
     { id: '7', name: 'Admin Absensi', description: 'Manages attendance for a specific position', accessibleMenus: [] },
     { id: '8', name: 'Driver LV Office', description: 'Access to driver-specific dashboard', accessibleMenus: [] },
     { id: '9', name: 'HSE', description: 'Manages HSE reports and violations', accessibleMenus: ['hse', 'hse-fines', 'violations', 'vehicles'] },
-    { id: '10', name: 'Disipliner', description: 'Manages employee disciplinary actions', accessibleMenus: ['violations', 'separations', 'disciplinary-dashboard'] },
+    { id: '10', name: 'Disipliner', description: 'Manages employee disciplinary actions', accessibleMenus: ['violations', 'separations', 'disciplinary-dashboard', 'hse-fines'] },
 ];
 
 
