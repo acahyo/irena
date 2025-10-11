@@ -93,6 +93,10 @@ export async function updateViolationRecord(id: string, updates: Partial<Omit<Vi
   }
   
   if (updateData.fileUrl && updateData.fileUrl.startsWith('data:')) {
+    if (!updates.employeeId) {
+        const existingDoc = await getDoc(docRef);
+        updates.employeeId = existingDoc.data()?.employeeId;
+    }
     const { fileUrl, fileName } = await uploadFileAndGetURL(updateData.fileUrl, updates.employeeId!);
     updateData.fileUrl = fileUrl;
     updateData.fileName = fileName;
