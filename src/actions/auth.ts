@@ -53,6 +53,10 @@ export async function authenticateUser(
                 const employee = employeeDoc.data() as Employee;
                 
                 if (employee.password === hashedPassword) {
+                    if (employee.employeeStatus === 'resign' || employee.employeeStatus === 'phk') {
+                        return { success: false, message: 'Akun ini sudah tidak aktif.', userType: null };
+                    }
+
                     const isDriver = employee.positions?.includes('Driver LV Office');
                     const isPj = employee.positions?.includes('PJ');
 

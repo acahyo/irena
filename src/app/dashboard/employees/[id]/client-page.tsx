@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import Link from 'next/link';
@@ -17,7 +18,7 @@ import {
     CardDescription
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Building2, Calendar, FileText, Heart, Home, Landmark, Mail, MapPin, Pencil, Phone, ShieldCheck, Trash2, User, UserCheck, UserSquare, Users, Briefcase, CalendarCheck, VenetianMask, WalletCards, Star, DollarSign, Clock } from 'lucide-react';
+import { ArrowLeft, Building2, Calendar, FileText, Heart, Home, Landmark, Mail, MapPin, Pencil, Phone, ShieldCheck, Trash2, User, UserCheck, UserSquare, Users, Briefcase, CalendarCheck, VenetianMask, WalletCards, Star, DollarSign, Clock, UserX } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { EmployeeWithPosition, LeaveRequest, Position } from '@/lib/types';
 import {
@@ -297,17 +298,6 @@ export default function EmployeeProfileClientPage({ employee, isPortalView = fal
                         <DetailItem icon={<FileText className="h-5 w-5"/>} label="BPJS Number" value={employee.bpjsNumber} />
                     </>
                  )}
-                 <div className="flex items-start gap-4">
-                    <div className="text-muted-foreground w-5 mt-1"><UserCheck className="h-5 w-5"/></div>
-                    <div>
-                        <p className="font-semibold text-sm">Status Karyawan</p>
-                        {employee.employeeStatus ? (
-                             <Badge variant={getEmployeeStatusVariant(employee.employeeStatus)} className="capitalize mt-1">
-                                {employee.employeeStatus}
-                            </Badge>
-                        ) : <p className="text-muted-foreground">N/A</p>}
-                    </div>
-                </div>
             </CardContent>
         </Card>
 
@@ -324,11 +314,26 @@ export default function EmployeeProfileClientPage({ employee, isPortalView = fal
         
         <Card className="lg:col-span-3">
              <CardHeader>
-                <CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5" /> Contract Information</CardTitle>
+                <CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5" /> Contract & Employment Status</CardTitle>
             </CardHeader>
-             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+             <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                  <DetailItem icon={<Calendar className="h-5 w-5"/>} label="Contract Start Date" value={formatDate(employee.contractStartDate)} />
-                <DetailItem icon={<Calendar className="h-5 w-5"/>} label="Contract End Date" value={formatDate(employee.contractEndDate)} />
+                 <div className="flex items-start gap-4">
+                    <div className="text-muted-foreground w-5 mt-1"><UserCheck className="h-5 w-5"/></div>
+                    <div>
+                        <p className="font-semibold text-sm">Status Karyawan</p>
+                        {employee.employeeStatus ? (
+                             <Badge variant={getEmployeeStatusVariant(employee.employeeStatus)} className="capitalize mt-1">
+                                {employee.employeeStatus}
+                            </Badge>
+                        ) : <p className="text-muted-foreground">N/A</p>}
+                    </div>
+                 </div>
+                 {(employee.employeeStatus === 'resign' || employee.employeeStatus === 'phk') ? (
+                    <DetailItem icon={<UserX className="h-5 w-5"/>} label="Tanggal Efektif Resign/PHK" value={formatDate(employee.contractEndDate)} />
+                 ) : (
+                    <DetailItem icon={<Calendar className="h-5 w-5"/>} label="Contract End Date" value={formatDate(employee.contractEndDate)} />
+                 )}
             </CardContent>
         </Card>
 
