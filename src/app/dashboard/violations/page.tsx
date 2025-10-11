@@ -6,6 +6,7 @@ import { getSites } from '@/actions/sites';
 import { getAdminSession } from '@/actions/auth';
 import { redirect } from 'next/navigation';
 import { ViolationRecord } from '@/lib/types';
+import { addMonths, differenceInDays } from 'date-fns';
 
 export default async function ViolationsPage() {
   const user = await getAdminSession();
@@ -19,10 +20,20 @@ export default async function ViolationsPage() {
     getSites(),
   ]);
 
-  const serializedRecords: ViolationRecord[] = records.map(rec => ({
-    ...rec,
-    date: (rec.date as Date).toISOString(),
-  }));
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const serializedRecords: ViolationRecord[] = records.map(rec => {
+    const violationDate = new Date(rec.date);
+    const expiryDate = addMonths(violationDate, 6);
+    const expiresInDays = differenceInDays(expiryDate, today);
+
+    return {
+      ...rec,
+      date: (rec.date as Date).toISOString(),
+      expiresInDays: expiresInDays > 0 ? expiresInDays : 0,
+    };
+  });
 
   return <ViolationsClientPage initialRecords={serializedRecords} employees={employees} sites={sites} />;
 }

@@ -145,9 +145,9 @@ export default function ViolationsClientPage({
             <TableRow>
               <TableHead>Karyawan</TableHead>
               <TableHead>Jabatan</TableHead>
-              <TableHead>Proyek</TableHead>
               <TableHead>Tanggal</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Masa Berlaku</TableHead>
               <TableHead>File</TableHead>
               <TableHead className="text-right">Aksi</TableHead>
             </TableRow>
@@ -158,9 +158,17 @@ export default function ViolationsClientPage({
                 <TableRow key={rec.id}>
                   <TableCell className="font-medium">{rec.employeeName}</TableCell>
                   <TableCell>{rec.employeePosition}</TableCell>
-                  <TableCell>{rec.siteLocation}</TableCell>
                   <TableCell>{isClient ? format(new Date(rec.date), 'PPP') : 'Loading...'}</TableCell>
                   <TableCell><Badge variant={getStatusVariant(rec.status)}>{rec.status}</Badge></TableCell>
+                  <TableCell>
+                    {rec.expiresInDays !== undefined && rec.expiresInDays > 0 ? (
+                      <Badge variant={rec.expiresInDays <= 30 ? 'destructive' : 'secondary'}>
+                        {rec.expiresInDays} hari lagi
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline">Berakhir</Badge>
+                    )}
+                  </TableCell>
                   <TableCell>
                     {rec.fileUrl ? (
                       <Button variant="outline" size="sm" asChild>

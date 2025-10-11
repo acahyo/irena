@@ -356,6 +356,7 @@ export type ViolationRecord = {
   description: string;
   fileUrl?: string;
   fileName?: string;
+  expiresInDays?: number;
 };
 
 export type FuelRequest = {
