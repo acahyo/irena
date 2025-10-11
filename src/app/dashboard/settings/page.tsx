@@ -76,6 +76,7 @@ const allMenus = [
   { id: 'employee-review', label: "Tinjau Registrasi" },
   { id: 'leave-schedule', label: 'Jadwal Cuti' },
   { id: 'separations', label: 'Proses Resign/PHK' },
+  { id: 'separations-review', label: 'Tinjau PHK' },
   { id: 'bpjs-id-simper', label: 'BPJS, ID & SIMPER' },
   { id: 'violations', label: 'Catatan Pelanggaran' },
   { id: 'attendance', label: 'Input Absensi' },

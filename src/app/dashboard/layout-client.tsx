@@ -55,6 +55,7 @@ import {
   Book,
   UserCog,
   UserMinus,
+  UserSearch,
 } from "lucide-react";
 import type { AppSettings, User, Role, MenuOrderItem } from "@/lib/types";
 import { logout } from "@/actions/auth";
@@ -72,6 +73,7 @@ const allNavItemsList = (lang: 'id' | 'en') => [
   { id: 'employee-review', href: "/dashboard/employees/review", icon: UserCheckIcon, label: "Tinjau Registrasi" },
   { id: 'leave-schedule', href: "/dashboard/leave-schedule", icon: CalendarCheck, label: lang === 'id' ? "Jadwal Cuti" : "Leave Schedule" },
   { id: 'separations', href: "/dashboard/separations", icon: UserMinus, label: "Proses Resign/PHK" },
+  { id: 'separations-review', href: "/dashboard/separations/review", icon: UserSearch, label: "Tinjau PHK" },
   { id: 'bpjs-id-simper', href: "/dashboard/bpjs-id-simper", icon: Database, label: "BPJS, ID & SIMPER" },
   { id: 'violations', href: "/dashboard/violations", icon: AlertTriangle, label: "Catatan Pelanggaran" },
   
@@ -132,6 +134,7 @@ const staticMenuOrder: MenuOrderItem[] = [
     { id: 'employee-review' },
     { id: 'leave-schedule' },
     { id: 'separations' },
+    { id: 'separations-review' },
     { id: 'bpjs-id-simper' },
     { id: 'violations' },
     { id: 'attendance' },

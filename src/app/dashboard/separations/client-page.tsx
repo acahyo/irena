@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useTransition } from 'react';
@@ -20,6 +21,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { Textarea } from '@/components/ui/textarea';
+import { useUser } from '@/contexts/user-context';
 
 
 export default function SeparationsClientPage({
@@ -39,6 +41,7 @@ export default function SeparationsClientPage({
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const router = useRouter();
+  const user = useUser();
 
   const filteredEmployees = useMemo(() => {
     if (siteFilter === 'all') {
@@ -73,14 +76,20 @@ export default function SeparationsClientPage({
 
     startTransition(async () => {
       try {
+        let finalStatus: Employee['employeeStatus'] = separationType;
+        
+        // HR/Admin can directly process PHK. Others need approval.
+        if (separationType === 'phk' && user?.role !== 'HR' && user?.role !== 'Administrator') {
+            finalStatus = 'Pending PHK Approval';
+        }
+
         const updateData: Partial<Employee> = {
-          employeeStatus: separationType,
-          contractEndDate: effectiveDate, // Using contractEndDate to mark separation date
-          // In a real scenario, you'd save the document URL and reason to a new collection
+          employeeStatus: finalStatus,
+          contractEndDate: effectiveDate,
+          separationReason: reason,
+          // In a real scenario, you'd save the document URL to a new collection
         };
 
-        // This is a simplified approach. Ideally, you'd create a new 'separations' record.
-        // For now, we just update the employee status.
         await updateEmployee(selectedEmployee.id, updateData);
 
         toast({ title: 'Sukses!', description: `Status karyawan ${selectedEmployee.name} telah diperbarui.` });
@@ -91,6 +100,14 @@ export default function SeparationsClientPage({
       }
     });
   };
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <>

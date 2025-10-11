@@ -30,7 +30,7 @@ export type Employee = {
   bpjsStatus?: 'active' | 'inactive' | 'not-registered';
   bpjsNumber?: string;
   bpjsType?: 'miki' | 'iba';
-  employeeStatus?: 'active' | 'nonaktif' | 'resign' | 'phk' | 'pending';
+  employeeStatus?: 'active' | 'nonaktif' | 'resign' | 'phk' | 'pending' | 'Pending PHK Approval';
   ktpPhoto?: string;
   simPhoto?: string;
   sioPhoto?: string;
@@ -65,6 +65,7 @@ export type Employee = {
     expiresInDays: number;
   };
   contractWarningDays?: number;
+  separationReason?: string;
 };
 
 export type CalendarEvent = {
