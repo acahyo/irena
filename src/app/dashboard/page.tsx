@@ -295,7 +295,7 @@ export default async function DashboardPage({ searchParams, userSiteIds }: { sea
                                     {stats.employeesByPosition.length > 0 ? (
                                         stats.employeesByPosition.flatMap((proj, projIndex) =>
                                             proj.positions.map((pos, posIndex) => (
-                                                <TableRow key={`${proj.projectName}-${pos.positionName}`}>
+                                                <TableRow key={`${proj.projectName}-${pos.positionName}-${posIndex}`}>
                                                     {posIndex === 0 && (
                                                         <TableCell rowSpan={proj.positions.length} className="align-top font-medium">
                                                             {projIndex + 1}
