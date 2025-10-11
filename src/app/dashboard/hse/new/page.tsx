@@ -1,11 +1,12 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { format } from 'date-fns';
-import { ArrowLeft, Calendar as CalendarIcon, Upload, Loader2, FileIcon } from 'lucide-react';
+import { ArrowLeft, Calendar as CalendarIcon, Upload, Loader2, FileIcon, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -31,7 +32,7 @@ import {
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import type { HseCategory, Employee, Department, Position, Site } from '@/lib/types';
+import type { HseCategory, Employee, Department, Position, Site, HseRecord, User } from '@/lib/types';
 import { createHseRecord } from '@/actions/hse';
 import { getEmployees } from '@/actions/employees';
 import { getDepartments } from '@/actions/departments';
@@ -63,8 +64,8 @@ export default function NewHseRecordPage() {
   const [positions, setPositions] = useState<Position[]>([]);
   const [sites, setSites] = useState<Site[]>([]);
   
-  const [selectedDepartment, setSelectedDepartment] = useState('');
-  const [selectedPosition, setSelectedPosition] = useState('');
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [selectedPosition, setSelectedPosition] = useState('all');
   const [siteFilter, setSiteFilter] = useState('all');
   const [hasFine, setHasFine] = useState(false);
   
@@ -134,6 +135,10 @@ export default function NewHseRecordPage() {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!selectedEmployee) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Karyawan harus dipilih.' });
+        return;
+    }
     setLoading(true);
 
     const formData = new FormData(event.currentTarget);
@@ -152,10 +157,11 @@ export default function NewHseRecordPage() {
         fileUrl: filePreview || undefined,
         // Incident-specific fields
         hasFine: hasFine,
-        departmentName: formData.get('departmentName') as string,
-        positionName: formData.get('positionName') as string,
-        employeeId: formData.get('employeeId') as string,
-        employeeName: employees.find(e => e.id === formData.get('employeeId'))?.name || '',
+        departmentName: selectedEmployee.department,
+        positionName: selectedEmployee.positions?.join(', '),
+        employeeId: selectedEmployee.id,
+        employeeName: selectedEmployee.name,
+        siteLocation: selectedEmployee.siteLocation,
         fineAmount: formData.get('fineAmount') ? Number(formData.get('fineAmount')) : undefined,
         fineAttachmentUrl: fineFilePreview || undefined,
     };
@@ -178,6 +184,11 @@ export default function NewHseRecordPage() {
     } finally {
         setLoading(false);
     }
+  };
+
+  const handleEmployeeChange = (employeeId: string) => {
+    const emp = employees.find(e => e.id === employeeId);
+    setSelectedEmployee(emp || null);
   };
 
   return (
@@ -227,7 +238,7 @@ export default function NewHseRecordPage() {
 
               {category === 'incident' && (
                 <>
-                     <div className="space-y-2 md:col-span-2">
+                     <div className="space-y-2">
                         <Label htmlFor="siteFilter">Filter Proyek/Site</Label>
                         <Select value={siteFilter} onValueChange={setSiteFilter}>
                             <SelectTrigger id="siteFilter">
@@ -241,8 +252,8 @@ export default function NewHseRecordPage() {
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="positionName">Jabatan</Label>
-                        <Select name="positionName" onValueChange={setSelectedPosition} disabled={siteFilter === 'all'}>
+                        <Label htmlFor="positionName">Filter Jabatan</Label>
+                        <Select onValueChange={setSelectedPosition} disabled={siteFilter === 'all'}>
                             <SelectTrigger id="positionName"><SelectValue placeholder={siteFilter === 'all' ? "Pilih proyek dulu" : "Semua Jabatan"} /></SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">Semua Jabatan</SelectItem>
@@ -251,9 +262,9 @@ export default function NewHseRecordPage() {
                         </Select>
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-2 md:col-span-2">
                         <Label htmlFor="employeeId">Nama Karyawan</Label>
-                        <Select name="employeeId" disabled={siteFilter === 'all'}>
+                        <Select name="employeeId" onValueChange={handleEmployeeChange} disabled={siteFilter === 'all'}>
                              <SelectTrigger id="employeeId"><SelectValue placeholder={siteFilter === 'all' ? "Pilih proyek dulu" : "Pilih Karyawan"} /></SelectTrigger>
                             <SelectContent>
                                 {filteredEmployees.map(emp => <SelectItem key={emp.id} value={emp.id}>{emp.name}</SelectItem>)}
