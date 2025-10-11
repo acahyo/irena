@@ -160,25 +160,28 @@ export default function HsePage() {
         {selectedRecord && (
            <DialogContent className="max-w-2xl">
               <DialogHeader>
-                  <DialogTitle>{selectedRecord.title}</DialogTitle>
+                  <DialogTitle>Detail Laporan</DialogTitle>
                   <DialogDescription>
-                    Detail Laporan - {format(new Date(selectedRecord.date), 'PPP')}
+                    {format(new Date(selectedRecord.date), 'PPP')}
                   </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto pr-2">
+                <p className="text-lg font-bold">{selectedRecord.title}</p>
                 <p className="text-sm text-muted-foreground">{selectedRecord.description}</p>
+                
                 {selectedRecord.category === 'incident' && (
                   <div className="space-y-2 border-t pt-4">
                     <h4 className="font-semibold">Detail Karyawan Terkait</h4>
                     <p><strong>Nama:</strong> {selectedRecord.employeeName}</p>
-                    <p><strong>Jabatan:</strong> {selectedRecord.employeePosition}</p>
                     <p><strong>Proyek:</strong> {selectedRecord.siteLocation}</p>
+                    <p><strong>Jabatan:</strong> {selectedRecord.employeePosition}</p>
                   </div>
                 )}
+                
                 {selectedRecord.hasFine && selectedRecord.fineAmount && (
                   <div className="space-y-2 border-t pt-4">
                       <h4 className="font-semibold">Detail Denda</h4>
-                      <p><strong>Jumlah Denda:</strong> <span className="font-bold text-destructive">{formatCurrency(selectedRecord.fineAmount)}</span></p>
+                      <p><strong>Total Denda:</strong> <span className="font-bold text-destructive">{formatCurrency(selectedRecord.fineAmount)}</span></p>
                       {selectedRecord.fineDeductionPeriods && (
                         <p><strong>Periode Cicilan:</strong> {selectedRecord.fineDeductionPeriods} bulan</p>
                       )}
