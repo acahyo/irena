@@ -6,7 +6,7 @@ import { getLeaveRequests } from '@/actions/leave';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { User, Employee, ViolationRecord } from '@/lib/types';
-import { Users, CalendarOff, UserCheck, AlertTriangle, AlertOctagon } from 'lucide-react';
+import { Users, CalendarOff, UserCheck, AlertTriangle, AlertOctagon, UserMinus } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { getYear, format } from 'date-fns';
 import { getViolationRecords } from '@/actions/violations';
@@ -70,6 +70,22 @@ async function getDashboardData() {
     
     const totalViolations = violationRecords.length;
 
+    const separationsSummary = employees
+        .filter(emp => emp.employeeStatus === 'resign' || emp.employeeStatus === 'phk')
+        .reduce((acc, emp) => {
+            const position = emp.positions?.[0] || 'N/A';
+            const key = `${emp.siteLocation}-${position}-${emp.employeeStatus}`;
+            if (!acc[key]) {
+                acc[key] = {
+                    project: emp.siteLocation || 'N/A',
+                    position: position,
+                    status: emp.employeeStatus as 'resign' | 'phk',
+                    count: 0
+                };
+            }
+            acc[key].count++;
+            return acc;
+        }, {} as Record<string, { project: string; position: string; status: 'resign' | 'phk'; count: number }>);
 
     return {
         employees,
@@ -79,6 +95,7 @@ async function getDashboardData() {
         violationsSummary: Object.values(violationsSummary).sort((a, b) => a.project.localeCompare(b.project) || a.position.localeCompare(b.position)),
         violationHistory: sortedViolationHistory,
         totalViolations,
+        separationsSummary: Object.values(separationsSummary).sort((a, b) => a.project.localeCompare(b.project) || a.position.localeCompare(b.position)),
     };
 }
 
@@ -88,6 +105,14 @@ const getViolationStatusVariant = (status: ViolationRecord['status']): 'default'
         case 'SP2': return 'secondary';
         case 'SP3': return 'destructive';
         case 'SPPT': return 'outline';
+        default: return 'outline';
+      }
+};
+
+const getSeparationStatusVariant = (status: 'resign' | 'phk'): 'outline' | 'destructive' => {
+      switch (status) {
+        case 'resign': return 'outline';
+        case 'phk': return 'destructive';
         default: return 'outline';
       }
 };
@@ -130,7 +155,49 @@ export default async function DisciplinaryDashboard({ user }: { user: User }) {
                 </Card>
             </div>
             
-            <QuickSeparationForm employees={data.employees} violations={data.violationRecords} />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <QuickSeparationForm employees={data.employees} violations={data.violationRecords} />
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><UserMinus /> Rekap Karyawan Keluar</CardTitle>
+                        <CardDescription>Ringkasan karyawan yang telah resign atau di-PHK.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <ScrollArea className="h-48">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Proyek</TableHead>
+                                    <TableHead>Jabatan</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead className="text-right">Jumlah</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {data.separationsSummary.length > 0 ? (
+                                    data.separationsSummary.map((item, index) => (
+                                        <TableRow key={index}>
+                                            <TableCell className="font-medium">{item.project}</TableCell>
+                                            <TableCell>{item.position}</TableCell>
+                                            <TableCell>
+                                                <Badge variant={getSeparationStatusVariant(item.status)}>{item.status.toUpperCase()}</Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right font-bold">{item.count}</TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={4} className="h-24 text-center">
+                                            Tidak ada data karyawan keluar.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                        </ScrollArea>
+                    </CardContent>
+                </Card>
+            </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <ViolationChart data={data.violationHistory} />
