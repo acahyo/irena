@@ -29,7 +29,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+} from "@/components/ui/alert-dialog"
 import { MoreHorizontal, PlusCircle, Trash2, Pencil, Download, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { ViolationRecord, Employee, Site } from '@/lib/types';

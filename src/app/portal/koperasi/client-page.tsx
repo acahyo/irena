@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useTransition } from 'react';
+import { useState, useMemo, useTransition, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,6 +44,11 @@ export default function KoperasiClientPage({ employee, initialItems, initialOrde
   const router = useRouter();
   const [selectedOrder, setSelectedOrder] = useState<KoperasiOrder | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
 
   const handleAddToCart = (itemId: string, quantity: number) => {
@@ -263,7 +268,7 @@ export default function KoperasiClientPage({ employee, initialItems, initialOrde
                                 <h4 className="font-semibold">Info Pengambilan</h4>
                                 <div className="text-sm text-muted-foreground p-3 border rounded-md mt-2 space-y-1">
                                     <div><strong>Hari:</strong> {selectedOrder.pickupInfo.day}</div>
-                                    <div><strong>Tanggal:</strong> {format(new Date(selectedOrder.pickupInfo.date as string), 'PPP')}</div>
+                                    {isClient && <div><strong>Tanggal:</strong> {format(new Date(selectedOrder.pickupInfo.date as string), 'PPP')}</div>}
                                     <div><strong>Lokasi:</strong> {selectedOrder.pickupInfo.location}</div>
                                 </div>
                             </div>
