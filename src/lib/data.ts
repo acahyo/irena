@@ -153,7 +153,7 @@ export const users: User[] = [
 
 export const roles: Role[] = [
     { id: '1', name: 'Administrator', description: 'Full access to all features', accessibleMenus: [] },
-    { id: '2', name: 'HR', description: 'Access to employee management features', accessibleMenus: ['violations', 'pj-access', 'driver-access', 'reports', 'separations', 'separations-review'] },
+    { id: '2', name: 'HR', description: 'Access to employee management features', accessibleMenus: ['violations', 'pj-access', 'driver-access', 'reports', 'separations', 'separations-review', 'hse-fines'] },
     { id: '3', name: 'Employee', description: 'Basic access to their own profile', accessibleMenus: [] },
     { id: '4', name: 'Admin Proyek', description: 'Project-specific administrative access', accessibleMenus: ['separations'] },
     { id: '5', name: 'Purchasing', description: 'Manages purchase requests', accessibleMenus: ['vehicles', 'warehouse'] },
