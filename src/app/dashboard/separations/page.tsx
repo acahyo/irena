@@ -1,4 +1,5 @@
 
+
 import { getAdminSession } from '@/actions/auth';
 import { redirect } from 'next/navigation';
 import SeparationsClientPage from './client-page';
@@ -29,7 +30,5 @@ export default async function SeparationsPage() {
         ? allSites.filter(site => user.siteIds?.includes(site.id))
         : allSites;
     
-    const activeEmployees = employees.filter(emp => emp.employeeStatus === 'active');
-
-    return <SeparationsClientPage initialEmployees={activeEmployees} sites={relevantSites} />;
+    return <SeparationsClientPage initialEmployees={employees} sites={relevantSites} />;
 }

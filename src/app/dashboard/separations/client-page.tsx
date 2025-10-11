@@ -22,6 +22,24 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { Textarea } from '@/components/ui/textarea';
 import { useUser } from '@/contexts/user-context';
+import { Badge } from '@/components/ui/badge';
+
+
+const getStatusVariant = (status?: string) => {
+  switch (status) {
+    case 'active':
+      return 'default';
+    case 'nonaktif':
+    case 'Pending PHK Approval':
+      return 'secondary';
+    case 'resign':
+      return 'outline';
+    case 'phk':
+      return 'destructive';
+    default:
+      return 'secondary';
+  }
+};
 
 
 export default function SeparationsClientPage({
@@ -134,6 +152,7 @@ export default function SeparationsClientPage({
                 <TableHead>Nama Karyawan</TableHead>
                 <TableHead>Jabatan</TableHead>
                 <TableHead>Proyek</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead className="text-right">Aksi</TableHead>
               </TableRow>
             </TableHeader>
@@ -151,15 +170,20 @@ export default function SeparationsClientPage({
                   </TableCell>
                   <TableCell>{employee.positions?.join(', ') || 'N/A'}</TableCell>
                   <TableCell>{employee.siteLocation}</TableCell>
+                   <TableCell>
+                    <Badge variant={getStatusVariant(employee.employeeStatus)} className="capitalize">
+                      {employee.employeeStatus}
+                    </Badge>
+                  </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="outline" size="sm" onClick={() => handleProcessClick(employee)}>
+                    <Button variant="outline" size="sm" onClick={() => handleProcessClick(employee)} disabled={employee.employeeStatus !== 'active'}>
                       <UserMinus className="mr-2 h-4 w-4" /> Proses
                     </Button>
                   </TableCell>
                 </TableRow>
               ))}
               {filteredEmployees.length === 0 && (
-                <TableRow><TableCell colSpan={4} className="h-24 text-center">Tidak ada karyawan aktif di proyek ini.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="h-24 text-center">Tidak ada karyawan di proyek ini.</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
