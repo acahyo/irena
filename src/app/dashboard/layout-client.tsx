@@ -64,7 +64,7 @@ const allNavItemsList = (lang: 'id' | 'en') => [
   { id: 'dashboard', href: "/dashboard", icon: LayoutDashboard, label: lang === 'id' ? "Dasbor" : "Dashboard", exact: true },
   { id: 'finance-dashboard', href: "/dashboard/finance-dashboard", icon: Landmark, label: "Dasbor Keuangan" },
   { id: 'hse-dashboard', href: "/dashboard/hse", icon: ShieldCheck, label: "Dasbor HSE" },
-  { id: 'disciplinary-dashboard', href: "/dashboard", icon: UserCog, label: "Dasbor Disipliner" },
+  { id: 'disciplinary-dashboard', href: "/dashboard/disciplinary-dashboard", icon: UserCog, label: "Dasbor Disipliner" },
   
   // Kepegawaian
   { id: 'employees', href: "/dashboard/employees", icon: Users, label: lang === 'id' ? "Daftar Karyawan" : "Employees" },
