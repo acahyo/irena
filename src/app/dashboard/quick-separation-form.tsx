@@ -41,6 +41,22 @@ const getStatusVariant = (status: ViolationRecord['status']) => {
   }
 };
 
+const getEmployeeStatusVariant = (status?: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
+      switch (status) {
+          case 'active':
+              return 'default';
+          case 'nonaktif':
+          case 'Pending PHK Approval':
+              return 'secondary';
+          case 'resign':
+              return 'outline';
+          case 'phk':
+              return 'destructive';
+          default:
+              return 'secondary';
+      }
+  };
+
 
 export default function QuickSeparationForm({
   employees,
@@ -121,6 +137,9 @@ export default function QuickSeparationForm({
                             <p className="text-sm text-muted-foreground">NIK: {searchResult.employee.nik}</p>
                             <p className="text-sm text-muted-foreground">Jabatan: {searchResult.employee.positions?.join(', ') || 'N/A'}</p>
                              <p className="text-sm text-muted-foreground">Departemen: {searchResult.employee.department || 'N/A'}</p>
+                             <div className="text-sm text-muted-foreground mt-2">
+                                Status: <Badge variant={getEmployeeStatusVariant(searchResult.employee.employeeStatus)} className="capitalize">{searchResult.employee.employeeStatus}</Badge>
+                             </div>
                         </div>
                         <Separator />
                         <Button asChild className="w-full">
@@ -170,5 +189,6 @@ export default function QuickSeparationForm({
     </>
   );
 }
+
 
 
