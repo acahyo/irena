@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useTransition } from 'react';
@@ -117,8 +118,9 @@ export default function QuickSeparationForm({
                         </Avatar>
                         <div>
                             <p className="font-semibold">{searchResult.employee.name}</p>
-                            <p className="text-sm text-muted-foreground">{searchResult.employee.nik}</p>
-                            <p className="text-sm text-muted-foreground">{searchResult.employee.position}</p>
+                            <p className="text-sm text-muted-foreground">NIK: {searchResult.employee.nik}</p>
+                            <p className="text-sm text-muted-foreground">Jabatan: {searchResult.employee.positions?.join(', ') || 'N/A'}</p>
+                             <p className="text-sm text-muted-foreground">Departemen: {searchResult.employee.department || 'N/A'}</p>
                         </div>
                         <Separator />
                         <Button asChild className="w-full">
@@ -168,4 +170,5 @@ export default function QuickSeparationForm({
     </>
   );
 }
+
 
