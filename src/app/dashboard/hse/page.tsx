@@ -5,7 +5,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, ShieldAlert, ClipboardCheck, Target, PlusCircle, Download, FileWarning } from 'lucide-react';
+import { FileText, ShieldAlert, ClipboardCheck, Target, PlusCircle, Download, FileWarning, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { getHseRecords } from '@/actions/hse';
 import type { HseRecord, HseCategory } from '@/lib/types';
@@ -132,7 +132,6 @@ export default function HsePage() {
                                   <div className="flex justify-between items-start">
                                       <button onClick={() => handleViewDetails(record)} className="text-left hover:underline">
                                           <p className="font-medium">{record.title}</p>
-                                          <p className="text-xs text-muted-foreground">{record.employeeName} ({record.siteLocation || 'N/A'})</p>
                                       </button>
                                       {item.category === 'incident' && record.employeeId && (
                                          <Button variant="outline" size="sm" asChild>
@@ -142,6 +141,7 @@ export default function HsePage() {
                                          </Button>
                                       )}
                                   </div>
+                                  <div className="text-xs text-muted-foreground mt-1">{record.employeeName}</div>
                                   <div className="flex justify-between items-end mt-2 pt-2 border-t">
                                       <div className="text-xs text-muted-foreground">{format(new Date(record.date), 'PPP')}</div>
                                       {record.hasFine && record.fineAmount && (
