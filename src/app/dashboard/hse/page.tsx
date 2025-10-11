@@ -161,32 +161,36 @@ export default function HsePage() {
            <DialogContent className="max-w-2xl">
               <DialogHeader>
                   <DialogTitle>Detail Laporan</DialogTitle>
-                  <DialogDescription>
-                    {format(new Date(selectedRecord.date), 'PPP')}
-                  </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto pr-2">
+                <div className="text-sm text-muted-foreground">{format(new Date(selectedRecord.date), 'PPP, HH:mm')}</div>
                 <p className="text-lg font-bold">{selectedRecord.title}</p>
-                <p className="text-sm text-muted-foreground">{selectedRecord.description}</p>
                 
                 {selectedRecord.category === 'incident' && (
                   <div className="space-y-2 border-t pt-4">
                     <h4 className="font-semibold">Detail Karyawan Terkait</h4>
-                    <p><strong>Nama:</strong> {selectedRecord.employeeName}</p>
-                    <p><strong>Proyek:</strong> {selectedRecord.siteLocation}</p>
-                    <p><strong>Jabatan:</strong> {selectedRecord.employeePosition}</p>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                      <div className="font-medium">Nama Karyawan:</div>
+                      <div>{selectedRecord.employeeName}</div>
+                      <div className="font-medium">Lokasi Proyek:</div>
+                      <div>{selectedRecord.siteLocation}</div>
+                      <div className="font-medium">Jabatan:</div>
+                      <div>{selectedRecord.employeePosition}</div>
+                      {selectedRecord.hasFine && selectedRecord.fineAmount && (
+                        <>
+                          <div className="font-medium text-destructive">Total Denda:</div>
+                          <div className="font-bold text-destructive">{formatCurrency(selectedRecord.fineAmount)}</div>
+                        </>
+                      )}
+                    </div>
                   </div>
                 )}
                 
-                {selectedRecord.hasFine && selectedRecord.fineAmount && (
-                  <div className="space-y-2 border-t pt-4">
-                      <h4 className="font-semibold">Detail Denda</h4>
-                      <p><strong>Total Denda:</strong> <span className="font-bold text-destructive">{formatCurrency(selectedRecord.fineAmount)}</span></p>
-                      {selectedRecord.fineDeductionPeriods && (
-                        <p><strong>Periode Cicilan:</strong> {selectedRecord.fineDeductionPeriods} bulan</p>
-                      )}
-                  </div>
-                )}
+                <div className="space-y-2 border-t pt-4">
+                    <h4 className="font-semibold">Deskripsi Laporan</h4>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedRecord.description}</p>
+                </div>
+
               </div>
               <DialogFooter>
                   {selectedRecord.fileUrl && (
