@@ -1,4 +1,5 @@
 
+
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Users, CalendarOff, UserCheck, Clock, UserX, LogOut, CircleSlash, ListChecks, UserRound, AlertOctagon } from 'lucide-react';
@@ -361,47 +362,49 @@ export default async function DashboardPage({ searchParams, userSiteIds }: { sea
                 </Card>
             </div>
              
-             <ViolationChart data={stats.violationHistory} />
-            
-             <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><AlertOctagon /> {T.violationRecap}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <ScrollArea className="h-72">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>{T.project}</TableHead>
-                                <TableHead>{T.position}</TableHead>
-                                <TableHead>{T.violationStatus}</TableHead>
-                                <TableHead className="text-right">{T.employeeCount}</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {stats.violationsSummary.length > 0 ? (
-                                stats.violationsSummary.map((item, index) => (
-                                    <TableRow key={index}>
-                                        <TableCell className="font-medium">{item.project}</TableCell>
-                                        <TableCell>{item.position}</TableCell>
-                                        <TableCell>
-                                            <Badge variant={getViolationStatusVariant(item.status)}>{item.status}</Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right font-bold">{item.count}</TableCell>
-                                    </TableRow>
-                                ))
-                            ) : (
+             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                 <ViolationChart data={stats.violationHistory} />
+                
+                 <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><AlertOctagon /> {T.violationRecap}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <ScrollArea className="h-72">
+                        <Table>
+                            <TableHeader>
                                 <TableRow>
-                                    <TableCell colSpan={4} className="h-24 text-center">
-                                        {T.noViolationData}
-                                    </TableCell>
+                                    <TableHead>{T.project}</TableHead>
+                                    <TableHead>{T.position}</TableHead>
+                                    <TableHead>{T.violationStatus}</TableHead>
+                                    <TableHead className="text-right">{T.employeeCount}</TableHead>
                                 </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                    </ScrollArea>
-                </CardContent>
-            </Card>
+                            </TableHeader>
+                            <TableBody>
+                                {stats.violationsSummary.length > 0 ? (
+                                    stats.violationsSummary.map((item, index) => (
+                                        <TableRow key={index}>
+                                            <TableCell className="font-medium">{item.project}</TableCell>
+                                            <TableCell>{item.position}</TableCell>
+                                            <TableCell>
+                                                <Badge variant={getViolationStatusVariant(item.status)}>{item.status}</Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right font-bold">{item.count}</TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={4} className="h-24 text-center">
+                                            {T.noViolationData}
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                        </ScrollArea>
+                    </CardContent>
+                </Card>
+             </div>
         </div>
     );
 }
