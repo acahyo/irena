@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileText, ShieldAlert, ClipboardCheck, Target, PlusCircle, Download } from 'lucide-react';
@@ -6,6 +7,15 @@ import { getHseRecords } from '@/actions/hse';
 import type { HseRecord, HseCategory } from '@/lib/types';
 import { format } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
+
+const formatCurrency = (amount: number | undefined | null) => {
+  if (amount === undefined || amount === null) return null;
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+  }).format(amount);
+};
 
 
 export default async function HsePage() {
@@ -80,21 +90,49 @@ export default async function HsePage() {
             <CardContent className="flex-grow">
               <ScrollArea className="h-48 pr-4">
                 <div className="space-y-3">
-                    {item.records.length > 0 ? item.records.map(record => (
-                        <div key={record.id} className="text-sm p-3 border rounded-md flex justify-between items-center">
-                            <div>
-                                <p className="font-medium">{record.title}</p>
-                                <p className="text-xs text-muted-foreground">{format(new Date(record.date), 'PPP')}</p>
+                    {item.records.length > 0 ? item.records.map(record => {
+                        if (item.category === 'incident') {
+                            return (
+                                <div key={record.id} className="text-sm p-3 border rounded-md">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <p className="font-medium">{record.title}</p>
+                                            <p className="text-xs text-muted-foreground">{record.employeeName}</p>
+                                            <p className="text-xs text-muted-foreground">{record.siteLocation || 'N/A'} - {record.positionName || 'N/A'}</p>
+                                        </div>
+                                        {record.fileUrl && (
+                                           <Button asChild variant="ghost" size="icon">
+                                             <a href={record.fileUrl} target="_blank" rel="noopener noreferrer">
+                                               <Download className="h-4 w-4" />
+                                             </a>
+                                           </Button>
+                                        )}
+                                    </div>
+                                    <div className="flex justify-between items-end mt-2 pt-2 border-t">
+                                        <div className="text-xs text-muted-foreground">{format(new Date(record.date), 'PPP')}</div>
+                                        {record.hasFine && record.fineAmount && (
+                                            <div className="text-sm font-semibold text-destructive">{formatCurrency(record.fineAmount)}</div>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        }
+                        return (
+                            <div key={record.id} className="text-sm p-3 border rounded-md flex justify-between items-center">
+                                <div>
+                                    <p className="font-medium">{record.title}</p>
+                                    <p className="text-xs text-muted-foreground">{format(new Date(record.date), 'PPP')}</p>
+                                </div>
+                                {record.fileUrl && (
+                                   <Button asChild variant="ghost" size="icon">
+                                     <a href={record.fileUrl} target="_blank" rel="noopener noreferrer">
+                                       <Download className="h-4 w-4" />
+                                     </a>
+                                   </Button>
+                                )}
                             </div>
-                            {record.fileUrl && (
-                               <Button asChild variant="ghost" size="icon">
-                                 <a href={record.fileUrl} target="_blank" rel="noopener noreferrer">
-                                   <Download className="h-4 w-4" />
-                                 </a>
-                               </Button>
-                            )}
-                        </div>
-                    )) : (
+                        );
+                    }) : (
                         <div className="flex items-center justify-center text-center h-48 rounded-lg border-2 border-dashed text-muted-foreground">
                             <p>Data belum tersedia.</p>
                         </div>
