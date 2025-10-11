@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import { getEmployees } from '@/actions/employees';
 import { getLeaveRequests } from '@/actions/leave';
@@ -126,47 +127,49 @@ export default async function HseDashboard({ user }: { user: User }) {
                 </Card>
             </div>
             
-            <ViolationChart data={data.violationHistory} />
+             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <ViolationChart data={data.violationHistory} />
 
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><AlertOctagon /> Rekap Pelanggaran</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <ScrollArea className="h-72">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Proyek</TableHead>
-                                <TableHead>Jabatan</TableHead>
-                                <TableHead>Status Peringatan</TableHead>
-                                <TableHead className="text-right">Jumlah</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {data.violationsSummary.length > 0 ? (
-                                data.violationsSummary.map((item, index) => (
-                                    <TableRow key={index}>
-                                        <TableCell className="font-medium">{item.project}</TableCell>
-                                        <TableCell>{item.position}</TableCell>
-                                        <TableCell>
-                                            <Badge variant={getViolationStatusVariant(item.status)}>{item.status}</Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right font-bold">{item.count}</TableCell>
-                                    </TableRow>
-                                ))
-                            ) : (
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><AlertOctagon /> Rekap Pelanggaran</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <ScrollArea className="h-72">
+                        <Table>
+                            <TableHeader>
                                 <TableRow>
-                                    <TableCell colSpan={4} className="h-24 text-center">
-                                        Tidak ada data pelanggaran.
-                                    </TableCell>
+                                    <TableHead>Proyek</TableHead>
+                                    <TableHead>Jabatan</TableHead>
+                                    <TableHead>Status Peringatan</TableHead>
+                                    <TableHead className="text-right">Jumlah</TableHead>
                                 </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                    </ScrollArea>
-                </CardContent>
-            </Card>
+                            </TableHeader>
+                            <TableBody>
+                                {data.violationsSummary.length > 0 ? (
+                                    data.violationsSummary.map((item, index) => (
+                                        <TableRow key={index}>
+                                            <TableCell className="font-medium">{item.project}</TableCell>
+                                            <TableCell>{item.position}</TableCell>
+                                            <TableCell>
+                                                <Badge variant={getViolationStatusVariant(item.status)}>{item.status}</Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right font-bold">{item.count}</TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={4} className="h-24 text-center">
+                                            Tidak ada data pelanggaran.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                        </ScrollArea>
+                    </CardContent>
+                </Card>
+            </div>
 
         </div>
     );
