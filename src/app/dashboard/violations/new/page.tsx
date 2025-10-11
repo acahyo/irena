@@ -86,6 +86,25 @@ export default function NewViolationRecordPage() {
         setAllViolations(vioData);
         setPositions(posData);
         setSites(siteData);
+        
+        // Pre-fill from query params
+        const employeeId = searchParams.get('employeeId');
+        const siteLocation = searchParams.get('siteLocation');
+        const positionName = searchParams.get('positionName');
+
+        if (siteLocation) {
+          setSiteFilter(siteLocation);
+        }
+        if (positionName) {
+          setPositionFilter(positionName);
+        }
+        if (employeeId) {
+          const emp = empData.find(e => e.id === employeeId);
+          if (emp) {
+            setSelectedEmployee(emp);
+          }
+        }
+        
       } catch (error) {
           toast({ variant: 'destructive', title: 'Error', description: 'Gagal memuat data.'});
       }
@@ -94,7 +113,7 @@ export default function NewViolationRecordPage() {
     if (user) {
         fetchData();
     }
-  }, [toast, user, router]);
+  }, [toast, user, router, searchParams]);
   
   const filteredEmployees = useMemo(() => {
       return employees.filter(emp => 
@@ -254,7 +273,7 @@ export default function NewViolationRecordPage() {
 
               <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="employeeId">Nama Karyawan</Label>
-                  <Select name="employeeId" onValueChange={handleEmployeeChange}>
+                  <Select name="employeeId" onValueChange={handleEmployeeChange} value={selectedEmployee?.id || ''}>
                         <SelectTrigger id="employeeId"><SelectValue placeholder="Pilih Karyawan" /></SelectTrigger>
                       <SelectContent>
                           {filteredEmployees.map(emp => <SelectItem key={emp.id} value={emp.id}>{emp.name}</SelectItem>)}

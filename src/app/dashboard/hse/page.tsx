@@ -5,7 +5,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, ShieldAlert, ClipboardCheck, Target, PlusCircle, Download } from 'lucide-react';
+import { FileText, ShieldAlert, ClipboardCheck, Target, PlusCircle, Download, FileWarning } from 'lucide-react';
 import Link from 'next/link';
 import { getHseRecords } from '@/actions/hse';
 import type { HseRecord, HseCategory } from '@/lib/types';
@@ -53,9 +53,9 @@ export default function HsePage() {
       records: HseRecord[];
   }[] = [
     {
-      title: 'Laporan Insiden dan Investigasi',
-      description: 'Laporan insiden, kecelakaan, dan hasil investigasi.',
-      icon: <ShieldAlert className="h-6 w-6 text-destructive" />,
+      title: 'Rekomendasi Surat Peringatan',
+      description: 'Buat SP untuk karyawan berdasarkan laporan insiden yang masuk.',
+      icon: <FileWarning className="h-6 w-6 text-destructive" />,
       category: 'incident',
       records: allRecords.filter(r => r.category === 'incident'),
     },
@@ -120,19 +120,26 @@ export default function HsePage() {
                 <ScrollArea className="h-48 pr-4">
                   <div className="space-y-3">
                       {item.records.length > 0 ? item.records.map(record => {
+                          const queryParams = record.employeeId ? new URLSearchParams({
+                            employeeId: record.employeeId,
+                            employeeName: record.employeeName || '',
+                            positionName: record.positionName || '',
+                            siteLocation: record.siteLocation || ''
+                          }).toString() : '';
+
                           return (
-                              <button key={record.id} onClick={() => handleViewDetails(record)} className="w-full text-left text-sm p-3 border rounded-md hover:bg-muted/50 transition-colors">
+                              <div key={record.id} className="text-sm p-3 border rounded-md transition-colors">
                                   <div className="flex justify-between items-start">
-                                      <div>
+                                      <button onClick={() => handleViewDetails(record)} className="text-left hover:underline">
                                           <p className="font-medium">{record.title}</p>
-                                           {item.category === 'incident' && (
-                                              <p className="text-xs text-muted-foreground">{record.employeeName} ({record.siteLocation || 'N/A'})</p>
-                                           )}
-                                      </div>
-                                      {record.fileUrl && (
-                                         <div className="text-muted-foreground hover:text-primary">
-                                           <Download className="h-4 w-4" />
-                                         </div>
+                                          <p className="text-xs text-muted-foreground">{record.employeeName} ({record.siteLocation || 'N/A'})</p>
+                                      </button>
+                                      {item.category === 'incident' && record.employeeId && (
+                                         <Button variant="outline" size="sm" asChild>
+                                             <Link href={`/dashboard/violations/new?${queryParams}`}>
+                                                 <FileWarning className="mr-2 h-4 w-4" /> Buat SP
+                                             </Link>
+                                         </Button>
                                       )}
                                   </div>
                                   <div className="flex justify-between items-end mt-2 pt-2 border-t">
@@ -141,7 +148,7 @@ export default function HsePage() {
                                           <div className="text-sm font-semibold text-destructive">{formatCurrency(record.fineAmount)}</div>
                                       )}
                                   </div>
-                              </button>
+                              </div>
                           );
                       }) : (
                           <div className="flex items-center justify-center text-center h-48 rounded-lg border-2 border-dashed text-muted-foreground">
@@ -167,18 +174,15 @@ export default function HsePage() {
                 <p className="text-lg font-bold">{selectedRecord.title}</p>
                 
                 {selectedRecord.category === 'incident' && (
-                  <div className="space-y-2 border-t pt-4">
-                    <h4 className="font-semibold">Detail Karyawan Terkait</h4>
+                  <div className="space-y-3 border-t pt-4">
+                    <h4 className="font-semibold">Detail Karyawan</h4>
                     <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                      <div className="font-medium">Nama Karyawan:</div>
-                      <div>{selectedRecord.employeeName}</div>
-                      <div className="font-medium">Lokasi Proyek:</div>
-                      <div>{selectedRecord.siteLocation}</div>
-                      <div className="font-medium">Jabatan:</div>
-                      <div>{selectedRecord.employeePosition}</div>
+                      <div className="font-medium">Nama:</div><div>{selectedRecord.employeeName}</div>
+                      <div className="font-medium">Lokasi Proyek:</div><div>{selectedRecord.siteLocation}</div>
+                      <div className="font-medium">Jabatan:</div><div>{selectedRecord.positionName}</div>
                       {selectedRecord.hasFine && selectedRecord.fineAmount && (
                         <>
-                          <div className="font-medium text-destructive">Total Denda:</div>
+                          <div className="font-medium text-destructive">Denda:</div>
                           <div className="font-bold text-destructive">{formatCurrency(selectedRecord.fineAmount)}</div>
                         </>
                       )}
