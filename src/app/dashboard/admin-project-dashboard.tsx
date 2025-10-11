@@ -9,7 +9,7 @@ import { getLeaveRequests } from '@/actions/leave';
 import { getSite } from '@/actions/sites';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import type { User, Employee, PurchaseRequest, Site, LeaveRequest, WarehouseItem } from '@/lib/types';
+import type { User, Employee, PurchaseRequest, Site, LeaveRequest, WarehouseItem, AttendanceRecord } from '@/lib/types';
 import { Building, Users, UserPlus, ListChecks, UserRound } from 'lucide-react';
 import NewPurchaseRequestForm from './new-purchase-request-form';
 import ProjectPurchaseRequests from './project-purchase-requests';
@@ -20,6 +20,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { differenceInDays } from 'date-fns';
 import { getWarehouseItems } from '@/actions/warehouse';
+import { getAttendanceByPeriod } from '@/actions/attendance';
+import ProjectAttendanceForm from './project-attendance-form';
+import ProjectAttendanceHistory from './project-attendance-history';
+
 
 type DashboardData = {
     site: Site | null;
@@ -28,19 +32,23 @@ type DashboardData = {
     employeesByPosition: { name: string, value: number }[];
     leaveRecommendation: (Employee & { daysActive: number })[];
     warehouseItems: WarehouseItem[];
+    attendanceRecords: AttendanceRecord[];
 }
 
 async function getProjectDashboardData(siteId?: string, shiftName?: string): Promise<DashboardData> {
     if (!siteId) {
-        return { site: null, employees: [], purchaseRequests: [], employeesByPosition: [], leaveRecommendation: [], warehouseItems: [] };
+        return { site: null, employees: [], purchaseRequests: [], employeesByPosition: [], leaveRecommendation: [], warehouseItems: [], attendanceRecords: [] };
     }
     
-    const [site, employees, purchaseRequests, leaveRequests, warehouseItems] = await Promise.all([
+    const currentPeriod = new Date().toISOString().slice(0, 7);
+    
+    const [site, employees, purchaseRequests, leaveRequests, warehouseItems, attendanceRecords] = await Promise.all([
         getSite(siteId),
         getEmployees({ siteId, shiftName }),
         getPurchaseRequests({ siteId }),
         getLeaveRequests({ siteId }),
         getWarehouseItems(),
+        getAttendanceByPeriod(currentPeriod, { siteId })
     ]);
 
     const employeesByPosition = employees.reduce((acc, emp) => {
@@ -81,6 +89,7 @@ async function getProjectDashboardData(siteId?: string, shiftName?: string): Pro
         employeesByPosition: employeesByPosition.sort((a,b) => b.value - a.value),
         leaveRecommendation,
         warehouseItems,
+        attendanceRecords
     };
 }
 
@@ -97,7 +106,7 @@ export default function AdminProjectDashboard({ user, assignedSites, currentProj
                 const dashboardData = await getProjectDashboardData(selectedProjectId, shiftFilter);
                 setData(dashboardData);
             } else {
-                setData({ site: null, employees: [], purchaseRequests: [], employeesByPosition: [], leaveRecommendation: [], warehouseItems: [] });
+                setData({ site: null, employees: [], purchaseRequests: [], employeesByPosition: [], leaveRecommendation: [], warehouseItems: [], attendanceRecords: [] });
             }
         };
 
@@ -243,8 +252,10 @@ export default function AdminProjectDashboard({ user, assignedSites, currentProj
                     </CardContent>
                 </Card>
             </div>
+             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <ProjectAttendanceForm employees={data.employees} />
+                <ProjectAttendanceHistory attendanceRecords={data.attendanceRecords} />
+            </div>
         </div>
     )
 }
-
-    
