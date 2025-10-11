@@ -36,6 +36,10 @@ const getStatusBadge = (status?: string) => {
             return <Badge variant="outline" className="absolute top-2 right-2">Non-Aktif</Badge>;
         case 'onLeave':
             return <Badge variant="destructive" className="absolute top-2 right-2">Cuti</Badge>;
+        case 'resign':
+            return <Badge variant="outline" className="absolute top-2 right-2 bg-blue-100 text-blue-800">Resign</Badge>;
+        case 'phk':
+            return <Badge variant="destructive" className="absolute top-2 right-2">PHK</Badge>;
         default:
             return null;
     }
@@ -154,5 +158,6 @@ export function EmployeeCard({ employee, isSelected, onSelect }: EmployeeCardPro
       </Card>
   );
 }
+
 
 
