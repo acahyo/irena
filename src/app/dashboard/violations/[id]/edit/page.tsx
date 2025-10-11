@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -40,7 +39,7 @@ export default function EditViolationPage() {
       setPageLoading(true);
       try {
         const user = await getAdminSession();
-        if (!user || (user.role !== 'Administrator' && user.role !== 'HR' && user.role !== 'HSE')) {
+        if (!user || (user.role !== 'Administrator' && user.role !== 'HR' && user.role !== 'HSE' && user.role !== 'Disipliner')) {
             router.push('/dashboard');
             return;
         }

@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -69,7 +68,7 @@ export default function NewViolationRecordPage() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        if (!user || (user.role !== 'Administrator' && user.role !== 'HR' && user.role !== 'HSE')) {
+        if (!user || (user.role !== 'Administrator' && user.role !== 'HR' && user.role !== 'HSE' && user.role !== 'Disipliner')) {
             router.push('/dashboard');
             return;
         }
