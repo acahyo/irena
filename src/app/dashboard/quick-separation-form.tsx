@@ -85,7 +85,7 @@ export default function QuickSeparationForm({
     <>
       <Card>
         <CardHeader>
-          <CardTitle>Alat Bantu Proses Cepat</CardTitle>
+          <CardTitle>Cek Pelanggaran Karyawan</CardTitle>
           <CardDescription>Cari riwayat pelanggaran karyawan berdasarkan NIK untuk memulai proses resign/PHK.</CardDescription>
         </CardHeader>
         <CardContent>

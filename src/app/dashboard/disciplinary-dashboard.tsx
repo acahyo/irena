@@ -13,6 +13,7 @@ import { getViolationRecords } from '@/actions/violations';
 import { Badge } from '@/components/ui/badge';
 import ViolationChart from './violation-chart';
 import QuickSeparationForm from './quick-separation-form';
+import SeparationHistoryCard from './separation-history-card';
 
 async function getDashboardData() {
     
@@ -119,6 +120,9 @@ const getSeparationStatusVariant = (status: 'resign' | 'phk'): 'outline' | 'dest
 
 export default async function DisciplinaryDashboard({ user }: { user: User }) {
     const data = await getDashboardData();
+    const separatedEmployees = data.employees.filter(
+        emp => emp.employeeStatus === 'resign' || emp.employeeStatus === 'phk'
+    );
 
     return (
         <div className="space-y-6">
@@ -155,11 +159,14 @@ export default async function DisciplinaryDashboard({ user }: { user: User }) {
                 </Card>
             </div>
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <QuickSeparationForm employees={data.employees} violations={data.violationRecords} />
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                <div className="xl:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                    <QuickSeparationForm employees={data.employees} violations={data.violationRecords} />
+                    <SeparationHistoryCard separatedEmployees={separatedEmployees} />
+                </div>
                 <Card>
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><UserMinus /> Rekap Karyawan Keluar</CardTitle>
+                        <CardTitle className="flex items-center gap-2"><UserMinus /> Rekap Karyawan Resign/PHK</CardTitle>
                         <CardDescription>Ringkasan karyawan yang telah resign atau di-PHK.</CardDescription>
                     </CardHeader>
                     <CardContent>
