@@ -1,7 +1,6 @@
 
-
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Users, CalendarOff, UserCheck, Clock, UserX, LogOut, CircleSlash, ListChecks, UserRound, AlertOctagon } from 'lucide-react';
 import { getEmployees } from '@/actions/employees';
 import { getLeaveRequests } from '@/actions/leave';
@@ -50,16 +49,30 @@ async function getDashboardData({ siteIds }: { siteIds?: string[] }) {
             new Date(req.endDate) >= today
     );
     
-    const employeesByPosition = employees.reduce((acc, emp) => {
-        const position = emp.position || 'Unassigned';
-        const existing = acc.find(item => item.name === position);
-        if (existing) {
-            existing.value += 1;
-        } else {
-            acc.push({ name: position, value: 1 });
-        }
-        return acc;
-    }, [] as { name: string, value: number }[]);
+    const employeesByProject = employees
+        .filter(emp => emp.employeeStatus === 'active')
+        .reduce((acc, emp) => {
+            const project = emp.siteLocation || 'Unassigned';
+            if (!acc[project]) {
+                acc[project] = {};
+            }
+            (emp.positions || ['Unassigned']).forEach(position => {
+                if (!acc[project][position]) {
+                    acc[project][position] = 0;
+                }
+                acc[project][position]++;
+            });
+            return acc;
+    }, {} as Record<string, Record<string, number>>);
+    
+    const employeesByPosition = Object.entries(employeesByProject).map(([projectName, positions]) => ({
+        projectName,
+        positions: Object.entries(positions).map(([positionName, count]) => ({
+            positionName,
+            count
+        })).sort((a, b) => b.count - a.count),
+    })).sort((a,b) => a.projectName.localeCompare(b.projectName));
+
 
     const employeesByStatus = employees.reduce((acc, emp) => {
         const status = emp.employeeStatus || 'active';
@@ -69,7 +82,7 @@ async function getDashboardData({ siteIds }: { siteIds?: string[] }) {
             acc[status as keyof typeof acc] = 1;
         }
         return acc;
-    }, { active: 0, nonaktif: 0, resign: 0, phk: 0 });
+    }, { active: 0, nonaktif: 0, resign: 0, phk: 0, pending: 0, "Pending PHK Approval": 0 });
 
     const leaveRecommendation = employees
         .filter(emp => emp.employeeStatus === 'active')
@@ -125,7 +138,7 @@ async function getDashboardData({ siteIds }: { siteIds?: string[] }) {
     return {
         totalEmployees: employees.length,
         employeesOnLeave: approvedLeave.length,
-        employeesByPosition: employeesByPosition.sort((a,b) => b.value - a.value),
+        employeesByPosition,
         employeesByStatus: employeesByStatus,
         leaveRecommendation,
         violationsSummary: Object.values(violationsSummary).sort((a, b) => a.project.localeCompare(b.project) || a.position.localeCompare(b.position)),
@@ -185,17 +198,17 @@ export default async function DashboardPage({ searchParams, userSiteIds }: { sea
         inactive: lang === 'id' ? 'Non-Aktif' : 'Inactive',
         resign: lang === 'id' ? 'Resign' : 'Resigned',
         phk: lang === 'id' ? 'PHK' : 'Terminated',
-        employeesByPosition: lang === 'id' ? 'Karyawan Berdasarkan Jabatan' : 'Employees by Position',
+        employeesByProject: lang === 'id' ? 'Karyawan Berdasarkan Proyek' : 'Employees by Project',
         no: lang === 'id' ? 'No' : 'No',
+        project: lang === 'id' ? 'Proyek' : 'Project',
         position: lang === 'id' ? 'Jabatan' : 'Position',
         employeeCount: lang === 'id' ? 'Jumlah Karyawan' : 'Number of Employees',
-        noPositionData: lang === 'id' ? 'Tidak ada data jabatan.' : 'No position data available.',
+        noPositionData: lang === 'id' ? 'Tidak ada data karyawan.' : 'No employee data available.',
         leaveRecommendation: lang === 'id' ? 'Rekomendasi Cuti' : 'Leave Recommendation',
         leaveRecommendationDesc: lang === 'id' ? 'Karyawan aktif lebih dari 120 hari yang direkomendasikan untuk mengambil cuti.' : 'Active employees for more than 120 days recommended to take leave.',
         days: lang === 'id' ? 'hari' : 'days',
         noRecommendation: lang === 'id' ? 'Tidak ada karyawan yang memenuhi kriteria saat ini.' : 'No employees meet the criteria at this time.',
         violationRecap: lang === 'id' ? 'Rekap Pelanggaran' : 'Violation Recap',
-        project: lang === 'id' ? 'Proyek' : 'Project',
         violationStatus: lang === 'id' ? 'Status Peringatan' : 'Warning Status',
         noViolationData: lang === 'id' ? 'Tidak ada data pelanggaran.' : 'No violation data available.',
     };
@@ -264,34 +277,49 @@ export default async function DashboardPage({ searchParams, userSiteIds }: { sea
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <Card className="lg:col-span-2">
                     <CardHeader>
-                        <CardTitle>{T.employeesByPosition}</CardTitle>
+                        <CardTitle>{T.employeesByProject}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                       <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="w-[50px]">{T.no}</TableHead>
-                                    <TableHead>{T.position}</TableHead>
-                                    <TableHead className="text-right">{T.employeeCount}</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {stats.employeesByPosition.map((pos, index) => (
-                                    <TableRow key={pos.name}>
-                                        <TableCell>{index + 1}</TableCell>
-                                        <TableCell className="font-medium">{pos.name}</TableCell>
-                                        <TableCell className="text-right">{pos.value}</TableCell>
+                        <ScrollArea className="h-[300px]">
+                           <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead className="w-[50px]">{T.no}</TableHead>
+                                        <TableHead>{T.project}</TableHead>
+                                        <TableHead>{T.position}</TableHead>
+                                        <TableHead className="text-right">{T.employeeCount}</TableHead>
                                     </TableRow>
-                                ))}
-                                {stats.employeesByPosition.length === 0 && (
-                                     <TableRow>
-                                        <TableCell colSpan={3} className="h-24 text-center">
-                                            {T.noPositionData}
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
+                                </TableHeader>
+                                <TableBody>
+                                    {stats.employeesByPosition.length > 0 ? (
+                                        stats.employeesByPosition.flatMap((proj, projIndex) =>
+                                            proj.positions.map((pos, posIndex) => (
+                                                <TableRow key={`${proj.projectName}-${pos.positionName}`}>
+                                                    {posIndex === 0 && (
+                                                        <TableCell rowSpan={proj.positions.length} className="align-top font-medium">
+                                                            {projIndex + 1}
+                                                        </TableCell>
+                                                    )}
+                                                    {posIndex === 0 && (
+                                                        <TableCell rowSpan={proj.positions.length} className="align-top font-medium">
+                                                            {proj.projectName}
+                                                        </TableCell>
+                                                    )}
+                                                    <TableCell>{pos.positionName}</TableCell>
+                                                    <TableCell className="text-right">{pos.count}</TableCell>
+                                                </TableRow>
+                                            ))
+                                        )
+                                    ) : (
+                                        <TableRow>
+                                            <TableCell colSpan={4} className="h-24 text-center">
+                                                {T.noPositionData}
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </ScrollArea>
                     </CardContent>
                 </Card>
                 <Card>
