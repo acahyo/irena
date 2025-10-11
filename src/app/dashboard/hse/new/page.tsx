@@ -31,11 +31,12 @@ import {
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import type { HseCategory, Employee, Department, Position } from '@/lib/types';
+import type { HseCategory, Employee, Department, Position, Site } from '@/lib/types';
 import { createHseRecord } from '@/actions/hse';
 import { getEmployees } from '@/actions/employees';
 import { getDepartments } from '@/actions/departments';
 import { getPositions } from '@/actions/positions';
+import { getSites } from '@/actions/sites';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 
@@ -60,37 +61,53 @@ export default function NewHseRecordPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [positions, setPositions] = useState<Position[]>([]);
+  const [sites, setSites] = useState<Site[]>([]);
+  
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [selectedPosition, setSelectedPosition] = useState('');
+  const [siteFilter, setSiteFilter] = useState('all');
   const [hasFine, setHasFine] = useState(false);
   
   const category = searchParams.get('category') as HseCategory | null;
 
   useEffect(() => {
-    // Set initial date on client mount to avoid hydration mismatch
     setDate(new Date());
 
     const fetchData = async () => {
       if (category === 'incident') {
-        const [empData, deptData, posData] = await Promise.all([
+        const [empData, deptData, posData, siteData] = await Promise.all([
           getEmployees(),
           getDepartments(),
           getPositions(),
+          getSites(),
         ]);
         setEmployees(empData);
         setDepartments(deptData);
         setPositions(posData);
+        setSites(siteData);
       }
     };
     fetchData();
   }, [category]);
+
+  const filteredPositions = useMemo(() => {
+    if (siteFilter === 'all') return [];
+    const selectedSite = sites.find(s => s.id === siteFilter);
+    if (!selectedSite) return [];
+
+    return positions.filter(p => !p.projectName || p.projectName === selectedSite.name);
+  }, [positions, siteFilter, sites]);
   
   const filteredEmployees = useMemo(() => {
+      if (siteFilter === 'all') return [];
+      const selectedSite = sites.find(s => s.id === siteFilter);
+      if (!selectedSite) return [];
+      
       return employees.filter(emp => 
-        (!selectedDepartment || emp.department === selectedDepartment) &&
-        (!selectedPosition || emp.positions?.includes(selectedPosition))
+        (emp.siteLocation === selectedSite.name) &&
+        (selectedPosition === 'all' || !selectedPosition || emp.positions?.includes(selectedPosition))
       );
-  }, [employees, selectedDepartment, selectedPosition]);
+  }, [employees, siteFilter, selectedPosition, sites]);
 
 
   if (!category || !categoryTitles[category]) {
@@ -210,34 +227,40 @@ export default function NewHseRecordPage() {
 
               {category === 'incident' && (
                 <>
+                     <div className="space-y-2 md:col-span-2">
+                        <Label htmlFor="siteFilter">Filter Proyek/Site</Label>
+                        <Select value={siteFilter} onValueChange={setSiteFilter}>
+                            <SelectTrigger id="siteFilter">
+                                <SelectValue placeholder="Pilih Proyek/Site" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Pilih Proyek...</SelectItem>
+                                {sites.map(site => <SelectItem key={site.id} value={site.id}>{site.name}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
                     <div className="space-y-2">
-                        <Label htmlFor="departmentName">Departemen</Label>
-                        <Select name="departmentName" onValueChange={setSelectedDepartment}>
-                            <SelectTrigger id="departmentName"><SelectValue placeholder="Pilih Departemen" /></SelectTrigger>
-                            <SelectContent>
-                                {departments.map(dept => <SelectItem key={dept.id} value={dept.name}>{dept.name}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                     <div className="space-y-2">
                         <Label htmlFor="positionName">Jabatan</Label>
-                        <Select name="positionName" onValueChange={setSelectedPosition}>
-                            <SelectTrigger id="positionName"><SelectValue placeholder="Pilih Jabatan" /></SelectTrigger>
+                        <Select name="positionName" onValueChange={setSelectedPosition} disabled={siteFilter === 'all'}>
+                            <SelectTrigger id="positionName"><SelectValue placeholder={siteFilter === 'all' ? "Pilih proyek dulu" : "Semua Jabatan"} /></SelectTrigger>
                             <SelectContent>
-                                {positions.map(pos => <SelectItem key={pos.id} value={pos.name}>{pos.name}</SelectItem>)}
+                                <SelectItem value="all">Semua Jabatan</SelectItem>
+                                {filteredPositions.map(pos => <SelectItem key={pos.id} value={pos.name}>{pos.name}</SelectItem>)}
                             </SelectContent>
                         </Select>
                     </div>
-                    <div className="space-y-2 md:col-span-2">
+
+                    <div className="space-y-2">
                         <Label htmlFor="employeeId">Nama Karyawan</Label>
-                        <Select name="employeeId">
-                             <SelectTrigger id="employeeId"><SelectValue placeholder="Pilih Karyawan" /></SelectTrigger>
+                        <Select name="employeeId" disabled={siteFilter === 'all'}>
+                             <SelectTrigger id="employeeId"><SelectValue placeholder={siteFilter === 'all' ? "Pilih proyek dulu" : "Pilih Karyawan"} /></SelectTrigger>
                             <SelectContent>
                                 {filteredEmployees.map(emp => <SelectItem key={emp.id} value={emp.id}>{emp.name}</SelectItem>)}
                             </SelectContent>
                         </Select>
                     </div>
-                     <div className="space-y-2 flex items-center gap-2 pt-2">
+                     <div className="space-y-2 flex items-center gap-2 pt-2 md:col-span-2">
                         <Checkbox id="hasFine" name="hasFine" checked={hasFine} onCheckedChange={(checked) => setHasFine(!!checked)} />
                         <Label htmlFor="hasFine">Ada Denda Terkait Insiden Ini?</Label>
                     </div>
