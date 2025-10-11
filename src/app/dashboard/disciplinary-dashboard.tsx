@@ -1,4 +1,5 @@
 
+
 import Link from 'next/link';
 import { getEmployees } from '@/actions/employees';
 import { getLeaveRequests } from '@/actions/leave';
@@ -11,6 +12,7 @@ import { getYear, format } from 'date-fns';
 import { getViolationRecords } from '@/actions/violations';
 import { Badge } from '@/components/ui/badge';
 import ViolationChart from './violation-chart';
+import QuickSeparationForm from './quick-separation-form';
 
 async function getDashboardData() {
     
@@ -70,6 +72,8 @@ async function getDashboardData() {
 
 
     return {
+        employees,
+        violationRecords,
         onLeave,
         active: activeEmployees,
         violationsSummary: Object.values(violationsSummary).sort((a, b) => a.project.localeCompare(b.project) || a.position.localeCompare(b.position)),
@@ -126,6 +130,8 @@ export default async function DisciplinaryDashboard({ user }: { user: User }) {
                 </Card>
             </div>
             
+            <QuickSeparationForm employees={data.employees} violations={data.violationRecords} />
+
             <ViolationChart data={data.violationHistory} />
 
             <Card>
@@ -171,4 +177,3 @@ export default async function DisciplinaryDashboard({ user }: { user: User }) {
         </div>
     );
 }
-
