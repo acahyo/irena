@@ -77,7 +77,7 @@ export type Candidate = {
   positionApplied: string;
   siteLocation?: string;
   appliedDate: Date | string;
-  status: 'Pending' | 'Interview' | 'Tes unit/alat' | 'Registrasi Karyawan' | 'Hired' | 'Rejected';
+  status: 'Menunggu' | 'Interview' | 'Tes Unit/Alat' | 'Diterima' | 'Ditolak';
   recruiterId: string;
   recruiterName: string;
   notes?: string;

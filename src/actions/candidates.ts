@@ -89,7 +89,7 @@ export async function createCandidate(data: Omit<Candidate, 'id' | 'appliedDate'
   const finalData: { [key: string]: any } = {
     ...data,
     appliedDate: serverTimestamp(),
-    status: 'Pending' as const,
+    status: 'Menunggu' as const,
   };
   
   if (data.dateOfBirth) {

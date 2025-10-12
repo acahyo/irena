@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useTransition, useEffect } from 'react';
@@ -59,12 +60,11 @@ import { getAdminSession } from '@/actions/auth';
 
 const getStatusVariant = (status: Candidate['status']) => {
   switch (status) {
-    case 'Pending': return 'secondary';
+    case 'Menunggu': return 'secondary';
     case 'Interview': return 'default';
-    case 'Tes unit/alat': return 'default';
-    case 'Registrasi Karyawan': return 'default';
-    case 'Hired': return 'default';
-    case 'Rejected': return 'destructive';
+    case 'Tes Unit/Alat': return 'default';
+    case 'Diterima': return 'default';
+    case 'Ditolak': return 'destructive';
     default: return 'outline';
   }
 };
@@ -121,7 +121,7 @@ export default function CandidatesClientPage() {
   const handleOpenDialog = (candidate: Partial<Candidate> | null = null) => {
     setEditingCandidate(candidate);
     setSelectedSite(candidate?.siteLocation || '');
-    setCurrentStatus(candidate?.status || 'Pending');
+    setCurrentStatus(candidate?.status || 'Menunggu');
     setInterviewDoc(candidate?.interviewDocUrl || null);
     setTestDoc(candidate?.testDocUrl || null);
     setDateOfBirth(candidate?.dateOfBirth ? new Date(candidate.dateOfBirth) : undefined);
@@ -246,11 +246,11 @@ export default function CandidatesClientPage() {
                   <TableCell>{format(new Date(candidate.appliedDate), 'PPP')}</TableCell>
                   <TableCell><Badge variant={getStatusVariant(candidate.status)}>{candidate.status}</Badge></TableCell>
                   <TableCell className="text-right">
-                    {candidate.status === 'Registrasi Karyawan' ? (
+                    {candidate.status === 'Diterima' ? (
                        <Button asChild size="sm">
                           <Link href={`/dashboard/employees/register?candidateId=${candidate.id}`}>
                             <UserPlus className="mr-2 h-4 w-4" />
-                            Registrasi
+                            Proses Jadi Karyawan
                           </Link>
                        </Button>
                     ) : (
@@ -372,12 +372,11 @@ export default function CandidatesClientPage() {
                         <Select name="status" value={currentStatus} onValueChange={(value) => setCurrentStatus(value as Candidate['status'])}>
                              <SelectTrigger><SelectValue /></SelectTrigger>
                              <SelectContent>
-                                <SelectItem value="Pending">Pending</SelectItem>
+                                <SelectItem value="Menunggu">Menunggu</SelectItem>
                                 <SelectItem value="Interview">Interview</SelectItem>
-                                <SelectItem value="Tes unit/alat">Tes unit/alat</SelectItem>
-                                <SelectItem value="Registrasi Karyawan">Registrasi Karyawan</SelectItem>
-                                <SelectItem value="Hired">Diterima</SelectItem>
-                                <SelectItem value="Rejected">Ditolak</SelectItem>
+                                <SelectItem value="Tes Unit/Alat">Tes Unit/Alat</SelectItem>
+                                <SelectItem value="Diterima">Diterima</SelectItem>
+                                <SelectItem value="Ditolak">Ditolak</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -395,7 +394,7 @@ export default function CandidatesClientPage() {
                         )}
                     </div>
                 )}
-                 {currentStatus === 'Tes unit/alat' && (
+                 {currentStatus === 'Tes Unit/Alat' && (
                     <div className="space-y-2 border p-3 rounded-md">
                         <Label htmlFor="testDoc" className="flex items-center gap-2">
                            <Upload className="h-4 w-4" /> Dokumen Hasil Tes
