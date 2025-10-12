@@ -319,7 +319,7 @@ export default function NewEmployeePage() {
     </div>
   );
 
-  if (!user || (user.role !== 'Administrator' && user.role !== 'HR' && user.role !== 'Rekrutmen')) {
+  if (!user || !['Administrator', 'HR', 'Rekrutmen'].includes(user.role)) {
     return (
         <Card>
             <CardHeader>

@@ -7,7 +7,7 @@ import { getSites } from '@/actions/sites';
 
 export default async function ReviewEmployeesPage() {
   const user = await getAdminSession();
-  if (!user || !['Administrator', 'HR', 'Rekrutmen'].includes(user.role)) {
+  if (!user || !['Administrator', 'HR'].includes(user.role)) {
     redirect('/dashboard');
   }
 

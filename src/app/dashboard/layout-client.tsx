@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import Link from "next/link";
@@ -70,7 +68,7 @@ const allNavItemsList = (lang: 'id' | 'en') => [
   
   // Kepegawaian
   { id: 'employees', href: "/dashboard/employees", icon: Users, label: lang === 'id' ? "Daftar Karyawan" : "Employees" },
-  { id: 'employee-register', href: "/dashboard/employees/register", icon: UserPlus, label: "Registrasi Karyawan" },
+  { id: 'employee-register', href: "/dashboard/employees/new", icon: UserPlus, label: "Registrasi Karyawan" },
   { id: 'employee-review', href: "/dashboard/employees/review", icon: UserCheckIcon, label: "Tinjau Registrasi" },
   { id: 'leave-schedule', href: "/dashboard/leave-schedule", icon: CalendarCheck, label: lang === 'id' ? "Jadwal Cuti" : "Leave Schedule" },
   { id: 'separations', href: "/dashboard/separations", icon: UserMinus, label: "Proses Resign/PHK" },
@@ -107,10 +105,6 @@ const allNavItemsList = (lang: 'id' | 'en') => [
   { id: 'driver-attendance', href: "/dashboard/driver-attendance", icon: ClipboardList, label: "Absensi Driver" },
   { id: 'pj-attendance', href: "/dashboard/pj-attendance", icon: ClipboardList, label: "Absensi PJ" },
 
-  // HSE
-  { id: 'hse', href: "/dashboard/hse", icon: ShieldCheck, label: "Report HSE" },
-  { id: 'hse-fines', href: "/dashboard/hse/fines", icon: CircleDollarSign, label: "Pengaturan Denda" },
-
   // Pengaturan & Master Data
   { id: 'department', href: "/dashboard/department", icon: Briefcase, label: lang === 'id' ? "Departemen" : "Department" },
   { id: 'position', href: "/dashboard/position", icon: WalletCards, label: lang === 'id' ? "Jabatan & Gaji" : "Position & Salary" },
@@ -122,6 +116,8 @@ const allNavItemsList = (lang: 'id' | 'en') => [
   { id: 'driver-access', href: "/dashboard/driver-access", icon: Car, label: "Hak Akses Driver" },
   { id: 'pj-access', href: "/dashboard/pj-access", icon: Contact, label: "Hak Akses PJ" },
   { id: 'settings', href: "/dashboard/settings", icon: Settings, label: lang === 'id' ? "Pengaturan" : "Settings" },
+  { id: 'hse', href: "/dashboard/hse", icon: ShieldCheck, label: "Report HSE" },
+  { id: 'hse-fines', href: "/dashboard/hse/fines", icon: CircleDollarSign, label: "Pengaturan Denda" },
 ];
 
 const staticMenuOrder: MenuOrderItem[] = [
@@ -214,11 +210,15 @@ export default function DashboardClientLayout({
     if (accessibleMenus.size > 0) {
         accessibleMenus.add('dashboard');
         // Add specific dashboards based on role
-        if (role.name === 'HR' || role.name === 'Rekrutmen') {
+        if (role.name === 'HR') {
             accessibleMenus.add('recruitment-dashboard');
             accessibleMenus.add('employees');
             accessibleMenus.add('employee-register');
             accessibleMenus.add('employee-review');
+        }
+        if (role.name === 'Rekrutmen') {
+            accessibleMenus.add('recruitment-dashboard');
+            accessibleMenus.add('employee-register');
         }
         if (role.name === 'Finance') {
             accessibleMenus.add('finance-dashboard');
