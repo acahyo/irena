@@ -263,19 +263,17 @@ export default function CandidatesClientPage() {
                   </TableCell>
                   <TableCell><Badge variant={getStatusVariant(candidate.status)}>{candidate.status}</Badge></TableCell>
                   <TableCell className="text-right">
-                    {candidate.status === 'Diterima' && (
+                    {candidate.status === 'Diterima' ? (
                         <Button asChild size="sm">
-                            <Link href={`/dashboard/employees/new?candidateId=${candidate.nik}`}>
+                            <Link href={`/dashboard/employees/register?candidateId=${candidate.nik}`}>
                                 <UserPlus className="mr-2 h-4 w-4"/> Proses
                             </Link>
                         </Button>
-                    )}
-                    {candidate.status === 'Ditolak' && (
+                    ) : candidate.status === 'Ditolak' ? (
                        <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(candidate)}>
                           <Eye className="h-4 w-4" />
                        </Button>
-                    )}
-                    {candidate.status !== 'Diterima' && candidate.status !== 'Ditolak' && (
+                    ) : (
                       <>
                         <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(candidate)}><Pencil className="h-4 w-4" /></Button>
                         <AlertDialog>
