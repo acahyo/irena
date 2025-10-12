@@ -68,6 +68,15 @@ export type Employee = {
   separationReason?: string;
 };
 
+export type CandidateStatus = 'Menunggu' | 'Interview' | 'Tes Unit/Alat' | 'Diterima' | 'Ditolak';
+
+export type CandidateStatusHistory = {
+  status: CandidateStatus;
+  date: Date | string;
+  notes?: string;
+};
+
+
 export type Candidate = {
   id: string;
   name: string;
@@ -77,7 +86,7 @@ export type Candidate = {
   positionApplied: string;
   siteLocation?: string;
   appliedDate: Date | string;
-  status: 'Menunggu' | 'Interview' | 'Tes Unit/Alat' | 'Diterima' | 'Ditolak';
+  status: CandidateStatus;
   recruiterId: string;
   recruiterName: string;
   notes?: string;
@@ -90,6 +99,7 @@ export type Candidate = {
   dateOfBirth?: Date | string;
   gender?: 'Laki-laki' | 'Perempuan';
   maritalStatus?: 'single' | 'married' | 'divorced';
+  statusHistory?: CandidateStatusHistory[];
 };
 
 export type CalendarEvent = {

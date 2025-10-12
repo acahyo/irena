@@ -42,7 +42,7 @@ import {
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { MoreHorizontal, PlusCircle, Trash2, Pencil, Loader2, UserPlus, ExternalLink, Upload, Calendar as CalendarIcon } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash2, Pencil, Loader2, UserPlus, ExternalLink, Upload, Calendar as CalendarIcon, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Candidate, Position, User, Site } from '@/lib/types';
 import { getCandidates, createCandidate, updateCandidate, deleteCandidate } from '@/actions/candidates';
@@ -57,6 +57,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getAdminSession } from '@/actions/auth';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const getStatusVariant = (status: Candidate['status']) => {
   switch (status) {
@@ -288,7 +289,8 @@ export default function CandidatesClientPage() {
                 <DialogDescription>Isi detail informasi calon karyawan.</DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit}>
-              <div className="space-y-6 max-h-[90vh] overflow-y-auto p-1">
+              <ScrollArea className="max-h-[70vh] p-1">
+              <div className="space-y-6 p-4">
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label htmlFor="nik">NIK</Label>
@@ -367,18 +369,36 @@ export default function CandidatesClientPage() {
                 </div>
 
                 {editingCandidate?.id && (
-                    <div className="space-y-2">
-                        <Label htmlFor="status">Status</Label>
-                        <Select name="status" value={currentStatus} onValueChange={(value) => setCurrentStatus(value as Candidate['status'])}>
-                             <SelectTrigger><SelectValue /></SelectTrigger>
-                             <SelectContent>
-                                <SelectItem value="Menunggu">Menunggu</SelectItem>
-                                <SelectItem value="Interview">Interview</SelectItem>
-                                <SelectItem value="Tes Unit/Alat">Tes Unit/Alat</SelectItem>
-                                <SelectItem value="Diterima">Diterima</SelectItem>
-                                <SelectItem value="Ditolak">Ditolak</SelectItem>
-                            </SelectContent>
-                        </Select>
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="status">Status</Label>
+                            <Select name="status" value={currentStatus} onValueChange={(value) => setCurrentStatus(value as Candidate['status'])}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Menunggu">Menunggu</SelectItem>
+                                    <SelectItem value="Interview">Interview</SelectItem>
+                                    <SelectItem value="Tes Unit/Alat">Tes Unit/Alat</SelectItem>
+                                    <SelectItem value="Diterima">Diterima</SelectItem>
+                                    <SelectItem value="Ditolak">Ditolak</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        {editingCandidate.statusHistory && editingCandidate.statusHistory.length > 0 && (
+                            <div className="space-y-2">
+                                <Label>Riwayat Status</Label>
+                                <div className="space-y-2 rounded-md border p-3">
+                                    {editingCandidate.statusHistory.map((item, index) => (
+                                        <div key={index} className="flex items-center justify-between text-sm">
+                                            <div className="flex items-center gap-2">
+                                                <Clock className="h-4 w-4 text-muted-foreground" />
+                                                <Badge variant={getStatusVariant(item.status)}>{item.status}</Badge>
+                                            </div>
+                                            <span className="text-muted-foreground">{format(new Date(item.date), 'dd MMM yyyy')}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
                 {currentStatus === 'Interview' && (
@@ -412,6 +432,7 @@ export default function CandidatesClientPage() {
                     <Input id="notes" name="notes" defaultValue={editingCandidate?.notes || ''} />
                 </div>
               </div>
+              </ScrollArea>
 
                  <DialogFooter>
                     <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Batal</Button>

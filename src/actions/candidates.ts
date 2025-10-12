@@ -12,10 +12,10 @@ import {
   Timestamp,
   query,
   orderBy,
-  serverTimestamp,
   getDoc,
+  arrayUnion,
 } from 'firebase/firestore';
-import type { Candidate } from '@/lib/types';
+import type { Candidate, CandidateStatusHistory } from '@/lib/types';
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 
 async function uploadFileAndGetURL(base64Data: string, path: string): Promise<{ downloadURL: string; fileName: string; }> {
@@ -44,11 +44,16 @@ export async function getCandidates(): Promise<Candidate[]> {
     const candidates: Candidate[] = [];
     querySnapshot.forEach((doc) => {
       const data = doc.data();
+      const statusHistory = (data.statusHistory || []).map((item: any) => ({
+        ...item,
+        date: (item.date as Timestamp).toDate(),
+      }));
       candidates.push({
         id: doc.id,
         ...data,
         appliedDate: (data.appliedDate as Timestamp).toDate(),
         dateOfBirth: data.dateOfBirth ? (data.dateOfBirth as Timestamp).toDate() : undefined,
+        statusHistory,
       } as Candidate);
     });
     return candidates;
@@ -65,11 +70,17 @@ export async function getCandidateById(id: string): Promise<Candidate | null> {
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
             const data = docSnap.data();
+            const statusHistory = (data.statusHistory || []).map((item: any) => ({
+                ...item,
+                date: (item.date as Timestamp).toDate(),
+            }));
+
             return { 
                 id: docSnap.id, 
                 ...data,
                 appliedDate: (data.appliedDate as Timestamp).toDate(),
                 dateOfBirth: data.dateOfBirth ? (data.dateOfBirth as Timestamp).toDate() : undefined,
+                statusHistory,
             } as Candidate;
         }
         return null;
@@ -80,16 +91,23 @@ export async function getCandidateById(id: string): Promise<Candidate | null> {
 }
 
 // Create a new candidate using NIK as document ID
-export async function createCandidate(data: Omit<Candidate, 'id' | 'appliedDate' | 'status'>): Promise<string> {
+export async function createCandidate(data: Omit<Candidate, 'id' | 'appliedDate' | 'status' | 'statusHistory'>): Promise<string> {
   if (!data.nik) {
     throw new Error('NIK is required to create a candidate.');
   }
   const candidateId = data.nik;
+  const now = new Date();
+
+  const initialStatus: CandidateStatusHistory = {
+      status: 'Menunggu',
+      date: now,
+  };
 
   const finalData: { [key: string]: any } = {
     ...data,
-    appliedDate: serverTimestamp(),
+    appliedDate: now,
     status: 'Menunggu' as const,
+    statusHistory: [initialStatus],
   };
   
   if (data.dateOfBirth) {
@@ -106,11 +124,26 @@ export async function createCandidate(data: Omit<Candidate, 'id' | 'appliedDate'
 // Update an existing candidate
 export async function updateCandidate(id: string, updates: Partial<Omit<Candidate, 'id' | 'appliedDate'>>): Promise<void> {
   const docRef = doc(db, 'candidates', id);
+  const existingDoc = await getDoc(docRef);
+  if (!existingDoc.exists()) {
+      throw new Error("Candidate not found");
+  }
+  const existingData = existingDoc.data() as Candidate;
+
   const updateData: { [key: string]: any } = { ...updates };
   
   if (updateData.dateOfBirth) {
     updateData.dateOfBirth = new Date(updateData.dateOfBirth);
   }
+
+  if (updates.status && updates.status !== existingData.status) {
+    const newStatusEntry: CandidateStatusHistory = {
+        status: updates.status,
+        date: new Date(),
+    };
+    updateData.statusHistory = arrayUnion(newStatusEntry);
+  }
+
 
   if (updateData.interviewDocUrl && (updateData.interviewDocUrl as string).startsWith('data:')) {
     const { downloadURL, fileName } = await uploadFileAndGetURL(updateData.interviewDocUrl, `interview-${id}`);
