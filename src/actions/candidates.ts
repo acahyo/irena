@@ -50,7 +50,7 @@ export async function createCandidate(data: Omit<Candidate, 'id' | 'appliedDate'
 }
 
 // Update an existing candidate
-export async function updateCandidate(id: string, updates: Partial<Omit<Candidate, 'id'>>): Promise<void> {
+export async function updateCandidate(id: string, updates: Partial<Omit<Candidate, 'id' | 'appliedDate'>>): Promise<void> {
   const docRef = doc(db, 'candidates', id);
   await updateDoc(docRef, updates);
 }

@@ -75,6 +75,7 @@ export type Candidate = {
   email?: string;
   address: string;
   positionApplied: string;
+  siteLocation?: string;
   appliedDate: Date | string;
   status: 'Pending' | 'Interview' | 'Hired' | 'Rejected';
   recruiterId: string;

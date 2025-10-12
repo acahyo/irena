@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useTransition } from 'react';
+import { useState, useMemo, useTransition, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -42,11 +42,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MoreHorizontal, PlusCircle, Trash2, Pencil, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import type { Candidate, Position, User } from '@/lib/types';
+import type { Candidate, Position, User, Site } from '@/lib/types';
 import { createCandidate, updateCandidate, deleteCandidate } from '@/actions/candidates';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { getSites } from '@/actions/sites';
 
 const getStatusVariant = (status: Candidate['status']) => {
   switch (status) {
@@ -73,11 +75,30 @@ export default function CandidatesClientPage({
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const router = useRouter();
+
+  const [sites, setSites] = useState<Site[]>([]);
+  const [selectedSite, setSelectedSite] = useState('');
+  
+  useEffect(() => {
+    const fetchSitesData = async () => {
+        const sitesData = await getSites();
+        setSites(sitesData);
+    };
+    fetchSitesData();
+  }, []);
   
   const handleOpenDialog = (candidate: Partial<Candidate> | null = null) => {
     setEditingCandidate(candidate);
+    setSelectedSite(candidate?.siteLocation || '');
     setIsDialogOpen(true);
   };
+
+  const filteredPositions = useMemo(() => {
+    if (!selectedSite) return positions.filter(p => !p.projectName); // Only general positions if no site selected
+    const site = sites.find(s => s.name === selectedSite);
+    if (!site) return positions.filter(p => !p.projectName);
+    return positions.filter(p => !p.projectName || p.projectName === site.name);
+  }, [positions, selectedSite, sites]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -149,7 +170,10 @@ export default function CandidatesClientPage({
                     <div className="text-sm">{candidate.phone}</div>
                     <div className="text-xs text-muted-foreground">{candidate.email}</div>
                   </TableCell>
-                  <TableCell>{candidate.positionApplied}</TableCell>
+                  <TableCell>
+                    {candidate.positionApplied}
+                    {candidate.siteLocation && <Badge variant="outline" className="ml-2">{candidate.siteLocation}</Badge>}
+                  </TableCell>
                   <TableCell>{format(new Date(candidate.appliedDate), 'PPP')}</TableCell>
                   <TableCell><Badge variant={getStatusVariant(candidate.status)}>{candidate.status}</Badge></TableCell>
                   <TableCell className="text-right">
@@ -203,11 +227,21 @@ export default function CandidatesClientPage({
                     <Input id="address" name="address" defaultValue={editingCandidate?.address} required />
                 </div>
                  <div className="space-y-2">
-                    <Label htmlFor="positionApplied">Posisi yang Dilamar</Label>
-                    <Select name="positionApplied" defaultValue={editingCandidate?.positionApplied}>
-                        <SelectTrigger><SelectValue placeholder="Pilih Posisi" /></SelectTrigger>
+                    <Label htmlFor="siteLocation">Lokasi Proyek</Label>
+                    <Select name="siteLocation" value={selectedSite} onValueChange={setSelectedSite}>
+                        <SelectTrigger><SelectValue placeholder="Pilih Lokasi" /></SelectTrigger>
                         <SelectContent>
-                            {positions.map(pos => <SelectItem key={pos.id} value={pos.name}>{pos.name}</SelectItem>)}
+                            {sites.map(site => <SelectItem key={site.id} value={site.name}>{site.name}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                 </div>
+
+                 <div className="space-y-2">
+                    <Label htmlFor="positionApplied">Posisi yang Dilamar</Label>
+                    <Select name="positionApplied" defaultValue={editingCandidate?.positionApplied} disabled={!selectedSite}>
+                        <SelectTrigger><SelectValue placeholder={!selectedSite ? "Pilih lokasi dulu" : "Pilih Posisi"} /></SelectTrigger>
+                        <SelectContent>
+                            {filteredPositions.map(pos => <SelectItem key={pos.id} value={pos.name}>{pos.name}</SelectItem>)}
                         </SelectContent>
                     </Select>
                 </div>
