@@ -6,7 +6,7 @@ import {
   collection,
   getDocs,
   doc,
-  addDoc,
+  setDoc,
   updateDoc,
   deleteDoc,
   Timestamp,
@@ -57,8 +57,13 @@ export async function getCandidates(): Promise<Candidate[]> {
   }
 }
 
-// Create a new candidate
+// Create a new candidate using NIK as document ID
 export async function createCandidate(data: Omit<Candidate, 'id' | 'appliedDate' | 'status'>): Promise<string> {
+  if (!data.nik) {
+    throw new Error('NIK is required to create a candidate.');
+  }
+  const candidateId = data.nik;
+
   const finalData: { [key: string]: any } = {
     ...data,
     appliedDate: serverTimestamp(),
@@ -69,9 +74,12 @@ export async function createCandidate(data: Omit<Candidate, 'id' | 'appliedDate'
     finalData.dateOfBirth = new Date(data.dateOfBirth);
   }
 
-  const docRef = await addDoc(collection(db, 'candidates'), finalData);
-  return docRef.id;
+  const docRef = doc(db, 'candidates', candidateId);
+  await setDoc(docRef, finalData);
+
+  return candidateId;
 }
+
 
 // Update an existing candidate
 export async function updateCandidate(id: string, updates: Partial<Omit<Candidate, 'id' | 'appliedDate'>>): Promise<void> {

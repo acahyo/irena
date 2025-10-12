@@ -283,7 +283,7 @@ export default function CandidatesClientPage({
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label htmlFor="nik">NIK</Label>
-                        <Input id="nik" name="nik" defaultValue={editingCandidate?.nik} required />
+                        <Input id="nik" name="nik" defaultValue={editingCandidate?.nik} required disabled={!!editingCandidate?.id} />
                     </div>
                      <div className="space-y-2">
                         <Label htmlFor="name">Nama Lengkap</Label>
@@ -379,7 +379,7 @@ export default function CandidatesClientPage({
                            <Upload className="h-4 w-4" /> Dokumen Hasil Interview
                         </Label>
                         <Input id="interviewDoc" type="file" onChange={(e) => handleFileChange(e, setInterviewDoc)} />
-                        {editingCandidate?.interviewDocUrl && (
+                        {editingCandidate?.interviewDocUrl && !interviewDoc?.startsWith('data:') && (
                              <a href={editingCandidate.interviewDocUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
                                 <ExternalLink className="h-3 w-3" /> Lihat file yang sudah diunggah
                             </a>
@@ -392,7 +392,7 @@ export default function CandidatesClientPage({
                            <Upload className="h-4 w-4" /> Dokumen Hasil Tes
                         </Label>
                         <Input id="testDoc" type="file" onChange={(e) => handleFileChange(e, setTestDoc)} />
-                         {editingCandidate?.testDocUrl && (
+                         {editingCandidate?.testDocUrl && !testDoc?.startsWith('data:') && (
                              <a href={editingCandidate.testDocUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
                                 <ExternalLink className="h-3 w-3" /> Lihat file yang sudah diunggah
                             </a>
