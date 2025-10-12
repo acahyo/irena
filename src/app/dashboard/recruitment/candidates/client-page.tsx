@@ -42,7 +42,7 @@ import {
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { MoreHorizontal, PlusCircle, Trash2, Pencil, Loader2, UserPlus, ExternalLink, Upload, Calendar as CalendarIcon, Clock, Eye, CheckCheck } from 'lucide-react';
+import { PlusCircle, Trash2, Pencil, Loader2, UserPlus, ExternalLink, Upload, Calendar as CalendarIcon, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Candidate, Position, User, Site } from '@/lib/types';
 import { createCandidate, updateCandidate, deleteCandidate } from '@/actions/candidates';
@@ -246,11 +246,29 @@ export default function CandidatesClientPage({
                   <TableCell><Badge variant={getStatusVariant(candidate.status)}>{candidate.status}</Badge></TableCell>
                   <TableCell className="text-right">
                     {candidate.status === 'Diterima' ? (
-                       <Button variant="default" size="sm" asChild>
-                          <Link href={`/dashboard/employees/register?candidateId=${candidate.nik}`}>
+                       <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="default" size="sm">
                               <UserPlus className="mr-2 h-4 w-4"/> Proses
-                          </Link>
-                      </Button>
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Proses Kandidat Menjadi Karyawan?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Anda akan diarahkan ke halaman registrasi karyawan dengan data kandidat ini.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Batal</AlertDialogCancel>
+                              <AlertDialogAction asChild>
+                                <Link href={`/dashboard/employees/register?candidateId=${candidate.nik}`}>
+                                  Lanjutkan
+                                </Link>
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                     ) : (candidate.status === 'Diproses' || candidate.status === 'Ditolak') ? (
                        <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(candidate)}>
                             <Eye className="h-4 w-4" />
