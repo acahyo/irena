@@ -72,7 +72,7 @@ const allNavItemsList = (lang: 'id' | 'en') => [
   // Kepegawaian
   { id: 'candidate-data', href: "/dashboard/recruitment/candidates", icon: UserSquare2, label: "Data Kandidat"},
   { id: 'employees', href: "/dashboard/employees", icon: Users, label: lang === 'id' ? "Daftar Karyawan" : "Employees" },
-  { id: 'employee-register', href: "/dashboard/employees/new", icon: UserPlus, label: "Registrasi Karyawan" },
+  { id: 'employee-register', href: "/dashboard/employees/register", icon: UserPlus, label: "Registrasi Karyawan" },
   { id: 'employee-review', href: "/dashboard/employees/review", icon: UserCheckIcon, label: "Tinjau Registrasi" },
   { id: 'leave-schedule', href: "/dashboard/leave-schedule", icon: CalendarCheck, label: lang === 'id' ? "Jadwal Cuti" : "Leave Schedule" },
   { id: 'separations', href: "/dashboard/separations", icon: UserMinus, label: "Proses Resign/PHK" },
