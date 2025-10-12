@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, useTransition, useEffect } from 'react';
@@ -45,18 +44,15 @@ import { Label } from '@/components/ui/label';
 import { MoreHorizontal, PlusCircle, Trash2, Pencil, Loader2, UserPlus, ExternalLink, Upload, Calendar as CalendarIcon, Clock, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Candidate, Position, User, Site } from '@/lib/types';
-import { getCandidates, createCandidate, updateCandidate, deleteCandidate } from '@/actions/candidates';
-import { getPositions } from '@/actions/positions';
+import { createCandidate, updateCandidate, deleteCandidate } from '@/actions/candidates';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { getSites } from '@/actions/sites';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getAdminSession } from '@/actions/auth';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 const getStatusVariant = (status: Candidate['status']) => {
@@ -70,12 +66,21 @@ const getStatusVariant = (status: Candidate['status']) => {
   }
 };
 
-export default function CandidatesClientPage() {
-  const [candidates, setCandidates] = useState<Candidate[]>([]);
-  const [positions, setPositions] = useState<Position[]>([]);
-  const [sites, setSites] = useState<Site[]>([]);
-  const [user, setUser] = useState<User | null>(null);
-  const [pageLoading, setPageLoading] = useState(true);
+export default function CandidatesClientPage({
+  initialUser,
+  initialCandidates,
+  initialPositions,
+  initialSites,
+}: {
+  initialUser: User | null;
+  initialCandidates: Candidate[];
+  initialPositions: Position[];
+  initialSites: Site[];
+}) {
+  const [candidates, setCandidates] = useState<Candidate[]>(initialCandidates);
+  const [positions] = useState<Position[]>(initialPositions);
+  const [sites] = useState<Site[]>(initialSites);
+  const [user] = useState<User | null>(initialUser);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCandidate, setEditingCandidate] = useState<Partial<Candidate> | null>(null);
@@ -89,35 +94,6 @@ export default function CandidatesClientPage() {
   const [interviewDoc, setInterviewDoc] = useState<string | null>(null);
   const [testDoc, setTestDoc] = useState<string | null>(null);
   const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>();
-
-  useEffect(() => {
-    const fetchInitialData = async () => {
-        setPageLoading(true);
-        try {
-            const [sessionUser, candidatesData, positionsData, sitesData] = await Promise.all([
-                getAdminSession(),
-                getCandidates(),
-                getPositions(),
-                getSites()
-            ]);
-            
-            if (!sessionUser) {
-              router.push('/dashboard');
-              return;
-            }
-            setUser(sessionUser);
-
-            setCandidates(candidatesData);
-            setPositions(positionsData);
-            setSites(sitesData);
-        } catch (error) {
-            toast({ variant: "destructive", title: "Error", description: "Gagal memuat data kandidat."});
-        } finally {
-            setPageLoading(false);
-        }
-    };
-    fetchInitialData();
-  }, [router, toast]);
   
   const handleOpenDialog = (candidate: Partial<Candidate> | null = null) => {
     setEditingCandidate(candidate);
@@ -172,8 +148,7 @@ export default function CandidatesClientPage() {
                 toast({ title: 'Sukses!', description: 'Kandidat baru berhasil ditambahkan.' });
             }
             setIsDialogOpen(false);
-            const updatedCandidates = await getCandidates();
-            setCandidates(updatedCandidates);
+            router.refresh();
         } catch (error) {
             toast({ variant: 'destructive', title: 'Error', description: 'Gagal menyimpan data kandidat.' });
         }
@@ -192,7 +167,7 @@ export default function CandidatesClientPage() {
       });
   };
   
-  if (pageLoading || !user) {
+  if (!user) {
       return (
           <div className="space-y-6">
               <Card>
@@ -264,15 +239,11 @@ export default function CandidatesClientPage() {
                   <TableCell><Badge variant={getStatusVariant(candidate.status)}>{candidate.status}</Badge></TableCell>
                   <TableCell className="text-right">
                     {candidate.status === 'Diterima' ? (
-                        <Button asChild size="sm">
-                            <Link href={`/dashboard/employees/register?candidateId=${candidate.nik}`}>
+                        <Button asChild size="sm" variant="default">
+                           <Link href={`/dashboard/employees/register?candidateId=${candidate.nik}`}>
                                 <UserPlus className="mr-2 h-4 w-4"/> Proses
                             </Link>
                         </Button>
-                    ) : candidate.status === 'Ditolak' ? (
-                       <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(candidate)}>
-                          <Eye className="h-4 w-4" />
-                       </Button>
                     ) : (
                       <>
                         <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(candidate)}><Pencil className="h-4 w-4" /></Button>
