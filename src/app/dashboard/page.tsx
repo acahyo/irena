@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Users, CalendarOff, UserCheck, Clock, UserX, LogOut, CircleSlash, ListChecks, UserRound, AlertOctagon } from 'lucide-react';
+import { Users, CalendarOff, UserCheck, Clock, UserX, LogOut, CircleSlash, ListChecks, UserRound, AlertOctagon, UserPlus } from 'lucide-react';
 import { getEmployees } from '@/actions/employees';
 import { getLeaveRequests } from '@/actions/leave';
 import type { Employee, ViolationRecord } from '@/lib/types';
@@ -32,22 +32,25 @@ import FinanceDashboard from './finance-dashboard';
 import HseDashboard from './hse-dashboard';
 import DisciplinaryDashboard from './disciplinary-dashboard';
 import QuickEmployeeSearch from './quick-employee-search';
+import RecruitmentDashboard from './recruitment-dashboard';
 
 
 async function getDashboardData() {
+    const user = await getAdminSession();
+    if (!user) return null;
+
+    const siteIdsForFilter = (user.role === 'HR' || user.role === 'Administrator') ? undefined : user.siteIds;
+
     const [allEmployees, allLeaveRequests, violationRecords] = await Promise.all([
-        getEmployees(), 
+        getEmployees({ siteIds: siteIdsForFilter }), 
         getLeaveRequests({}), 
         getViolationRecords()
     ]);
-    
-    // For general stats, use all employees fetched
-    const filteredEmployees = allEmployees;
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const filteredEmployeeIds = new Set(filteredEmployees.map(e => e.id));
+    const filteredEmployeeIds = new Set(allEmployees.map(e => e.id));
 
     const approvedLeave = allLeaveRequests.filter(
         (req) =>
@@ -57,7 +60,7 @@ async function getDashboardData() {
             new Date(req.endDate) >= today
     );
     
-    const employeesByProject = filteredEmployees
+    const employeesByProject = allEmployees
         .filter(emp => emp.employeeStatus === 'active')
         .reduce((acc, emp) => {
             const project = emp.siteLocation || 'Unassigned';
@@ -82,7 +85,7 @@ async function getDashboardData() {
     })).sort((a,b) => a.projectName.localeCompare(b.projectName));
 
 
-    const employeesByStatus = filteredEmployees.reduce((acc, emp) => {
+    const employeesByStatus = allEmployees.reduce((acc, emp) => {
         const status = emp.employeeStatus || 'active';
         if (acc[status as keyof typeof acc]) {
             acc[status as keyof typeof acc]++;
@@ -146,7 +149,7 @@ async function getDashboardData() {
     return {
         allEmployees, // Pass all employees for the search component
         violationRecords, // Pass all violations for the search component
-        totalEmployees: filteredEmployees.length,
+        totalEmployees: allEmployees.length,
         employeesOnLeave: approvedLeave.length,
         employeesByPosition,
         employeesByStatus: employeesByStatus,
@@ -165,6 +168,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
 
     if (user.role === 'HSE') {
         return <HseDashboard user={user} />;
+    }
+    
+    if (user.role === 'HR') {
+        return <RecruitmentDashboard user={user} />;
     }
 
     if (user.role === 'Finance') {
@@ -191,11 +198,11 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
         return <AttendanceAdminDashboard user={user} />;
     }
     
-    const [stats, settings] = await Promise.all([
-        getDashboardData(),
-        getSettings()
-    ]);
+    const stats = await getDashboardData();
+    const settings = await getSettings();
     
+    if (!stats) return null;
+
     const lang = settings.language || 'id';
 
     const T = {
@@ -208,6 +215,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
         inactive: lang === 'id' ? 'Non-Aktif' : 'Inactive',
         resign: lang === 'id' ? 'Resign' : 'Resigned',
         phk: lang === 'id' ? 'PHK' : 'Terminated',
+        pendingRegistrations: lang === 'id' ? 'Pendaftaran Tertunda' : 'Pending Registrations',
         employeesByProject: lang === 'id' ? 'Karyawan Berdasarkan Proyek' : 'Employees by Project',
         no: lang === 'id' ? 'No' : 'No',
         project: lang === 'id' ? 'Proyek' : 'Project',
@@ -276,9 +284,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium">{T.employeeStatus}</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-3 pt-2">
+                    <CardContent className="space-y-2 pt-2">
                        <StatusItem icon={<UserCheck className="h-4 w-4 text-green-500" />} label={T.active} value={stats.employeesByStatus.active} color="bg-green-100 text-green-800" />
-                       <StatusItem icon={<UserX className="h-4 w-4 text-yellow-500" />} label={T.inactive} value={stats.employeesByStatus.nonaktif} color="bg-yellow-100 text-yellow-800" />
+                       <StatusItem icon={<UserPlus className="h-4 w-4 text-yellow-500" />} label={T.pendingRegistrations} value={stats.employeesByStatus.pending} color="bg-yellow-100 text-yellow-800" />
                        <StatusItem icon={<LogOut className="h-4 w-4 text-blue-500" />} label={T.resign} value={stats.employeesByStatus.resign} color="bg-blue-100 text-blue-800" />
                        <StatusItem icon={<CircleSlash className="h-4 w-4 text-red-500" />} label={T.phk} value={stats.employeesByStatus.phk} color="bg-red-100 text-red-800" />
                     </CardContent>

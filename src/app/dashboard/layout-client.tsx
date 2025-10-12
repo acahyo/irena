@@ -63,6 +63,7 @@ import { logout } from "@/actions/auth";
 
 const allNavItemsList = (lang: 'id' | 'en') => [
   { id: 'dashboard', href: "/dashboard", icon: LayoutDashboard, label: lang === 'id' ? "Dasbor" : "Dashboard", exact: true },
+  { id: 'recruitment-dashboard', href: "/dashboard/recruitment", icon: UserPlus, label: "Dasbor Rekrutmen" },
   { id: 'finance-dashboard', href: "/dashboard/finance-dashboard", icon: Landmark, label: "Dasbor Keuangan" },
   { id: 'hse-dashboard', href: "/dashboard/hse", icon: ShieldCheck, label: "Dasbor HSE" },
   { id: 'disciplinary-dashboard', href: "/dashboard/disciplinary-dashboard", icon: UserCog, label: "Dasbor Disipliner" },
@@ -125,6 +126,7 @@ const allNavItemsList = (lang: 'id' | 'en') => [
 
 const staticMenuOrder: MenuOrderItem[] = [
     { id: 'dashboard' },
+    { id: 'recruitment-dashboard' },
     { id: 'finance-dashboard' },
     { id: 'hse-dashboard' },
     { id: 'disciplinary-dashboard' },
@@ -211,7 +213,10 @@ export default function DashboardClientLayout({
     // Ensure dashboard is always accessible if a user has any other menu access
     if (accessibleMenus.size > 0) {
         accessibleMenus.add('dashboard');
-        // Add finance dashboard for finance role
+        // Add specific dashboards based on role
+        if (role.name === 'HR') {
+            accessibleMenus.add('recruitment-dashboard');
+        }
         if (role.name === 'Finance') {
             accessibleMenus.add('finance-dashboard');
         }
