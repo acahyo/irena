@@ -164,11 +164,11 @@ export async function createEmployee(employee: Partial<Employee>, actorRole?: st
     employeeData.password = createHash('md5').update('irena@2025').digest('hex');
 
     // Set employee status based on actor's role
-    if (actorRole === 'Admin Proyek') {
-        employeeData.employeeStatus = 'pending';
+    if (actorRole === 'Administrator' || actorRole === 'HR') {
+        employeeData.employeeStatus = employee.employeeStatus || 'active';
     } else {
-        // Default to active if no role or other roles
-        employeeData.employeeStatus = 'active';
+        // Default to pending for other roles like Admin Proyek, Rekrutmen
+        employeeData.employeeStatus = 'pending';
     }
 
 
