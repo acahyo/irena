@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ArrowLeft, Calendar as CalendarIcon, Upload, Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -33,9 +33,7 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { createEmployee } from '@/actions/employees';
-import { getCandidates } from '@/actions/candidates';
 import type { Employee, Position, Site, User, Candidate } from '@/lib/types';
-import { useUser } from '@/contexts/user-context';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getPositions } from '@/actions/positions';
 import { getSites } from '@/actions/sites';
@@ -45,9 +43,8 @@ type SelectedPosition = {
     name: string;
 };
 
-export default function RegisterEmployeeClientPage({ user }: { user: User }) {
+export default function RegisterEmployeeClientPage({ user, candidate }: { user: User, candidate?: Candidate }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { toast } = useToast();
   
   const [loading, setLoading] = useState(false);
@@ -55,7 +52,6 @@ export default function RegisterEmployeeClientPage({ user }: { user: User }) {
 
   const [positions, setPositions] = useState<Position[]>([]);
   const [sites, setSites] = useState<Site[]>([]);
-  const [candidate, setCandidate] = useState<Candidate | null>(null);
 
   const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>();
   
@@ -68,29 +64,24 @@ export default function RegisterEmployeeClientPage({ user }: { user: User }) {
   const [siteLocation, setSiteLocation] = useState('');
 
   useEffect(() => {
-    const candidateId = searchParams.get('candidateId');
     const fetchData = async () => {
       setPageLoading(true);
       try {
-        const [pos, siteData, allCandidates] = await Promise.all([
+        const [pos, siteData] = await Promise.all([
           getPositions(),
           getSites(),
-          candidateId ? getCandidates() : [],
         ]);
         setPositions(pos);
         setSites(siteData);
-        if (candidateId) {
-          const foundCandidate = allCandidates.find(c => c.id === candidateId);
-          if (foundCandidate) {
-            setCandidate(foundCandidate);
-            setEmployeeName(foundCandidate.name);
-            setSiteLocation(foundCandidate.siteLocation || '');
-            const initialPosition = pos.find(p => p.name === foundCandidate.positionApplied);
-            if (initialPosition) {
-              setSelectedPositions([{ id: initialPosition.id, name: initialPosition.name }]);
-            }
-          } else {
-            toast({ variant: 'destructive', title: 'Error', description: 'Candidate not found.' });
+        if (candidate) {
+          setEmployeeName(candidate.name);
+          setSiteLocation(candidate.siteLocation || '');
+          if (candidate.dateOfBirth) {
+            setDateOfBirth(new Date(candidate.dateOfBirth));
+          }
+          const initialPosition = pos.find(p => p.name === candidate.positionApplied);
+          if (initialPosition) {
+            setSelectedPositions([{ id: initialPosition.id, name: initialPosition.name }]);
           }
         }
       } catch (error) {
@@ -104,7 +95,7 @@ export default function RegisterEmployeeClientPage({ user }: { user: User }) {
       }
     };
     fetchData();
-  }, [searchParams, toast]);
+  }, [candidate, toast]);
   
   const handleSiteChange = (value: string) => {
     setSiteLocation(value);
@@ -323,7 +314,7 @@ export default function RegisterEmployeeClientPage({ user }: { user: User }) {
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="nik">NIK</Label>
-                        <Input id="nik" name="nik" placeholder="e.g. 3201..." required defaultValue={candidate?.phone || ''} />
+                        <Input id="nik" name="nik" placeholder="e.g. 3201..." required defaultValue={candidate?.nik || ''} />
                     </div>
                     <div className="space-y-2 md:col-span-2">
                         <Label htmlFor="name">Nama Lengkap</Label>
@@ -331,7 +322,7 @@ export default function RegisterEmployeeClientPage({ user }: { user: User }) {
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="placeOfBirth">Tempat Lahir</Label>
-                        <Input id="placeOfBirth" name="placeOfBirth" placeholder="e.g. Jakarta" required />
+                        <Input id="placeOfBirth" name="placeOfBirth" placeholder="e.g. Jakarta" defaultValue={candidate?.placeOfBirth || ''} required />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="dateOfBirth">Tanggal Lahir</Label>
@@ -339,7 +330,7 @@ export default function RegisterEmployeeClientPage({ user }: { user: User }) {
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="gender">Jenis Kelamin</Label>
-                        <Select name="gender">
+                        <Select name="gender" defaultValue={candidate?.gender}>
                             <SelectTrigger id="gender"><SelectValue placeholder="Pilih Jenis Kelamin" /></SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="Laki-laki">Laki-laki</SelectItem>
@@ -349,7 +340,7 @@ export default function RegisterEmployeeClientPage({ user }: { user: User }) {
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="maritalStatus">Status Perkawinan</Label>
-                        <Select name="maritalStatus">
+                        <Select name="maritalStatus" defaultValue={candidate?.maritalStatus}>
                             <SelectTrigger id="maritalStatus"><SelectValue placeholder="Select status" /></SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="single">Lajang</SelectItem>
