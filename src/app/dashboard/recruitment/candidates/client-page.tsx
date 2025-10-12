@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, useTransition, useEffect } from 'react';
@@ -227,8 +226,8 @@ export default function CandidatesClientPage() {
                 <TableHead>Nama</TableHead>
                 <TableHead>Kontak</TableHead>
                 <TableHead>Posisi Dilamar</TableHead>
-                <TableHead>Tanggal Melamar</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Riwayat Status</TableHead>
+                <TableHead>Status Saat Ini</TableHead>
                 <TableHead className="text-right">Aksi</TableHead>
               </TableRow>
             </TableHeader>
@@ -244,7 +243,23 @@ export default function CandidatesClientPage() {
                     {candidate.positionApplied}
                     {candidate.siteLocation && <Badge variant="outline" className="ml-2">{candidate.siteLocation}</Badge>}
                   </TableCell>
-                  <TableCell>{format(new Date(candidate.appliedDate), 'PPP')}</TableCell>
+                   <TableCell>
+                    <div className="flex flex-col gap-1">
+                      {candidate.statusHistory && candidate.statusHistory.length > 0 ? (
+                        candidate.statusHistory
+                          .slice()
+                          .sort((a, b) => new Date(b.date as string).getTime() - new Date(a.date as string).getTime())
+                          .map((historyItem, index) => (
+                            <div key={index} className="flex items-center gap-2 text-xs">
+                              <Badge variant={getStatusVariant(historyItem.status)} className="w-24 justify-center">{historyItem.status}</Badge>
+                              <span className="text-muted-foreground">{format(new Date(historyItem.date), 'dd/MM/yy')}</span>
+                            </div>
+                          ))
+                      ) : (
+                        <span className="text-xs text-muted-foreground">No history</span>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell><Badge variant={getStatusVariant(candidate.status)}>{candidate.status}</Badge></TableCell>
                   <TableCell className="text-right">
                     {candidate.status === 'Diterima' ? (
