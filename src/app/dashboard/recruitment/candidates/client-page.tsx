@@ -81,6 +81,7 @@ export default function CandidatesClientPage({
   const [positions] = useState<Position[]>(initialPositions);
   const [sites] = useState<Site[]>(initialSites);
   const [user] = useState<User | null>(initialUser);
+  const [isClient, setIsClient] = useState(false);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCandidate, setEditingCandidate] = useState<Partial<Candidate> | null>(null);
@@ -94,6 +95,10 @@ export default function CandidatesClientPage({
   const [interviewDoc, setInterviewDoc] = useState<string | null>(null);
   const [testDoc, setTestDoc] = useState<string | null>(null);
   const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>();
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
   
   const handleOpenDialog = (candidate: Partial<Candidate> | null = null) => {
     setEditingCandidate(candidate);
@@ -159,7 +164,7 @@ export default function CandidatesClientPage({
       startTransition(async () => {
           try {
               await deleteCandidate(id);
-              setCandidates(prev => prev.filter(c => c.id !== id));
+              router.refresh();
               toast({ title: 'Sukses!', description: 'Data kandidat telah dihapus.' });
           } catch(error) {
               toast({ variant: 'destructive', title: 'Error', description: 'Gagal menghapus data kandidat.' });
@@ -208,7 +213,7 @@ export default function CandidatesClientPage({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {candidates.map((candidate) => (
+              {initialCandidates.map((candidate) => (
                 <TableRow key={candidate.id}>
                   <TableCell className="font-medium">{candidate.name}</TableCell>
                   <TableCell>
@@ -228,7 +233,7 @@ export default function CandidatesClientPage({
                           .map((historyItem, index) => (
                             <div key={index} className="flex items-center gap-2 text-xs">
                               <Badge variant={getStatusVariant(historyItem.status)} className="w-24 justify-center">{historyItem.status}</Badge>
-                              <span className="text-muted-foreground">{format(new Date(historyItem.date as string), 'dd/MM/yy, HH:mm')}</span>
+                              <span className="text-muted-foreground">{isClient ? format(new Date(historyItem.date as string), 'dd/MM/yy, HH:mm') : '...'}</span>
                             </div>
                           ))
                       ) : (
@@ -238,12 +243,10 @@ export default function CandidatesClientPage({
                   </TableCell>
                   <TableCell><Badge variant={getStatusVariant(candidate.status)}>{candidate.status}</Badge></TableCell>
                   <TableCell className="text-right">
-                    {candidate.status === 'Diterima' ? (
-                        <Button asChild size="sm" variant="default">
-                           <Link href={`/dashboard/employees/register?candidateId=${candidate.nik}`}>
-                                <UserPlus className="mr-2 h-4 w-4"/> Proses
-                            </Link>
-                        </Button>
+                    {candidate.status === 'Diterima' || candidate.status === 'Ditolak' ? (
+                       <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(candidate)}>
+                            <Eye className="h-4 w-4" />
+                       </Button>
                     ) : (
                       <>
                         <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(candidate)}><Pencil className="h-4 w-4" /></Button>
@@ -264,7 +267,7 @@ export default function CandidatesClientPage({
                   </TableCell>
                 </TableRow>
               ))}
-              {candidates.length === 0 && (
+              {initialCandidates.length === 0 && (
                 <TableRow><TableCell colSpan={6} className="h-24 text-center">Belum ada data kandidat.</TableCell></TableRow>
               )}
             </TableBody>
@@ -409,11 +412,20 @@ export default function CandidatesClientPage({
               </ScrollArea>
 
                  <DialogFooter>
-                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Batal</Button>
-                    <Button type="submit" disabled={isPending}>
-                        {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Simpan
-                    </Button>
+                    {editingCandidate?.status === 'Diterima' && (
+                         <Button type="button" asChild>
+                            <Link href={`/dashboard/employees/register?candidateId=${editingCandidate.nik}`}>
+                                <UserPlus className="mr-2 h-4 w-4"/> Proses Jadi Karyawan
+                            </Link>
+                        </Button>
+                    )}
+                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Tutup</Button>
+                    {(editingCandidate?.status !== 'Diterima' && editingCandidate?.status !== 'Ditolak') &&
+                        <Button type="submit" disabled={isPending}>
+                            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Simpan
+                        </Button>
+                    }
                 </DialogFooter>
             </form>
         </DialogContent>
