@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useTransition, useEffect } from 'react';
@@ -41,7 +42,7 @@ import {
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { MoreHorizontal, PlusCircle, Trash2, Pencil, Loader2, UserPlus, ExternalLink, Upload, Calendar as CalendarIcon, Clock } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash2, Pencil, Loader2, UserPlus, ExternalLink, Upload, Calendar as CalendarIcon, Clock, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Candidate, Position, User, Site } from '@/lib/types';
 import { getCandidates, createCandidate, updateCandidate, deleteCandidate } from '@/actions/candidates';
@@ -262,12 +263,9 @@ export default function CandidatesClientPage() {
                   </TableCell>
                   <TableCell><Badge variant={getStatusVariant(candidate.status)}>{candidate.status}</Badge></TableCell>
                   <TableCell className="text-right">
-                    {candidate.status === 'Diterima' ? (
-                       <Button asChild size="sm">
-                          <Link href={`/dashboard/employees/register?candidateId=${candidate.id}`}>
-                            <UserPlus className="mr-2 h-4 w-4" />
-                            Proses Jadi Karyawan
-                          </Link>
+                    {candidate.status === 'Diterima' || candidate.status === 'Ditolak' ? (
+                       <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(candidate)}>
+                          <Eye className="h-4 w-4" />
                        </Button>
                     ) : (
                       <>
@@ -446,6 +444,14 @@ export default function CandidatesClientPage() {
                     <Label htmlFor="notes">Catatan (Opsional)</Label>
                     <Input id="notes" name="notes" defaultValue={editingCandidate?.notes || ''} />
                 </div>
+                 {editingCandidate?.status === 'Diterima' && (
+                    <Button asChild className="w-full">
+                      <Link href={`/dashboard/employees/register?candidateId=${editingCandidate.id}`}>
+                        <UserPlus className="mr-2 h-4 w-4" />
+                        Proses Kandidat Menjadi Karyawan
+                      </Link>
+                    </Button>
+                )}
               </div>
               </ScrollArea>
 
