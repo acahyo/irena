@@ -160,8 +160,12 @@ export async function createEmployee(employee: Partial<Employee>, actorRole?: st
         }
     }
 
-    // Set default password
-    employeeData.password = createHash('md5').update('irena@2025').digest('hex');
+    // Set default password if provided, otherwise create default
+    if (employeeData.password) {
+        employeeData.password = createHash('md5').update(employeeData.password).digest('hex');
+    } else {
+        employeeData.password = createHash('md5').update('irena@2025').digest('hex');
+    }
 
     // Set employee status based on actor's role
     if (actorRole === 'Administrator' || actorRole === 'HR') {

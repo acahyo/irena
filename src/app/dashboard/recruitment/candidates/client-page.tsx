@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useTransition, useEffect } from 'react';
@@ -159,8 +160,8 @@ export default function CandidatesClientPage() {
 
     startTransition(async () => {
         try {
-            if (editingCandidate?.id) {
-                await updateCandidate(editingCandidate.id, data);
+            if (editingCandidate?.nik) {
+                await updateCandidate(editingCandidate.nik, data);
                 toast({ title: 'Sukses!', description: 'Data kandidat berhasil diperbarui.' });
             } else {
                 await createCandidate({
@@ -262,11 +263,19 @@ export default function CandidatesClientPage() {
                   </TableCell>
                   <TableCell><Badge variant={getStatusVariant(candidate.status)}>{candidate.status}</Badge></TableCell>
                   <TableCell className="text-right">
-                    {candidate.status === 'Diterima' || candidate.status === 'Ditolak' ? (
+                    {candidate.status === 'Diterima' && (
+                        <Button asChild size="sm">
+                            <Link href={`/dashboard/employees/new?candidateId=${candidate.nik}`}>
+                                <UserPlus className="mr-2 h-4 w-4"/> Proses
+                            </Link>
+                        </Button>
+                    )}
+                    {candidate.status === 'Ditolak' && (
                        <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(candidate)}>
                           <Eye className="h-4 w-4" />
                        </Button>
-                    ) : (
+                    )}
+                    {candidate.status !== 'Diterima' && candidate.status !== 'Ditolak' && (
                       <>
                         <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(candidate)}><Pencil className="h-4 w-4" /></Button>
                         <AlertDialog>
@@ -395,22 +404,6 @@ export default function CandidatesClientPage() {
                                 </SelectContent>
                             </Select>
                         </div>
-                        {editingCandidate.statusHistory && editingCandidate.statusHistory.length > 0 && (
-                            <div className="space-y-2">
-                                <Label>Riwayat Status</Label>
-                                <div className="space-y-2 rounded-md border p-3">
-                                    {editingCandidate.statusHistory.map((item, index) => (
-                                        <div key={index} className="flex items-center justify-between text-sm">
-                                            <div className="flex items-center gap-2">
-                                                <Clock className="h-4 w-4 text-muted-foreground" />
-                                                <Badge variant={getStatusVariant(item.status)}>{item.status}</Badge>
-                                            </div>
-                                            <span className="text-muted-foreground">{format(new Date(item.date), 'dd MMM yyyy')}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
                     </div>
                 )}
                 {currentStatus === 'Interview' && (
