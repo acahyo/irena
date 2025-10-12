@@ -68,7 +68,7 @@ export type Employee = {
   separationReason?: string;
 };
 
-export type CandidateStatus = 'Menunggu' | 'Interview' | 'Tes Unit/Alat' | 'Diterima' | 'Ditolak';
+export type CandidateStatus = 'Menunggu' | 'Interview' | 'Tes Unit/Alat' | 'Diterima' | 'Ditolak' | 'Diproses';
 
 export type CandidateStatusHistory = {
   status: CandidateStatus;

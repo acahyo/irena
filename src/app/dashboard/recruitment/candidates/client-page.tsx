@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useTransition, useEffect } from 'react';
@@ -41,7 +42,7 @@ import {
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { MoreHorizontal, PlusCircle, Trash2, Pencil, Loader2, UserPlus, ExternalLink, Upload, Calendar as CalendarIcon, Clock, Eye } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash2, Pencil, Loader2, UserPlus, ExternalLink, Upload, Calendar as CalendarIcon, Clock, Eye, CheckCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Candidate, Position, User, Site } from '@/lib/types';
 import { createCandidate, updateCandidate, deleteCandidate } from '@/actions/candidates';
@@ -61,6 +62,7 @@ const getStatusVariant = (status: Candidate['status']) => {
     case 'Interview': return 'default';
     case 'Tes Unit/Alat': return 'default';
     case 'Diterima': return 'default';
+    case 'Diproses': return 'outline';
     case 'Ditolak': return 'destructive';
     default: return 'outline';
   }
@@ -243,7 +245,13 @@ export default function CandidatesClientPage({
                   </TableCell>
                   <TableCell><Badge variant={getStatusVariant(candidate.status)}>{candidate.status}</Badge></TableCell>
                   <TableCell className="text-right">
-                    {candidate.status === 'Diterima' || candidate.status === 'Ditolak' ? (
+                    {candidate.status === 'Diterima' ? (
+                       <Button variant="default" size="sm" asChild>
+                          <Link href={`/dashboard/employees/register?candidateId=${candidate.nik}`}>
+                              <UserPlus className="mr-2 h-4 w-4"/> Proses
+                          </Link>
+                      </Button>
+                    ) : (candidate.status === 'Diproses' || candidate.status === 'Ditolak') ? (
                        <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(candidate)}>
                             <Eye className="h-4 w-4" />
                        </Button>
@@ -372,6 +380,7 @@ export default function CandidatesClientPage({
                                     <SelectItem value="Interview">Interview</SelectItem>
                                     <SelectItem value="Tes Unit/Alat">Tes Unit/Alat</SelectItem>
                                     <SelectItem value="Diterima">Diterima</SelectItem>
+                                    <SelectItem value="Diproses">Diproses</SelectItem>
                                     <SelectItem value="Ditolak">Ditolak</SelectItem>
                                 </SelectContent>
                             </Select>
@@ -412,15 +421,8 @@ export default function CandidatesClientPage({
               </ScrollArea>
 
                  <DialogFooter>
-                    {editingCandidate?.status === 'Diterima' && (
-                         <Button type="button" asChild>
-                            <Link href={`/dashboard/employees/register?candidateId=${editingCandidate.nik}`}>
-                                <UserPlus className="mr-2 h-4 w-4"/> Proses Jadi Karyawan
-                            </Link>
-                        </Button>
-                    )}
                     <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Tutup</Button>
-                    {(editingCandidate?.status !== 'Diterima' && editingCandidate?.status !== 'Ditolak') &&
+                    {(editingCandidate?.status !== 'Diterima' && editingCandidate?.status !== 'Ditolak' && editingCandidate?.status !== 'Diproses') &&
                         <Button type="submit" disabled={isPending}>
                             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             Simpan

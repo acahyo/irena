@@ -38,7 +38,7 @@ import type { Employee, Position, Site, User, Candidate } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getPositions } from '@/actions/positions';
 import { getSites } from '@/actions/sites';
-import { getCandidateById } from '@/actions/candidates';
+import { getCandidateById, updateCandidate } from '@/actions/candidates';
 import { useUser } from '@/contexts/user-context';
 
 
@@ -190,6 +190,12 @@ export default function RegisterEmployeeClientPage() {
     try {
         if (!user) throw new Error("User session not found");
         await createEmployee(employeeData, user.role);
+
+        // If created from a candidate, update candidate status
+        if (candidate?.id) {
+            await updateCandidate(candidate.id, { status: 'Diproses' });
+        }
+
         toast({
             title: 'Success!',
             description: 'New employee has been registered and is pending verification.',
