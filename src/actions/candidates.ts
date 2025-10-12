@@ -47,6 +47,7 @@ export async function getCandidates(): Promise<Candidate[]> {
         id: doc.id,
         ...data,
         appliedDate: (data.appliedDate as Timestamp).toDate(),
+        dateOfBirth: data.dateOfBirth ? (data.dateOfBirth as Timestamp).toDate() : undefined,
       } as Candidate);
     });
     return candidates;
@@ -58,11 +59,16 @@ export async function getCandidates(): Promise<Candidate[]> {
 
 // Create a new candidate
 export async function createCandidate(data: Omit<Candidate, 'id' | 'appliedDate' | 'status'>): Promise<string> {
-  const finalData = {
+  const finalData: { [key: string]: any } = {
     ...data,
     appliedDate: serverTimestamp(),
     status: 'Pending' as const,
   };
+  
+  if (data.dateOfBirth) {
+    finalData.dateOfBirth = new Date(data.dateOfBirth);
+  }
+
   const docRef = await addDoc(collection(db, 'candidates'), finalData);
   return docRef.id;
 }
@@ -72,6 +78,10 @@ export async function updateCandidate(id: string, updates: Partial<Omit<Candidat
   const docRef = doc(db, 'candidates', id);
   const updateData: { [key: string]: any } = { ...updates };
   
+  if (updateData.dateOfBirth) {
+    updateData.dateOfBirth = new Date(updateData.dateOfBirth);
+  }
+
   if (updateData.interviewDocUrl && (updateData.interviewDocUrl as string).startsWith('data:')) {
     const { downloadURL, fileName } = await uploadFileAndGetURL(updateData.interviewDocUrl, `interview-${id}`);
     updateData.interviewDocUrl = downloadURL;

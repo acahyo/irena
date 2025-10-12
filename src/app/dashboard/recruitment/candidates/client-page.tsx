@@ -41,7 +41,7 @@ import {
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { MoreHorizontal, PlusCircle, Trash2, Pencil, Loader2, UserPlus, ExternalLink, Upload } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash2, Pencil, Loader2, UserPlus, ExternalLink, Upload, Calendar as CalendarIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Candidate, Position, User, Site } from '@/lib/types';
 import { createCandidate, updateCandidate, deleteCandidate } from '@/actions/candidates';
@@ -50,6 +50,9 @@ import { useRouter } from 'next/navigation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { getSites } from '@/actions/sites';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
 
 const getStatusVariant = (status: Candidate['status']) => {
   switch (status) {
@@ -85,6 +88,8 @@ export default function CandidatesClientPage({
   const [currentStatus, setCurrentStatus] = useState<Candidate['status'] | undefined>();
   const [interviewDoc, setInterviewDoc] = useState<string | null>(null);
   const [testDoc, setTestDoc] = useState<string | null>(null);
+  const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>();
+
 
   useEffect(() => {
     const fetchSitesData = async () => {
@@ -100,6 +105,7 @@ export default function CandidatesClientPage({
     setCurrentStatus(candidate?.status || 'Pending');
     setInterviewDoc(candidate?.interviewDocUrl || null);
     setTestDoc(candidate?.testDocUrl || null);
+    setDateOfBirth(candidate?.dateOfBirth ? new Date(candidate.dateOfBirth) : undefined);
     setIsDialogOpen(true);
   };
 
@@ -123,6 +129,8 @@ export default function CandidatesClientPage({
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const data: any = Object.fromEntries(formData.entries());
+    
+    data.dateOfBirth = dateOfBirth;
 
     // Add document data if they exist
     if (interviewDoc && interviewDoc.startsWith('data:')) data.interviewDocUrl = interviewDoc;
@@ -236,49 +244,89 @@ export default function CandidatesClientPage({
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent className="sm:max-w-3xl">
             <DialogHeader>
                 <DialogTitle>{editingCandidate?.id ? 'Edit Kandidat' : 'Tambah Kandidat Baru'}</DialogTitle>
                 <DialogDescription>Isi detail informasi calon karyawan.</DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
+                        <Label htmlFor="nik">NIK</Label>
+                        <Input id="nik" name="nik" defaultValue={editingCandidate?.nik} required />
+                    </div>
+                     <div className="space-y-2">
                         <Label htmlFor="name">Nama Lengkap</Label>
                         <Input id="name" name="name" defaultValue={editingCandidate?.name} required />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="placeOfBirth">Tempat Lahir</Label>
+                        <Input id="placeOfBirth" name="placeOfBirth" defaultValue={editingCandidate?.placeOfBirth} required />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="dateOfBirth">Tanggal Lahir</Label>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button variant={'outline'} className={cn('w-full justify-start text-left font-normal', !dateOfBirth && 'text-muted-foreground')}>
+                                <CalendarIcon className="mr-2 h-4 w-4" />{dateOfBirth ? format(dateOfBirth, 'PPP') : <span>Pilih tanggal</span>}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={dateOfBirth} onSelect={setDateOfBirth} captionLayout="dropdown-buttons" fromYear={1960} toYear={new Date().getFullYear()} initialFocus /></PopoverContent>
+                        </Popover>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="gender">Jenis Kelamin</Label>
+                        <Select name="gender" defaultValue={editingCandidate?.gender}>
+                            <SelectTrigger><SelectValue placeholder="Pilih Jenis Kelamin" /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="Laki-laki">Laki-laki</SelectItem>
+                                <SelectItem value="Perempuan">Perempuan</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="maritalStatus">Status Perkawinan</Label>
+                        <Select name="maritalStatus" defaultValue={editingCandidate?.maritalStatus}>
+                            <SelectTrigger><SelectValue placeholder="Pilih Status" /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="single">Lajang</SelectItem>
+                                <SelectItem value="married">Menikah</SelectItem>
+                                <SelectItem value="divorced">Cerai</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                        <Label htmlFor="address">Alamat</Label>
+                        <Input id="address" name="address" defaultValue={editingCandidate?.address} required />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="phone">No. Handphone</Label>
                         <Input id="phone" name="phone" defaultValue={editingCandidate?.phone} required />
                     </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="email">Email (Opsional)</Label>
+                        <Input id="email" name="email" type="email" defaultValue={editingCandidate?.email || ''} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="siteLocation">Lokasi Proyek</Label>
+                        <Select name="siteLocation" value={selectedSite} onValueChange={setSelectedSite}>
+                            <SelectTrigger><SelectValue placeholder="Pilih Lokasi" /></SelectTrigger>
+                            <SelectContent>
+                                {sites.map(site => <SelectItem key={site.id} value={site.name}>{site.name}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="positionApplied">Posisi yang Dilamar</Label>
+                        <Select name="positionApplied" defaultValue={editingCandidate?.positionApplied} disabled={!selectedSite}>
+                            <SelectTrigger><SelectValue placeholder={!selectedSite ? "Pilih lokasi dulu" : "Pilih Posisi"} /></SelectTrigger>
+                            <SelectContent>
+                                {filteredPositions.map(pos => <SelectItem key={pos.id} value={pos.name}>{pos.name}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="email">Email (Opsional)</Label>
-                    <Input id="email" name="email" type="email" defaultValue={editingCandidate?.email || ''} />
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="address">Alamat</Label>
-                    <Input id="address" name="address" defaultValue={editingCandidate?.address} required />
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="siteLocation">Lokasi Proyek</Label>
-                    <Select name="siteLocation" value={selectedSite} onValueChange={setSelectedSite}>
-                        <SelectTrigger><SelectValue placeholder="Pilih Lokasi" /></SelectTrigger>
-                        <SelectContent>
-                            {sites.map(site => <SelectItem key={site.id} value={site.name}>{site.name}</SelectItem>)}
-                        </SelectContent>
-                    </Select>
-                 </div>
 
-                 <div className="space-y-2">
-                    <Label htmlFor="positionApplied">Posisi yang Dilamar</Label>
-                    <Select name="positionApplied" defaultValue={editingCandidate?.positionApplied} disabled={!selectedSite}>
-                        <SelectTrigger><SelectValue placeholder={!selectedSite ? "Pilih lokasi dulu" : "Pilih Posisi"} /></SelectTrigger>
-                        <SelectContent>
-                            {filteredPositions.map(pos => <SelectItem key={pos.id} value={pos.name}>{pos.name}</SelectItem>)}
-                        </SelectContent>
-                    </Select>
-                </div>
                 {editingCandidate?.id && (
                     <div className="space-y-2">
                         <Label htmlFor="status">Status</Label>

@@ -85,6 +85,11 @@ export type Candidate = {
   interviewDocName?: string;
   testDocUrl?: string;
   testDocName?: string;
+  nik?: string;
+  placeOfBirth?: string;
+  dateOfBirth?: Date | string;
+  gender?: 'Laki-laki' | 'Perempuan';
+  maritalStatus?: 'single' | 'married' | 'divorced';
 };
 
 export type CalendarEvent = {
