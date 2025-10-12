@@ -10,7 +10,7 @@ import type { Candidate } from '@/lib/types';
 export default async function NewEmployeePage({ searchParams }: { searchParams: { candidateId?: string } }) {
   const user = await getAdminSession();
   
-  if (!user || !['Administrator', 'HR', 'Rekrutmen', 'Admin Proyek'].includes(user.role)) {
+  if (!user || !['Administrator', 'HR'].includes(user.role)) {
     redirect('/dashboard');
   }
 

@@ -1,4 +1,5 @@
 
+
 import { getEmployees } from '@/actions/employees';
 import { getLeaveRequests } from '@/actions/leave';
 import EmployeeDirectoryClientPage from './client-page';
@@ -6,7 +7,7 @@ import { format, parseISO, differenceInDays, addMonths, isValid } from 'date-fns
 import { getAdminSession } from '@/actions/auth';
 import { redirect } from 'next/navigation';
 import { getViolationRecords } from '@/actions/violations';
-import type { Employee } from '@/lib/types';
+import type { Employee, User } from '@/lib/types';
 
 
 export default async function EmployeeDirectoryPage() {
@@ -15,10 +16,6 @@ export default async function EmployeeDirectoryPage() {
     redirect('/');
   }
   
-  // Redirect roles that should not access this page
-  if (user.role === 'Rekrutmen') {
-    redirect('/dashboard/recruitment');
-  }
   if (user.role === 'Admin Proyek') {
     redirect('/dashboard');
   }

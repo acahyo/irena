@@ -39,16 +39,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { getPositions } from '@/actions/positions';
 import { getSites } from '@/actions/sites';
 import { getCandidateById } from '@/actions/candidates';
+import { useUser } from '@/contexts/user-context';
 
-type SelectedPosition = {
-    id: string;
-    name: string;
-};
 
-export default function RegisterEmployeeClientPage({ user }: { user: User }) {
+export default function RegisterEmployeeClientPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
+  const user = useUser();
   
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
@@ -59,7 +57,7 @@ export default function RegisterEmployeeClientPage({ user }: { user: User }) {
 
   const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>();
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [selectedPositions, setSelectedPositions] = useState<SelectedPosition[]>([]);
+  const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
   const [positionToAdd, setPositionToAdd] = useState('');
   const [employeeName, setEmployeeName] = useState('');
   const [siteLocation, setSiteLocation] = useState('');
@@ -88,7 +86,7 @@ export default function RegisterEmployeeClientPage({ user }: { user: User }) {
                 }
                 const initialPosition = pos.find(p => p.name === candidateData.positionApplied);
                 if (initialPosition) {
-                    setSelectedPositions([{ id: initialPosition.id, name: initialPosition.name }]);
+                    setSelectedPositions([initialPosition.name]);
                 }
             }
         }
@@ -107,8 +105,8 @@ export default function RegisterEmployeeClientPage({ user }: { user: User }) {
   
   const handleSiteChange = (value: string) => {
     setSiteLocation(value);
-    setSelectedPositions(prev => prev.filter(pos => {
-      const positionDetails = positions.find(p => p.name === pos.name);
+    setSelectedPositions(prev => prev.filter(posName => {
+      const positionDetails = positions.find(p => p.name === posName);
       return !positionDetails?.projectName || positionDetails.projectName === value;
     }));
     setPositionToAdd('');
@@ -122,15 +120,15 @@ export default function RegisterEmployeeClientPage({ user }: { user: User }) {
   }, [positions, siteLocation, sites]);
 
   const addPosition = () => {
-    const position = positions.find(p => p.id === positionToAdd);
-    if (position && !selectedPositions.some(p => p.id === position.id)) {
-        setSelectedPositions([...selectedPositions, { id: position.id, name: position.name }]);
+    const position = filteredPositions.find(p => p.name === positionToAdd);
+    if (position && !selectedPositions.some(p => p === position.name)) {
+        setSelectedPositions([...selectedPositions, position.name]);
         setPositionToAdd('');
     }
   };
 
-  const removePosition = (positionId: string) => {
-      setSelectedPositions(selectedPositions.filter(p => p.id !== positionId));
+  const removePosition = (positionName: string) => {
+      setSelectedPositions(selectedPositions.filter(p => p !== positionName));
   };
 
 
@@ -185,11 +183,12 @@ export default function RegisterEmployeeClientPage({ user }: { user: User }) {
         ...data,
         dateOfBirth: dateOfBirth,
         avatar: photoPreview,
-        positions: selectedPositions.map(p => p.name),
+        positions: selectedPositions,
         siteLocation: siteLocation,
     } as Partial<Employee>;
     
     try {
+        if (!user) throw new Error("User session not found");
         await createEmployee(employeeData, user.role);
         toast({
             title: 'Success!',
@@ -282,7 +281,7 @@ export default function RegisterEmployeeClientPage({ user }: { user: User }) {
   );
 
 
-  if (pageLoading) {
+  if (pageLoading || !user) {
     return (
         <div className="space-y-6">
             <Skeleton className="h-9 w-40" />
@@ -299,7 +298,7 @@ export default function RegisterEmployeeClientPage({ user }: { user: User }) {
     )
   }
 
-  const backLink = user.role === 'Rekrutmen' ? '/dashboard/recruitment/candidates' : '/dashboard/employees';
+  const backLink = user.role === 'Rekrutmen' ? '/dashboard/recruitment/candidates' : '/dashboard';
 
   return (
     <div className="space-y-6">
@@ -336,7 +335,7 @@ export default function RegisterEmployeeClientPage({ user }: { user: User }) {
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="placeOfBirth">Tempat Lahir</Label>
-                        <Input id="placeOfBirth" name="placeOfBirth" placeholder="e.g. Jakarta" defaultValue={candidate?.placeOfBirth || ''} required />
+                        <Input id="placeOfBirth" name="placeOfBirth" placeholder="e.g. Jakarta" required defaultValue={candidate?.placeOfBirth || ''} />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="dateOfBirth">Tanggal Lahir</Label>
@@ -416,23 +415,12 @@ export default function RegisterEmployeeClientPage({ user }: { user: User }) {
                                         <SelectValue placeholder={!siteLocation ? "Pilih proyek dulu" : "Pilih jabatan"} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {filteredPositions.filter(p => !selectedPositions.some(sp => sp.id === p.id)).map((pos) => (
-                                            <SelectItem key={pos.id} value={pos.id}>{pos.name}</SelectItem>
+                                        {filteredPositions.filter(p => !selectedPositions.some(posName => posName === p.name)).map((pos) => (
+                                            <SelectItem key={pos.id} value={pos.name}>{pos.name}</SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
                                 <Button type="button" onClick={addPosition} disabled={!positionToAdd}><PlusCircle className="mr-2 h-4 w-4" /> Tambah</Button>
-                            </div>
-                            <div className="flex flex-wrap gap-2 p-2 border rounded-md min-h-[40px]">
-                                {selectedPositions.map((pos) => (
-                                    <Badge key={pos.id} variant="secondary" className="flex items-center gap-2">
-                                        {pos.name}
-                                        <button type="button" onClick={() => removePosition(pos.id)} className="ml-1 rounded-full hover:bg-destructive/20 p-0.5">
-                                            <Trash2 className="h-3 w-3 text-destructive" />
-                                        </button>
-                                    </Badge>
-                                ))}
-                                {selectedPositions.length === 0 && <p className="text-sm text-muted-foreground">Belum ada jabatan dipilih.</p>}
                             </div>
                     </div>
                 </CardContent>

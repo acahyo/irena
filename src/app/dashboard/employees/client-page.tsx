@@ -164,7 +164,7 @@ export default function EmployeeDirectoryClientPage({ initialEmployees }: { init
                     }
                 });
 
-                await createEmployee(processedRow as Partial<Employee>);
+                await createEmployee(processedRow as Partial<Employee>, user?.role);
             }
             
             toast({
@@ -199,6 +199,9 @@ export default function EmployeeDirectoryClientPage({ initialEmployees }: { init
   if (!user) {
     return <div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin"/></div>
   }
+  
+  const canAddFullEmployee = user.role === 'Administrator' || user.role === 'HR';
+
 
   return (
     <div className="space-y-6">
@@ -256,20 +259,24 @@ export default function EmployeeDirectoryClientPage({ initialEmployees }: { init
                 accept=".xlsx, .xls"
                 disabled={isPending}
             />
-            <Button variant="outline" onClick={handleImportClick} disabled={isPending}>
-                {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-                Import
-            </Button>
+             {canAddFullEmployee && (
+                <Button variant="outline" onClick={handleImportClick} disabled={isPending}>
+                    {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                    Import
+                </Button>
+            )}
             <Button variant="outline" onClick={handleExport}>
                 <Download className="mr-2 h-4 w-4" />
                 Export
             </Button>
-            <Button asChild>
-                <Link href="/dashboard/employees/new">
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add Employee
-                </Link>
-            </Button>
+            {canAddFullEmployee && (
+              <Button asChild>
+                  <Link href="/dashboard/employees/new">
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Add Employee
+                  </Link>
+              </Button>
+            )}
             </div>
         </div>
         
