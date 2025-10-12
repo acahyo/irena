@@ -26,7 +26,7 @@ import PurchasingDashboard from './purchasing-dashboard';
 import AttendanceAdminDashboard from './attendance-admin-dashboard';
 import { getSitesByIds } from '@/actions/sites';
 import { getViolationRecords } from '@/actions/violations';
-import { format, getMonth, getYear, differenceInDays } from 'date-fns';
+import { format, getMonth, getYear, differenceInDays, addMonths, isValid } from 'date-fns';
 import ViolationChart from './violation-chart';
 import FinanceDashboard from './finance-dashboard';
 import HseDashboard from './hse-dashboard';
@@ -34,11 +34,7 @@ import DisciplinaryDashboard from './disciplinary-dashboard';
 import QuickEmployeeSearch from './quick-employee-search';
 import RecruitmentDashboard from './recruitment-dashboard';
 
-
-async function getDashboardData() {
-    const user = await getAdminSession();
-    if (!user) return null;
-
+async function getDashboardData(user: any) {
     const siteIdsForFilter = (user.role === 'HR' || user.role === 'Administrator') ? undefined : user.siteIds;
 
     const [allEmployees, allLeaveRequests, violationRecords] = await Promise.all([
@@ -198,7 +194,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
         return <AttendanceAdminDashboard user={user} />;
     }
     
-    const stats = await getDashboardData();
+    const stats = await getDashboardData(user);
     const settings = await getSettings();
     
     if (!stats) return null;
@@ -428,3 +424,5 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
         </div>
     );
 }
+
+    
