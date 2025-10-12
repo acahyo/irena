@@ -55,6 +55,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getAdminSession } from '@/actions/auth';
 
 const getStatusVariant = (status: Candidate['status']) => {
   switch (status) {
@@ -68,14 +69,11 @@ const getStatusVariant = (status: Candidate['status']) => {
   }
 };
 
-export default function CandidatesClientPage({ 
-  user 
-}: { 
-  user: User
-}) {
+export default function CandidatesClientPage() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [positions, setPositions] = useState<Position[]>([]);
   const [sites, setSites] = useState<Site[]>([]);
+  const [user, setUser] = useState<User | null>(null);
   const [pageLoading, setPageLoading] = useState(true);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -95,22 +93,30 @@ export default function CandidatesClientPage({
     const fetchInitialData = async () => {
         setPageLoading(true);
         try {
-            const [candidatesData, positionsData, sitesData] = await Promise.all([
+            const [sessionUser, candidatesData, positionsData, sitesData] = await Promise.all([
+                getAdminSession(),
                 getCandidates(),
                 getPositions(),
                 getSites()
             ]);
+            
+            if (!sessionUser) {
+              router.push('/dashboard');
+              return;
+            }
+            setUser(sessionUser);
+
             setCandidates(candidatesData);
             setPositions(positionsData);
             setSites(sitesData);
         } catch (error) {
-            toast({ variant: "destructive", title: "Error", description: "Failed to load candidate data."});
+            toast({ variant: "destructive", title: "Error", description: "Gagal memuat data kandidat."});
         } finally {
             setPageLoading(false);
         }
     };
     fetchInitialData();
-  }, [toast]);
+  }, [router, toast]);
   
   const handleOpenDialog = (candidate: Partial<Candidate> | null = null) => {
     setEditingCandidate(candidate);
@@ -140,6 +146,8 @@ export default function CandidatesClientPage({
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!user) return;
+    
     const formData = new FormData(e.currentTarget);
     const data: any = Object.fromEntries(formData.entries());
     
@@ -183,7 +191,7 @@ export default function CandidatesClientPage({
       });
   };
   
-  if (pageLoading) {
+  if (pageLoading || !user) {
       return (
           <div className="space-y-6">
               <Card>
