@@ -3,12 +3,11 @@
 import { getAdminSession } from '@/actions/auth';
 import { redirect, notFound } from 'next/navigation';
 import RegisterEmployeeClientPage from './client-page';
-import { User, Site, Candidate } from '@/lib/types';
+import { User, Site } from '@/lib/types';
 import { getSitesByIds } from '@/actions/sites';
-import { getCandidates } from '@/actions/candidates';
 
 
-export default async function RegisterEmployeePage({ searchParams }: { searchParams?: { candidateId?: string }}) {
+export default async function RegisterEmployeePage() {
   const currentUser = await getAdminSession();
   
   if (!currentUser) {
@@ -23,14 +22,5 @@ export default async function RegisterEmployeePage({ searchParams }: { searchPar
 
   const assignedSites: Site[] = currentUser.siteIds ? await getSitesByIds(currentUser.siteIds) : [];
 
-  let candidate: Candidate | undefined = undefined;
-  if (searchParams?.candidateId) {
-    const candidates = await getCandidates();
-    candidate = candidates.find(c => c.id === searchParams.candidateId);
-    if (!candidate) {
-      notFound();
-    }
-  }
-
-  return <RegisterEmployeeClientPage user={currentUser as User} assignedSites={assignedSites} candidate={candidate} />;
+  return <RegisterEmployeeClientPage user={currentUser as User} assignedSites={assignedSites} />;
 }

@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { ArrowLeft, Calendar as CalendarIcon, Upload, Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -36,10 +36,13 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { createEmployee } from '@/actions/employees';
 import { getDepartments } from '@/actions/departments';
 import { getPositions } from '@/actions/positions';
-import type { Employee, Department, Position, Site, User } from '@/lib/types';
+import { getCandidates } from '@/actions/candidates';
+import type { Employee, Department, Position, Site, User, Candidate } from '@/lib/types';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
+import { useUser } from '@/contexts/user-context';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type SelectedPosition = {
     id: string;
@@ -48,20 +51,28 @@ type SelectedPosition = {
 
 export default function RegisterEmployeeClientPage({ user, assignedSites }: { user: User, assignedSites: Site[] }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
+  
   const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
+
   const [departments, setDepartments] = useState<Department[]>([]);
   const [positions, setPositions] = useState<Position[]>([]);
+  const [candidate, setCandidate] = useState<Candidate | null>(null);
+
   const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>();
   const [messEntryDate, setMessEntryDate] = useState<Date | undefined>();
   const [contractStartDate, setContractStartDate] = useState<Date | undefined>();
   const [contractEndDate, setContractEndDate] = useState<Date | undefined>();
+  
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [ktpPreview, setKtpPreview] = useState<string | null>(null);
   const [simPreview, setSimPreview] = useState<string | null>(null);
   const [sioPreview, setSioPreview] = useState<string | null>(null);
   const [kkPreview, setKkPreview] = useState<string | null>(null);
   const [bankBookPreview, setBankBookPreview] = useState<string | null>(null);
+
   const [bpjsStatus, setBpjsStatus] = useState<string | undefined>();
   const [canGeneratePayslip, setCanGeneratePayslip] = useState(true);
   const [selectedPositions, setSelectedPositions] = useState<SelectedPosition[]>([]);
@@ -75,24 +86,43 @@ export default function RegisterEmployeeClientPage({ user, assignedSites }: { us
   );
 
   useEffect(() => {
-    const fetchDropdownData = async () => {
+    const candidateId = searchParams.get('candidateId');
+    const fetchData = async () => {
+      setPageLoading(true);
       try {
-        const [depts, pos] = await Promise.all([
+        const [depts, pos, allCandidates] = await Promise.all([
           getDepartments(),
           getPositions(),
+          candidateId ? getCandidates() : [],
         ]);
         setDepartments(depts);
         setPositions(pos);
+        if (candidateId) {
+          const foundCandidate = allCandidates.find(c => c.id === candidateId);
+          if (foundCandidate) {
+            setCandidate(foundCandidate);
+            setEmployeeName(foundCandidate.name);
+            setSiteLocation(foundCandidate.siteLocation || (assignedSites.length === 1 ? assignedSites[0].name : ''));
+            const initialPosition = pos.find(p => p.name === foundCandidate.positionApplied);
+            if (initialPosition) {
+              setSelectedPositions([{ id: initialPosition.id, name: initialPosition.name }]);
+            }
+          } else {
+            toast({ variant: 'destructive', title: 'Error', description: 'Candidate not found.' });
+          }
+        }
       } catch (error) {
         toast({
           variant: 'destructive',
           title: 'Error',
           description: 'Failed to fetch dropdown data.',
         });
+      } finally {
+        setPageLoading(false);
       }
     };
-    fetchDropdownData();
-  }, [toast]);
+    fetchData();
+  }, [searchParams, toast, assignedSites]);
   
   useEffect(() => {
     if (accountType === 'pribadi') {
@@ -104,7 +134,6 @@ export default function RegisterEmployeeClientPage({ user, assignedSites }: { us
   
   const handleSiteChange = (value: string) => {
     setSiteLocation(value);
-    // Reset selected positions if they are not valid for the new site
     setSelectedPositions(prev => prev.filter(pos => {
       const positionDetails = positions.find(p => p.name === pos.name);
       return !positionDetails?.projectName || positionDetails.projectName === value;
@@ -295,12 +324,29 @@ export default function RegisterEmployeeClientPage({ user, assignedSites }: { us
   );
 
 
+  if (pageLoading) {
+    return (
+        <div className="space-y-6">
+            <Skeleton className="h-9 w-40" />
+            <Card>
+                <CardHeader>
+                    <Skeleton className="h-8 w-60" />
+                    <Skeleton className="h-4 w-80" />
+                </CardHeader>
+                <CardContent>
+                    <Skeleton className="h-[500px] w-full" />
+                </CardContent>
+            </Card>
+        </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <Button asChild variant="outline" size="sm">
         <Link href="/dashboard">
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Dashboard
+          Kembali ke Dasbor
         </Link>
       </Button>
 
@@ -320,11 +366,11 @@ export default function RegisterEmployeeClientPage({ user, assignedSites }: { us
 
               <div className="space-y-2">
                 <Label htmlFor="nik">NIK</Label>
-                <Input id="nik" name="nik" placeholder="e.g. 3201..." required />
+                <Input id="nik" name="nik" placeholder="e.g. 3201..." required defaultValue={candidate?.phone || ''} />
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="name">Nama Lengkap</Label>
-                <Input id="name" name="name" placeholder="e.g. John Doe" required defaultValue={employeeName} onChange={(e) => setEmployeeName(e.target.value)} />
+                <Input id="name" name="name" placeholder="e.g. John Doe" required value={employeeName} onChange={(e) => setEmployeeName(e.target.value)} />
               </div>
                <div className="space-y-2">
                 <Label htmlFor="npwpNumber">Nomor NPWP (Opsional)</Label>
@@ -365,17 +411,17 @@ export default function RegisterEmployeeClientPage({ user, assignedSites }: { us
               </div>
               <div className="space-y-2 md:col-span-3">
                 <Label htmlFor="address">Alamat</Label>
-                <Input id="address" name="address" placeholder="e.g. 123 Main St, Anytown" required />
+                <Input id="address" name="address" placeholder="e.g. 123 Main St, Anytown" required defaultValue={candidate?.address || ''} />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
-                <Input id="email" name="email" type="email" placeholder="e.g. john@example.com" />
+                <Input id="email" name="email" type="email" placeholder="e.g. john@example.com" defaultValue={candidate?.email || ''} />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone Number</Label>
-                <Input id="phone" name="phone" type="tel" placeholder="e.g. 08123456789" />
+                <Input id="phone" name="phone" type="tel" placeholder="e.g. 08123456789" defaultValue={candidate?.phone || ''} />
               </div>
 
               <div className="space-y-2">
