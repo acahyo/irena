@@ -16,12 +16,13 @@ import { useToast } from '@/hooks/use-toast';
 import type { Employee, Candidate } from '@/lib/types';
 import { Search, Loader2 } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 
 export default function QuickNikCheck({ allEmployees, allCandidates }: { allEmployees: Employee[], allCandidates: Candidate[] }) {
   const [nik, setNik] = useState('');
   const [isSearching, startSearch] = useTransition();
   const { toast } = useToast();
-  const [searchResult, setSearchResult] = useState<{ status: 'found' | 'not_found', nik: string, foundIn?: 'Karyawan' | 'Kandidat', name?: string } | null>(null);
+  const [searchResult, setSearchResult] = useState<{ status: 'found' | 'not_found', nik: string, foundIn?: 'Karyawan' | 'Kandidat', name?: string, entityStatus?: string } | null>(null);
 
   const handleSearch = () => {
     if (!nik) {
@@ -32,24 +33,36 @@ export default function QuickNikCheck({ allEmployees, allCandidates }: { allEmpl
     startSearch(() => {
       const foundEmployee = allEmployees.find(e => e.nik === nik);
       if (foundEmployee) {
-        const result = { status: 'found' as const, nik, foundIn: 'Karyawan' as const, name: foundEmployee.name };
+        const result = { 
+            status: 'found' as const, 
+            nik, 
+            foundIn: 'Karyawan' as const, 
+            name: foundEmployee.name,
+            entityStatus: foundEmployee.employeeStatus 
+        };
         setSearchResult(result);
         toast({
             variant: 'destructive',
             title: `NIK Sudah Terdaftar (Karyawan)`,
-            description: `NIK ${nik} sudah terdaftar atas nama ${foundEmployee.name}.`
+            description: `NIK ${nik} sudah terdaftar atas nama ${foundEmployee.name} dengan status "${foundEmployee.employeeStatus}".`
         });
         return;
       }
       
       const foundCandidate = allCandidates.find(c => c.nik === nik);
       if (foundCandidate) {
-        const result = { status: 'found' as const, nik, foundIn: 'Kandidat' as const, name: foundCandidate.name };
+        const result = { 
+            status: 'found' as const, 
+            nik, 
+            foundIn: 'Kandidat' as const, 
+            name: foundCandidate.name,
+            entityStatus: foundCandidate.status
+        };
         setSearchResult(result);
         toast({
             variant: 'destructive',
             title: `NIK Sudah Terdaftar (Kandidat)`,
-            description: `NIK ${nik} sudah terdaftar sebagai kandidat atas nama ${foundCandidate.name}.`
+            description: `NIK ${nik} sudah terdaftar sebagai kandidat atas nama ${foundCandidate.name} dengan status "${foundCandidate.status}".`
         });
         return;
       }
@@ -84,10 +97,21 @@ export default function QuickNikCheck({ allEmployees, allCandidates }: { allEmpl
         </div>
         {searchResult && (
             <Alert variant={searchResult.status === 'found' ? 'destructive' : 'default'} className="mt-4">
-                <AlertTitle>{searchResult.status === 'found' ? `NIK Sudah Ada (${searchResult.foundIn})` : 'NIK Tersedia'}</AlertTitle>
+                <AlertTitle>
+                    {searchResult.status === 'found' 
+                        ? `NIK Sudah Ada (${searchResult.foundIn})` 
+                        : 'NIK Tersedia'}
+                </AlertTitle>
                 <AlertDescription>
                      {searchResult.status === 'found' 
-                        ? `NIK ${searchResult.nik} sudah digunakan oleh ${searchResult.name}.`
+                        ? (
+                            <div className="flex flex-col gap-1">
+                                <span>NIK {searchResult.nik} sudah digunakan oleh {searchResult.name}.</span>
+                                {searchResult.entityStatus && (
+                                    <span>Status saat ini: <Badge variant="outline" className="capitalize">{searchResult.entityStatus}</Badge></span>
+                                )}
+                            </div>
+                        )
                         : `NIK ${searchResult.nik} dapat digunakan untuk registrasi.`
                      }
                 </AlertDescription>
