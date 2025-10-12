@@ -71,7 +71,7 @@ const formatCurrency = (amount: number | undefined | null) => {
 
 
 // The employee object passed here should have dates as Date objects or ISO strings
-export default function EmployeeProfileClientPage({ employee, isPortalView = false }: { employee: EmployeeWithPosition, isPortalView?: boolean }) {
+export default function EmployeeProfileClientPage({ employee, isPortalView = false, isDialogView = false }: { employee: EmployeeWithPosition, isPortalView?: boolean, isDialogView?: boolean }) {
     const router = useRouter();
     const { toast } = useToast();
     const [isClient, setIsClient] = useState(false);
@@ -156,17 +156,8 @@ export default function EmployeeProfileClientPage({ employee, isPortalView = fal
       }
   };
 
-  return (
-    <div className="space-y-6">
-       {!isPortalView && (
-            <Button asChild variant="outline" size="sm">
-                <Link href="/dashboard/employees">
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back to Employees
-                </Link>
-            </Button>
-       )}
-
+  const mainContent = (
+    <>
       <Card>
         <CardHeader className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
           <Avatar className="h-24 w-24 border-4 border-primary/20">
@@ -185,14 +176,14 @@ export default function EmployeeProfileClientPage({ employee, isPortalView = fal
             <p className="text-sm text-muted-foreground mt-1">{employee.department} - {employee.siteLocation}</p>
           </div>
            <div className="flex gap-2">
-            {isPortalView ? (
+            {isPortalView && !isDialogView ? (
                 <Button asChild variant="outline">
                     <Link href="/portal/profile/edit">
                         <Pencil className="mr-2 h-4 w-4" />
                         Edit Profile
                     </Link>
                 </Button>
-            ) : (
+            ) : !isDialogView && (
                 <>
                     <Button asChild variant="outline">
                         <Link href={`/dashboard/employees/${employee.id}/edit`}>
@@ -429,6 +420,20 @@ export default function EmployeeProfileClientPage({ employee, isPortalView = fal
         </Card>
 
       </div>
+    </>
+  );
+
+  return (
+    <div className="space-y-6">
+       {!isPortalView && !isDialogView && (
+            <Button asChild variant="outline" size="sm">
+                <Link href="/dashboard/employees">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back to Employees
+                </Link>
+            </Button>
+       )}
+       {mainContent}
     </div>
   );
 }

@@ -29,8 +29,8 @@ export default async function EmployeeProfilePage({ params }: { params: { id: st
     positionDetails: positionDetails,
     leaveHistory: leaveHistoryData.map(req => ({
       ...req,
-      startDate: req.startDate, // Pass as is
-      endDate: req.endDate,     // Pass as is
+      startDate: new Date(req.startDate).toISOString(), // Pass as ISO string
+      endDate: new Date(req.endDate).toISOString(),     // Pass as ISO string
     })) as LeaveRequest[],
   };
 

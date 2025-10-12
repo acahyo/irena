@@ -233,8 +233,9 @@ export type PurchaseRequest = {
 
 
 // Composite type for pages that need employee data with full position details
-export type EmployeeWithPosition = Employee & {
-  positionDetails?: Position[]; // Changed from Position
+export type EmployeeWithPosition = Omit<Employee, 'leaveHistory'> & {
+  positionDetails?: Position[];
+  leaveHistory?: LeaveRequest[];
 }
 
 // Composite type for payroll page
