@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, useTransition, useEffect } from 'react';
@@ -444,14 +443,6 @@ export default function CandidatesClientPage() {
                     <Label htmlFor="notes">Catatan (Opsional)</Label>
                     <Input id="notes" name="notes" defaultValue={editingCandidate?.notes || ''} />
                 </div>
-                 {editingCandidate?.status === 'Diterima' && (
-                    <Button asChild className="w-full">
-                      <Link href={`/dashboard/employees/register?candidateId=${editingCandidate.id}`}>
-                        <UserPlus className="mr-2 h-4 w-4" />
-                        Proses Kandidat Menjadi Karyawan
-                      </Link>
-                    </Button>
-                )}
               </div>
               </ScrollArea>
 
