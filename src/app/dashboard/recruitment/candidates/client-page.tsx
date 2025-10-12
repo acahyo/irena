@@ -253,7 +253,7 @@ export default function CandidatesClientPage() {
                           .map((historyItem, index) => (
                             <div key={index} className="flex items-center gap-2 text-xs">
                               <Badge variant={getStatusVariant(historyItem.status)} className="w-24 justify-center">{historyItem.status}</Badge>
-                              <span className="text-muted-foreground">{format(new Date(historyItem.date), 'dd/MM/yy')}</span>
+                              <span className="text-muted-foreground">{format(new Date(historyItem.date as string), 'dd/MM/yy, HH:mm')}</span>
                             </div>
                           ))
                       ) : (
