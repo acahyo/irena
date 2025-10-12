@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import Link from "next/link";
@@ -55,6 +56,7 @@ import {
   UserCog,
   UserMinus,
   UserSearch,
+  UserSquare2,
 } from "lucide-react";
 import type { AppSettings, User, Role, MenuOrderItem } from "@/lib/types";
 import { logout } from "@/actions/auth";
@@ -68,6 +70,7 @@ const allNavItemsList = (lang: 'id' | 'en') => [
   { id: 'disciplinary-dashboard', href: "/dashboard/disciplinary-dashboard", icon: UserCog, label: "Dasbor Disipliner" },
   
   // Kepegawaian
+  { id: 'candidate-data', href: "/dashboard/recruitment/candidates", icon: UserSquare2, label: "Data Kandidat"},
   { id: 'employees', href: "/dashboard/employees", icon: Users, label: lang === 'id' ? "Daftar Karyawan" : "Employees" },
   { id: 'employee-register', href: "/dashboard/employees/new", icon: UserPlus, label: "Registrasi Karyawan" },
   { id: 'employee-review', href: "/dashboard/employees/review", icon: UserCheckIcon, label: "Tinjau Registrasi" },
@@ -128,6 +131,7 @@ const staticMenuOrder: MenuOrderItem[] = [
     { id: 'hse-dashboard' },
     { id: 'disciplinary-dashboard' },
     { id: 'finance' },
+    { id: 'candidate-data' },
     { id: 'employees' },
     { id: 'employee-register' },
     { id: 'employee-review' },
@@ -211,11 +215,9 @@ export default function DashboardClientLayout({
     if (accessibleMenus.size > 0) {
         accessibleMenus.add('dashboard');
         // Add specific dashboards based on role
-        if (role.name === 'HR') {
+        if (role.name === 'Rekrutmen' || role.name === 'HR') {
             accessibleMenus.add('recruitment-dashboard');
-        }
-        if (role.name === 'Rekrutmen') {
-            accessibleMenus.add('recruitment-dashboard');
+            accessibleMenus.add('candidate-data');
         }
         if (role.name === 'Finance') {
             accessibleMenus.add('finance-dashboard');

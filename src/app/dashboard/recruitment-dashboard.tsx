@@ -1,40 +1,46 @@
 
+
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { getEmployees } from '@/actions/employees';
-import type { User } from '@/lib/types';
-import { Users, UserCheck, UserPlus, Clock } from 'lucide-react';
+import type { User, Candidate } from '@/lib/types';
+import { Users, UserCheck, UserPlus, Clock, CalendarDays } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { format, isSameDay, isSameMonth, isSameYear } from 'date-fns';
+import { format, startOfWeek, isAfter } from 'date-fns';
 import QuickNikCheck from './quick-nik-check';
+import { getEmployees } from '@/actions/employees';
+import { getCandidates } from '@/actions/candidates';
+import { Badge } from '@/components/ui/badge';
+
 
 async function getDashboardData() {
-    const allEmployees = await getEmployees();
+    const [allEmployees, allCandidates] = await Promise.all([
+        getEmployees(),
+        getCandidates(),
+    ]);
+
     const today = new Date();
+    const startOfThisWeek = startOfWeek(today, { weekStartsOn: 1 }); // Monday
 
-    const pendingEmployees = allEmployees.filter(e => e.employeeStatus === 'pending');
     const activeEmployeesCount = allEmployees.filter(e => e.employeeStatus === 'active').length;
+    const pendingReviewCount = allEmployees.filter(e => e.employeeStatus === 'pending').length;
     
-    const activeThisMonthCount = allEmployees.filter(e => {
-        if (e.employeeStatus !== 'active' || !e.contractStartDate) return false;
-        const startDate = new Date(e.contractStartDate);
-        return isSameMonth(startDate, today) && isSameYear(startDate, today);
+    const newThisWeekCount = allCandidates.filter(c => {
+        const appliedDate = new Date(c.appliedDate);
+        return isAfter(appliedDate, startOfThisWeek);
     }).length;
-
-    const recruitedTodayCount = allEmployees.filter(e => {
-        if (!e.contractStartDate) return false; // Assuming new candidates have this date set on creation
-        return isSameDay(new Date(e.contractStartDate), today);
-    }).length;
+    
+    const pendingCandidates = allCandidates.filter(c => c.status === 'Pending' || c.status === 'Interview');
 
     return {
         allEmployees,
-        pendingEmployees,
+        totalCandidates: allCandidates.length,
         activeEmployeesCount,
-        pendingEmployeesCount: pendingEmployees.length,
-        activeThisMonthCount,
+        pendingReviewCount,
+        newThisWeekCount,
+        pendingCandidates,
     };
 }
 
@@ -46,29 +52,29 @@ export default async function RecruitmentDashboard({ user }: { user: User }) {
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Karyawan Aktif</CardTitle>
+                        <CardTitle className="text-sm font-medium">Total Kandidat</CardTitle>
                         <Users className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{data.activeEmployeesCount}</div>
+                        <div className="text-2xl font-bold">{data.totalCandidates}</div>
                     </CardContent>
                 </Card>
                  <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Menunggu Persetujuan HR</CardTitle>
-                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <CardTitle className="text-sm font-medium">Kandidat Baru (Minggu Ini)</CardTitle>
+                        <CalendarDays className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{data.pendingEmployeesCount}</div>
+                        <div className="text-2xl font-bold">{data.newThisWeekCount}</div>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Karyawan Aktif Bulan Ini</CardTitle>
-                        <UserCheck className="h-4 w-4 text-muted-foreground" />
+                        <CardTitle className="text-sm font-medium">Menunggu Verifikasi HR</CardTitle>
+                        <Clock className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{data.activeThisMonthCount}</div>
+                        <div className="text-2xl font-bold">{data.pendingReviewCount}</div>
                     </CardContent>
                 </Card>
             </div>
@@ -79,13 +85,13 @@ export default async function RecruitmentDashboard({ user }: { user: User }) {
                 <CardHeader>
                     <div className="flex justify-between items-center">
                         <div>
-                            <CardTitle>Pendaftaran Menunggu Verifikasi</CardTitle>
-                            <CardDescription>Daftar calon karyawan yang perlu diverifikasi dan dilengkapi datanya oleh HR.</CardDescription>
+                            <CardTitle>Kandidat Sedang Diproses</CardTitle>
+                            <CardDescription>Daftar calon karyawan yang menunggu interview atau verifikasi lebih lanjut.</CardDescription>
                         </div>
                         <Button asChild>
-                            <Link href="/dashboard/employees/new">
+                            <Link href="/dashboard/recruitment/candidates">
                                 <UserPlus className="mr-2 h-4 w-4" />
-                                Daftarkan Kandidat
+                                Kelola Data Kandidat
                             </Link>
                         </Button>
                     </div>
@@ -96,39 +102,25 @@ export default async function RecruitmentDashboard({ user }: { user: User }) {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Nama Kandidat</TableHead>
-                                    <TableHead>NIK</TableHead>
-                                    <TableHead>No. HP</TableHead>
-                                    <TableHead>Email</TableHead>
-                                    <TableHead className="text-right">Aksi</TableHead>
+                                    <TableHead>Posisi Dilamar</TableHead>
+                                    <TableHead>Tanggal Melamar</TableHead>
+                                    <TableHead>Status</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {data.pendingEmployees.length > 0 ? (
-                                    data.pendingEmployees.map(emp => (
-                                        <TableRow key={emp.id}>
-                                            <TableCell>
-                                                <div className="flex items-center gap-3">
-                                                    <Avatar className="h-9 w-9">
-                                                        <AvatarImage src={emp.avatar} alt={emp.name} />
-                                                        <AvatarFallback>{emp.name.charAt(0)}</AvatarFallback>
-                                                    </Avatar>
-                                                    <span className="font-medium">{emp.name}</span>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell>{emp.nik}</TableCell>
-                                            <TableCell>{emp.phone || '-'}</TableCell>
-                                            <TableCell>{emp.email || '-'}</TableCell>
-                                            <TableCell className="text-right">
-                                                <Button asChild variant="outline" size="sm">
-                                                    <Link href={`/dashboard/employees/${emp.id}/edit`}>Verifikasi & Lengkapi</Link>
-                                                </Button>
-                                            </TableCell>
+                                {data.pendingCandidates.length > 0 ? (
+                                    data.pendingCandidates.map(candidate => (
+                                        <TableRow key={candidate.id}>
+                                            <TableCell className="font-medium">{candidate.name}</TableCell>
+                                            <TableCell>{candidate.positionApplied}</TableCell>
+                                            <TableCell>{format(new Date(candidate.appliedDate), 'PPP')}</TableCell>
+                                            <TableCell><Badge variant="secondary">{candidate.status}</Badge></TableCell>
                                         </TableRow>
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="h-24 text-center">
-                                            Tidak ada pendaftaran yang menunggu persetujuan.
+                                        <TableCell colSpan={4} className="h-24 text-center">
+                                            Tidak ada kandidat yang sedang diproses.
                                         </TableCell>
                                     </TableRow>
                                 )}

@@ -1,4 +1,5 @@
 
+
 import { getAdminSession } from '@/actions/auth';
 import { redirect } from 'next/navigation';
 import RecruitmentDashboard from '../recruitment-dashboard';
@@ -11,7 +12,7 @@ export default async function RecruitmentPage() {
         redirect('/');
     }
 
-    const hasAccess = ['Administrator', 'HR'].includes(user.role);
+    const hasAccess = ['Administrator', 'HR', 'Rekrutmen'].includes(user.role);
     if (!hasAccess) {
         redirect('/dashboard');
     }

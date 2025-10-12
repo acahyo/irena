@@ -68,6 +68,20 @@ export type Employee = {
   separationReason?: string;
 };
 
+export type Candidate = {
+  id: string;
+  name: string;
+  phone: string;
+  email?: string;
+  address: string;
+  positionApplied: string;
+  appliedDate: Date | string;
+  status: 'Pending' | 'Interview' | 'Hired' | 'Rejected';
+  recruiterId: string;
+  recruiterName: string;
+  notes?: string;
+};
+
 export type CalendarEvent = {
   date: Date;
   title: string;
