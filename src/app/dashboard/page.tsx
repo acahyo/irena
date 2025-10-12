@@ -34,24 +34,25 @@ import DisciplinaryDashboard from './disciplinary-dashboard';
 
 
 async function getDashboardData({ siteIds }: { siteIds?: string[] }) {
-    // Fetch employees with siteId filter for general stats
-    const filteredEmployees = await getEmployees({ siteIds });
-
-    // Fetch all employees for leave recommendation and all leave requests/violations
     const [allEmployees, allLeaveRequests, violationRecords] = await Promise.all([
-        getEmployees(),
+        getEmployees(), // Fetch all employees once
         getLeaveRequests({}), 
         getViolationRecords()
     ]);
+    
+    // Filter employees based on user's site access for most stats
+    const filteredEmployees = siteIds 
+        ? allEmployees.filter(e => e.siteLocation && siteIds.includes(e.siteLocation)) 
+        : allEmployees;
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const employeeIds = new Set(filteredEmployees.map(e => e.id));
+    const filteredEmployeeIds = new Set(filteredEmployees.map(e => e.id));
 
     const approvedLeave = allLeaveRequests.filter(
         (req) =>
-            employeeIds.has(req.employeeId) &&
+            filteredEmployeeIds.has(req.employeeId) &&
             req.status === 'Approved' &&
             new Date(req.startDate) <= today &&
             new Date(req.endDate) >= today
@@ -92,6 +93,7 @@ async function getDashboardData({ siteIds }: { siteIds?: string[] }) {
         return acc;
     }, { active: 0, nonaktif: 0, resign: 0, phk: 0, pending: 0, "Pending PHK Approval": 0 });
 
+    // For leave recommendation, we use all active employees regardless of the user's site filter.
     const leaveRecommendation = allEmployees
         .filter(emp => emp.employeeStatus === 'active')
         .map(emp => {
@@ -414,5 +416,4 @@ export default async function DashboardPage({ searchParams, userSiteIds }: { sea
              </div>
         </div>
     );
-
-    
+}
