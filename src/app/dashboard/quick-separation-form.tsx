@@ -12,7 +12,6 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import type { Employee, ViolationRecord } from '@/lib/types';
 import { Search, Loader2, UserMinus, FileText, AlertTriangle, Eye } from 'lucide-react';
@@ -189,6 +188,7 @@ export default function QuickSeparationForm({
     </>
   );
 }
+
 
 
 
