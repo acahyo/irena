@@ -44,7 +44,8 @@ import { Label } from '@/components/ui/label';
 import { MoreHorizontal, PlusCircle, Trash2, Pencil, Loader2, UserPlus, ExternalLink, Upload, Calendar as CalendarIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Candidate, Position, User, Site } from '@/lib/types';
-import { createCandidate, updateCandidate, deleteCandidate } from '@/actions/candidates';
+import { getCandidates, createCandidate, updateCandidate, deleteCandidate } from '@/actions/candidates';
+import { getPositions } from '@/actions/positions';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -53,6 +54,7 @@ import { getSites } from '@/actions/sites';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const getStatusVariant = (status: Candidate['status']) => {
   switch (status) {
@@ -67,22 +69,21 @@ const getStatusVariant = (status: Candidate['status']) => {
 };
 
 export default function CandidatesClientPage({ 
-  initialCandidates, 
-  positions, 
   user 
 }: { 
-  initialCandidates: Candidate[], 
-  positions: Position[],
   user: User
 }) {
-  const [candidates, setCandidates] = useState(initialCandidates);
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [positions, setPositions] = useState<Position[]>([]);
+  const [sites, setSites] = useState<Site[]>([]);
+  const [pageLoading, setPageLoading] = useState(true);
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCandidate, setEditingCandidate] = useState<Partial<Candidate> | null>(null);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const router = useRouter();
 
-  const [sites, setSites] = useState<Site[]>([]);
   const [selectedSite, setSelectedSite] = useState('');
   
   const [currentStatus, setCurrentStatus] = useState<Candidate['status'] | undefined>();
@@ -90,14 +91,26 @@ export default function CandidatesClientPage({
   const [testDoc, setTestDoc] = useState<string | null>(null);
   const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>();
 
-
   useEffect(() => {
-    const fetchSitesData = async () => {
-        const sitesData = await getSites();
-        setSites(sitesData);
+    const fetchInitialData = async () => {
+        setPageLoading(true);
+        try {
+            const [candidatesData, positionsData, sitesData] = await Promise.all([
+                getCandidates(),
+                getPositions(),
+                getSites()
+            ]);
+            setCandidates(candidatesData);
+            setPositions(positionsData);
+            setSites(sitesData);
+        } catch (error) {
+            toast({ variant: "destructive", title: "Error", description: "Failed to load candidate data."});
+        } finally {
+            setPageLoading(false);
+        }
     };
-    fetchSitesData();
-  }, []);
+    fetchInitialData();
+  }, [toast]);
   
   const handleOpenDialog = (candidate: Partial<Candidate> | null = null) => {
     setEditingCandidate(candidate);
@@ -150,7 +163,8 @@ export default function CandidatesClientPage({
                 toast({ title: 'Sukses!', description: 'Kandidat baru berhasil ditambahkan.' });
             }
             setIsDialogOpen(false);
-            router.refresh();
+            const updatedCandidates = await getCandidates();
+            setCandidates(updatedCandidates);
         } catch (error) {
             toast({ variant: 'destructive', title: 'Error', description: 'Gagal menyimpan data kandidat.' });
         }
@@ -168,6 +182,22 @@ export default function CandidatesClientPage({
           }
       });
   };
+  
+  if (pageLoading) {
+      return (
+          <div className="space-y-6">
+              <Card>
+                  <CardHeader>
+                      <Skeleton className="h-8 w-60" />
+                      <Skeleton className="h-4 w-80" />
+                  </CardHeader>
+                  <CardContent>
+                      <Skeleton className="h-64 w-full" />
+                  </CardContent>
+              </Card>
+          </div>
+      )
+  }
 
   return (
     <>
