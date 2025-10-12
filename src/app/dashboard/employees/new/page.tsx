@@ -38,10 +38,11 @@ import { createEmployee } from '@/actions/employees';
 import { getDepartments } from '@/actions/departments';
 import { getPositions } from '@/actions/positions';
 import { getSites } from '@/actions/sites';
-import type { Employee, Department, Position, Site } from '@/lib/types';
+import type { Employee, Department, Position, Site, User } from '@/lib/types';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
+import { useUser } from '@/contexts/user-context';
 
 type SelectedPosition = {
     id: string;
@@ -51,6 +52,7 @@ type SelectedPosition = {
 export default function NewEmployeePage() {
   const router = useRouter();
   const { toast } = useToast();
+  const user = useUser();
   const [loading, setLoading] = useState(false);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [positions, setPositions] = useState<Position[]>([]);
@@ -227,7 +229,7 @@ export default function NewEmployeePage() {
     } as Partial<Employee>;
     
     try {
-        await createEmployee(employeeData);
+        await createEmployee(employeeData, user?.role);
         toast({
             title: 'Success!',
             description: 'New employee has been added.',
@@ -317,6 +319,19 @@ export default function NewEmployeePage() {
     </div>
   );
 
+  if (!user || (user.role !== 'Administrator' && user.role !== 'HR' && user.role !== 'Rekrutmen')) {
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Akses Ditolak</CardTitle>
+                <CardDescription>Anda tidak memiliki izin untuk mengakses halaman ini.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Button asChild><Link href="/dashboard">Kembali ke Dasbor</Link></Button>
+            </CardContent>
+        </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">

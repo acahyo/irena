@@ -214,8 +214,11 @@ export default function DashboardClientLayout({
     if (accessibleMenus.size > 0) {
         accessibleMenus.add('dashboard');
         // Add specific dashboards based on role
-        if (role.name === 'HR') {
+        if (role.name === 'HR' || role.name === 'Rekrutmen') {
             accessibleMenus.add('recruitment-dashboard');
+            accessibleMenus.add('employees');
+            accessibleMenus.add('employee-register');
+            accessibleMenus.add('employee-review');
         }
         if (role.name === 'Finance') {
             accessibleMenus.add('finance-dashboard');
