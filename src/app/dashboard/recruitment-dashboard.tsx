@@ -32,10 +32,11 @@ async function getDashboardData() {
         return isAfter(appliedDate, startOfThisWeek);
     }).length;
     
-    const pendingCandidates = allCandidates.filter(c => c.status === 'Pending' || c.status === 'Interview');
+    const pendingCandidates = allCandidates.filter(c => c.status === 'Menunggu' || c.status === 'Interview');
 
     return {
         allEmployees,
+        allCandidates,
         totalCandidates: allCandidates.length,
         activeEmployeesCount,
         pendingReviewCount,
@@ -79,7 +80,7 @@ export default async function RecruitmentDashboard({ user }: { user: User }) {
                 </Card>
             </div>
             
-            <QuickNikCheck allEmployees={data.allEmployees} />
+            <QuickNikCheck allEmployees={data.allEmployees} allCandidates={data.allCandidates} />
 
             <Card>
                 <CardHeader>

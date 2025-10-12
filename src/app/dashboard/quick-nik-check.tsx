@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useTransition } from 'react';
@@ -12,15 +13,15 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import type { Employee } from '@/lib/types';
+import type { Employee, Candidate } from '@/lib/types';
 import { Search, Loader2 } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
-export default function QuickNikCheck({ allEmployees }: { allEmployees: Employee[] }) {
+export default function QuickNikCheck({ allEmployees, allCandidates }: { allEmployees: Employee[], allCandidates: Candidate[] }) {
   const [nik, setNik] = useState('');
   const [isSearching, startSearch] = useTransition();
   const { toast } = useToast();
-  const [searchResult, setSearchResult] = useState<{ status: 'found' | 'not_found', nik: string } | null>(null);
+  const [searchResult, setSearchResult] = useState<{ status: 'found' | 'not_found', nik: string, foundIn?: 'Karyawan' | 'Kandidat', name?: string } | null>(null);
 
   const handleSearch = () => {
     if (!nik) {
@@ -31,19 +32,33 @@ export default function QuickNikCheck({ allEmployees }: { allEmployees: Employee
     startSearch(() => {
       const foundEmployee = allEmployees.find(e => e.nik === nik);
       if (foundEmployee) {
-        setSearchResult({ status: 'found', nik });
+        const result = { status: 'found' as const, nik, foundIn: 'Karyawan' as const, name: foundEmployee.name };
+        setSearchResult(result);
         toast({
             variant: 'destructive',
-            title: 'NIK Sudah Terdaftar',
+            title: `NIK Sudah Terdaftar (Karyawan)`,
             description: `NIK ${nik} sudah terdaftar atas nama ${foundEmployee.name}.`
         });
-      } else {
-        setSearchResult({ status: 'not_found', nik });
-        toast({
-            title: 'NIK Tersedia',
-            description: `NIK ${nik} belum terdaftar dan dapat digunakan.`
-        });
+        return;
       }
+      
+      const foundCandidate = allCandidates.find(c => c.nik === nik);
+      if (foundCandidate) {
+        const result = { status: 'found' as const, nik, foundIn: 'Kandidat' as const, name: foundCandidate.name };
+        setSearchResult(result);
+        toast({
+            variant: 'destructive',
+            title: `NIK Sudah Terdaftar (Kandidat)`,
+            description: `NIK ${nik} sudah terdaftar sebagai kandidat atas nama ${foundCandidate.name}.`
+        });
+        return;
+      }
+
+      setSearchResult({ status: 'not_found', nik });
+      toast({
+          title: 'NIK Tersedia',
+          description: `NIK ${nik} belum terdaftar dan dapat digunakan.`
+      });
     });
   };
 
@@ -69,10 +84,10 @@ export default function QuickNikCheck({ allEmployees }: { allEmployees: Employee
         </div>
         {searchResult && (
             <Alert variant={searchResult.status === 'found' ? 'destructive' : 'default'} className="mt-4">
-                <AlertTitle>{searchResult.status === 'found' ? 'NIK Sudah Ada' : 'NIK Tersedia'}</AlertTitle>
+                <AlertTitle>{searchResult.status === 'found' ? `NIK Sudah Ada (${searchResult.foundIn})` : 'NIK Tersedia'}</AlertTitle>
                 <AlertDescription>
                      {searchResult.status === 'found' 
-                        ? `NIK ${searchResult.nik} sudah digunakan.`
+                        ? `NIK ${searchResult.nik} sudah digunakan oleh ${searchResult.name}.`
                         : `NIK ${searchResult.nik} dapat digunakan untuk registrasi.`
                      }
                 </AlertDescription>
