@@ -68,12 +68,14 @@ const hexToHslString = (hex: string | undefined): string | undefined => {
 
 const allMenus = [
   { id: 'dashboard', label: 'Dasbor' },
+  { id: 'recruitment-dashboard', label: 'Dasbor Rekrutmen' },
   { id: 'finance-dashboard', label: 'Dasbor Keuangan' },
   { id: 'hse-dashboard', label: 'Dasbor HSE' },
   { id: 'disciplinary-dashboard', label: "Dasbor Disipliner" },
   { id: 'employees', label: 'Daftar Karyawan' },
   { id: 'employee-register', label: "Registrasi Karyawan" },
   { id: 'employee-review', label: "Tinjau Registrasi" },
+  { id: 'candidate-data', label: 'Data Kandidat' },
   { id: 'leave-schedule', label: 'Jadwal Cuti' },
   { id: 'separations', label: 'Proses Resign/PHK' },
   { id: 'separations-review', label: 'Tinjau PHK' },
