@@ -53,7 +53,7 @@ export default function HsePage() {
       records: HseRecord[];
   }[] = [
     {
-      title: 'Rekomendasi Surat Peringatan',
+      title: 'Laporan Insiden dan Investigasi',
       description: 'Buat SP untuk karyawan berdasarkan laporan insiden yang masuk.',
       icon: <FileWarning className="h-6 w-6 text-destructive" />,
       category: 'incident',

@@ -200,6 +200,7 @@ export default function RegisterEmployeeClientPage({ user, assignedSites }: { us
         bankBookPhoto: bankBookPreview,
         canGeneratePayslip: (data.canGeneratePayslip === 'on'),
         positions: selectedPositions.map(p => p.name),
+        accountHolderName: accountHolderName,
     } as Partial<Employee>;
     
     try {

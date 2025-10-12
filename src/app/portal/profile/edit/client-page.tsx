@@ -108,7 +108,7 @@ export default function EditMyProfileClientPage({ employee }: { employee: Employ
 
     const employeeData: Partial<Employee> = {
         ...data,
-        accountHolderName,
+        accountHolderName: accountHolderName,
         kartuKeluargaPhoto: kkPreview,
         bankBookPhoto: bankBookPreview,
     } as Partial<Employee>;

@@ -112,6 +112,7 @@ export default function NewUserPage() {
         const userData: Omit<User, 'id'> = { 
             name: selectedEmployee?.name || '', 
             email: selectedEmployee?.email || '', 
+            avatar: selectedEmployee?.avatar || '',
             role, 
             password,
             projectAccess: role !== 'Admin Proyek' ? projectAccess : undefined,
@@ -321,5 +322,3 @@ export default function NewUserPage() {
     </div>
   );
 }
-
-    

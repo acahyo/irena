@@ -12,7 +12,8 @@ import {
   deleteDoc,
   Timestamp,
   query,
-  orderBy
+  orderBy,
+  getDoc
 } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from "firebase/storage";
 import type { ViolationRecord } from '@/lib/types';

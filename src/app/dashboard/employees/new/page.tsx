@@ -223,6 +223,7 @@ export default function NewEmployeePage() {
         bankBookPhoto: bankBookPreview,
         canGeneratePayslip: (data.canGeneratePayslip === 'on'),
         positions: selectedPositions.map(p => p.name),
+        accountHolderName: accountHolderName,
     } as Partial<Employee>;
     
     try {
@@ -545,16 +546,15 @@ export default function NewEmployeePage() {
                         <Button type="button" onClick={addPosition} disabled={!positionToAdd}><PlusCircle className="mr-2 h-4 w-4" /> Tambah</Button>
                     </div>
                     <div className="flex flex-wrap gap-2 p-2 border rounded-md min-h-[40px]">
-                        {selectedPositions.length > 0 ? selectedPositions.map((pos) => (
+                        {selectedPositions.map((pos) => (
                             <Badge key={pos.id} variant="secondary" className="flex items-center gap-2">
                                 {pos.name}
                                 <button type="button" onClick={() => removePosition(pos.id)} className="ml-1 rounded-full hover:bg-destructive/20 p-0.5">
                                     <Trash2 className="h-3 w-3 text-destructive" />
                                 </button>
                             </Badge>
-                        )) : (
-                           <p className="text-sm text-muted-foreground">Belum ada jabatan dipilih.</p>
-                        )}
+                        ))}
+                        {selectedPositions.length === 0 && <p className="text-sm text-muted-foreground">Belum ada jabatan dipilih.</p>}
                     </div>
               </div>
 
@@ -669,4 +669,3 @@ export default function NewEmployeePage() {
     </div>
   );
 }
-
