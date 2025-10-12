@@ -35,7 +35,7 @@ import DisciplinaryDashboard from './disciplinary-dashboard';
 
 async function getDashboardData({ siteIds }: { siteIds?: string[] }) {
     const [allEmployees, allLeaveRequests, violationRecords] = await Promise.all([
-        getEmployees(), // Fetch all employees once
+        getEmployees(), 
         getLeaveRequests({}), 
         getViolationRecords()
     ]);
@@ -93,7 +93,6 @@ async function getDashboardData({ siteIds }: { siteIds?: string[] }) {
         return acc;
     }, { active: 0, nonaktif: 0, resign: 0, phk: 0, pending: 0, "Pending PHK Approval": 0 });
 
-    // For leave recommendation, we use all active employees regardless of the user's site filter.
     const leaveRecommendation = allEmployees
         .filter(emp => emp.employeeStatus === 'active')
         .map(emp => {
@@ -157,7 +156,7 @@ async function getDashboardData({ siteIds }: { siteIds?: string[] }) {
 }
 
 
-export default async function DashboardPage({ searchParams, userSiteIds }: { searchParams: { projectId?: string }, userSiteIds?: string[] }) {
+export default async function DashboardPage({ searchParams }: { searchParams: { projectId?: string } }) {
     const user = await getAdminSession();
     if (!user) {
         redirect('/');
@@ -190,9 +189,15 @@ export default async function DashboardPage({ searchParams, userSiteIds }: { sea
     if (user.role === 'Admin Absensi') {
         return <AttendanceAdminDashboard user={user} />;
     }
+    
+    // For HR and Administrator, determine site IDs to filter by.
+    // If Admin Proyek has `projectAccess: 'all'`, they should also see all sites.
+    const siteIdsForFilter = (user.role === 'HR' || user.role === 'Administrator' || (user.role === 'Admin Proyek' && user.projectAccess === 'all'))
+        ? undefined 
+        : user.siteIds;
 
     const [stats, settings] = await Promise.all([
-        getDashboardData({ siteIds: userSiteIds }), // General admin sees all sites
+        getDashboardData({ siteIds: siteIdsForFilter }),
         getSettings()
     ]);
     
@@ -417,3 +422,4 @@ export default async function DashboardPage({ searchParams, userSiteIds }: { sea
         </div>
     );
 }
+
