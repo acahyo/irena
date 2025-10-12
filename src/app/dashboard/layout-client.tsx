@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from "next/link";
@@ -212,13 +213,9 @@ export default function DashboardClientLayout({
         // Add specific dashboards based on role
         if (role.name === 'HR') {
             accessibleMenus.add('recruitment-dashboard');
-            accessibleMenus.add('employees');
-            accessibleMenus.add('employee-register');
-            accessibleMenus.add('employee-review');
         }
         if (role.name === 'Rekrutmen') {
             accessibleMenus.add('recruitment-dashboard');
-            accessibleMenus.add('employee-register');
         }
         if (role.name === 'Finance') {
             accessibleMenus.add('finance-dashboard');

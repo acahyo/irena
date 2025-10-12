@@ -202,9 +202,9 @@ export default function EmployeeDirectoryClientPage({ initialEmployees }: { init
 
   return (
     <div className="space-y-6">
-      {(user.role === 'Admin Proyek' || user.role === 'Rekrutmen') && (
+      {(user.role === 'Rekrutmen') && (
         <Button asChild variant="outline" size="sm">
-            <Link href="/dashboard">
+            <Link href="/dashboard/recruitment">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Kembali ke Dasbor
             </Link>
@@ -303,7 +303,7 @@ export default function EmployeeDirectoryClientPage({ initialEmployees }: { init
                     <AlertDialogHeader>
                         <AlertDialogTitle>Anda yakin?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Aksi ini tidak dapat dibatalkan. Ini akan menghapus {selectedEmployeeIds.size} catatan karyawan secara permanen.
+                            Aksi ini akan menghapus {selectedEmployeeIds.size} catatan karyawan secara permanen.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

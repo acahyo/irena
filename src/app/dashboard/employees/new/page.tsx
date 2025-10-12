@@ -107,7 +107,8 @@ export default function NewEmployeePage() {
             title: 'Success!',
             description: 'Data kandidat telah disimpan dan menunggu verifikasi HR.',
         });
-        router.push('/dashboard/employees');
+        const redirectUrl = user?.role === 'Rekrutmen' ? '/dashboard/recruitment' : '/dashboard';
+        router.push(redirectUrl);
         router.refresh();
     } catch (error) {
         console.error(error);
@@ -206,12 +207,14 @@ export default function NewEmployeePage() {
     );
   }
 
+  const backLink = user.role === 'Rekrutmen' ? '/dashboard/recruitment' : '/dashboard';
+
   return (
     <div className="space-y-6">
       <Button asChild variant="outline" size="sm">
-        <Link href="/dashboard/employees">
+        <Link href={backLink}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Employees
+          Kembali ke Dasbor
         </Link>
       </Button>
 

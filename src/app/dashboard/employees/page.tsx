@@ -1,5 +1,4 @@
 
-
 import { getEmployees } from '@/actions/employees';
 import { getLeaveRequests } from '@/actions/leave';
 import EmployeeDirectoryClientPage from './client-page';
@@ -15,13 +14,22 @@ export default async function EmployeeDirectoryPage() {
   if (!user) {
     redirect('/');
   }
+  
+  // Redirect roles that should not access this page
+  if (user.role === 'Rekrutmen') {
+    redirect('/dashboard/recruitment');
+  }
+  if (user.role === 'Admin Proyek') {
+    redirect('/dashboard');
+  }
+
 
   // HR and Admin see all employees, regardless of siteIds
   const siteIdsForFilter = (user.role === 'HR' || user.role === 'Administrator') ? undefined : user.siteIds;
 
   const [fetchedEmployees, leaveRequests, violationRecords] = await Promise.all([
       getEmployees({ siteIds: siteIdsForFilter }),
-      getLeaveRequests({ siteId: siteIdsForFilter ? siteIdsForFilter[0] : undefined }),
+      getLeaveRequests({}),
       getViolationRecords(),
     ]);
 
