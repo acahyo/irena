@@ -31,19 +31,18 @@ import ViolationChart from './violation-chart';
 import FinanceDashboard from './finance-dashboard';
 import HseDashboard from './hse-dashboard';
 import DisciplinaryDashboard from './disciplinary-dashboard';
+import QuickEmployeeSearch from './quick-employee-search';
 
 
-async function getDashboardData({ siteIds }: { siteIds?: string[] }) {
+async function getDashboardData() {
     const [allEmployees, allLeaveRequests, violationRecords] = await Promise.all([
         getEmployees(), 
         getLeaveRequests({}), 
         getViolationRecords()
     ]);
     
-    // Filter employees based on user's site access for most stats
-    const filteredEmployees = siteIds 
-        ? allEmployees.filter(e => e.siteLocation && siteIds.includes(e.siteLocation)) 
-        : allEmployees;
+    // For general stats, use all employees fetched
+    const filteredEmployees = allEmployees;
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -145,6 +144,8 @@ async function getDashboardData({ siteIds }: { siteIds?: string[] }) {
 
 
     return {
+        allEmployees, // Pass all employees for the search component
+        violationRecords, // Pass all violations for the search component
         totalEmployees: filteredEmployees.length,
         employeesOnLeave: approvedLeave.length,
         employeesByPosition,
@@ -190,14 +191,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
         return <AttendanceAdminDashboard user={user} />;
     }
     
-    // For HR and Administrator, determine site IDs to filter by.
-    // If Admin Proyek has `projectAccess: 'all'`, they should also see all sites.
-    const siteIdsForFilter = (user.role === 'HR' || user.role === 'Administrator' || (user.role === 'Admin Proyek' && user.projectAccess === 'all'))
-        ? undefined 
-        : user.siteIds;
-
     const [stats, settings] = await Promise.all([
-        getDashboardData({ siteIds: siteIdsForFilter }),
+        getDashboardData(),
         getSettings()
     ]);
     
@@ -337,41 +332,46 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
                         </ScrollArea>
                     </CardContent>
                 </Card>
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <ListChecks />
-                            {T.leaveRecommendation}
-                        </CardTitle>
-                        <CardDescription>{T.leaveRecommendationDesc}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <ScrollArea className="h-[300px]">
-                            <div className="space-y-4">
-                                {stats.leaveRecommendation.length > 0 ? (
-                                    stats.leaveRecommendation.map(emp => (
-                                        <div key={emp.id} className="flex items-center">
-                                            <Avatar className="h-9 w-9">
-                                                <AvatarImage src={emp.avatar} alt={emp.name} />
-                                                <AvatarFallback>{emp.name.charAt(0)}</AvatarFallback>
-                                            </Avatar>
-                                            <div className="ml-4 space-y-1">
-                                                <Link href={`/dashboard/employees/${emp.id}`} className="text-sm font-medium leading-none hover:underline">{emp.name}</Link>
-                                                <p className="text-xs text-muted-foreground">{emp.positions?.join(', ') || 'N/A'}</p>
+
+                <div className="space-y-6">
+                    <QuickEmployeeSearch employees={stats.allEmployees} violations={stats.violationRecords} />
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <ListChecks />
+                                {T.leaveRecommendation}
+                            </CardTitle>
+                            <CardDescription>{T.leaveRecommendationDesc}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <ScrollArea className="h-[180px]">
+                                <div className="space-y-4">
+                                    {stats.leaveRecommendation.length > 0 ? (
+                                        stats.leaveRecommendation.map(emp => (
+                                            <div key={emp.id} className="flex items-center">
+                                                <Avatar className="h-9 w-9">
+                                                    <AvatarImage src={emp.avatar} alt={emp.name} />
+                                                    <AvatarFallback>{emp.name.charAt(0)}</AvatarFallback>
+                                                </Avatar>
+                                                <div className="ml-4 space-y-1">
+                                                    <Link href={`/dashboard/employees/${emp.id}`} className="text-sm font-medium leading-none hover:underline">{emp.name}</Link>
+                                                    <p className="text-xs text-muted-foreground">{emp.positions?.join(', ') || 'N/A'}</p>
+                                                </div>
+                                                <div className="ml-auto font-medium text-xs">{emp.daysActive} {T.days}</div>
                                             </div>
-                                            <div className="ml-auto font-medium text-xs">{emp.daysActive} {T.days}</div>
+                                        ))
+                                    ) : (
+                                        <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-8">
+                                            <UserRound className="h-8 w-8 mb-2" />
+                                            <p className="text-sm">{T.noRecommendation}</p>
                                         </div>
-                                    ))
-                                ) : (
-                                     <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-8">
-                                        <UserRound className="h-8 w-8 mb-2" />
-                                        <p className="text-sm">{T.noRecommendation}</p>
-                                    </div>
-                                )}
-                            </div>
-                        </ScrollArea>
-                    </CardContent>
-                </Card>
+                                    )}
+                                </div>
+                            </ScrollArea>
+                        </CardContent>
+                    </Card>
+                </div>
+
             </div>
              
              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
