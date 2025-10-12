@@ -30,7 +30,7 @@ export type Employee = {
   bpjsStatus?: 'active' | 'inactive' | 'not-registered';
   bpjsNumber?: string;
   bpjsType?: 'miki' | 'iba';
-  employeeStatus?: 'active' | 'nonaktif' | 'resign' | 'phk' | 'pending' | 'Pending PHK Approval';
+  employeeStatus?: 'active' | 'nonaktif' | 'resign' | 'phk' | 'pending' | 'Pending PHK Approval' | 'Verifikasi Data';
   ktpPhoto?: string;
   simPhoto?: string;
   sioPhoto?: string;

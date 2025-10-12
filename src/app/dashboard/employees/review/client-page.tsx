@@ -71,10 +71,10 @@ export default function ReviewEmployeesClientPage({ pendingEmployees, sites }: {
   const handleApprove = async (employeeId: string) => {
     setLoading(employeeId);
     try {
-      await updateEmployee(employeeId, { employeeStatus: 'active' });
+      await updateEmployee(employeeId, { employeeStatus: 'Verifikasi Data' });
       toast({
         title: 'Success!',
-        description: 'Employee has been approved and is now active.',
+        description: 'Employee has been approved and is now pending data verification.',
       });
       setEmployees((prev) => prev.filter((emp) => emp.id !== employeeId));
       router.refresh();
@@ -218,7 +218,7 @@ export default function ReviewEmployeesClientPage({ pendingEmployees, sites }: {
           </DialogHeader>
           <div className="flex-1 overflow-y-auto pr-6">
             {selectedEmployee && (
-              <EmployeeProfileClientPage employee={selectedEmployee} isPortalView />
+              <EmployeeProfileClientPage employee={selectedEmployee} isDialogView={true} />
             )}
           </div>
         </DialogContent>

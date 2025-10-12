@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import Link from 'next/link';
@@ -32,6 +33,8 @@ const getStatusBadge = (status?: string) => {
             return <Badge variant="default" className="absolute top-2 right-2">Aktif</Badge>;
         case 'pending':
             return <Badge variant="secondary" className="absolute top-2 right-2 bg-yellow-100 text-yellow-800">Pending</Badge>;
+        case 'Verifikasi Data':
+            return <Badge className="absolute top-2 right-2 bg-black text-white">Verifikasi Data</Badge>;
         case 'nonaktif':
             return <Badge variant="outline" className="absolute top-2 right-2">Non-Aktif</Badge>;
         case 'onLeave':
@@ -158,6 +161,3 @@ export function EmployeeCard({ employee, isSelected, onSelect }: EmployeeCardPro
       </Card>
   );
 }
-
-
-

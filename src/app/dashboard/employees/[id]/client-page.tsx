@@ -145,6 +145,8 @@ export default function EmployeeProfileClientPage({ employee, isPortalView = fal
       switch (status) {
           case 'active':
               return 'default';
+          case 'Verifikasi Data':
+              return 'outline';
           case 'nonaktif':
               return 'secondary';
           case 'resign':

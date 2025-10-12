@@ -246,6 +246,7 @@ export default function EmployeeDirectoryClientPage({ initialEmployees }: { init
                 <SelectItem value="all">Semua Status</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="Verifikasi Data">Verifikasi Data</SelectItem>
                 <SelectItem value="nonaktif">Non-Aktif</SelectItem>
                 <SelectItem value="resign">Resign</SelectItem>
                 <SelectItem value="phk">PHK</SelectItem>
