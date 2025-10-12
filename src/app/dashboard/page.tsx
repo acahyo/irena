@@ -220,7 +220,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
         employeeCount: lang === 'id' ? 'Jumlah Karyawan' : 'Number of Employees',
         noPositionData: lang === 'id' ? 'Tidak ada data karyawan.' : 'No employee data available.',
         leaveRecommendation: lang === 'id' ? 'Rekomendasi Cuti' : 'Leave Recommendation',
-        leaveRecommendationDesc: lang === 'id' ? 'Karyawan aktif lebih dari 120 hari yang direkomendasikan untuk mengambil cuti.' : 'Active employees for more than 120 days recommended to take leave.',
+        leaveRecommendationDesc: lang === 'id' ? 'Karyawan aktif >120 hari yang direkomendasikan untuk mengambil cuti.' : 'Active employees >120 days recommended for leave.',
         days: lang === 'id' ? 'hari' : 'days',
         noRecommendation: lang === 'id' ? 'Tidak ada karyawan yang memenuhi kriteria saat ini.' : 'No employees meet the criteria at this time.',
         violationRecap: lang === 'id' ? 'Rekap Pelanggaran' : 'Violation Recap',
@@ -343,34 +343,40 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
                             <ListChecks />
                             {T.leaveRecommendation}
                         </CardTitle>
+                        <CardDescription>{T.leaveRecommendationDesc}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-sm text-muted-foreground mb-4">
-                            {T.leaveRecommendationDesc}
-                        </p>
                         <ScrollArea className="h-[300px]">
-                            <div className="space-y-4">
-                                {stats.leaveRecommendation.length > 0 ? (
-                                    stats.leaveRecommendation.map(emp => (
-                                        <div key={emp.id} className="flex items-center">
-                                            <Avatar className="h-9 w-9">
-                                                <AvatarImage src={emp.avatar} alt={emp.name} />
-                                                <AvatarFallback>{emp.name.charAt(0)}</AvatarFallback>
-                                            </Avatar>
-                                            <div className="ml-4 space-y-1">
-                                                <Link href={`/dashboard/employees/${emp.id}`} className="text-sm font-medium leading-none hover:underline">{emp.name}</Link>
-                                                <div className="text-xs text-muted-foreground">{emp.position}</div>
-                                            </div>
-                                            <div className="ml-auto font-medium text-xs">{emp.daysActive} {T.days}</div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-8">
-                                        <UserRound className="h-8 w-8 mb-2" />
-                                        <div className="text-sm">{T.noRecommendation}</div>
-                                    </div>
-                                )}
-                            </div>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Karyawan</TableHead>
+                                        <TableHead>Jabatan</TableHead>
+                                        <TableHead className="text-right">Hari Aktif</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {stats.leaveRecommendation.length > 0 ? (
+                                        stats.leaveRecommendation.map(emp => (
+                                            <TableRow key={emp.id}>
+                                                <TableCell>
+                                                    <Link href={`/dashboard/employees/${emp.id}`} className="font-medium hover:underline">{emp.name}</Link>
+                                                    <div className="text-xs text-muted-foreground">{emp.siteLocation || 'N/A'}</div>
+                                                </TableCell>
+                                                <TableCell className="text-xs">{emp.position}</TableCell>
+                                                <TableCell className="text-right font-medium">{emp.daysActive} {T.days}</TableCell>
+                                            </TableRow>
+                                        ))
+                                    ) : (
+                                        <TableRow>
+                                            <TableCell colSpan={3} className="h-24 text-center">
+                                                <UserRound className="mx-auto h-8 w-8 mb-2 text-muted-foreground" />
+                                                <p className="text-sm text-muted-foreground">{T.noRecommendation}</p>
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
                         </ScrollArea>
                     </CardContent>
                 </Card>
@@ -422,4 +428,3 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
         </div>
     );
 }
-
