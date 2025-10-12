@@ -1,9 +1,10 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { ArrowLeft, Calendar as CalendarIcon, Upload, Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -37,33 +38,35 @@ import type { Employee, Position, Site, User, Candidate } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getPositions } from '@/actions/positions';
 import { getSites } from '@/actions/sites';
+import { getCandidateById } from '@/actions/candidates';
 
 type SelectedPosition = {
     id: string;
     name: string;
 };
 
-export default function RegisterEmployeeClientPage({ user, candidate }: { user: User, candidate?: Candidate }) {
+export default function RegisterEmployeeClientPage({ user }: { user: User }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
 
+  const [candidate, setCandidate] = useState<Candidate | undefined | null>(undefined);
   const [positions, setPositions] = useState<Position[]>([]);
   const [sites, setSites] = useState<Site[]>([]);
 
   const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>();
-  
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  
   const [selectedPositions, setSelectedPositions] = useState<SelectedPosition[]>([]);
   const [positionToAdd, setPositionToAdd] = useState('');
   const [employeeName, setEmployeeName] = useState('');
-  
   const [siteLocation, setSiteLocation] = useState('');
 
   useEffect(() => {
+    const candidateId = searchParams.get('candidateId');
+    
     const fetchData = async () => {
       setPageLoading(true);
       try {
@@ -73,29 +76,34 @@ export default function RegisterEmployeeClientPage({ user, candidate }: { user: 
         ]);
         setPositions(pos);
         setSites(siteData);
-        if (candidate) {
-          setEmployeeName(candidate.name);
-          setSiteLocation(candidate.siteLocation || '');
-          if (candidate.dateOfBirth) {
-            setDateOfBirth(new Date(candidate.dateOfBirth));
-          }
-          const initialPosition = pos.find(p => p.name === candidate.positionApplied);
-          if (initialPosition) {
-            setSelectedPositions([{ id: initialPosition.id, name: initialPosition.name }]);
-          }
+
+        if (candidateId) {
+            const candidateData = await getCandidateById(candidateId);
+            setCandidate(candidateData);
+            if (candidateData) {
+                setEmployeeName(candidateData.name);
+                setSiteLocation(candidateData.siteLocation || '');
+                if (candidateData.dateOfBirth) {
+                    setDateOfBirth(new Date(candidateData.dateOfBirth));
+                }
+                const initialPosition = pos.find(p => p.name === candidateData.positionApplied);
+                if (initialPosition) {
+                    setSelectedPositions([{ id: initialPosition.id, name: initialPosition.name }]);
+                }
+            }
         }
       } catch (error) {
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: 'Failed to fetch dropdown data.',
+          description: 'Failed to fetch initial data.',
         });
       } finally {
         setPageLoading(false);
       }
     };
     fetchData();
-  }, [candidate, toast]);
+  }, [searchParams, toast]);
   
   const handleSiteChange = (value: string) => {
     setSiteLocation(value);
@@ -108,8 +116,10 @@ export default function RegisterEmployeeClientPage({ user, candidate }: { user: 
 
   const filteredPositions = useMemo(() => {
     if (!siteLocation) return [];
-    return positions.filter(p => !p.projectName || p.projectName === siteLocation);
-  }, [positions, siteLocation]);
+    const site = sites.find(s => s.name === siteLocation);
+    if (!site) return [];
+    return positions.filter(p => !p.projectName || p.projectName === site.name);
+  }, [positions, siteLocation, sites]);
 
   const addPosition = () => {
     const position = positions.find(p => p.id === positionToAdd);
@@ -176,6 +186,7 @@ export default function RegisterEmployeeClientPage({ user, candidate }: { user: 
         dateOfBirth: dateOfBirth,
         avatar: photoPreview,
         positions: selectedPositions.map(p => p.name),
+        siteLocation: siteLocation,
     } as Partial<Employee>;
     
     try {
@@ -184,7 +195,8 @@ export default function RegisterEmployeeClientPage({ user, candidate }: { user: 
             title: 'Success!',
             description: 'New employee has been registered and is pending verification.',
         });
-        router.push('/dashboard/employees');
+        const redirectUrl = user.role === 'Rekrutmen' ? '/dashboard/recruitment/candidates' : '/dashboard/employees';
+        router.push(redirectUrl);
         router.refresh();
     } catch (error) {
         console.error(error);
@@ -287,12 +299,14 @@ export default function RegisterEmployeeClientPage({ user, candidate }: { user: 
     )
   }
 
+  const backLink = user.role === 'Rekrutmen' ? '/dashboard/recruitment/candidates' : '/dashboard/employees';
+
   return (
     <div className="space-y-6">
       <Button asChild variant="outline" size="sm">
-        <Link href="/dashboard">
+        <Link href={backLink}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Kembali ke Dasbor
+          Kembali
         </Link>
       </Button>
 

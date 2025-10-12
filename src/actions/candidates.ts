@@ -13,6 +13,7 @@ import {
   query,
   orderBy,
   serverTimestamp,
+  getDoc,
 } from 'firebase/firestore';
 import type { Candidate } from '@/lib/types';
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
@@ -55,6 +56,27 @@ export async function getCandidates(): Promise<Candidate[]> {
     console.error("Error fetching candidates:", error);
     return [];
   }
+}
+
+// Get a single candidate by ID (NIK)
+export async function getCandidateById(id: string): Promise<Candidate | null> {
+    try {
+        const docRef = doc(db, 'candidates', id);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            return { 
+                id: docSnap.id, 
+                ...data,
+                appliedDate: (data.appliedDate as Timestamp).toDate(),
+                dateOfBirth: data.dateOfBirth ? (data.dateOfBirth as Timestamp).toDate() : undefined,
+            } as Candidate;
+        }
+        return null;
+    } catch (error) {
+        console.error("Error fetching candidate by ID:", error);
+        return null;
+    }
 }
 
 // Create a new candidate using NIK as document ID
