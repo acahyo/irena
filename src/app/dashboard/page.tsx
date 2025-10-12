@@ -34,17 +34,21 @@ import DisciplinaryDashboard from './disciplinary-dashboard';
 
 
 async function getDashboardData({ siteIds }: { siteIds?: string[] }) {
-    const [employees, leaveRequests, violationRecords] = await Promise.all([
+    // Fetch all leave requests to ensure accurate calculation regardless of site filter
+    const [employees, allLeaveRequests, violationRecords] = await Promise.all([
         getEmployees({ siteIds }),
-        getLeaveRequests({ siteId: siteIds ? siteIds[0] : undefined }), // Leave requests might need more specific logic for multi-site
+        getLeaveRequests({}), 
         getViolationRecords()
     ]);
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const approvedLeave = leaveRequests.filter(
+    const employeeIds = new Set(employees.map(e => e.id));
+
+    const approvedLeave = allLeaveRequests.filter(
         (req) =>
+            employeeIds.has(req.employeeId) &&
             req.status === 'Approved' &&
             new Date(req.startDate) <= today &&
             new Date(req.endDate) >= today
@@ -88,7 +92,7 @@ async function getDashboardData({ siteIds }: { siteIds?: string[] }) {
     const leaveRecommendation = employees
         .filter(emp => emp.employeeStatus === 'active')
         .map(emp => {
-            const lastApprovedLeave = leaveRequests
+            const lastApprovedLeave = allLeaveRequests
                 .filter(req => req.employeeId === emp.id && req.status === 'Approved')
                 .sort((a, b) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime())[0];
 

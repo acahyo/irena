@@ -42,14 +42,17 @@ async function getProjectDashboardData(siteId?: string, shiftName?: string): Pro
     
     const currentPeriod = new Date().toISOString().slice(0, 7);
     
-    const [site, employees, purchaseRequests, leaveRequests, warehouseItems, attendanceRecords] = await Promise.all([
+    // Fetch all leave requests to ensure accurate calculation regardless of site filter
+    const [site, employees, purchaseRequests, allLeaveRequests, warehouseItems, attendanceRecords] = await Promise.all([
         getSite(siteId),
         getEmployees({ siteId, shiftName }),
         getPurchaseRequests({ siteId }),
-        getLeaveRequests({ siteId }),
+        getLeaveRequests({}), 
         getWarehouseItems(),
         getAttendanceByPeriod(currentPeriod, { siteId })
     ]);
+    
+    const employeeIds = new Set(employees.map(e => e.id));
 
     const employeesByPosition = employees.reduce((acc, emp) => {
         const position = emp.position || 'Unassigned';
@@ -68,7 +71,7 @@ async function getProjectDashboardData(siteId?: string, shiftName?: string): Pro
     const leaveRecommendation = employees
         .filter(emp => emp.employeeStatus === 'active')
         .map(emp => {
-            const lastApprovedLeave = leaveRequests
+            const lastApprovedLeave = allLeaveRequests
                 .filter(req => req.employeeId === emp.id && req.status === 'Approved')
                 .sort((a, b) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime())[0];
             

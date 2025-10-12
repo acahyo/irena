@@ -22,23 +22,22 @@ async function getDashboardData(positionName?: string) {
     }
 
     const allEmployees = await getEmployees();
-    const employees = allEmployees.filter(e => e.position === positionName);
+    const employees = allEmployees.filter(e => e.positions?.includes(positionName));
     const employeeIds = employees.map(e => e.id);
 
     if (employeeIds.length === 0) {
          return { employees: [], onLeave: 0, active: 0, leaveRecommendation: [], lowAttendance: [] };
     }
     
-    // Firestore 'in' queries are limited to 30 items.
-    // Fetch all and filter in application code if there are more.
-    const allLeaveRequests = await getLeaveRequests();
-    const leaveRequests = allLeaveRequests.filter(req => employeeIds.includes(req.employeeId));
+    // Fetch all leave requests to ensure accurate calculation
+    const allLeaveRequests = await getLeaveRequests({});
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const onLeave = leaveRequests.filter(
+    const onLeave = allLeaveRequests.filter(
         (req) =>
+            employeeIds.includes(req.employeeId) &&
             req.status === 'Approved' &&
             new Date(req.startDate) <= today &&
             new Date(req.endDate) >= today
@@ -49,7 +48,7 @@ async function getDashboardData(positionName?: string) {
     const leaveRecommendation = employees
         .filter(emp => emp.employeeStatus === 'active')
         .map(emp => {
-            const lastApprovedLeave = leaveRequests
+            const lastApprovedLeave = allLeaveRequests
                 .filter(req => req.employeeId === emp.id && req.status === 'Approved')
                 .sort((a, b) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime())[0];
             
@@ -67,7 +66,7 @@ async function getDashboardData(positionName?: string) {
     const attendanceRecords = await getAttendanceByPeriod(currentPeriod);
     const lowAttendance = employees.map(emp => {
         const record = attendanceRecords.find(r => r.employeeId === emp.id);
-        const attendanceDays = record?.attendanceDays || 0;
+        const attendanceDays = record?.attendanceByPosition ? Object.values(record.attendanceByPosition).reduce((sum, days) => sum + (days || 0), 0) : 0;
         return { ...emp, attendanceDays };
     }).filter(emp => emp.attendanceDays < 26);
 
