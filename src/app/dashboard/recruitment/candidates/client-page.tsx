@@ -274,12 +274,13 @@ export default function CandidatesClientPage({
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-3xl">
+        <DialogContent className="max-w-2xl">
             <DialogHeader>
                 <DialogTitle>{editingCandidate?.id ? 'Edit Kandidat' : 'Tambah Kandidat Baru'}</DialogTitle>
                 <DialogDescription>Isi detail informasi calon karyawan.</DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit}>
+              <div className="space-y-6 max-h-[90vh] overflow-y-auto p-1">
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label htmlFor="nik">NIK</Label>
@@ -403,6 +404,7 @@ export default function CandidatesClientPage({
                     <Label htmlFor="notes">Catatan (Opsional)</Label>
                     <Input id="notes" name="notes" defaultValue={editingCandidate?.notes || ''} />
                 </div>
+              </div>
 
                  <DialogFooter>
                     <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Batal</Button>
