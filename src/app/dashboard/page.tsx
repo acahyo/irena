@@ -34,9 +34,12 @@ import DisciplinaryDashboard from './disciplinary-dashboard';
 
 
 async function getDashboardData({ siteIds }: { siteIds?: string[] }) {
-    // Fetch all leave requests to ensure accurate calculation regardless of site filter
-    const [employees, allLeaveRequests, violationRecords] = await Promise.all([
-        getEmployees({ siteIds }),
+    // Fetch employees with siteId filter for general stats
+    const filteredEmployees = await getEmployees({ siteIds });
+
+    // Fetch all employees for leave recommendation and all leave requests/violations
+    const [allEmployees, allLeaveRequests, violationRecords] = await Promise.all([
+        getEmployees(),
         getLeaveRequests({}), 
         getViolationRecords()
     ]);
@@ -44,7 +47,7 @@ async function getDashboardData({ siteIds }: { siteIds?: string[] }) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const employeeIds = new Set(employees.map(e => e.id));
+    const employeeIds = new Set(filteredEmployees.map(e => e.id));
 
     const approvedLeave = allLeaveRequests.filter(
         (req) =>
@@ -54,7 +57,7 @@ async function getDashboardData({ siteIds }: { siteIds?: string[] }) {
             new Date(req.endDate) >= today
     );
     
-    const employeesByProject = employees
+    const employeesByProject = filteredEmployees
         .filter(emp => emp.employeeStatus === 'active')
         .reduce((acc, emp) => {
             const project = emp.siteLocation || 'Unassigned';
@@ -79,7 +82,7 @@ async function getDashboardData({ siteIds }: { siteIds?: string[] }) {
     })).sort((a,b) => a.projectName.localeCompare(b.projectName));
 
 
-    const employeesByStatus = employees.reduce((acc, emp) => {
+    const employeesByStatus = filteredEmployees.reduce((acc, emp) => {
         const status = emp.employeeStatus || 'active';
         if (acc[status as keyof typeof acc]) {
             acc[status as keyof typeof acc]++;
@@ -89,7 +92,7 @@ async function getDashboardData({ siteIds }: { siteIds?: string[] }) {
         return acc;
     }, { active: 0, nonaktif: 0, resign: 0, phk: 0, pending: 0, "Pending PHK Approval": 0 });
 
-    const leaveRecommendation = employees
+    const leaveRecommendation = allEmployees
         .filter(emp => emp.employeeStatus === 'active')
         .map(emp => {
             const lastApprovedLeave = allLeaveRequests
@@ -141,7 +144,7 @@ async function getDashboardData({ siteIds }: { siteIds?: string[] }) {
 
 
     return {
-        totalEmployees: employees.length,
+        totalEmployees: filteredEmployees.length,
         employeesOnLeave: approvedLeave.length,
         employeesByPosition,
         employeesByStatus: employeesByStatus,
@@ -411,4 +414,5 @@ export default async function DashboardPage({ searchParams, userSiteIds }: { sea
              </div>
         </div>
     );
-}
+
+    
