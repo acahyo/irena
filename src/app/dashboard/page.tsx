@@ -166,7 +166,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
         return <HseDashboard user={user} />;
     }
     
-    if (user.role === 'HR') {
+    if (user.role === 'HR' || user.role === 'Rekrutmen') {
         return <RecruitmentDashboard user={user} />;
     }
 
