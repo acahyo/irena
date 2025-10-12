@@ -1,7 +1,7 @@
 
 'use server';
 
-import { db } from '@/lib/firebase';
+import { db, storage } from '@/lib/firebase';
 import {
   collection,
   getDocs,
@@ -15,6 +15,24 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import type { Candidate } from '@/lib/types';
+import { ref, uploadString, getDownloadURL } from 'firebase/storage';
+
+async function uploadFileAndGetURL(base64Data: string, path: string): Promise<{ downloadURL: string; fileName: string; }> {
+  if (!base64Data || !base64Data.startsWith('data:')) {
+    throw new Error('Invalid file data provided.');
+  }
+
+  const mimeTypeMatch = base64Data.match(/data:(.*);base64,/);
+  if (!mimeTypeMatch) throw new Error('Invalid data URI format.');
+  const mimeType = mimeTypeMatch[1];
+  const extension = mimeType.split('/')[1] || 'bin';
+  
+  const fileName = `${path.split('/').pop()}-${Date.now()}.${extension}`;
+  const storageRef = ref(storage, `candidate-docs/${fileName}`);
+  const uploadResult = await uploadString(storageRef, base64Data, 'data_url');
+  const downloadURL = await getDownloadURL(uploadResult.ref);
+  return { downloadURL, fileName };
+}
 
 
 // Get all candidates
@@ -52,7 +70,21 @@ export async function createCandidate(data: Omit<Candidate, 'id' | 'appliedDate'
 // Update an existing candidate
 export async function updateCandidate(id: string, updates: Partial<Omit<Candidate, 'id' | 'appliedDate'>>): Promise<void> {
   const docRef = doc(db, 'candidates', id);
-  await updateDoc(docRef, updates);
+  const updateData: { [key: string]: any } = { ...updates };
+  
+  if (updateData.interviewDocUrl && (updateData.interviewDocUrl as string).startsWith('data:')) {
+    const { downloadURL, fileName } = await uploadFileAndGetURL(updateData.interviewDocUrl, `interview-${id}`);
+    updateData.interviewDocUrl = downloadURL;
+    updateData.interviewDocName = fileName;
+  }
+  
+  if (updateData.testDocUrl && (updateData.testDocUrl as string).startsWith('data:')) {
+    const { downloadURL, fileName } = await uploadFileAndGetURL(updateData.testDocUrl, `test-${id}`);
+    updateData.testDocUrl = downloadURL;
+    updateData.testDocName = fileName;
+  }
+  
+  await updateDoc(docRef, updateData);
 }
 
 // Delete a candidate

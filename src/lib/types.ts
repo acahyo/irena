@@ -77,10 +77,14 @@ export type Candidate = {
   positionApplied: string;
   siteLocation?: string;
   appliedDate: Date | string;
-  status: 'Pending' | 'Interview' | 'Hired' | 'Rejected';
+  status: 'Pending' | 'Interview' | 'Tes unit/alat' | 'Registrasi Karyawan' | 'Hired' | 'Rejected';
   recruiterId: string;
   recruiterName: string;
   notes?: string;
+  interviewDocUrl?: string;
+  interviewDocName?: string;
+  testDocUrl?: string;
+  testDocName?: string;
 };
 
 export type CalendarEvent = {

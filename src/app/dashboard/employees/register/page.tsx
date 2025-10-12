@@ -1,12 +1,14 @@
 
+
 import { getAdminSession } from '@/actions/auth';
-import { redirect } from 'next/navigation';
+import { redirect, notFound } from 'next/navigation';
 import RegisterEmployeeClientPage from './client-page';
-import { User, Site } from '@/lib/types';
+import { User, Site, Candidate } from '@/lib/types';
 import { getSitesByIds } from '@/actions/sites';
+import { getCandidates } from '@/actions/candidates';
 
 
-export default async function RegisterEmployeePage() {
+export default async function RegisterEmployeePage({ searchParams }: { searchParams?: { candidateId?: string }}) {
   const currentUser = await getAdminSession();
   
   if (!currentUser) {
@@ -14,12 +16,21 @@ export default async function RegisterEmployeePage() {
     redirect('/');
   }
 
-  // Only Admin Proyek can access this page
-  if (currentUser.role !== 'Admin Proyek') {
+  // Only Admin Proyek and Rekrutmen can access this page
+  if (currentUser.role !== 'Admin Proyek' && currentUser.role !== 'Rekrutmen') {
     redirect('/dashboard');
   }
 
   const assignedSites: Site[] = currentUser.siteIds ? await getSitesByIds(currentUser.siteIds) : [];
 
-  return <RegisterEmployeeClientPage user={currentUser as User} assignedSites={assignedSites} />;
+  let candidate: Candidate | undefined = undefined;
+  if (searchParams?.candidateId) {
+    const candidates = await getCandidates();
+    candidate = candidates.find(c => c.id === searchParams.candidateId);
+    if (!candidate) {
+      notFound();
+    }
+  }
+
+  return <RegisterEmployeeClientPage user={currentUser as User} assignedSites={assignedSites} candidate={candidate} />;
 }

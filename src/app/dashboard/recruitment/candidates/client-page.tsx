@@ -40,7 +40,7 @@ import {
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { MoreHorizontal, PlusCircle, Trash2, Pencil, Loader2 } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash2, Pencil, Loader2, UserPlus, ExternalLink, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Candidate, Position, User, Site } from '@/lib/types';
 import { createCandidate, updateCandidate, deleteCandidate } from '@/actions/candidates';
@@ -54,6 +54,8 @@ const getStatusVariant = (status: Candidate['status']) => {
   switch (status) {
     case 'Pending': return 'secondary';
     case 'Interview': return 'default';
+    case 'Tes unit/alat': return 'default';
+    case 'Registrasi Karyawan': return 'default';
     case 'Hired': return 'default';
     case 'Rejected': return 'destructive';
     default: return 'outline';
@@ -79,6 +81,10 @@ export default function CandidatesClientPage({
   const [sites, setSites] = useState<Site[]>([]);
   const [selectedSite, setSelectedSite] = useState('');
   
+  const [currentStatus, setCurrentStatus] = useState<Candidate['status'] | undefined>();
+  const [interviewDoc, setInterviewDoc] = useState<string | null>(null);
+  const [testDoc, setTestDoc] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchSitesData = async () => {
         const sitesData = await getSites();
@@ -90,20 +96,36 @@ export default function CandidatesClientPage({
   const handleOpenDialog = (candidate: Partial<Candidate> | null = null) => {
     setEditingCandidate(candidate);
     setSelectedSite(candidate?.siteLocation || '');
+    setCurrentStatus(candidate?.status || 'Pending');
+    setInterviewDoc(candidate?.interviewDocUrl || null);
+    setTestDoc(candidate?.testDocUrl || null);
     setIsDialogOpen(true);
   };
 
   const filteredPositions = useMemo(() => {
-    if (!selectedSite) return positions.filter(p => !p.projectName); // Only general positions if no site selected
+    if (!selectedSite) return positions.filter(p => !p.projectName);
     const site = sites.find(s => s.name === selectedSite);
     if (!site) return positions.filter(p => !p.projectName);
     return positions.filter(p => !p.projectName || p.projectName === site.name);
   }, [positions, selectedSite, sites]);
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, setter: React.Dispatch<React.SetStateAction<string | null>>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => setter(e.target?.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const data: any = Object.fromEntries(formData.entries());
+
+    // Add document data if they exist
+    if (interviewDoc && interviewDoc.startsWith('data:')) data.interviewDocUrl = interviewDoc;
+    if (testDoc && testDoc.startsWith('data:')) data.testDocUrl = testDoc;
 
     startTransition(async () => {
         try {
@@ -177,19 +199,30 @@ export default function CandidatesClientPage({
                   <TableCell>{format(new Date(candidate.appliedDate), 'PPP')}</TableCell>
                   <TableCell><Badge variant={getStatusVariant(candidate.status)}>{candidate.status}</Badge></TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(candidate)}><Pencil className="h-4 w-4" /></Button>
-                    <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                           <Button variant="ghost" size="icon" className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
-                        </AlertDialogTrigger>
-                         <AlertDialogContent>
-                            <AlertDialogHeader><AlertDialogTitle>Anda yakin?</AlertDialogTitle><AlertDialogDescription>Aksi ini akan menghapus data kandidat secara permanen.</AlertDialogDescription></AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel>Batal</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDelete(candidate.id)}>Hapus</AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
+                    {candidate.status === 'Registrasi Karyawan' ? (
+                       <Button asChild size="sm">
+                          <Link href={`/dashboard/employees/register?candidateId=${candidate.id}`}>
+                            <UserPlus className="mr-2 h-4 w-4" />
+                            Registrasi
+                          </Link>
+                       </Button>
+                    ) : (
+                      <>
+                        <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(candidate)}><Pencil className="h-4 w-4" /></Button>
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                               <Button variant="ghost" size="icon" className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                            </AlertDialogTrigger>
+                             <AlertDialogContent>
+                                <AlertDialogHeader><AlertDialogTitle>Anda yakin?</AlertDialogTitle><AlertDialogDescription>Aksi ini akan menghapus data kandidat secara permanen.</AlertDialogDescription></AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Batal</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleDelete(candidate.id)}>Hapus</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                      </>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
@@ -202,7 +235,7 @@ export default function CandidatesClientPage({
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-2xl">
             <DialogHeader>
                 <DialogTitle>{editingCandidate?.id ? 'Edit Kandidat' : 'Tambah Kandidat Baru'}</DialogTitle>
                 <DialogDescription>Isi detail informasi calon karyawan.</DialogDescription>
@@ -248,15 +281,43 @@ export default function CandidatesClientPage({
                 {editingCandidate?.id && (
                     <div className="space-y-2">
                         <Label htmlFor="status">Status</Label>
-                        <Select name="status" defaultValue={editingCandidate?.status}>
-                             <SelectTrigger><SelectValue placeholder="Ubah Status" /></SelectTrigger>
+                        <Select name="status" value={currentStatus} onValueChange={(value) => setCurrentStatus(value as Candidate['status'])}>
+                             <SelectTrigger><SelectValue /></SelectTrigger>
                              <SelectContent>
                                 <SelectItem value="Pending">Pending</SelectItem>
                                 <SelectItem value="Interview">Interview</SelectItem>
+                                <SelectItem value="Tes unit/alat">Tes unit/alat</SelectItem>
+                                <SelectItem value="Registrasi Karyawan">Registrasi Karyawan</SelectItem>
                                 <SelectItem value="Hired">Diterima</SelectItem>
                                 <SelectItem value="Rejected">Ditolak</SelectItem>
                             </SelectContent>
                         </Select>
+                    </div>
+                )}
+                {currentStatus === 'Interview' && (
+                    <div className="space-y-2 border p-3 rounded-md">
+                        <Label htmlFor="interviewDoc" className="flex items-center gap-2">
+                           <Upload className="h-4 w-4" /> Dokumen Hasil Interview
+                        </Label>
+                        <Input id="interviewDoc" type="file" onChange={(e) => handleFileChange(e, setInterviewDoc)} />
+                        {editingCandidate?.interviewDocUrl && (
+                             <a href={editingCandidate.interviewDocUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
+                                <ExternalLink className="h-3 w-3" /> Lihat file yang sudah diunggah
+                            </a>
+                        )}
+                    </div>
+                )}
+                 {currentStatus === 'Tes unit/alat' && (
+                    <div className="space-y-2 border p-3 rounded-md">
+                        <Label htmlFor="testDoc" className="flex items-center gap-2">
+                           <Upload className="h-4 w-4" /> Dokumen Hasil Tes
+                        </Label>
+                        <Input id="testDoc" type="file" onChange={(e) => handleFileChange(e, setTestDoc)} />
+                         {editingCandidate?.testDocUrl && (
+                             <a href={editingCandidate.testDocUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
+                                <ExternalLink className="h-3 w-3" /> Lihat file yang sudah diunggah
+                            </a>
+                        )}
                     </div>
                 )}
                  <div className="space-y-2">
