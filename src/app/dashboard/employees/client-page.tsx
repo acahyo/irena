@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useRef, useEffect, useTransition } from 'react';
@@ -201,7 +202,7 @@ export default function EmployeeDirectoryClientPage({ initialEmployees }: { init
 
   return (
     <div className="space-y-6">
-      {user.role === 'Admin Proyek' && (
+      {(user.role === 'Admin Proyek' || user.role === 'Rekrutmen') && (
         <Button asChild variant="outline" size="sm">
             <Link href="/dashboard">
                 <ArrowLeft className="mr-2 h-4 w-4" />
