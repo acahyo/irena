@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef, useTransition } from 'react';
@@ -62,7 +63,7 @@ export default function AttendanceClientPage({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
-  const [projectFilter, setProjectFilter] = useState(searchParams.get('projectId') || 'all');
+  const [projectFilter, setProjectFilter] = useState(searchParams.get('projectId') || (assignedSites && assignedSites.length > 0 ? assignedSites[0].id : 'all'));
   const [attendanceData, setAttendanceData] = useState<AttendanceData>({});
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -111,12 +112,15 @@ export default function AttendanceClientPage({
   };
 
   const filteredEmployees = useMemo(() => {
-    return employees.filter(emp => {
-        // Project filtering is now handled by server component fetching, 
-        // but we keep this client-side filter for responsiveness.
-        const matchesProject = projectFilter === 'all' || emp.siteLocation === projectFilter;
-        return assignedSites ? matchesProject : true;
-    });
+    // Server component now handles the main filtering. 
+    // This client-side filter is just for responsiveness and safety.
+    if (!assignedSites) return employees; // HR/Admin can see all from `employees` prop
+    
+    if (projectFilter === 'all') {
+      return employees;
+    }
+    const selectedSite = assignedSites.find(site => site.id === projectFilter);
+    return employees.filter(emp => emp.siteLocation === selectedSite?.name);
   }, [employees, projectFilter, assignedSites]);
 
   useEffect(() => {
@@ -140,7 +144,8 @@ export default function AttendanceClientPage({
     setPeriod(newPeriod);
     setIsLoading(true);
     try {
-        const records = await getAttendanceByPeriod(newPeriod);
+        const filter = assignedSites && projectFilter !== 'all' ? { siteId: projectFilter } : {};
+        const records = await getAttendanceByPeriod(newPeriod, filter);
         const newData: AttendanceData = {};
         records.forEach(record => {
             newData[record.employeeId] = {
@@ -345,7 +350,7 @@ export default function AttendanceClientPage({
               filteredEmployees.map((emp) => {
                 const totalOvertime = Object.values(attendanceData[emp.id]?.overtimeByPosition || {}).reduce((sum, hours) => sum + (hours || 0), 0);
                 
-                const dailyPositions = emp.positionDetails?.filter(p => p.salaryType === 'harian') || [];
+                const dailyPositions = emp.positionDetails?.filter(p => p.salaryType === 'harian' || p.salaryType === 'jam') || [];
                 const monthlyPositions = emp.positionDetails?.filter(p => p.salaryType === 'bulanan' || p.salaryType === 'direksi') || [];
                 const hasAnyPositions = dailyPositions.length > 0 || monthlyPositions.length > 0;
                 

@@ -1,4 +1,5 @@
 
+
 import { getEmployees } from '@/actions/employees';
 import { getPositions } from '@/actions/positions';
 import AttendanceClientPage from './client-page';
@@ -20,10 +21,15 @@ export default async function AttendancePage({ userSiteIds, searchParams }: { us
   }
 
   const projectId = searchParams?.projectId;
-  const employeeSiteIds = projectId && projectId !== 'all' ? [projectId] : userSiteIds;
+  // If user is Admin Proyek, filter employees by selected project or their assigned sites.
+  // If user is HR/Admin and no project is selected, fetch all employees.
+  const employeeSiteFilter = user?.role === 'Admin Proyek' 
+    ? (projectId && projectId !== 'all' ? [projectId] : userSiteIds) 
+    : (projectId && projectId !== 'all' ? [projectId] : undefined);
+
 
   const [employees, positions] = await Promise.all([
-    getEmployees({ siteIds: employeeSiteIds }),
+    getEmployees({ siteIds: employeeSiteFilter }),
     getPositions(),
   ]);
 
@@ -41,10 +47,10 @@ export default async function AttendancePage({ userSiteIds, searchParams }: { us
 
   // Fetch initial attendance for the current month, filtering by site if applicable
   const currentPeriod = new Date().toISOString().slice(0, 7);
-  const employeeIdsToFetch = employeesWithPositionDetails.map(e => e.id);
   
-  const allAttendanceForPeriod = await getAttendanceByPeriod(currentPeriod);
-  const initialAttendance = allAttendanceForPeriod.filter(att => employeeIdsToFetch.includes(att.employeeId));
+  // Apply the same site filter for fetching initial attendance records for efficiency
+  const attendanceSiteFilter = user?.role === 'Admin Proyek' ? employeeSiteFilter?.[0] : (projectId && projectId !== 'all' ? projectId : undefined);
+  const initialAttendance = await getAttendanceByPeriod(currentPeriod, { siteId: attendanceSiteFilter });
 
 
   return (
