@@ -46,7 +46,7 @@ import {
 import EmployeeProfileClientPage from '@/app/dashboard/employees/[id]/client-page';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 
-export default function ReviewEmployeesClientPage({ pendingEmployees, sites }: { pendingEmployees: EmployeeWithPosition[], sites: Site[] }) {
+export default function ReviewEmployeesClientPage({ pendingEmployees, sites }: { pendingEmployees: Employee[], sites: Site[] }) {
   const [employees, setEmployees] = useState(pendingEmployees);
   const [loading, setLoading] = useState<string | null>(null);
   const [projectFilter, setProjectFilter] = useState('all');
@@ -54,7 +54,7 @@ export default function ReviewEmployeesClientPage({ pendingEmployees, sites }: {
   const { toast } = useToast();
   
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState<EmployeeWithPosition | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
 
   const filteredEmployees = useMemo(() => {
     if (projectFilter === 'all') {
@@ -63,7 +63,7 @@ export default function ReviewEmployeesClientPage({ pendingEmployees, sites }: {
     return employees.filter(emp => emp.siteLocation === sites.find(s => s.id === projectFilter)?.name);
   }, [employees, projectFilter, sites]);
 
-  const handleViewDetails = (employee: EmployeeWithPosition) => {
+  const handleViewDetails = (employee: Employee) => {
     setSelectedEmployee(employee);
     setIsDetailOpen(true);
   };
@@ -218,7 +218,7 @@ export default function ReviewEmployeesClientPage({ pendingEmployees, sites }: {
           </DialogHeader>
           <div className="flex-1 overflow-y-auto pr-6">
             {selectedEmployee && (
-              <EmployeeProfileClientPage employee={selectedEmployee} isDialogView={true} />
+              <EmployeeProfileClientPage employee={selectedEmployee as EmployeeWithPosition} isDialogView={true} />
             )}
           </div>
         </DialogContent>

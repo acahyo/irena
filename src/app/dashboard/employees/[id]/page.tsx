@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import EmployeeProfileClientPage from './client-page';
 import { format, parseISO } from 'date-fns';
 import { getPositions } from '@/actions/positions';
-import type { EmployeeWithPosition, Position, LeaveRequest } from '@/lib/types';
+import type { Employee, EmployeeWithPosition, Position, LeaveRequest } from '@/lib/types';
 
 
 export default async function EmployeeProfilePage({ params }: { params: { id: string } }) {
@@ -24,7 +24,7 @@ export default async function EmployeeProfilePage({ params }: { params: { id: st
     .filter((p): p is Position => !!p);
 
   // Pass raw date objects or ISO strings to the client component
-  const employee: EmployeeWithPosition = {
+  const employee: Employee = {
     ...employeeData,
     positionDetails: positionDetails,
     leaveHistory: leaveHistoryData.map(req => ({
