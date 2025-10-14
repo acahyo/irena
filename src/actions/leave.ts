@@ -19,7 +19,7 @@ function convertTimestampsToDates(docData: any) {
 }
 
 // Get all leave requests
-export async function getLeaveRequests({ siteId }: { siteId?: string } = {}): Promise<LeaveRequest[]> {
+export async function getLeaveRequests({ siteIds }: { siteIds?: string[] } = {}): Promise<LeaveRequest[]> {
   try {
     let q = query(collection(db, 'leaveRequests'));
 
@@ -30,8 +30,8 @@ export async function getLeaveRequests({ siteId }: { siteId?: string } = {}): Pr
         requests.push({ id: doc.id, ...data } as LeaveRequest);
     });
 
-    if (siteId) {
-        const siteEmployees = await getEmployees({ siteId });
+    if (siteIds && siteIds.length > 0) {
+        const siteEmployees = await getEmployees({ siteIds });
         const employeeIds = new Set(siteEmployees.map(emp => emp.id));
         const siteRequests = requests.filter(req => employeeIds.has(req.employeeId));
         return siteRequests.sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());

@@ -10,11 +10,12 @@ export default async function LeaveSchedulePage() {
   if (!user) {
     redirect('/');
   }
-  // For leave schedule, filtering by the first siteId is a reasonable default for multi-project admins.
-  // HR and Admins should see all requests.
-  const siteIdForFilter = (user.role === 'Admin Proyek' && user.siteIds) ? user.siteIds[0] : undefined;
+  
+  // For Admin Proyek, filter requests by their assigned sites.
+  // For other roles like HR/Admin, siteIds will be undefined, fetching all requests.
+  const siteIdsForFilter = user.role === 'Admin Proyek' ? user.siteIds : undefined;
 
-  const initialRequests = await getLeaveRequests({ siteId: siteIdForFilter });
+  const initialRequests = await getLeaveRequests({ siteIds: siteIdsForFilter });
 
   return <LeaveScheduleClientPage initialRequests={initialRequests} />;
 }
