@@ -21,12 +21,14 @@ export default async function CandidatesPage() {
     getSites()
   ]);
 
-  // Serialize date objects in statusHistory
+  // Serialize date objects in statusHistory to prevent hydration errors.
   const serializedCandidates = candidatesData.map(candidate => ({
     ...candidate,
+    appliedDate: new Date(candidate.appliedDate).toISOString(),
+    dateOfBirth: candidate.dateOfBirth ? new Date(candidate.dateOfBirth).toISOString() : undefined,
     statusHistory: candidate.statusHistory?.map(historyItem => ({
       ...historyItem,
-      date: new Date(historyItem.date).toISOString(),
+      date: new Date(historyItem.date as Date).toISOString(),
     }))
   }));
 

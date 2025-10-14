@@ -46,13 +46,13 @@ export async function getCandidates(): Promise<Candidate[]> {
       const data = doc.data();
       const statusHistory = (data.statusHistory || []).map((item: any) => ({
         ...item,
-        date: (item.date as Timestamp).toDate(),
+        date: item.date instanceof Timestamp ? item.date.toDate() : item.date,
       }));
       candidates.push({
         id: doc.id,
         ...data,
-        appliedDate: (data.appliedDate as Timestamp).toDate(),
-        dateOfBirth: data.dateOfBirth ? (data.dateOfBirth as Timestamp).toDate() : undefined,
+        appliedDate: data.appliedDate instanceof Timestamp ? data.appliedDate.toDate() : data.appliedDate,
+        dateOfBirth: data.dateOfBirth ? (data.dateOfBirth instanceof Timestamp ? data.dateOfBirth.toDate() : data.dateOfBirth) : undefined,
         statusHistory,
       } as Candidate);
     });
@@ -72,14 +72,14 @@ export async function getCandidateById(id: string): Promise<Candidate | null> {
             const data = docSnap.data();
             const statusHistory = (data.statusHistory || []).map((item: any) => ({
                 ...item,
-                date: (item.date as Timestamp).toDate(),
+                date: item.date instanceof Timestamp ? item.date.toDate() : item.date,
             }));
 
             return { 
                 id: docSnap.id, 
                 ...data,
-                appliedDate: (data.appliedDate as Timestamp).toDate(),
-                dateOfBirth: data.dateOfBirth ? (data.dateOfBirth as Timestamp).toDate() : undefined,
+                appliedDate: data.appliedDate instanceof Timestamp ? data.appliedDate.toDate() : data.appliedDate,
+                dateOfBirth: data.dateOfBirth ? (data.dateOfBirth instanceof Timestamp ? data.dateOfBirth.toDate() : data.dateOfBirth) : undefined,
                 statusHistory,
             } as Candidate;
         }
