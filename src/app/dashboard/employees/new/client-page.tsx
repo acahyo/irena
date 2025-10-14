@@ -430,8 +430,8 @@ export default function NewEmployeePageClient({
                     <Label htmlFor="bpjs-active">Aktif</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="inactive" id="bpjs-inactive" />
-                    <Label htmlFor="bpjs-inactive">Non-Aktif</Label>
+                    <RadioGroupItem value="in-progress" id="bpjs-in-progress" />
+                    <Label htmlFor="bpjs-in-progress">Proses Pendaftaran</Label>
                   </div>
                    <div className="flex items-center space-x-2">
                     <RadioGroupItem value="not-registered" id="bpjs-not-registered" />

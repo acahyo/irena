@@ -27,7 +27,7 @@ export type Employee = {
   maritalStatus?: 'single' | 'married' | 'divorced' | 'widowed';
   emergencyContactName?: string;
   emergencyContactNumber?: string;
-  bpjsStatus?: 'active' | 'inactive' | 'not-registered';
+  bpjsStatus?: 'active' | 'in-progress' | 'not-registered';
   bpjsNumber?: string;
   bpjsType?: 'miki' | 'iba';
   employeeStatus?: 'active' | 'nonaktif' | 'resign' | 'phk' | 'pending' | 'Pending PHK Approval' | 'Verifikasi Data';

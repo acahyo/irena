@@ -90,7 +90,7 @@ export default function BpjsIdSimperClientPage({
             acc.types[type] = (acc.types[type] || 0) + 1;
         }
         return acc;
-    }, { 'active': 0, 'inactive': 0, 'not-registered': 0, types: {} as Record<string, number> });
+    }, { 'active': 0, 'in-progress': 0, 'not-registered': 0, types: {} as Record<string, number> });
 
     const idCardStats = initialEmployees.reduce((acc, emp) => {
         const status = emp.idCardStatus || 'not-registered';
@@ -227,7 +227,7 @@ export default function BpjsIdSimperClientPage({
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
                             <SelectItem value="active">Aktif</SelectItem>
-                            <SelectItem value="inactive">Tidak Aktif</SelectItem>
+                            <SelectItem value="in-progress">Proses Pendaftaran</SelectItem>
                             <SelectItem value="not-registered">Belum Terdaftar</SelectItem>
                         </SelectContent>
                     </Select>
@@ -358,7 +358,7 @@ export default function BpjsIdSimperClientPage({
                              <div className="flex justify-between"><span>- Lainnya:</span> <span>{stats.bpjsStats.types.unknown || 0}</span></div>
                         </div>
                     )}
-                    <div className="flex justify-between"><span>Tidak Aktif:</span> <Badge variant="outline">{stats.bpjsStats.inactive}</Badge></div>
+                    <div className="flex justify-between"><span>Proses Pendaftaran:</span> <Badge variant="outline">{stats.bpjsStats['in-progress']}</Badge></div>
                     <div className="flex justify-between"><span>Belum Terdaftar:</span> <Badge variant="outline">{stats.bpjsStats['not-registered']}</Badge></div>
                 </CardContent>
             </Card>
