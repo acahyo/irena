@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useTransition } from 'react';
@@ -99,7 +100,7 @@ export default function QuickEmployeeSearch({
     <>
       <Card>
         <CardHeader>
-          <CardTitle>Cek Cepat Karyawan</CardTitle>
+          <CardTitle>Cek Pelanggaran Karyawan</CardTitle>
           <CardDescription>Cari ringkasan informasi karyawan berdasarkan NIK.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -141,11 +142,6 @@ export default function QuickEmployeeSearch({
                              </div>
                         </div>
                         <Separator />
-                         <Button asChild variant="outline" className="w-full">
-                            <Link href={`/dashboard/employees/${searchResult.employee.id}`}>
-                                <Eye className="mr-2 h-4 w-4" /> Lihat Profil Lengkap
-                            </Link>
-                        </Button>
                     </div>
                     <div className="md:col-span-2">
                         <h4 className="font-semibold mb-2">Riwayat Pelanggaran</h4>
