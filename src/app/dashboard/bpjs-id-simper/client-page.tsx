@@ -110,7 +110,7 @@ export default function BpjsIdSimperClientPage({
   const filteredEmployees = useMemo(() => {
     return employees.filter(emp => {
       const matchesProject = projectFilter === 'all' || emp.siteLocation === projectFilter;
-      const matchesPosition = positionFilter === 'all' || emp.position === positionFilter;
+      const matchesPosition = positionFilter === 'all' || emp.positions?.includes(positionFilter);
       return matchesProject && matchesPosition;
     });
   }, [employees, projectFilter, positionFilter]);
@@ -452,7 +452,7 @@ export default function BpjsIdSimperClientPage({
                                     </div>
                                 </TableCell>
                                 <TableCell>{emp.siteLocation || 'N/A'}</TableCell>
-                                <TableCell>{emp.position || 'N/A'}</TableCell>
+                                <TableCell>{(emp.positions || []).join(', ') || 'N/A'}</TableCell>
                                 <TableCell>{renderCellContent(emp, 'bpjs')}</TableCell>
                                 <TableCell>{renderCellContent(emp, 'idCard')}</TableCell>
                                 <TableCell>{renderCellContent(emp, 'simper')}</TableCell>
@@ -482,3 +482,7 @@ export default function BpjsIdSimperClientPage({
     </div>
   );
 }
+
+    
+
+    
