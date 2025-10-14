@@ -21,10 +21,19 @@ export default async function CandidatesPage() {
     getSites()
   ]);
 
+  // Serialize date objects in statusHistory
+  const serializedCandidates = candidatesData.map(candidate => ({
+    ...candidate,
+    statusHistory: candidate.statusHistory?.map(historyItem => ({
+      ...historyItem,
+      date: new Date(historyItem.date).toISOString(),
+    }))
+  }));
+
   return (
     <CandidatesClientPage 
       initialUser={user}
-      initialCandidates={candidatesData}
+      initialCandidates={serializedCandidates}
       initialPositions={positionsData}
       initialSites={sitesData}
     />
