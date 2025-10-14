@@ -228,6 +228,9 @@ export default function DashboardClientLayout({
         if (role.name === 'Disipliner') {
             accessibleMenus.add('disciplinary-dashboard');
         }
+        if (role.name === 'Staf GA') {
+            accessibleMenus.add('bpjs-id-simper');
+        }
     }
 
 

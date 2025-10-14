@@ -163,6 +163,7 @@ export const roles: Role[] = [
     { id: '9', name: 'HSE', description: 'Manages HSE reports and violations', accessibleMenus: ['hse', 'hse-fines', 'violations', 'vehicles'] },
     { id: '10', name: 'Disipliner', description: 'Manages employee disciplinary actions', accessibleMenus: ['violations', 'separations', 'disciplinary-dashboard', 'hse-fines'] },
     { id: '11', name: 'Rekrutmen', description: 'Manages employee recruitment and registration', accessibleMenus: [] },
+    { id: '12', name: 'Staf GA', description: 'Manages BPJS, ID Card, and SIMPER data', accessibleMenus: ['bpjs-id-simper'] },
 ];
 
 

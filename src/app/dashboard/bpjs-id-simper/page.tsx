@@ -12,7 +12,7 @@ export default async function BpjsIdSimperPage() {
     redirect('/');
   }
   
-  const siteIdForFilter = (user.role === 'Administrator' || user.role === 'HR') ? undefined : user.siteIds?.[0];
+  const siteIdForFilter = (user.role === 'Administrator' || user.role === 'HR' || user.role === 'Staf GA') ? undefined : user.siteIds?.[0];
 
   const [employees, sites, positions] = await Promise.all([
       getEmployees({ siteId: siteIdForFilter }),
