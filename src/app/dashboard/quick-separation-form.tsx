@@ -146,11 +146,6 @@ export default function QuickSeparationForm({
                                 <UserMinus className="mr-2 h-4 w-4" /> Proses Resign / PHK
                             </Link>
                         </Button>
-                         <Button asChild variant="outline" className="w-full">
-                            <Link href={`/dashboard/employees/${searchResult.employee.id}`}>
-                                <Eye className="mr-2 h-4 w-4" /> Lihat Profil Lengkap
-                            </Link>
-                        </Button>
                     </div>
                     <div className="md:col-span-2">
                         <h4 className="font-semibold mb-2">Riwayat Pelanggaran</h4>
@@ -188,6 +183,7 @@ export default function QuickSeparationForm({
     </>
   );
 }
+
 
 
 
