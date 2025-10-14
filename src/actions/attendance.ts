@@ -1,3 +1,4 @@
+
 'use server';
 
 import { db } from '@/lib/firebase';
@@ -29,6 +30,7 @@ export async function getAttendanceByPeriod(period: string, { siteId }: { siteId
     });
 
     if (siteId) {
+        // Since attendance records don't have a siteId, we filter by employees belonging to that site.
         const siteEmployees = await getEmployees({ siteId });
         const employeeIds = new Set(siteEmployees.map(emp => emp.id));
         return records.filter(record => employeeIds.has(record.employeeId));

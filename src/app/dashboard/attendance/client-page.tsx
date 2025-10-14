@@ -54,16 +54,17 @@ export default function AttendanceClientPage({
   initialAttendance,
   settings,
   assignedSites,
+  initialProjectId,
 }: {
   employees: EmployeeWithPosition[];
   initialAttendance: AttendanceRecord[];
   settings: AppSettings;
   assignedSites?: Site[];
+  initialProjectId?: string;
 }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
-  const [projectFilter, setProjectFilter] = useState(searchParams.get('projectId') || (assignedSites && assignedSites.length > 0 ? assignedSites[0].id : 'all'));
+  const [projectFilter, setProjectFilter] = useState(initialProjectId || 'all');
   const [attendanceData, setAttendanceData] = useState<AttendanceData>({});
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -112,11 +113,12 @@ export default function AttendanceClientPage({
   };
 
   const filteredEmployees = useMemo(() => {
-    // Server component now handles the main filtering. 
-    // This client-side filter is just for responsiveness and safety.
-    if (!assignedSites) return employees; // HR/Admin can see all from `employees` prop
+    if (!assignedSites) return employees;
     
     if (projectFilter === 'all') {
+      // HR/Admins can see all if they select "All Projects"
+      // Admin Proyek will have `assignedSites` and this should ideally not be 'all'
+      // but as a fallback, show their assigned employees.
       return employees;
     }
     const selectedSite = assignedSites.find(site => site.id === projectFilter);
@@ -144,8 +146,11 @@ export default function AttendanceClientPage({
     setPeriod(newPeriod);
     setIsLoading(true);
     try {
-        const filter = assignedSites && projectFilter !== 'all' ? { siteId: projectFilter } : {};
-        const records = await getAttendanceByPeriod(newPeriod, filter);
+        const filterOptions = (assignedSites && projectFilter !== 'all') 
+            ? { siteId: projectFilter } 
+            : {};
+        
+        const records = await getAttendanceByPeriod(newPeriod, filterOptions);
         const newData: AttendanceData = {};
         records.forEach(record => {
             newData[record.employeeId] = {
