@@ -159,7 +159,7 @@ export default async function DisciplinaryDashboard({ user }: { user: User }) {
                 </Card>
             </div>
             
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
                 <div className="xl:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                     <QuickSeparationForm employees={data.employees} violations={data.violationRecords} />
                     <SeparationHistoryCard separatedEmployees={separatedEmployees} />

@@ -1,4 +1,5 @@
 
+
 import Link from 'next/link';
 import { getEmployees } from '@/actions/employees';
 import { getLeaveRequests } from '@/actions/leave';
@@ -12,6 +13,7 @@ import { differenceInDays, getMonth, getYear, format } from 'date-fns';
 import { getViolationRecords } from '@/actions/violations';
 import { Badge } from '@/components/ui/badge';
 import ViolationChart from './violation-chart';
+import QuickEmployeeSearch from './quick-employee-search';
 
 async function getDashboardData() {
     
@@ -71,6 +73,8 @@ async function getDashboardData() {
 
 
     return {
+        employees,
+        violationRecords,
         onLeave,
         active: activeEmployees,
         violationsSummary: Object.values(violationsSummary).sort((a, b) => a.project.localeCompare(b.project) || a.position.localeCompare(b.position)),
@@ -127,10 +131,11 @@ export default async function HseDashboard({ user }: { user: User }) {
                 </Card>
             </div>
             
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <ViolationChart data={data.violationHistory} />
-
-                <Card>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-1">
+                    <QuickEmployeeSearch employees={data.employees} violations={data.violationRecords} />
+                </div>
+                <Card className="lg:col-span-2">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2"><AlertOctagon /> Rekap Pelanggaran</CardTitle>
                     </CardHeader>
@@ -170,6 +175,8 @@ export default async function HseDashboard({ user }: { user: User }) {
                     </CardContent>
                 </Card>
             </div>
+
+            <ViolationChart data={data.violationHistory} />
 
         </div>
     );
