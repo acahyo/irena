@@ -429,6 +429,7 @@ export default function BpjsIdSimperClientPage({
                         <TableRow>
                             <TableHead className="sticky left-0 bg-card min-w-[250px]">Nama Karyawan</TableHead>
                             <TableHead>Proyek</TableHead>
+                            <TableHead>Jabatan</TableHead>
                             <TableHead>BPJS</TableHead>
                             <TableHead>ID Card</TableHead>
                             <TableHead>SIMPER</TableHead>
@@ -446,11 +447,12 @@ export default function BpjsIdSimperClientPage({
                                         </Avatar>
                                         <div>
                                             <p>{emp.name}</p>
-                                            <p className="text-sm text-muted-foreground">{emp.position || 'N/A'}</p>
+                                            <p className="text-sm text-muted-foreground">{emp.nik}</p>
                                         </div>
                                     </div>
                                 </TableCell>
                                 <TableCell>{emp.siteLocation || 'N/A'}</TableCell>
+                                <TableCell>{emp.position || 'N/A'}</TableCell>
                                 <TableCell>{renderCellContent(emp, 'bpjs')}</TableCell>
                                 <TableCell>{renderCellContent(emp, 'idCard')}</TableCell>
                                 <TableCell>{renderCellContent(emp, 'simper')}</TableCell>
@@ -467,7 +469,7 @@ export default function BpjsIdSimperClientPage({
                         ))}
                         {filteredEmployees.length === 0 && (
                              <TableRow>
-                                <TableCell colSpan={6} className="h-24 text-center">
+                                <TableCell colSpan={7} className="h-24 text-center">
                                     Tidak ada data karyawan ditemukan untuk filter yang dipilih.
                                 </TableCell>
                             </TableRow>
